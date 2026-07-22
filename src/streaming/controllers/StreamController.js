@@ -308,6 +308,8 @@ function StreamController() {
         }
         pendingDynamicToStaticUpdate = false;
         _setMediaDuration();
+        // Recalculate the range using the final static manifest instead of the previous live DVR window.
+        addDVRMetric();
         const dvrInfo = dashMetrics.getCurrentDVRInfo();
         if (dvrInfo && dvrInfo.range) {
             mediaSourceController.setSeekable(dvrInfo.range.start, dvrInfo.range.end);
