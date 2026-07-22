@@ -356,6 +356,7 @@ function StreamController() {
             if (settings.get().streaming.applyServiceDescription) {
                 serviceDescriptionController.applyServiceDescription(manifestInfo);
             }
+            eventBus.trigger(Events.SERVICE_DESCRIPTION_APPLIED);
 
             // Compute and set the live delay
             if (adapter.getIsDynamic()) {

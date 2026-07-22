@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
 import MetricsReportingEvents from '../metrics/MetricsReportingEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
@@ -175,6 +176,7 @@ function CmcdController() {
         eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
+        eventBus.off(Events.SERVICE_DESCRIPTION_APPLIED, _onServiceDescriptionApplied, instance);
         eventBus.off(MediaPlayerEvents.ERROR, _onPlayerError, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance)
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
@@ -285,7 +287,7 @@ function CmcdController() {
     }
 
     function _createReporter(eventTargets) {
-        const cmcdConfig = {
+        const cmcdReporterConfig = {
             version: cmcdConfigAccessor.getVersion(),
             transmissionMode: _getTransmissionMode(),
             enabledKeys: cmcdConfigAccessor.get('keys'),
@@ -296,14 +298,14 @@ function CmcdController() {
         const sid = cmcdConfigAccessor.get('sessionID') || cmcdSessionId || Utils.generateUuid();
         cmcdSessionId = sid;
         if (sid) {
-            cmcdConfig.sid = sid;
+            cmcdReporterConfig.sid = sid;
         }
         const cid = cmcdConfigAccessor.get('contentID');
         if (cid) {
-            cmcdConfig.cid = cid;
+            cmcdReporterConfig.cid = cid;
         }
 
-        return new CmcdReporter(cmcdConfig, _customRequester);
+        return new CmcdReporter(cmcdReporterConfig, _customRequester);
     }
 
     function _getTransmissionMode() {
@@ -364,19 +366,13 @@ function CmcdController() {
             return;
         }
 
-        // Only rebuild if manifest params are available and enabled.
-        // Without manifest params, the reporter config hasn't changed
-        // and rebuilding would unnecessarily reset sid and sn.
-        // IMPORTANT: Don't reset reportersNeedRebuild until we actually rebuild,
-        // otherwise a race condition can occur where params aren't available yet
-        // and we never get another chance to rebuild.
+        // Service description application is the last point at which MPD CMCD
+        // parameters can change for this manifest.
         const applyFromMpd = cmcdConfigAccessor.get('applyParametersFromMpd') ?? true;
+        reportersNeedRebuild = false;
         if (!applyFromMpd || !cmcdConfigAccessor.hasManifestParams()) {
             return;
         }
-
-        // Reset flag only after confirming we will rebuild
-        reportersNeedRebuild = false;
 
         requestModeReporter.stop(true);
         eventModeReporters.forEach(({ reporter }) => reporter.stop(true));
@@ -451,8 +447,6 @@ function CmcdController() {
             return;
         }
 
-        _rebuildReportersIfNeeded();
-
         try {
             const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
 
@@ -515,8 +509,6 @@ function CmcdController() {
             return;
         }
 
-        _rebuildReportersIfNeeded();
-
         if (!eventModeReporters?.length) {
             return;
         }
@@ -558,8 +550,6 @@ function CmcdController() {
         if (!requestModeReporter) {
             return;
         }
-
-        _rebuildReportersIfNeeded();
 
         if (!eventModeReporters?.length) {
             return;
@@ -620,6 +610,7 @@ function CmcdController() {
             eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         }
         eventBus.on(MediaPlayerEvents.ERROR, _onPlayerError, instance);
+        eventBus.on(Events.SERVICE_DESCRIPTION_APPLIED, _onServiceDescriptionApplied, instance);
     }
 
     function _initializePlaybackStateListeners() {
@@ -660,16 +651,18 @@ function CmcdController() {
     function _onManifestLoaded(data) {
         _updateCmcdManifestParamsInCmcdConfigAccessor();
 
-        // Mark reporters for rebuild so they pick up sid, cid, and keys from manifest params.
-        // We can't rebuild here because ServiceDescriptionController may not have processed
-        // the manifest yet (MANIFEST_LOADED fires before service description is available).
-        // The reporters will be rebuilt lazily before the next request or event.
+        // Rebuild after ServiceDescriptionController applies the manifest settings.
         reportersNeedRebuild = true;
 
         if (requestModeReporter) {
             const streamFormatInfo = cmcdModel.onManifestLoaded(data);
             _updateAllReporters(streamFormatInfo);
         }
+    }
+
+    function _onServiceDescriptionApplied() {
+        _updateCmcdManifestParamsInCmcdConfigAccessor();
+        _rebuildReportersIfNeeded();
     }
 
     function _onPlayerError(errorData) {

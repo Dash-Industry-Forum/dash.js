@@ -65,6 +65,7 @@ class CoreEvents extends EventsBase {
         this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.SEEK_TARGET = 'seekTarget';
+        this.SERVICE_DESCRIPTION_APPLIED = 'serviceDescriptionApplied';
         this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
         this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
         this.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';

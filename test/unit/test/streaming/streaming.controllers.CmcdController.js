@@ -3,6 +3,7 @@ import CmcdModel from '../../../../src/streaming/models/CmcdModel.js';
 import Settings from '../../../../src/core/Settings.js';
 import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import AbrControllerMock from '../../mocks/AbrControllerMock.js';
 import DashMetricsMock from '../../mocks/DashMetricsMock.js';
@@ -1495,6 +1496,7 @@ describe('CmcdController', function () {
                 protocol: 'DASH',
                 data: { type: 'static' }
             });
+            eventBus.trigger(Events.SERVICE_DESCRIPTION_APPLIED);
         });
 
         function createCommonMediaRequest(request) {
@@ -1527,6 +1529,49 @@ describe('CmcdController', function () {
             const metrics = getCmcdFromUrl(result.url);
             expect(metrics).to.have.property('sid', 'session-id-1');
             expect(metrics).to.have.property('cid', 'content-id-1');
+        });
+
+        it('should rebuild after CMCDParameters are applied to the service description', function () {
+            const lateServiceDescriptionControllerMock = new ServiceDescriptionControllerMock();
+            cmcdController.reset();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: lateServiceDescriptionControllerMock
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, {
+                protocol: 'DASH',
+                data: { type: 'static' }
+            });
+            lateServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: {
+                    cmcdParameters: {
+                        version: '1',
+                        sessionID: 'late-session-id',
+                        contentID: 'late-content-id',
+                        includeInRequests: 'segment'
+                    }
+                }
+            });
+            eventBus.trigger(Events.SERVICE_DESCRIPTION_APPLIED);
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const result = interceptor(createCommonMediaRequest({
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                bandwidth: 10000,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            }));
+            const metrics = getCmcdFromUrl(result.url);
+
+            expect(metrics).to.have.property('sid', 'late-session-id');
+            expect(metrics).to.have.property('cid', 'late-content-id');
         });
 
         it('should only include keys specified in manifest CMCDParameters', function () {
@@ -1577,6 +1622,7 @@ describe('CmcdController', function () {
                 protocol: 'DASH',
                 data: { type: 'static' }
             });
+            eventBus.trigger(Events.SERVICE_DESCRIPTION_APPLIED);
 
             const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
             const result = interceptor(createCommonMediaRequest({
@@ -1607,6 +1653,7 @@ describe('CmcdController', function () {
                 protocol: 'DASH',
                 data: { type: 'static' }
             });
+            eventBus.trigger(Events.SERVICE_DESCRIPTION_APPLIED);
 
             const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
             const result = interceptor(createCommonMediaRequest({
