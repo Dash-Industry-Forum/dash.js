@@ -473,6 +473,15 @@
                         "live",
                         "dashif"
                     ]
+                },                
+                {
+                    "url": "https://livesim2.dashif.org/livesim2/startrel_-20/stoprel_6/testpic_2s/Manifest.mpd",
+                    "name": "Dynamic to static transition with LiveSim2 using an MPD Location element",
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://demo.unified-streaming.com/k8s/live/scte35.isml/.mpd",
