@@ -19,10 +19,48 @@ export async function checkIsNotProgressing(playerAdapter) {
 }
 
 export function checkNoCriticalErrors(playerAdapter) {
+    const sanitizeUrl = (url) => {
+        if (!url) {
+            return url;
+        }
+
+        try {
+            const parsedUrl = new URL(url);
+            return `${parsedUrl.origin}${parsedUrl.pathname}${parsedUrl.search ? '?[redacted]' : ''}`;
+        } catch (e) {
+            return url.split('?')[0];
+        }
+    };
     const logEvents = playerAdapter.getLogEvents();
-    expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
     const errorEvents = playerAdapter.getErrorEvents();
-    expect(errorEvents).to.be.empty;
+    const errorLogs = logEvents[dashjs.Debug.LOG_LEVEL_ERROR];
+    const diagnostics = JSON.stringify({
+        errorEvents: errorEvents.map((event) => {
+            const error = event.error || event;
+            const data = error.data || {};
+            const request = data.request || {};
+            const response = data.response || {};
+
+            return {
+                code: error.code,
+                message: error.message,
+                request: {
+                    mediaType: request.mediaType,
+                    range: request.range,
+                    type: request.type,
+                    url: sanitizeUrl(request.url)
+                },
+                response: {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: sanitizeUrl(response.url)
+                }
+            };
+        }),
+        errorLogs
+    }, null, 2);
+    expect(errorLogs, diagnostics).to.be.empty;
+    expect(errorEvents, diagnostics).to.be.empty;
 }
 
 export function checkEventHasBeenTriggered(playerAdapter, eventName) {
