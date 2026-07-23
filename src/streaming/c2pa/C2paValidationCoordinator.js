@@ -102,12 +102,14 @@ function C2paValidationCoordinator(config) {
         trackStates,
         sequenceTracker,
         activeTrackKeyByMediaType,
+        initPromises,
         enginePromise;
 
     function setup() {
         trackStates = {};
         sequenceTracker = {};
         activeTrackKeyByMediaType = {};
+        initPromises = {};
         enginePromise = null;
     }
 
@@ -122,9 +124,26 @@ function C2paValidationCoordinator(config) {
         }
         _resetAbandonedTrackOnSwitch(segmentInput);
         if (segmentInput.kind === SEGMENT_KIND_INIT) {
-            return _handleInitSegment(segmentInput);
+            const promise = _handleInitSegment(segmentInput);
+            initPromises[segmentInput.trackKey] = promise;
+            return promise;
         }
-        return _handleMediaSegment(segmentInput);
+        return _handleMediaSegmentAfterInit(segmentInput);
+    }
+
+    /**
+     * The scanner forwards each segment without awaiting the previous one, so a track's
+     * first media segment can arrive and be handled while that track's own init segment is
+     * still being classified (dynamic import + crypto work). Awaiting the init's own promise
+     * here — if one was seen for this track — guarantees `trackStates[trackKey]` is populated
+     * (session keys, method, etc.) before a media segment reads it, closing that race.
+     */
+    async function _handleMediaSegmentAfterInit(input) {
+        const pendingInit = initPromises[input.trackKey];
+        if (pendingInit) {
+            await pendingInit;
+        }
+        return _handleMediaSegment(input);
     }
 
     /**

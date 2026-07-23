@@ -279,6 +279,33 @@ describe('C2paValidationCoordinator', function () {
             await coordinator.handleSegment(mediaInput('stream3', 290));
             expect(seenSequenceState).to.deep.equal({lastSequenceNumber: 289, seenSequences: new Set([289])});
         });
+
+        it('should not validate a track\'s first media segment before its own init has finished classifying', async () => {
+            let resolveInit;
+            const initGate = new Promise((resolve) => { resolveInit = resolve; });
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            engine.validateC2paInitSegment = async () => {
+                await initGate;
+                return vsiInitValidation([{kid: 'key-1'}]);
+            };
+            let seenSessionKeys = 'unset';
+            engine.validateC2paSegment = async (bytes, sessionKeys) => {
+                seenSessionKeys = sessionKeys;
+                return vsiSegmentOutcome({isValid: true, errorCodes: []});
+            };
+            const {coordinator} = createCoordinator({engine});
+
+            // The scanner never awaits a segment's own handler before forwarding the next
+            // one (AC — never block the fetch-to-MSE path), so a track's first media
+            // segment can genuinely arrive while its init classification is still pending.
+            const initHandled = coordinator.handleSegment(initInput('stream3'));
+            const mediaHandled = coordinator.handleSegment(mediaInput('stream3', 289));
+
+            resolveInit();
+            await Promise.all([initHandled, mediaHandled]);
+
+            expect(seenSessionKeys).to.deep.equal([{kid: 'key-1'}]);
+        });
     });
 
     describe('ManifestBox (§19.3) media-segment validation', function () {
