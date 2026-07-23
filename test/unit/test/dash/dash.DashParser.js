@@ -1,6 +1,7 @@
 import DashParser from '../../../../src/dash/parser/DashParser.js';
 import DebugMock from '../../mocks/DebugMock.js';
 import DashManifestModel from '../../../../src/dash/models/DashManifestModel.js';
+import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 import FileLoader from '../../helpers/FileLoader.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 
@@ -41,6 +42,13 @@ describe('DashParser', function () {
         expect(adaptationSet.Viewpoint).to.be.instanceOf(Array);
         expect(adaptationSet.Viewpoint).to.have.lengthOf(1);
         expect(adaptationSet.Viewpoint[0].value).to.equal('front');
+
+        const viewpoints = dashManifestModel.getViewpointForAdaptation(adaptationSet);
+
+        expect(viewpoints).to.have.lengthOf(1);
+        expect(viewpoints[0]).to.be.instanceOf(DescriptorType);
+        expect(viewpoints[0].schemeIdUri).to.equal('urn:mpeg:dash:viewpoint:2011');
+        expect(viewpoints[0].value).to.equal('front');
     });
 
     it('should preserve multiple Viewpoints in document order', () => {
@@ -56,6 +64,21 @@ describe('DashParser', function () {
 
         expect(adaptationSet.Viewpoint).to.be.instanceOf(Array);
         expect(adaptationSet.Viewpoint.map((viewpoint) => viewpoint.value)).to.deep.equal(['front', 'rear']);
+        expect(dashManifestModel.getViewpointForAdaptation(adaptationSet).map((viewpoint) => viewpoint.value)).to.deep.equal(['front', 'rear']);
+    });
+
+    it('should keep numeric-looking Viewpoint values as strings', () => {
+        const manifest = `<MPD>
+    <Period>
+        <AdaptationSet>
+            <Viewpoint schemeIdUri="urn:mpeg:dash:viewpoint:2011" value="01"/>
+        </AdaptationSet>
+    </Period>
+</MPD>`;
+        const adaptationSet = dashParser.parse(manifest).Period[0].AdaptationSet[0];
+
+        expect(adaptationSet.Viewpoint[0].value).to.equal('01');
+        expect(dashManifestModel.getViewpointForAdaptation(adaptationSet)[0].value).to.equal('01');
     });
 
     it('should return a parsed Patch object when parse is called with valid patch data', () => {
@@ -166,4 +189,5 @@ describe('DashParser', function () {
 
     });
 })
+
 
