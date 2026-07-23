@@ -134,7 +134,7 @@ describe('DashManifestModel', function () {
             it('should return DescriptorTypes with sanitized value for Role-value set to Main only for MPEG-Role scheme', () => {
                 const adaptation = {
                     Role: [
-                        { schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'Main' },
+                        Object.freeze({ schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'Main' }),
                         { schemeIdUri: 'my.own.scheme', value: 'Main' }]
                 };
                 const rolesArray = dashManifestModel.getRolesForAdaptation(adaptation);
