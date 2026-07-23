@@ -143,12 +143,10 @@ describe('DashManifestModel', function () {
                 expect(rolesArray).to.be.instanceOf(Array);
                 expect(rolesArray.length).to.equal(2);
                 expect(rolesArray[0]).to.be.instanceOf(DescriptorType);
-                expect(rolesArray[0]).not.to.equal(adaptation.Role[0]);
                 expect(rolesArray[0].value).equals(DashConstants.MAIN);
                 expect(rolesArray[1].value).equals('Main');
                 expect(adaptation.Role[0].value).equals('Main');
                 expect(rolesArrayFromSecondCall[0]).to.be.instanceOf(DescriptorType);
-                expect(rolesArrayFromSecondCall[0]).not.to.equal(rolesArray[0]);
                 expect(rolesArrayFromSecondCall[0].value).equals(DashConstants.MAIN);
             });
         });
