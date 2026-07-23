@@ -101,11 +101,13 @@ function C2paValidationCoordinator(config) {
     let instance,
         trackStates,
         sequenceTracker,
+        activeTrackKeyByMediaType,
         enginePromise;
 
     function setup() {
         trackStates = {};
         sequenceTracker = {};
+        activeTrackKeyByMediaType = {};
         enginePromise = null;
     }
 
@@ -118,10 +120,26 @@ function C2paValidationCoordinator(config) {
         if (!segmentInput) {
             return Promise.resolve();
         }
+        _resetAbandonedTrackOnSwitch(segmentInput);
         if (segmentInput.kind === SEGMENT_KIND_INIT) {
             return _handleInitSegment(segmentInput);
         }
         return _handleMediaSegment(segmentInput);
+    }
+
+    /**
+     * ABR can switch the active representation of a media type at any time; each
+     * representation has its own independent sequence/manifest-id chain, so a track that
+     * goes idle while a sibling representation is playing is not a continuity break — it's
+     * simply not being observed. Reset the abandoned track's continuity state on switch so
+     * resuming it later starts a fresh baseline instead of reporting a false gap.
+     */
+    function _resetAbandonedTrackOnSwitch(input) {
+        const previousTrackKey = activeTrackKeyByMediaType[input.mediaType];
+        if (previousTrackKey && previousTrackKey !== input.trackKey) {
+            resetSequenceForTrack(previousTrackKey);
+        }
+        activeTrackKeyByMediaType[input.mediaType] = input.trackKey;
     }
 
     async function _handleInitSegment(input) {
@@ -155,7 +173,10 @@ function C2paValidationCoordinator(config) {
             hasC2pa: method !== null,
             skip: !_forcedMethod() && method === null,
             sequenceState: undefined,
-            lastManifestId: validation ? validation.manifestId : null,
+            // The init segment's own manifest is not part of the media-segment
+            // previousManifestId chain, so the continuity baseline starts unknown; the
+            // first media segment establishes it for the one after it.
+            lastManifestId: null,
             manifestBoxState: undefined
         };
 
@@ -515,6 +536,7 @@ function C2paValidationCoordinator(config) {
     function reset() {
         trackStates = {};
         sequenceTracker = {};
+        activeTrackKeyByMediaType = {};
         enginePromise = null;
     }
 

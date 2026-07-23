@@ -329,7 +329,7 @@ describe('C2paValidationCoordinator', function () {
             expect(events[1].payload.errorCodes).to.deep.equal(['livevideo.continuityMethod.invalid']);
         });
 
-        it('should thread lastManifestId from the init anchor through the chain', async () => {
+        it('should thread lastManifestId across the chain starting from an unknown baseline', async () => {
             const seenLastManifestIds = [];
             const {engine} = createEngine({initValidation: manifestBoxInitValidation()});
             engine.validateC2paManifestBoxSegment = async (bytes, lastManifestId) => {
@@ -347,7 +347,10 @@ describe('C2paValidationCoordinator', function () {
             await coordinator.handleSegment(mediaInput('stream3', 289));
             await coordinator.handleSegment(mediaInput('stream3', 290));
 
-            expect(seenLastManifestIds).to.deep.equal(['urn:c2pa:manifest-0', 'urn:c2pa:manifest-1']);
+            // The init segment's own manifest is not part of the media-segment chain, so the
+            // first media segment a track sees has no baseline to check against (null); the
+            // chain only self-anchors from that segment's own manifest id onward.
+            expect(seenLastManifestIds).to.deep.equal([null, 'urn:c2pa:manifest-1']);
         });
     });
 
@@ -407,6 +410,25 @@ describe('C2paValidationCoordinator', function () {
             await coordinator.handleSegment(mediaInput('stream4', 1000));
 
             expect(segmentStatuses(events)).to.deep.equal([[10, 'valid'], [10, 'valid']]);
+        });
+
+        it('should not report a gap when a track resumes after an ABR switch to a sibling representation', async () => {
+            const {engine} = vsiEngineReturningSequences([10, 999, 50]);
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 1000));
+            await coordinator.handleSegment(initInput('stream4'));
+            await coordinator.handleSegment(mediaInput('stream4', 1000));
+            await coordinator.handleSegment(mediaInput('stream3', 2000));
+
+            // stream3 resumes at 50 (far past its last-seen 10) after the ABR switch to
+            // stream4 and back; it must read as a fresh baseline, not a 39-segment gap.
+            expect(segmentStatuses(events)).to.deep.equal([
+                [10, 'valid'],
+                [999, 'valid'],
+                [50, 'valid']
+            ]);
         });
     });
 
