@@ -1797,7 +1797,8 @@ function MediaPlayer() {
      *  viewpoint: viewpointValue (object:{schemeIdUri,value} or value-primitive),
      *  audioChannelConfiguration: audioChannelConfigurationValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')),
      *  accessibility: accessibilityValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
-     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011'))
+     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
+     *  codec: codecValue (full codec string as exposed in MediaInfo.codec, e.g. 'audio/mp4;codecs="ec-3"', compared with strict equality)
      * }
      *
      * @param {MediaType} type
@@ -1822,7 +1823,8 @@ function MediaPlayer() {
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
      *  accessibility: accessibilityValue,
-     *  role: roleValue}
+     *  role: roleValue,
+     *  codec: codecValue}
      * @param {MediaType} type
      * @returns {Object}
      * @memberof module:MediaPlayer
@@ -2907,6 +2909,9 @@ function MediaPlayer() {
         }
         if (value.accessibility !== undefined) {
             output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+        }
+        if (value.codec !== undefined) {
+            output.codec = value.codec;
         }
 
         return output;

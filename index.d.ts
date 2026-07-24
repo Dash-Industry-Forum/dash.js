@@ -2884,6 +2884,7 @@ export interface AdaptationSetRemovedNoCapabilitiesEvent extends MediaPlayerEven
 export interface MediaSettings {
     accessibility?: any;
     audioChannelConfiguration?: any[];
+    codec?: string;
     lang?: string;
     role?: string;
     viewpoint?: any;
