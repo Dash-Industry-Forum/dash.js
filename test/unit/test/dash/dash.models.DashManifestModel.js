@@ -161,6 +161,23 @@ describe('DashManifestModel', function () {
                         expect(result[1]).not.to.equal(secondDescriptor);
                         expect(element[propertyName]).to.equal(descriptors);
                     });
+
+                    it('should preserve descriptors sharing the same schemeIdUri', () => {
+                        const descriptors = Object.freeze([
+                            Object.freeze({ schemeIdUri: 'test.scheme.shared', value: '1' }),
+                            Object.freeze({ schemeIdUri: 'test.scheme.shared', value: '2' })
+                        ]);
+                        const element = { [propertyName]: descriptors };
+
+                        const result = dashManifestModel[methodName](element);
+
+                        expect(result).to.have.lengthOf(2);
+                        expect(result.map(descriptor => descriptor.schemeIdUri)).to.deep.equal([
+                            'test.scheme.shared',
+                            'test.scheme.shared'
+                        ]);
+                        expect(result.map(descriptor => descriptor.value)).to.deep.equal(['1', '2']);
+                    });
                 });
             });
         });
