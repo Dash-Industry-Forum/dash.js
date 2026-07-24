@@ -78,6 +78,42 @@ var protData = {
 };
 ````
 
+## FairPlay
+
+Apple FairPlay Streaming is supported on Apple platforms (Safari on macOS, iOS and iPadOS). dash.js registers the key
+system under the system string `com.apple.fps` (`urn:uuid:94ce86fb-07ff-4f43-adb8-93d2fa968ca2`). FairPlay protected
+DASH content is typically encrypted using the `cbcs` scheme.
+
+In contrast to Widevine and PlayReady, FairPlay does not use PSSH data from the manifest — the initialization data is
+provided by the platform via the `encrypted` event (`sinf` init data type). If the license server URL and certificate
+are signaled in the MPD (for instance via `dashif:laurl`), playback works without any additional configuration:
+
+```js
+const player = dashjs.MediaPlayer().create();
+player.initialize(video, url, true);
+```
+
+Otherwise, provide the license server URL — and, if required by your DRM provider, the FairPlay server certificate —
+via the protection data:
+
+```js
+const protData = {
+    "com.apple.fps": {
+        "serverURL": "https://fairplay-license.example.com/license",
+        "serverCertificate": "<base64 encoded certificate>"
+    }
+};
+player.setProtectionData(protData);
+```
+
+`serverCertificate` is the Base64 string representation of the DRM certificate. If it is not provided, dash.js
+attempts to download the certificate from the URLs signaled in the `ContentProtection` elements of the MPD. Certificate
+requests and responses can be modified via filters, see the
+[certificate wrapping sample](https://reference.dashif.org/dash.js/nightly/samples/drm/certificate-wrapping.html).
+
+An example is available in
+the [FairPlay sample](https://reference.dashif.org/dash.js/nightly/samples/drm/fairplay.html).
+
 ## DRM specific headers
 
 License servers might require custom headers in order to provide a valid license. dash.js allows the addition of custom

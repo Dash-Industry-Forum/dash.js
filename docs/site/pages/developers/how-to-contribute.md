@@ -11,7 +11,7 @@ testing, project coordination, marketing and more.
 
 For any kind of contribution your first port of call should be to join
 our [mailing list]( https://groups.google.com/d/forum/dashjs) and
-our [Slack channel](https://join.slack.com/t/dashif/shared_invite/zt-egme869x-JH~UPUuLoKJB26fw7wj3Gg). We welcome all
+our [Slack channel](https://join.slack.com/t/dashif/shared_invite/zt-191r8cjva-4bu_5_SJ1U~d_oltjqWkEQ). We welcome all
 contributions (including asking questions which demonstrate our documentation needs to be improved).
 
 The dash.js project serves as the reference player for the DASH Industry Forum. Respecting this, if you wish to

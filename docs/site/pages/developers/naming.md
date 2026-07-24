@@ -46,4 +46,4 @@ Examples:
 ## References
 
 1. [Naming Things](https://www.amazon.com/Naming-Things-Hardest-Software-Engineering/dp/B0BTLYZWRL) by Tom Benner
-2. [Clean Cod A handbook for agile Software craftsmanship](https://a.co/d/d4pJl9s) by Robert C. Martin 
+2. [Clean Code: A Handbook of Agile Software Craftsmanship](https://www.informit.com/store/clean-code-a-handbook-of-agile-software-craftsmanship-9780132350884) by Robert C. Martin

@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Quickstart
-      link: /pages/quickstart/index
+      link: /pages/quickstart/
     - theme: alt
       text: Reference Player
       link: https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html
@@ -23,7 +23,7 @@ features:
   - icon: 🎬
     title: MPEG-DASH Playback
     details: Spec-compliant DASH playback built on the Media Source Extensions, for VoD and live content.
-    link: /pages/usage/index
+    link: /pages/usage/
   - icon: ⚡
     title: Low Latency Streaming
     details: CMAF low-latency streaming with configurable catchup mechanisms and latency targets.
@@ -31,7 +31,7 @@ features:
   - icon: 📈
     title: Adaptive Bitrate Algorithms
     details: Multiple pluggable ABR rules including BOLA, L2A and LoL+, plus support for custom rules.
-    link: /pages/usage/abr/index
+    link: /pages/usage/abr/
   - icon: 🔐
     title: DRM Support
     details: Playback of protected content via the Encrypted Media Extensions — Widevine, PlayReady and more.
@@ -39,11 +39,11 @@ features:
   - icon: 💬
     title: Subtitles & Captions
     details: TTML, IMSC, WebVTT and CEA-608/708 rendering, including DVB font downloading.
-    link: /pages/usage/subtitles-and-captions/index
+    link: /pages/usage/subtitles-and-captions/
   - icon: 🧩
     title: Extensible Architecture
     details: Modular design with dependency injection — extend or replace almost any internal component.
-    link: /pages/developers/architecture
+    link: /pages/developers/architecture/
 ---
 
 ## Which branch should I use?
@@ -84,7 +84,7 @@ Multiple examples how to use dash.js in your TypeScript or Webpack based JavaScr
 
 The full [API Documentation](https://cdn.dashjs.org/latest/jsdoc/index.html) describes all public methods, interfaces, properties, and events.
 
-For help, join the [#dashjs Slack channel](https://join.slack.com/t/dashif/shared_invite/zt-egme869x-JH~UPUuLoKJB26fw7wj3Gg), our [email list](https://groups.google.com/d/forum/dashjs) and read the documentation on this website.
+For help, join the [#dashjs Slack channel](https://join.slack.com/t/dashif/shared_invite/zt-191r8cjva-4bu_5_SJ1U~d_oltjqWkEQ), our [email list](https://groups.google.com/d/forum/dashjs) and read the documentation on this website.
 
 ## License
 

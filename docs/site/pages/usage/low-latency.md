@@ -551,7 +551,7 @@ dash.js has two low latency specific algorithms [LoL+](abr/lol_plus.html) and [L
 ### Articles
 
 * [Daniel Silhavy - dash.js – Low Latency Streaming with CMAF](https://websites.fraunhofer.de/video-dev/dash-js-low-latency-streaming-with-cmaf/)
-* [Will Law - Using LL-HLS with byte-range addressing to achieve interoperability in low latency streaming](https://blogs.akamai.com/2020/11/using-ll-hls-with-byte-range-addressing-to-achieve-interoperability-in-low-latency-streaming.html)
+* [Will Law - Using LL-HLS with byte-range addressing to achieve interoperability in low latency streaming](https://web.archive.org/web/2021/https://blogs.akamai.com/2020/11/using-ll-hls-with-byte-range-addressing-to-achieve-interoperability-in-low-latency-streaming.html)
 
 ### Videos
 

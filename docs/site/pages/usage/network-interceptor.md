@@ -59,4 +59,4 @@ example demonstrates how to intercept network requests:
         }
 ````
 
-A fully working example can be found in our [sample section](https://reference.dashif.org/dash.js/nightly/samples/advanced/network-interceptor.html).
+A fully working example can be found in our [sample section](https://reference.dashif.org/dash.js/nightly/samples/network-interceptor/index.html).

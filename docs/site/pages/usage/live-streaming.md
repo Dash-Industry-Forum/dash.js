@@ -61,3 +61,20 @@ player.updateSettings({
 An example illustrating how to synchronize multiple players is available in
 the [live section](https://reference.dashif.org/dash.js/nightly/samples/live-streaming/synchronized-live-playback.html)
 of the dash.js sample page.
+
+## Dynamic to static transition
+
+A live stream can end and be converted into an on-demand presentation: the MPD changes its type from `dynamic` to
+`static`. dash.js handles this transition automatically — the duration becomes finite and the presentation behaves
+like VoD content. To get notified about the transition, subscribe to the `DYNAMIC_TO_STATIC` event:
+
+````js
+player.on(dashjs.MediaPlayer.events.DYNAMIC_TO_STATIC, () => {
+    console.log('MPD changed from dynamic to static, final duration:', player.duration());
+});
+````
+
+`player.isDynamic()` returns `false` once the static MPD has been applied.
+
+An example is available in
+the [dynamic to static sample](https://reference.dashif.org/dash.js/nightly/samples/live-streaming/dynamic-to-static.html).

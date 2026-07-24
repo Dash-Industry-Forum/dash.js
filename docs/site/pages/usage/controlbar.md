@@ -3,67 +3,122 @@ title: Controlbar
 ---
 
 # Controlbar
-dash.js ships with an implementation of a controlbar implementing the various APIs of the player (see screenshot below).
-It is located in `contrib/akamai/controlbar`.
 
-![controlbar](/assets/images/controlbar.jpg)
+dash.js ships with a self-contained, reusable control bar located in `contrib/controlbar`. It generates its own DOM
+structure, so you only need to provide a wrapper element. The control bar implements the various APIs of the player —
+play/pause, seeking, volume, live edge, bitrate and track selection — and is used by the
+[DASH-IF Reference Player](https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html).
 
 ## Example
-An example is available as part of the [sample section](https://reference.dashif.org/dash.js/nightly/samples/getting-started/controlbar.html).
+
+An example is available as part of the
+[sample section](https://reference.dashif.org/dash.js/nightly/samples/getting-started/controlbar.html).
+
+## Prerequisites
+
+- **dash.js** loaded (the global `dashjs` object must be available)
+- **Bootstrap Icons** CSS for icon display:
+
+```html
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1/font/bootstrap-icons.min.css" rel="stylesheet">
+```
 
 ## Usage
-To use the Akamai Controlbar in your application include the Javascript and the CSS file and add the required control elements to the DOM. In addition, make sure 
-to initialize an instance of the controlbar after you have initialized the player.
 
-````xml
-<script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
-<link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
-<script>
-    function init() {
-        var url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
-        var videoElement = document.querySelector('.videoContainer video');
-        var player = dashjs.MediaPlayer().create();
+Include the control bar CSS:
 
-        player.initialize(videoElement, url, true);
-        var controlbar = new ControlBar(player);
-        controlbar.initialize();
-    }
-</script>
-<div class="dash-video-player ">
-    <div class="videoContainer" id="videoContainer">
-        <video preload="auto" autoplay=""></video>
-        <div id="videoController" class="video-controller unselectable">
-            <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
-                <span id="iconPlayPause" class="icon-play"></span>
-            </div>
-            <span id="videoTime" class="time-display">00:00:00</span>
-            <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
-                <span class="icon-fullscreen-enter"></span>
-            </div>
-            <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
-                <span class="icon-bitrate"></span>
-            </div>
-            <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01">
-            <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
-                <span id="iconMute" class="icon-mute-off"></span>
-            </div>
-            <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
-                <span class="icon-tracks"></span>
-            </div>
-            <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
-                <span class="icon-caption"></span>
-            </div>
-            <span id="videoDuration" class="duration-display">00:00:00</span>
-            <div class="seekContainer">
-                <div id="seekbar" class="seekbar seekbar-complete">
-                    <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
-                    <div id="seekbar-play" class="seekbar seekbar-play"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+```html
+<link rel="stylesheet" href="path/to/contrib/controlbar/controlbar.css">
+```
+
+Provide a wrapper element in your HTML (must have `position: relative`):
+
+```html
+<div id="video-wrapper" style="position: relative;">
+    <video id="video-element"></video>
 </div>
-````
+```
 
+Import and initialize the control bar as an ES module after initializing the player:
 
+```js
+import { ControlBar } from 'path/to/contrib/controlbar/ControlBar.js';
 
+const player = dashjs.MediaPlayer().create();
+const video = document.getElementById('video-element');
+player.initialize(video, url, true);
+
+const controlbar = new ControlBar(player, video);
+controlbar.init(document.getElementById('video-wrapper'));
+controlbar.enable();
+```
+
+## API
+
+```js
+new ControlBar(player, videoElement)
+```
+
+| Parameter      | Type                      | Description                                    |
+|:---------------|:--------------------------|:-----------------------------------------------|
+| `player`       | `dashjs.MediaPlayerClass` | A dash.js MediaPlayer instance                 |
+| `videoElement` | `HTMLVideoElement`        | The `<video>` element managed by the player    |
+
+| Method            | Description                                                                                                                       |
+|:------------------|:----------------------------------------------------------------------------------------------------------------------------------|
+| `init(wrapper)`   | Build the DOM and inject it into the given wrapper element (or CSS selector string). The wrapper should have `position: relative`. |
+| `enable()`        | Enable the control bar (interactive).                                                                                              |
+| `disable()`       | Disable the control bar (non-interactive, dimmed).                                                                                 |
+| `reset()`         | Reset state (call before loading a new stream).                                                                                    |
+| `setMuted(muted)` | Set the muted visual state (`true` / `false`). Does **not** touch the player — use `syncMuteState()` for that.                     |
+| `syncMuteState()` | Re-apply the control bar's current volume/mute state to the player. Call after attaching a new source.                             |
+| `destroy()`       | Remove all event listeners and remove the control bar DOM from the page.                                                           |
+
+## Typical lifecycle
+
+```js
+// Create
+const cb = new ControlBar(player, video);
+cb.init('#video-wrapper');
+cb.disable();
+
+// On stream initialized
+cb.enable();
+
+// Before loading a new stream
+cb.reset();
+cb.disable();
+
+// After loading
+cb.syncMuteState();
+
+// On stream initialized again
+cb.enable();
+
+// Cleanup
+cb.destroy();
+```
+
+## Theming
+
+The control bar defines two CSS custom properties with sensible defaults:
+
+| Variable      | Default   | Description                                     |
+|:--------------|:----------|:------------------------------------------------|
+| `--cb-accent` | `#5b8def` | Accent colour (seekbar played, menu highlights)  |
+| `--cb-danger` | `#e74c3c` | Danger colour (live-edge indicator)              |
+
+Override them on the `.cb-controlbar` selector or any ancestor:
+
+```css
+.cb-controlbar {
+    --cb-accent: #1a73c9;
+    --cb-danger: #e74c3c;
+}
+```
+
+## Legacy controlbar
+
+The older Akamai control bar is still available at `contrib/akamai/controlbar/` for legacy integrations that use
+`<script>` tags instead of ES modules. It requires you to provide the full control bar DOM yourself and is initialized
+via `new ControlBar(player)` + `controlbar.initialize()`.

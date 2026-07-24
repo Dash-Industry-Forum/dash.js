@@ -149,6 +149,32 @@ You can also import dash.js as an ES module:
 </html>
 ```
 
+## NPM
+
+dash.js is available on [npm](https://www.npmjs.com/package/dashjs). Install it as a dependency of your project:
+
+```bash
+npm install dashjs
+```
+
+In projects that use a module bundler (Webpack, Vite, Rollup, ...) you can then import dash.js directly. The package
+resolves to the modern ESM bundle:
+
+```javascript
+import { MediaPlayer } from 'dashjs';
+
+const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+const player = MediaPlayer().create();
+player.initialize(document.querySelector('video'), url, true);
+```
+
+To play Microsoft Smooth Streaming content, additionally import the MSS module via the `dashjs/mss` subpath:
+
+```javascript
+import { MediaPlayer } from 'dashjs';
+import 'dashjs/mss';
+```
+
 ## Typescript and Webpack
 
 You can also use dash.js in your Typescript or Webpack based JavaScript project. Multiple examples can be found in the

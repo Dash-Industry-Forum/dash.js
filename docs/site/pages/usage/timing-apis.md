@@ -88,3 +88,49 @@ player.initialize(video, url, false);
 var dvrWindowEnd = player.getDvrWindow().end
 player.seekToPresentationTime(dvrWindowEnd - 20);
 ````
+
+## Setting a start time
+
+By default, playback starts at the beginning of a VoD presentation and at the live edge (minus the live delay) for
+live presentations. To start at a different position, pass a start time as the second parameter of `attachSource()`:
+
+````js
+player.initialize();
+player.attachView(video);
+player.attachSource(url, starttime);
+````
+
+The interpretation of `starttime` depends on the type of content:
+
+- **VoD**: the start time is relative to the start of the first period, in seconds.
+- **Live**:
+    - With the `posix:` prefix the value signifies an absolute time in seconds of Coordinated Universal Time (number
+      of seconds since 01-01-1970 00:00:00 UTC). Fractions of seconds may be specified down to the millisecond level:
+      `player.attachSource(url, 'posix:1696243200')`.
+    - Without the `posix:` prefix the start time is relative to `MPD@availabilityStartTime`.
+
+For example, to start playback 60 seconds behind the current wall clock time:
+
+````js
+const starttime = new Date().getTime() / 1000 - 60;
+player.attachSource(url, `posix:${starttime}`);
+````
+
+An example is available in
+the [start time sample](https://reference.dashif.org/dash.js/nightly/samples/advanced/load-with-starttime.html).
+
+## MPD anchors
+
+Alternatively, the start time can be signaled directly in the MPD URL using an MPD anchor as defined in Annex C.4 of
+the DASH specification. dash.js parses the anchor and starts playback at the requested position:
+
+````js
+// start playback at second 60
+const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd#t=60';
+player.initialize(video, url, true);
+````
+
+For live streams, `#t=posix:...` is supported analogously to the `attachSource()` syntax described above.
+
+An example is available in
+the [MPD anchor sample](https://reference.dashif.org/dash.js/nightly/samples/advanced/mpd-anchors.html).

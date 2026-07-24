@@ -16,7 +16,7 @@ An external implementation of the MSE classes MediaSource and SourceBuffer is pr
 
 ## Sample player
 
-An example player is available at [https://reference.dashif.org/dash.js/nightly/samples/lcevc-dual-track/lcevc-dual-track.html](https://reference.dashif.org/dash.js/nightly/samples/lcevc-dual-track/lcevc-dual-track.html)
+An example player is available at [https://reference.dashif.org/dash.js/nightly/samples/lcevc/lcevc-dual-track.html](https://reference.dashif.org/dash.js/nightly/samples/lcevc/lcevc-dual-track.html)
 
 ## Manifest format
 

@@ -249,5 +249,5 @@ player.updateSettings({
 
 ## References
 
-* [1] [DASH-IF Implementation Guidelines](https://dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#clock-sync)
+* [1] [DASH-IF Implementation Guidelines](https://dashif.org/Guidelines-TimingModel/#clock-sync)
 * [2] [DASH-IF IOP Guidelines](https://dash-industry-forum.github.io/docs/DASH-IF-IOP-v4.3.pdf)
