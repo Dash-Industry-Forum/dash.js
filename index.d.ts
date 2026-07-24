@@ -2885,7 +2885,7 @@ export interface MediaSettings {
     accessibility?: { schemeIdUri?: string, value?: string } | string;
     audioChannelConfiguration?: { schemeIdUri?: string, value?: string } | string;
     codec?: string;
-    id?: string;
+    id?: string | number,
     index?: number;
     lang?: string | RegExp;
     role?: { schemeIdUri?: string, value?: string } | string;
