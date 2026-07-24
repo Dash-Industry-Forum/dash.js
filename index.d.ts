@@ -2882,12 +2882,14 @@ export interface AdaptationSetRemovedNoCapabilitiesEvent extends MediaPlayerEven
 }
 
 export interface MediaSettings {
-    accessibility?: any;
-    audioChannelConfiguration?: any[];
+    accessibility?: { schemeIdUri?: string, value?: string } | string;
+    audioChannelConfiguration?: { schemeIdUri?: string, value?: string } | string;
     codec?: string;
-    lang?: string;
-    role?: string;
-    viewpoint?: any;
+    id?: string;
+    index?: number;
+    lang?: string | RegExp;
+    role?: { schemeIdUri?: string, value?: string } | string;
+    viewpoint?: { schemeIdUri?: string, value?: string } | string;
 }
 
 export class serviceDescriptions {
