@@ -1790,17 +1790,23 @@ function MediaPlayer() {
     }
 
     /**
-     * This method allows to set media settings that will be used to pick the initial track. Format of the settings
-     * is following: <br />
-     * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
-     *  index: indexValue,
-     *  viewpoint: viewpointValue (object:{schemeIdUri,value} or value-primitive),
-     *  audioChannelConfiguration: audioChannelConfigurationValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')),
-     *  accessibility: accessibilityValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
-     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
-     *  codec: codecValue (full codec string as exposed in MediaInfo.codec, e.g. 'audio/mp4;codecs="ec-3"', compared with strict equality)
-     * }
+     * This method allows to set media settings that will be used to pick the initial track. The settings object supports the following properties:
+     * <ul>
+     * <li><code>lang</code>: a string primitive, a string object, or a RegExp object to match</li>
+     * <li><code>index</code>: the index of the track</li>
+     * <li><code>viewpoint</code>: object <code>{schemeIdUri, value}</code> or value-primitive</li>
+     * <li><code>audioChannelConfiguration</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')</li>
+     * <li><code>accessibility</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+     * <li><code>role</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+     * <li><code>codec</code>: full codec string as exposed in MediaInfo.codec, e.g. <code>'audio/mp4;codecs="ec-3"'</code>, compared with strict equality</li>
+     * </ul>
      *
+     * @example
+     * player.setInitialMediaSettingsFor('audio', {
+     *     lang: 'de',
+     *     role: 'main',
+     *     codec: 'audio/mp4;codecs="ec-3"'
+     * });
      * @param {MediaType} type
      * @param {Object} value
      * @memberof module:MediaPlayer
@@ -1816,15 +1822,19 @@ function MediaPlayer() {
     }
 
     /**
-     * This method returns media settings that is used to pick the initial track. Format of the settings
-     * is following:
-     * {lang: langValue,
-     *  index: indexValue,
-     *  viewpoint: viewpointValue,
-     *  audioChannelConfiguration: audioChannelConfigurationValue,
-     *  accessibility: accessibilityValue,
-     *  role: roleValue,
-     *  codec: codecValue}
+     * This method returns the media settings that are used to pick the initial track.
+     *
+     * @example
+     * // Returned object has the following format:
+     * {
+     *     lang: langValue,
+     *     index: indexValue,
+     *     viewpoint: viewpointValue,
+     *     audioChannelConfiguration: audioChannelConfigurationValue,
+     *     accessibility: accessibilityValue,
+     *     role: roleValue,
+     *     codec: codecValue
+     * }
      * @param {MediaType} type
      * @returns {Object}
      * @memberof module:MediaPlayer
