@@ -371,6 +371,19 @@
                 ]
             },
             {
+                "title": "Fairplay DRM with external certificate URL",
+                "description": "Shows how to play Fairplay DRM protected streams with a certificate server URL provided via the API instead of the MPD.",
+                "href": "drm/fairplay-external-certificate-url.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Fairplay",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "ClearKey DRM",
                 "description": "Shows how to use dash.js to play streams with ClearKey DRM protection.",
                 "href": "drm/clearkey.html",
