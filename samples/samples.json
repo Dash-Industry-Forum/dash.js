@@ -957,6 +957,23 @@
         ]
     },
     {
+        "section": "hevc.js",
+        "samples": [
+            {
+                "title": "Play HEVC streams in any browser",
+                "description": "Play HEVC (H.265) DASH streams in dash.js on browsers without native HEVC support — Firefox, Chrome on Linux/Windows, etc. The @hevcjs/dashjs-plugin transcodes HEVC samples to H.264 in a Web Worker (WASM + WebCodecs), transparently to dash.js.",
+                "href": "hevc/hevc-playback.html",
+                "image": "hevc/preview.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio",
+                    "HEVC"
+                ]
+            }
+        ]
+    },
+    {
         "section": "Builds",
         "samples": [
             {
