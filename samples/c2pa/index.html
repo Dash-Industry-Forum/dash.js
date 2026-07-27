@@ -50,6 +50,7 @@
         .c2pa-chip.replayed,
         .c2pa-chip.reordered,
         .c2pa-chip.missing { background: #ef6c00; }
+        .c2pa-chip.continuityInvalid { background: #ad1457; }
         .c2pa-chip.unverified { background: #757575; }
         .c2pa-details {
             margin-top: 12px;
@@ -70,12 +71,13 @@
     // enables the off-by-default `streaming.c2pa` capability, lets the operator pick the
     // signing method at runtime, and renders a per-segment provenance indicator.
     var STATUS_ICONS = {
-        valid: '✅',      // check mark
-        invalid: '❌',    // cross mark
-        replayed: '♻',   // recycle
-        reordered: '⇅',  // up-down arrows
-        missing: '⁉',    // gap
-        unverified: '❔'  // question mark
+        valid: '✅',            // check mark
+        invalid: '❌',          // cross mark
+        replayed: '♻',         // recycle
+        reordered: '⇅',        // up-down arrows
+        missing: '⁉',          // gap
+        continuityInvalid: '🔗', // broken/unrecognized continuity link, hash still valid
+        unverified: '❔'        // question mark
     };
 
     var player = null;

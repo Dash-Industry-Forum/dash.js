@@ -40,7 +40,13 @@ const STATUS_REPLAYED = 'replayed';
 const STATUS_REORDERED = 'reordered';
 const STATUS_MISSING = 'missing';
 const STATUS_UNVERIFIED = 'unverified';
+const STATUS_CONTINUITY_INVALID = 'continuityInvalid';
 const SEQUENCE_OK = 'ok';
+
+const MANIFEST_BOX_CONTINUITY_CODES = [
+    'livevideo.continuityMethod.invalid',
+    'livevideo.continuityMethod.unsupported'
+];
 
 // dash.js-side diagnostic codes (not CML codes).
 // Emitted when a forced method does not match a segment's actual structure (AC#12).
@@ -401,19 +407,29 @@ function C2paValidationCoordinator(config) {
 
     function _toManifestBoxSegmentRecord(input, outcome) {
         const result = outcome.result;
+        const errorCodes = _mapErrorCodes(result.errorCodes);
         return {
             segmentNumber: _sequenceNumberOf(result, input),
             mediaType: input.mediaType,
             method: C2PA_METHOD_MANIFEST_BOX,
-            status: result.isValid ? STATUS_VALID : STATUS_INVALID,
+            status: _manifestBoxStatus(result.isValid, errorCodes),
             keyId: null,
             hash: result.bmffHashHex,
             manifestId: outcome.nextManifestId,
             issuer: result.issuer,
             previousManifestId: result.previousManifestId,
-            errorCodes: _mapErrorCodes(result.errorCodes),
+            errorCodes,
             timestamp: Date.now()
         };
+    }
+
+    function _manifestBoxStatus(isValid, errorCodes) {
+        if (isValid) {
+            return STATUS_VALID;
+        }
+        const isContinuityOnly = errorCodes.length > 0 &&
+            errorCodes.every((code) => MANIFEST_BOX_CONTINUITY_CODES.indexOf(code) !== -1);
+        return isContinuityOnly ? STATUS_CONTINUITY_INVALID : STATUS_INVALID;
     }
 
     function _toVsiSegmentRecord(input, result, state) {

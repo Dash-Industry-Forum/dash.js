@@ -337,7 +337,7 @@ describe('C2paValidationCoordinator', function () {
             expect(record.payload.keyId).to.be.null;
         });
 
-        it('should emit invalid with the CML error code for a broken manifest-id chain', async () => {
+        it('should report a distinct continuityInvalid status for a broken manifest-id chain', async () => {
             const {engine} = createEngine({
                 initValidation: manifestBoxInitValidation(),
                 manifestBoxOutcome: manifestBoxOutcomeFor({
@@ -352,8 +352,49 @@ describe('C2paValidationCoordinator', function () {
             await coordinator.handleSegment(initInput('stream3'));
             await coordinator.handleSegment(mediaInput('stream3', 289));
 
-            expect(events[1].payload.status).to.equal('invalid');
+            // The content hash itself matched — a broken/unsupported continuity method
+            // doesn't mean the segment's bytes were tampered with, so it gets its own
+            // status instead of the generic 'invalid'.
+            expect(events[1].payload.status).to.equal('continuityInvalid');
             expect(events[1].payload.errorCodes).to.deep.equal(['livevideo.continuityMethod.invalid']);
+        });
+
+        it('should report the same continuityInvalid status for an unsupported custom continuity method', async () => {
+            const {engine} = createEngine({
+                initValidation: manifestBoxInitValidation(),
+                manifestBoxOutcome: manifestBoxOutcomeFor({
+                    isValid: false,
+                    errorCodes: ['livevideo.continuityMethod.invalid', 'livevideo.continuityMethod.unsupported'],
+                    previousManifestId: null,
+                    nextManifestId: 'urn:c2pa:manifest-1'
+                })
+            });
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(events[1].payload.status).to.equal('continuityInvalid');
+        });
+
+        it('should keep the generic invalid status when a content-hash failure is also present', async () => {
+            const {engine} = createEngine({
+                initValidation: manifestBoxInitValidation(),
+                manifestBoxOutcome: manifestBoxOutcomeFor({
+                    isValid: false,
+                    errorCodes: ['livevideo.continuityMethod.invalid', 'livevideo.segment.invalid'],
+                    previousManifestId: 'urn:c2pa:unexpected',
+                    nextManifestId: 'urn:c2pa:manifest-1'
+                })
+            });
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            // A genuine content-hash failure is present too, so this is not purely a
+            // continuity problem — it stays 'invalid', not 'continuityInvalid'.
+            expect(events[1].payload.status).to.equal('invalid');
         });
 
         it('should thread lastManifestId across the chain starting from an unknown baseline', async () => {
