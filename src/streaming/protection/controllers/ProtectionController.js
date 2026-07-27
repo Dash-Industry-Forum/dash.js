@@ -939,8 +939,8 @@ function ProtectionController(config) {
      * @ignore
      */
     function setProtectionData(data) {
-        applicationProvidedProtectionData = data;
-        protectionKeyController.setProtectionData(data);
+        applicationProvidedProtectionData = CertUrlUtils.sanitizeProtectionDataCertUrls(data);
+        protectionKeyController.setProtectionData(applicationProvidedProtectionData);
     }
 
     /**
