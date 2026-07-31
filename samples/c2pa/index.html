@@ -232,7 +232,7 @@
             'pick the signing method (auto / §19.3 Manifest Box / §19.4 VSI), and load a signed ' +
             'stream to see a per-segment ✅ / ❌ / ⚠ indicator; click a segment for its manifest id, ' +
             'issuer and error codes. Enable/disable and method changes take effect at runtime. Requires a ' +
-            'C2PA-signed DASH stream (e.g. the c2pa-live-video-toolkit pipeline output).',
+            'C2PA-signed DASH stream (e.g. §19.3 segments signed with c2patool, or a custom §19.4 VSI signer).',
         category: 'C2PA',
         sidePanel: sidePanel,
         onInit: (video, container, wrapper) => initC2paSample(video, wrapper)
