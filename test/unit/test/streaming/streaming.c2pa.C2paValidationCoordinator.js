@@ -359,7 +359,7 @@ describe('C2paValidationCoordinator', function () {
             expect(events[1].payload.errorCodes).to.deep.equal(['livevideo.continuityMethod.invalid']);
         });
 
-        it('should report the same continuityInvalid status for an unsupported custom continuity method', async () => {
+        it('should report a distinct continuityUnsupported status for an unsupported custom continuity method', async () => {
             const {engine} = createEngine({
                 initValidation: manifestBoxInitValidation(),
                 manifestBoxOutcome: manifestBoxOutcomeFor({
@@ -374,7 +374,8 @@ describe('C2paValidationCoordinator', function () {
             await coordinator.handleSegment(initInput('stream3'));
             await coordinator.handleSegment(mediaInput('stream3', 289));
 
-            expect(events[1].payload.status).to.equal('continuityInvalid');
+            expect(events[1].payload.status).to.equal('continuityUnsupported');
+            expect(events[1].payload.errorCodes).to.deep.equal(['livevideo.continuityMethod.invalid', 'livevideo.continuityMethod.unsupported']);
         });
 
         it('should keep the generic invalid status when a content-hash failure is also present', async () => {
