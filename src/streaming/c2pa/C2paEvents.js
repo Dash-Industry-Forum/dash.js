@@ -47,7 +47,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 /**
  * The provenance status assigned to a media segment.
- * @typedef {('valid'|'invalid'|'replayed'|'reordered'|'missing'|'unverified')} C2paSegmentStatus
+ * @typedef {('valid'|'invalid'|'replayed'|'reordered'|'missing'|'continuityInvalid'|'continuityUnsupported'|'unverified')} C2paSegmentStatus
  */
 
 /**

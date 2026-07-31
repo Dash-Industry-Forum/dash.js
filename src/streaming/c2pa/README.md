@@ -61,11 +61,14 @@ player.updateSettings({
   gap detected in the signed sequence). Payload: `{ segmentNumber, mediaType, method,
   status, keyId, hash, manifestId, issuer, previousManifestId, errorCodes, timestamp }`.
   `status` is one of `valid`, `invalid`, `replayed`, `reordered`, `missing`,
-  `continuityInvalid`, `unverified`. `continuityInvalid` is ManifestBox-only (§19.3): the
-  segment's own content hash matched (it's authentic, not tampered) but its continuity
-  link to the previous segment is broken or uses a `continuityMethod` this build doesn't
-  recognize (see `livevideo.continuityMethod.unsupported`) — distinct from a generic
-  `invalid`, which always includes a content-hash or other structural failure.
+  `continuityInvalid`, `continuityUnsupported`, `unverified`. Both are ManifestBox-only
+  (§19.3): in each case the segment's own content hash matched (it's authentic, not
+  tampered), but its continuity link to the previous segment could not be confirmed,
+  distinct from a generic `invalid`, which always includes a content-hash or other
+  structural failure. `continuityInvalid` means the link itself is broken
+  (`livevideo.continuityMethod.invalid`); `continuityUnsupported` means the segment uses a
+  `continuityMethod` this build doesn't recognize (`livevideo.continuityMethod.unsupported`),
+  so continuity simply couldn't be evaluated either way.
 - **`C2PA_ERROR`** — emitted alongside an `unverified` segment record when the engine
   throws unexpectedly or Web Crypto is unavailable. Payload: `{ trackKey, segmentNumber,
   mediaType, errorCodes, message, timestamp }`.

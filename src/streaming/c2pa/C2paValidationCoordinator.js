@@ -41,11 +41,14 @@ const STATUS_REORDERED = 'reordered';
 const STATUS_MISSING = 'missing';
 const STATUS_UNVERIFIED = 'unverified';
 const STATUS_CONTINUITY_INVALID = 'continuityInvalid';
+const STATUS_CONTINUITY_UNSUPPORTED = 'continuityUnsupported';
 const SEQUENCE_OK = 'ok';
 
+const CONTINUITY_METHOD_INVALID_CODE = 'livevideo.continuityMethod.invalid';
+const CONTINUITY_METHOD_UNSUPPORTED_CODE = 'livevideo.continuityMethod.unsupported';
 const MANIFEST_BOX_CONTINUITY_CODES = [
-    'livevideo.continuityMethod.invalid',
-    'livevideo.continuityMethod.unsupported'
+    CONTINUITY_METHOD_INVALID_CODE,
+    CONTINUITY_METHOD_UNSUPPORTED_CODE
 ];
 
 // dash.js-side diagnostic codes (not CML codes).
@@ -429,7 +432,12 @@ function C2paValidationCoordinator(config) {
         }
         const isContinuityOnly = errorCodes.length > 0 &&
             errorCodes.every((code) => MANIFEST_BOX_CONTINUITY_CODES.indexOf(code) !== -1);
-        return isContinuityOnly ? STATUS_CONTINUITY_INVALID : STATUS_INVALID;
+        if (!isContinuityOnly) {
+            return STATUS_INVALID;
+        }
+        return errorCodes.indexOf(CONTINUITY_METHOD_UNSUPPORTED_CODE) !== -1
+            ? STATUS_CONTINUITY_UNSUPPORTED
+            : STATUS_CONTINUITY_INVALID;
     }
 
     function _toVsiSegmentRecord(input, result, state) {

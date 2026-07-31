@@ -51,6 +51,7 @@
         .c2pa-chip.reordered,
         .c2pa-chip.missing { background: #ef6c00; }
         .c2pa-chip.continuityInvalid { background: #ad1457; }
+        .c2pa-chip.continuityUnsupported { background: #f9a825; color: #000; }
         .c2pa-chip.unverified { background: #757575; }
         .c2pa-details {
             margin-top: 12px;
@@ -76,8 +77,14 @@
         replayed: '♻',         // recycle
         reordered: '⇅',        // up-down arrows
         missing: '⁉',          // gap
-        continuityInvalid: '🔗', // broken/unrecognized continuity link, hash still valid
+        continuityInvalid: '🔗', // broken continuity link, hash still valid
+        continuityUnsupported: '⚠', // unrecognized continuity method, hash still valid
         unverified: '❔'        // question mark
+    };
+
+    var STATUS_MESSAGES = {
+        continuityUnsupported: 'Continuity method cannot be validated: only the spec-defined continuity ' +
+            'method (manifest ID chain, §19.7.2) is supported. The segment\'s content hash is valid.'
     };
 
     var player = null;
@@ -182,7 +189,9 @@
     }
 
     function showDetails(record) {
-        document.getElementById('c2pa-details').textContent = JSON.stringify(record, null, 2);
+        var message = STATUS_MESSAGES[record.status];
+        var json = JSON.stringify(record, null, 2);
+        document.getElementById('c2pa-details').textContent = message ? (message + '\n\n' + json) : json;
     }
 
     function setSummary(text) {
@@ -221,7 +230,7 @@
         title: 'C2PA provenance validation',
         description: 'Validates C2PA provenance of a live DASH stream per segment. Enable checking, ' +
             'pick the signing method (auto / §19.3 Manifest Box / §19.4 VSI), and load a signed ' +
-            'stream to see a per-segment ✅ / ❌ indicator; click a segment for its manifest id, ' +
+            'stream to see a per-segment ✅ / ❌ / ⚠ indicator; click a segment for its manifest id, ' +
             'issuer and error codes. Enable/disable and method changes take effect at runtime. Requires a ' +
             'C2PA-signed DASH stream (e.g. the c2pa-live-video-toolkit pipeline output).',
         category: 'C2PA',
