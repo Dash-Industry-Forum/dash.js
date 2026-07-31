@@ -36,7 +36,7 @@
     "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
     "lint": "eslint \"src/**/*.js\" \"test/unit/mocks/*.js\" \"test/unit/test/**/*.js\"",
     "prebuild": "npm run ci:verify",
-    "prepack": "npm run build",
+    "prepack": "npm run build:dist",
     "prepare": "node githook.cjs",
     "start": "webpack serve --config build/webpack/modern/webpack.modern.dev.cjs",
     "test": "karma start test/unit/config/karma.unit.conf.cjs",
@@ -45,6 +45,7 @@
     "test:compliance:esm": "es-check es2021 \"dist/modern/esm/*.js\" --module",
     "test:compliance:package": "publint",
     "test:compliance:vite": "npm --prefix test/compliance/vite-consumer install --no-audit --no-fund && npm --prefix test/compliance/vite-consumer run build",
+    "test:package": "node test/package/verify-package.mjs",
     "test-refplayer": "karma start test/unit/config/karma.unit.conf.cjs --grep \"Reference Player\"",
     "test-functional": "karma start test/functional/config/karma.functional.conf.cjs --configfile=local --streamsfile=smoke",
     "webpack-build-legacy": "webpack --config build/webpack/legacy/webpack.legacy.prod.cjs",
@@ -123,6 +124,7 @@
     "index.d.ts",
     "dist",
     "contrib/akamai",
+    "contrib/controlbar",
     "contrib/videojs-vtt.js/vtt.min.js"
   ],
   "keywords": [
