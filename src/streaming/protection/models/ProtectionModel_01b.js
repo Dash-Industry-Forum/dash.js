@@ -46,6 +46,7 @@ import KeySystemAccess from '../vo/KeySystemAccess.js';
 import ProtectionErrors from '../errors/ProtectionErrors.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import Utils from '../../../core/Utils.js';
 
 function ProtectionModel_01b(config) {
 
@@ -222,7 +223,7 @@ function ProtectionModel_01b(config) {
             const newSession = { // Implements SessionToken
                 sessionId: null,
                 keyId: ksInfo.keyId,
-                normalizedKeyId: ksInfo && ksInfo.keyId && typeof ksInfo.keyId === 'string' ? ksInfo.keyId.replace(/-/g, '').toLowerCase() : '',
+                normalizedKeyId: Utils.normalizeKeyId(ksInfo && ksInfo.keyId) || '',
                 initData: ksInfo.initData,
                 hasTriggeredKeyStatusMapUpdate: false,
 

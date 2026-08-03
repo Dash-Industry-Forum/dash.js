@@ -288,6 +288,27 @@ class Utils {
         return hex;
     }
 
+    /**
+     * Normalizes a key ID (UUID string, hex string, or BufferSource) into a canonical
+     * lowercase 32-character hex string suitable for comparison, e.g. against a key status map.
+     * @param {string|BufferSource} keyId
+     * @returns {string|null} normalized key ID, or null if it cannot be normalized to a 32-character hex string
+     */
+    static normalizeKeyId(keyId) {
+        if (keyId === null || keyId === undefined) {
+            return null;
+        }
+        let hex;
+        if (typeof keyId === 'string') {
+            hex = keyId.replace(/[{}-]/g, '').toLowerCase();
+        } else if (keyId instanceof ArrayBuffer || ArrayBuffer.isView(keyId)) {
+            hex = Utils.bufferSourceToHex(keyId);
+        } else {
+            return null;
+        }
+        return /^[0-9a-f]{32}$/.test(hex) ? hex : null;
+    }
+
     static toDataView(bufferSource, Type) {
         const buffer = Utils.getArrayBuffer(bufferSource);
         let bytesPerElement = 1;

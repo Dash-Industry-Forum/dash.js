@@ -42,6 +42,7 @@ import {normalizeBcp47} from '../streaming/utils/BCP47Utils.js';
 import {getId3Frames} from '@svta/cml-id3';
 import Constants from '../streaming/constants/Constants.js';
 import Settings from '../core/Settings.js';
+import Utils from '../core/Utils.js';
 
 /**
  * @module DashAdapter
@@ -1196,8 +1197,9 @@ function DashAdapter() {
     function _getNormalizedKeyIds(contentProtection) {
         const normalizedKeyIds = new Set();
         contentProtection.forEach((contentProtectionElement) => {
-            if (contentProtectionElement.cencDefaultKid && typeof contentProtectionElement.cencDefaultKid === 'string') {
-                normalizedKeyIds.add(contentProtectionElement.cencDefaultKid.replace(/-/g, '').toLowerCase());
+            const normalizedKeyId = Utils.normalizeKeyId(contentProtectionElement.cencDefaultKid);
+            if (normalizedKeyId) {
+                normalizedKeyIds.add(normalizedKeyId);
             }
         })
 
