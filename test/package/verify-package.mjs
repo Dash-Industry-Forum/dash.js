@@ -93,8 +93,8 @@ function fail(message) {
     process.exit(1);
 }
 
-// 1. Build the bundles, then pack. The pack itself runs with --ignore-scripts so the
-// prepack output cannot pollute the --json output on stdout.
+// 1. Build the bundles, then pack. The pack itself runs with --ignore-scripts so prepack
+// does not rebuild everything (npm still runs prepare despite the flag, see parse below).
 run('npm', ['run', 'build:dist']);
 
 // Remove stale tarballs so "npm publish dashjs-*.tgz" can only match the one packed below.
@@ -114,9 +114,16 @@ if (pack.status !== 0) {
     console.error(pack.stderr);
     fail(`npm pack exited with status ${pack.status}`);
 }
+// npm runs the prepare script during pack even with --ignore-scripts (npm bug), so
+// lifecycle output (e.g. githook.cjs hook creation) can precede the JSON on stdout.
+// Parse from the first line that is exactly "[" - the start of the pretty-printed array.
 let packInfo;
 try {
-    packInfo = JSON.parse(pack.stdout)[0];
+    const jsonStart = pack.stdout.search(/^\[$/m);
+    if (jsonStart === -1) {
+        throw new Error('no JSON array found in output');
+    }
+    packInfo = JSON.parse(pack.stdout.slice(jsonStart))[0];
 } catch (e) {
     console.error(pack.stdout);
     fail(`npm pack --json produced unparseable output: ${e.message}`);
