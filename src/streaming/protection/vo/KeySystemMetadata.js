@@ -38,6 +38,7 @@ class KeySystemMetadata {
         this.ks = config.ks;
         this.keyId = config.keyId;
         this.initData = config.initData;
+        this.initDataType = config.initDataType;
         this.protData = config.protData;
         this.cdmData = config.cdmData;
         this.sessionId = config.sessionId;

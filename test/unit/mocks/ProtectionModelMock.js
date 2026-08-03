@@ -30,6 +30,7 @@ function ProtectionModelMock (config) {
         const session = {
             id: nextId++,
             keyId: keyId,
+            normalizedKeyId: keyId && typeof keyId === 'string' ? keyId.replace(/-/g, '').toLowerCase() : '',
             initData: keySystemMetadata.initData,
             sessionType: sessionType,
             sessionId: sessionId,

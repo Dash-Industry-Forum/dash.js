@@ -311,11 +311,14 @@ function DefaultProtectionModel(config) {
         const sessionToken = _createSessionToken(mediaKeySession, keySystemMetadata);
 
         // Determine the initDataType for generateRequest():
+        // - Explicit initDataType from the metadata (e.g. 'webm' from an encrypted event): use it
         // - ClearKey with keys: use 'keyids'
         // - FairPlay: use 'sinf'
         // - All others: use 'cenc'
         let dataType;
-        if (keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || (keySystemMetadata.protData && keySystemMetadata.protData.clearkeys))) {
+        if (keySystemMetadata.initDataType) {
+            dataType = keySystemMetadata.initDataType;
+        } else if (keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || (keySystemMetadata.protData && keySystemMetadata.protData.clearkeys))) {
             dataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS;
         } else if (keySystem.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
             dataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF;

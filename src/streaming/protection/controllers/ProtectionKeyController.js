@@ -42,6 +42,7 @@ import ClearKey from './../servers/ClearKey.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import KeySystemMetadata from '../vo/KeySystemMetadata.js';
+import Utils from '../../../core/Utils.js';
 
 /**
  * @module ProtectionKeyController
@@ -323,6 +324,51 @@ function ProtectionKeyController() {
     }
 
     /**
+     * Build key system metadata for webm initData.
+     * Per the EME WebM registry the initData is the raw KeyID and carries no key system UUIDs,
+     * so we match key systems against the ContentProtection elements from the manifest.
+     * @param {ArrayBuffer} initData
+     * @param {Array.<Object>} contentProtectionElements
+     * @param {ProtectionData} protDataSet user specified protection data
+     * @param {string} sessionType
+     * @return {Array}
+     * @private
+     */
+    function getSupportedKeySystemMetadataForWebm(initData, contentProtectionElements, protDataSet, sessionType) {
+        const supportedKS = [];
+
+        if (!contentProtectionElements || !contentProtectionElements.length) {
+            return supportedKS;
+        }
+
+        const keyId = initData && initData.byteLength === 16 ? Utils.bufferSourceToHex(initData) : null;
+
+        for (let ksIdx = 0; ksIdx < keySystems.length; ksIdx++) {
+            const keySystem = keySystems[ksIdx];
+            const matches = contentProtectionElements.some((contentProtectionElement) => {
+                return contentProtectionElement.schemeIdUri && contentProtectionElement.schemeIdUri.toLowerCase() === keySystem.schemeIdURI;
+            });
+            if (!matches) {
+                continue;
+            }
+
+            const protData = _getProtDataForKeySystem(keySystem.systemString, protDataSet);
+            supportedKS.push({
+                ks: keySystem,
+                keyId,
+                initData,
+                initDataType: ProtectionConstants.INITIALIZATION_DATA_TYPE_WEBM,
+                protData,
+                cdmData: keySystem.getCDMData(protData ? protData.cdmData : null),
+                sessionId: _getSessionId(protData),
+                sessionType: _getSessionType(protData, sessionType)
+            });
+        }
+
+        return supportedKS;
+    }
+
+    /**
      * Extract the defaultKID from the tenc box inside a sinf initData.
      * Safari sends sinf initData as JSON: {"sinf": ["<base64-encoded sinf box>"]}
      * The sinf box contains: sinf > schi > tenc, where the KID is 12 bytes after the 'tenc' fourcc.
@@ -479,6 +525,7 @@ function ProtectionKeyController() {
         getKeySystems,
         getLicenseServerModelInstance,
         getSupportedKeySystemMetadataForSinf,
+        getSupportedKeySystemMetadataForWebm,
         getSupportedKeySystemMetadataFromContentProtection,
         getSupportedKeySystemMetadataFromSegmentPssh,
         initDataEquals,

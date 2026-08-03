@@ -11,6 +11,7 @@ import Settings from '../../../../src/core/Settings.js';
 import CmcdController from '../../../../src/streaming/controllers/CmcdController.js';
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
+import NeedKey from '../../../../src/streaming/protection/vo/NeedKey.js';
 
 import {expect} from 'chai';
 import sinon from 'sinon';
@@ -74,10 +75,10 @@ describe('ProtectionController', function () {
     });
 
     describe('Well initialized', function () {
-        let protectionModelMock, settingsMock;
+        let protectionModelMock, settingsMock, protectionKeyControllerMock;
 
         beforeEach(function () {
-            const protectionKeyControllerMock = new ProtectionKeyControllerMock();
+            protectionKeyControllerMock = new ProtectionKeyControllerMock();
             settingsMock = { get: () => ({ streaming: { protection: {} } }) };
             protectionModelMock = new ProtectionModelMock({ events: ProtectionEvents, eventBus: eventBus });
             protectionController = ProtectionController(context).create({
@@ -158,6 +159,63 @@ describe('ProtectionController', function () {
 
             expect(keySystems).to.be.instanceOf(Array);
             expect(keySystems).not.to.be.empty;
+        });
+
+        describe('NEED_KEY handling', function () {
+            const widevineSchemeIdUri = 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed';
+            const keyIdBytes = new Uint8Array(16).fill(0xab);
+            let webmSpy, psshSpy, sinfSpy;
+
+            beforeEach(function () {
+                webmSpy = sinon.spy(protectionKeyControllerMock, 'getSupportedKeySystemMetadataForWebm');
+                psshSpy = sinon.spy(protectionKeyControllerMock, 'getSupportedKeySystemMetadataFromSegmentPssh');
+                sinfSpy = sinon.spy(protectionKeyControllerMock, 'getSupportedKeySystemMetadataForSinf');
+                protectionController.setMediaElement({});
+                protectionController.initializeForMedia({
+                    type: 'video',
+                    contentProtection: [{ schemeIdUri: widevineSchemeIdUri }]
+                });
+            });
+
+            afterEach(function () {
+                protectionController.setMediaElement(null);
+            });
+
+            it('should forward webm initData to getSupportedKeySystemMetadataForWebm together with the manifest ContentProtection elements', function () {
+                eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(keyIdBytes.buffer, 'webm') });
+
+                expect(webmSpy.calledOnce).to.be.true;
+                expect(webmSpy.firstCall.args[0]).to.equal(keyIdBytes.buffer);
+                expect(webmSpy.firstCall.args[1]).to.deep.equal([{ schemeIdUri: widevineSchemeIdUri }]);
+                expect(psshSpy.called).to.be.false;
+                expect(sinfSpy.called).to.be.false;
+            });
+
+            it('should forward cenc initData to getSupportedKeySystemMetadataFromSegmentPssh', function () {
+                eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(keyIdBytes.buffer, 'cenc') });
+
+                expect(psshSpy.calledOnce).to.be.true;
+                expect(webmSpy.called).to.be.false;
+            });
+
+            it('should ignore webm initData when a usable key for its keyId is already available', function () {
+                protectionController.updateKeyStatusesMap({
+                    sessionToken: {},
+                    parsedKeyStatuses: [{ keyId: keyIdBytes.buffer, status: 'usable' }]
+                });
+
+                eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(keyIdBytes.buffer, 'webm') });
+
+                expect(webmSpy.called).to.be.false;
+            });
+
+            it('should ignore initData of unsupported types', function () {
+                eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(keyIdBytes.buffer, 'keyids') });
+
+                expect(webmSpy.called).to.be.false;
+                expect(psshSpy.called).to.be.false;
+                expect(sinfSpy.called).to.be.false;
+            });
         });
 
         // tests for keepProtectionMediaKeysMaximumOpenSessions feature

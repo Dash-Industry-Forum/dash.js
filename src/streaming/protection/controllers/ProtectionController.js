@@ -638,6 +638,7 @@ function ProtectionController(config) {
         if (keySystemMetadata.protData && keySystemMetadata.protData.hasOwnProperty('clearkeys') && Object.keys(keySystemMetadata.protData.clearkeys).length !== 0) {
             const initData = { kids: Object.keys(keySystemMetadata.protData.clearkeys) };
             keySystemMetadata.initData = new TextEncoder().encode(JSON.stringify(initData));
+            keySystemMetadata.initDataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS;
         }
     }
 
@@ -793,9 +794,12 @@ function ProtectionController(config) {
         }
 
         try {
+            // Key ids can be signaled in different formats (dashed UUID from the manifest, plain hex from initData).
+            // Compare in normalized form.
+            const normalizedKeyId = keyId.replace(/-/g, '').toLowerCase();
             const sessions = protectionModel.getSessionTokens();
             for (let i = 0; i < sessions.length; i++) {
-                if (sessions[i].getKeyId() === keyId) {
+                if (sessions[i].normalizedKeyId === normalizedKeyId) {
                     return true;
                 }
             }
@@ -1375,10 +1379,11 @@ function ProtectionController(config) {
 
         logger.debug('DRM: onNeedKey');
 
-        // Ignore unsupported initData types (only cenc and sinf are supported)
+        // Ignore unsupported initData types (only cenc, sinf and webm are supported)
         if (event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC &&
-            event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF) {
-            logger.warn('DRM:  Only \'cenc\' and \'sinf\' initData are supported!  Ignoring initData of type: ' + event.key.initDataType);
+            event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF &&
+            event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_WEBM) {
+            logger.warn('DRM:  Only \'cenc\', \'sinf\' and \'webm\' initData are supported!  Ignoring initData of type: ' + event.key.initDataType);
             return;
         }
 
@@ -1401,9 +1406,11 @@ function ProtectionController(config) {
         }
 
         const isSinf = event.key.initDataType === ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF;
+        const isWebm = event.key.initDataType === ProtectionConstants.INITIALIZATION_DATA_TYPE_WEBM;
 
         if (selectedKeySystem) {
-            const initDataForCheck = isSinf ? abInitData : CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
+            // sinf and webm initData are not PSSH boxes, compare them verbatim
+            const initDataForCheck = (isSinf || isWebm) ? abInitData : CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
 
             if (initDataForCheck && _isInitDataDuplicate(initDataForCheck)) {
                 return;
@@ -1416,6 +1423,23 @@ function ProtectionController(config) {
         if (isSinf) {
             // sinf data is FairPlay-specific; match against the FairPlay key system directly
             supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataForSinf(abInitData, applicationProvidedProtectionData, sessionType);
+        } else if (isWebm) {
+            // If we already have a usable key for this keyId, for instance from a session created via manifest pssh data, there is no need for another session
+            const keyId = abInitData && abInitData.byteLength === 16 ? Utils.bufferSourceToHex(abInitData) : null;
+            const keyStatus = keyId ? keyStatusMap.get(keyId) : null;
+            if (keyStatus && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED) {
+                logger.debug('DRM: Ignoring webm initData because a usable key for keyId ' + keyId + ' is already available');
+                return;
+            }
+
+            // webm initData is the raw KeyID and carries no key system UUIDs; match against the ContentProtection elements from the manifest
+            const contentProtectionElements = [];
+            mediaInfoArr.forEach((mediaInfo) => {
+                if (mediaInfo && mediaInfo.contentProtection) {
+                    contentProtectionElements.push(...mediaInfo.contentProtection);
+                }
+            });
+            supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataForWebm(abInitData, contentProtectionElements, applicationProvidedProtectionData, sessionType);
         } else {
             supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
         }
