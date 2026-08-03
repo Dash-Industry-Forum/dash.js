@@ -30,7 +30,8 @@
     // plus a number of upcoming "future" keys, so playback can continue across several
     // crypto periods without a new license request once skipLicenseRequestsForUsableKeys
     // recognizes those keys are already usable.
-    // Note: hosted on an internal Irdeto network; may not be reachable from all locations.
+    // Note: this is a shared Irdeto test/staging environment (not production), also used
+    // by Irdeto partners for integration testing.
     var STREAM_URL = 'https://control-cdn.dev.ott.irdeto.com/dashjs-test-streams/video-content2.mpd';
     var PROT_DATA = {
         'com.widevine.alpha': {
@@ -162,7 +163,7 @@
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
     initSamplePage({
         title: 'Key Rotation (Future Keys)',
-        description: 'Plays Widevine/PlayReady-protected content whose content key rotates roughly every 10 seconds. Each license response also includes a number of upcoming ("future") keys, so once a key has been reported as usable by the CDM, dash.js does not need to request a license for it again. Toggle <code>streaming.protection.skipLicenseRequestsForUsableKeys</code> below, then use "(Re)attach source" to restart playback and compare the counters: with the setting enabled (the default), both counters should stop growing once the CDM already holds the upcoming keys; with it disabled, a new MediaKeySession and license request is issued for every crypto period. <br><br>Note: this reference stream and license servers are hosted on an internal Irdeto network and may not be reachable from all locations.',
+        description: 'Plays Widevine/PlayReady-protected content whose content key rotates roughly every 10 seconds. Each license response also includes a number of upcoming ("future") keys, so once a key has been reported as usable by the CDM, dash.js does not need to request a license for it again. Toggle <code>streaming.protection.skipLicenseRequestsForUsableKeys</code> below, then use "(Re)attach source" to restart playback and compare the counters: with the setting enabled (the default), both counters should stop growing once the CDM already holds the upcoming keys; with it disabled, a new MediaKeySession and license request is issued for every crypto period. <br><br>Note: this reference stream and license servers run on a shared Irdeto test/staging environment (not production), also used by Irdeto partners for integration testing.',
         category: 'DRM',
         httpWarning: true,
         layout: 'custom',

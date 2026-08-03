@@ -91,7 +91,7 @@
           "serverURL": "https://dub-tctr-control.test.ott.irdeto.com/licenseServer/playready/v1/irdeto-poc/license?contentId=video-content2"
         }
       },
-      "moreInfo": "Reference content for dash.js#5016 (Avoid Redundant DRM License Requests for Already-Usable Keys). Content key rotates roughly every 10 seconds; each license response includes the current key plus a number of upcoming keys. Hosted on an internal Irdeto network - not reachable without access to that network.",
+      "moreInfo": "Reference content for dash.js#5016 (Avoid Redundant DRM License Requests for Already-Usable Keys). Content key rotates roughly every 10 seconds; each license response includes the current key plus a number of upcoming keys. Hosted on a shared Irdeto test/staging environment (not production), also used by Irdeto partners for integration testing.",
       "includedTestfiles": [
         "playback/*"
       ],
