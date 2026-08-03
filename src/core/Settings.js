@@ -111,6 +111,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
  *                ignoreKeyStatuses: false,
+ *                skipLicenseRequestsForUsableKeys: true,
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -754,6 +755,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
  *
+ * @property {boolean} [skipLicenseRequestsForUsableKeys=true]
+ * If set to true the player will not create a new key session, and therefore not issue a new license request, when every key ID
+ * referenced by a version 1+ PSSH's key ID list is already reported as "usable" by the CDM.
+ *
 
 /**
  * @typedef {Object} Capabilities
@@ -1267,6 +1272,7 @@ function Settings() {
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
                 ignoreKeyStatuses: false,
+                skipLicenseRequestsForUsableKeys: true,
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
