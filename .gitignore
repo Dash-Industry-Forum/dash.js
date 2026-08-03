@@ -210,3 +210,5 @@ test/functional/apps/webos/test-app/com.dashjs.app_1.0.0_all.ipk
 test-results
 
 .claude/settings.local.json
+
+*.tgz
