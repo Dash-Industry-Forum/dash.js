@@ -30,6 +30,7 @@
  */
 import DashConstants from '../../dash/constants/DashConstants.js';
 import ProtectionConstants from '../constants/ProtectionConstants.js';
+import Utils from '../../core/Utils.js';
 
 const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
     prefixes: ['clearkey', 'dashif', 'ck']
@@ -96,7 +97,25 @@ class CommonEncryption {
     static getPSSHForKeySystem(keySystem, initData) {
         let psshList = CommonEncryption.parsePSSHList(initData);
         if (keySystem && psshList.hasOwnProperty(keySystem.uuid.toLowerCase())) {
-            return psshList[keySystem.uuid.toLowerCase()];
+            return psshList[keySystem.uuid.toLowerCase()].box;
+        }
+        return null;
+    }
+
+    /**
+     * Returns the key IDs signalled by the version 1+ PSSH box associated with the given key system,
+     * from the concatenated list of PSSH boxes in the given initData
+     *
+     * @param {KeySystem} keySystem the desired key system
+     * @param {ArrayBuffer} initData 'cenc' initialization data. Concatenated list of PSSH.
+     * @returns {string[]|null} normalized (lowercase, 32-character hex) key IDs found in the PSSH box,
+     * an empty array if the box does not signal any key IDs (e.g. version 0), or null if no PSSH box
+     * could be found for the given key system.
+     */
+    static getKeyIdsForKeySystem(keySystem, initData) {
+        let psshList = CommonEncryption.parsePSSHList(initData);
+        if (keySystem && psshList.hasOwnProperty(keySystem.uuid.toLowerCase())) {
+            return psshList[keySystem.uuid.toLowerCase()].keyIds;
         }
         return null;
     }
@@ -126,8 +145,9 @@ class CommonEncryption {
      * @param {ArrayBuffer} data - the concatenated list of PSSH boxes as provided by
      * CDM as initialization data when CommonEncryption content is detected
      * @returns {Object|Array} an object that has a property named according to each of
-     * the detected key system UUIDs (e.g. 00000000-0000-0000-0000-0000000000)
-     * and a ArrayBuffer (the entire PSSH box) as the property value
+     * the detected key system UUIDs (e.g. 00000000-0000-0000-0000-0000000000) and, as
+     * the property value, an object with the entire PSSH box (`box`), its `version`,
+     * and the normalized key IDs signalled by version 1+ boxes (`keyIds`, empty for version 0)
      */
     static parsePSSHList(data) {
 
@@ -210,11 +230,40 @@ class CommonEncryption {
 
             systemID = systemID.toLowerCase();
 
+            /* Version 1+ PSSH boxes signal an explicit list of key IDs before the data */
+            let keyIds = [];
+            if (version === 1) {
+                if (byteCursor + 4 > nextBox || byteCursor + 4 > dv.buffer.byteLength) {
+                    byteCursor = nextBox;
+                    continue;
+                }
+                const kidCount = dv.getUint32(byteCursor);
+                byteCursor += 4;
+
+                const kidListEnd = byteCursor + (kidCount * 16);
+                if (kidListEnd > nextBox || kidListEnd > dv.buffer.byteLength) {
+                    byteCursor = nextBox;
+                    continue;
+                }
+
+                for (let k = 0; k < kidCount; k++) {
+                    const keyId = Utils.normalizeKeyId(new Uint8Array(dv.buffer, byteCursor, 16));
+                    if (keyId) {
+                        keyIds.push(keyId);
+                    }
+                    byteCursor += 16;
+                }
+            }
+
             /* PSSH Data Size */
             byteCursor += 4;
 
             /* PSSH Data */
-            pssh[systemID] = dv.buffer.slice(boxStart, nextBox);
+            pssh[systemID] = {
+                box: dv.buffer.slice(boxStart, nextBox),
+                version,
+                keyIds
+            };
             byteCursor = nextBox;
         }
 
