@@ -80,6 +80,28 @@
       ]
     },
     {
+      "name": "Key Rotation - High Frequency Key Rotation with future keys (Widevine + PlayReady, 1 key per ~10s crypto period)",
+      "url": "https://control-cdn.dev.ott.irdeto.com/dashjs-test-streams/video-content2.mpd",
+      "type": "vod",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://dub-tctr-control.test.ott.irdeto.com/licenseServer/widevine/v1/irdeto-poc/license?contentId=video-content2"
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://dub-tctr-control.test.ott.irdeto.com/licenseServer/playready/v1/irdeto-poc/license?contentId=video-content2"
+        }
+      },
+      "moreInfo": "Reference content for dash.js#5016 (Avoid Redundant DRM License Requests for Already-Usable Keys). Content key rotates roughly every 10 seconds; each license response includes the current key plus a number of upcoming keys. Hosted on an internal Irdeto network - not reachable without access to that network.",
+      "includedTestfiles": [
+        "playback/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
       "name": "1080p with PlayReady and Widevine DRM, multiple keys",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_1080p.mpd",

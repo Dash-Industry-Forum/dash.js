@@ -557,6 +557,20 @@
                     "Widevine",
                     "Protection"
                 ]
+            },
+            {
+                "title": "Key Rotation (Future Keys)",
+                "description": "Plays back content with a rotating content key and a license response that includes upcoming keys, demonstrating the skipLicenseRequestsForUsableKeys setting.",
+                "href": "drm/key-rotation.html",
+                "image": "lib/img/dashjs-logo-border.png",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
