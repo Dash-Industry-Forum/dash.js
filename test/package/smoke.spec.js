@@ -32,8 +32,8 @@
 // 'dashjs' resolves to the npm pack tarball installed into
 // test/compliance/vite-consumer/node_modules - see test/package/verify-package.mjs.
 import dashjs from 'dashjs';
-// Exercises the './mss' entry of the package exports map (registers itself on import).
-import 'dashjs/mss';
+// Exercises the './mss' entry of the package exports map.
+import { MssHandler } from 'dashjs/mss';
 
 const STREAM_URL = 'https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd';
 const MIN_PLAYBACK_TIME = 3;
@@ -43,6 +43,7 @@ describe('npm package smoke test', () => {
     it('exposes MediaPlayer and Version through the package exports', () => {
         expect(dashjs.MediaPlayer).to.be.a('function');
         expect(dashjs.Version).to.be.a('string');
+        expect(MssHandler).to.be.a('function');
     });
 
     it(`plays a stream for at least ${MIN_PLAYBACK_TIME} seconds`, (done) => {
@@ -52,7 +53,16 @@ describe('npm package smoke test', () => {
 
         const player = dashjs.MediaPlayer().create();
 
+        // destroy() does not unregister player.on() listeners and the EventBus dispatches
+        // synchronously, so a second event (e.g. ERROR followed by PLAYBACK_ERROR for the
+        // same failure) would call mocha's done() twice without the latch.
+        let finished = false;
+
         function finish(error) {
+            if (finished) {
+                return;
+            }
+            finished = true;
             player.destroy();
             videoElement.remove();
             done(error);
@@ -62,7 +72,9 @@ describe('npm package smoke test', () => {
             finish(new Error(`Player error: ${JSON.stringify(e.error)}`));
         });
         player.on(dashjs.MediaPlayer.events.PLAYBACK_ERROR, (e) => {
-            finish(new Error(`Playback error: ${JSON.stringify(e.error)}`));
+            // e.error is a native MediaError whose fields are prototype getters, so
+            // JSON.stringify would print '{}'.
+            finish(new Error(`Playback error: code=${e.error?.code} message=${e.error?.message}`));
         });
         player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, (e) => {
             if (e.time >= MIN_PLAYBACK_TIME) {

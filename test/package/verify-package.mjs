@@ -51,13 +51,20 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../
 const consumerDir = path.join(repoRoot, 'test/compliance/vite-consumer');
 const noBuild = process.argv.includes('--no-build');
 
+const packageJson = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
+
+// Every bundle referenced by the exports map must be in the tarball - derived from
+// package.json so a new subpath export is verified automatically.
+const EXPORTED_FILES = [...new Set(
+    Object.values(packageJson.exports)
+        .flatMap((entry) => Object.values(entry))
+        .map((file) => file.replace(/^\.\//, ''))
+)];
+
+// Files consumers rely on that the exports map does not cover.
 const REQUIRED_FILES = [
-    'dist/modern/esm/dash.all.min.js',
-    'dist/modern/umd/dash.all.min.js',
-    'dist/modern/esm/dash.mss.min.js',
-    'dist/modern/umd/dash.mss.min.js',
+    ...EXPORTED_FILES,
     'dist/legacy/umd/dash.all.min.js',
-    'index.d.ts',
     'githook.cjs',
     'contrib/akamai/controlbar/ControlBar.js',
     'contrib/controlbar/ControlBar.js',
@@ -65,11 +72,21 @@ const REQUIRED_FILES = [
     'contrib/videojs-vtt.js/vtt.min.js',
 ];
 
+// Catches accidental broadening of the "files" allowlist (e.g. samples/ or docs/).
+// Baseline: dashjs@5.2.0 unpacks to ~130 MB (bundles + sourcemaps).
+const MAX_UNPACKED_SIZE_BYTES = 200 * 1024 * 1024;
+
 function run(command, args, options = {}) {
     console.log(`\n> ${command} ${args.join(' ')}`);
-    const result = spawnSync(command, args, { cwd: repoRoot, stdio: 'inherit', ...options });
+    const result = spawnSync(command, args, {
+        cwd: repoRoot,
+        stdio: 'inherit',
+        shell: process.platform === 'win32', // npm/npx are .cmd shims on Windows
+        ...options,
+    });
     if (result.status !== 0) {
-        fail(`"${command} ${args.join(' ')}" exited with status ${result.status}`);
+        const cause = result.error ? ` (${result.error.message})` : '';
+        fail(`"${command} ${args.join(' ')}" exited with status ${result.status}${cause}`);
     }
     return result;
 }
@@ -84,14 +101,31 @@ function fail(message) {
 if (!noBuild) {
     run('npm', ['run', 'build:dist']);
 }
+
+// Remove stale tarballs so "npm publish dashjs-*.tgz" can only match the one packed below.
+for (const staleTarball of fs.readdirSync(repoRoot).filter((file) => /^dashjs-.*\.tgz$/.test(file))) {
+    console.log(`Removing stale tarball ${staleTarball}`);
+    fs.rmSync(path.join(repoRoot, staleTarball));
+}
+
 const packArgs = ['pack', '--json', '--ignore-scripts'];
 console.log(`\n> npm ${packArgs.join(' ')}`);
-const pack = spawnSync('npm', packArgs, { cwd: repoRoot, encoding: 'utf8' });
+const pack = spawnSync('npm', packArgs, {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+});
 if (pack.status !== 0) {
     console.error(pack.stderr);
     fail(`npm pack exited with status ${pack.status}`);
 }
-const packInfo = JSON.parse(pack.stdout)[0];
+let packInfo;
+try {
+    packInfo = JSON.parse(pack.stdout)[0];
+} catch (e) {
+    console.error(pack.stdout);
+    fail(`npm pack --json produced unparseable output: ${e.message}`);
+}
 const tarball = path.join(repoRoot, packInfo.filename);
 console.log(`Packed ${packInfo.filename} (${packInfo.entryCount} files)`);
 
@@ -101,15 +135,22 @@ const missing = REQUIRED_FILES.filter((file) => !packedPaths.has(file));
 if (missing.length > 0) {
     fail(`tarball is missing required files:\n  ${missing.join('\n  ')}`);
 }
-console.log('All required files present in tarball.');
+if (packInfo.unpackedSize > MAX_UNPACKED_SIZE_BYTES) {
+    fail(`unpacked size ${packInfo.unpackedSize} bytes exceeds the ${MAX_UNPACKED_SIZE_BYTES} byte ceiling - was the "files" allowlist broadened?`);
+}
+console.log(`All required files present in tarball (${packInfo.unpackedSize} bytes unpacked).`);
 
 // 3. Install the tarball into the consumer app (also installs its vite devDependency).
 run('npm', ['install', '--no-save', '--no-audit', '--no-fund', tarball], { cwd: consumerDir });
 
 // Guard: a "file:" directory dependency would be a symlink; the tarball install must not be.
 const installedPackage = path.join(consumerDir, 'node_modules/dashjs');
-if (fs.lstatSync(installedPackage).isSymbolicLink()) {
-    fail('node_modules/dashjs in the consumer app is a symlink - the tarball was not installed');
+try {
+    if (fs.lstatSync(installedPackage).isSymbolicLink()) {
+        fail('node_modules/dashjs in the consumer app is a symlink - the tarball was not installed');
+    }
+} catch (e) {
+    fail(`node_modules/dashjs is missing from the consumer app - the tarball was not installed (${e.message})`);
 }
 
 // 4. Bundle the consumer app - resolves dashjs through the real package exports map.

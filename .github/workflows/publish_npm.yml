@@ -25,8 +25,14 @@ jobs:
             -   name: Install
                 run: npm ci
 
-            # Packs the tarball (prepack runs build:dist), asserts its contents, installs it
-            # into a consumer app and runs a playback smoke test. Publish only runs if this passes.
+            # The pack below runs with --ignore-scripts, so the prepack hook (and with it the
+            # prebuild -> ci:verify chain) never runs in this workflow. Gate explicitly.
+            -   name: Run unit tests and lint
+                run: npm run ci:verify
+
+            # Runs build:dist itself, packs the tarball with --ignore-scripts, asserts its
+            # contents, installs it into a consumer app and runs a playback smoke test.
+            # Publish only runs if this passes.
             -   name: Pack and verify tarball
                 run: npm run test:package
 
