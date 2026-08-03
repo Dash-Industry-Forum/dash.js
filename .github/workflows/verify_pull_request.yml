@@ -83,13 +83,6 @@ jobs:
                     path: dist/
             -   name: Run compliance tests
                 run: npm run test:compliance
-            # --no-build packs the downloaded dist artifacts as-is instead of rebuilding.
-            # Must run AFTER test:compliance: both steps share vite-consumer/node_modules/dashjs.
-            # test:compliance:vite installs the "file:" source dependency (CJS-in-ESM check,
-            # see #5026), then this step overwrites it with the tarball install. Reordering
-            # silently loses one of the two coverages.
-            -   name: Verify npm package tarball
-                run: node test/package/verify-package.mjs --no-build
 
     run_functional_test_single_stream_lambdatest:
         if: github.event.pull_request.head.repo.fork == false

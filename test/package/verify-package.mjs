@@ -37,9 +37,7 @@
  * 3. Builds the consumer app with Vite (resolves dashjs through the package exports map).
  * 4. Runs a playback smoke test in headless Chrome against the installed tarball.
  *
- * Usage: node test/package/verify-package.mjs [--no-build]
- *   --no-build  Skip the build step (use the existing dist/ as-is, for CI jobs that
- *               already built the bundles).
+ * Usage: node test/package/verify-package.mjs
  */
 
 import { spawnSync } from 'child_process';
@@ -49,7 +47,6 @@ import fs from 'fs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const consumerDir = path.join(repoRoot, 'test/compliance/vite-consumer');
-const noBuild = process.argv.includes('--no-build');
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
 
@@ -98,9 +95,7 @@ function fail(message) {
 
 // 1. Build the bundles, then pack. The pack itself runs with --ignore-scripts so the
 // prepack output cannot pollute the --json output on stdout.
-if (!noBuild) {
-    run('npm', ['run', 'build:dist']);
-}
+run('npm', ['run', 'build:dist']);
 
 // Remove stale tarballs so "npm publish dashjs-*.tgz" can only match the one packed below.
 for (const staleTarball of fs.readdirSync(repoRoot).filter((file) => /^dashjs-.*\.tgz$/.test(file))) {
