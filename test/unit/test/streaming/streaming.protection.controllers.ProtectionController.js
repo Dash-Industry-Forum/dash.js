@@ -216,6 +216,51 @@ describe('ProtectionController', function () {
                 expect(psshSpy.called).to.be.false;
                 expect(sinfSpy.called).to.be.false;
             });
+
+            it('should still handle encrypted events when ignoreInitDataFromManifest is enabled', function () {
+                settingsMock.get = () => ({ streaming: { protection: { ignoreInitDataFromManifest: true } } });
+
+                eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(keyIdBytes.buffer, 'webm') });
+
+                expect(webmSpy.calledOnce).to.be.true;
+            });
+        });
+
+        describe('handleKeySystemFromManifest', function () {
+            const keySystem = { systemString: 'com.widevine.alpha' };
+            let createKeySessionSpy;
+
+            beforeEach(function () {
+                createKeySessionSpy = sinon.spy(protectionModelMock, 'createKeySession');
+                protectionKeyControllerMock.getSupportedKeySystemMetadataFromContentProtection = () => [{
+                    ks: keySystem,
+                    keyId: '800aacaa-5229-58ae-8880-62b5695db6bf',
+                    // A valid box header (size 8, unknown type) so that CommonEncryption.parsePSSHList can parse it and returns no PSSH
+                    initData: new Uint8Array([0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00]).buffer
+                }];
+                protectionModelMock.requestKeySystemAccess = () => Promise.resolve({ data: { keySystem } });
+                protectionController.initializeForMedia({
+                    type: 'video',
+                    codec: 'video/mp4;codecs="avc1.4d401f"',
+                    contentProtection: [{ schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed' }]
+                });
+            });
+
+            it('should create a key session from manifest init data by default', async function () {
+                protectionController.handleKeySystemFromManifest();
+                await new Promise((resolve) => setTimeout(resolve, 0));
+
+                expect(createKeySessionSpy.calledOnce).to.be.true;
+            });
+
+            it('should not create a key session from manifest init data when ignoreInitDataFromManifest is enabled', async function () {
+                settingsMock.get = () => ({ streaming: { protection: { ignoreInitDataFromManifest: true } } });
+
+                protectionController.handleKeySystemFromManifest();
+                await new Promise((resolve) => setTimeout(resolve, 0));
+
+                expect(createKeySessionSpy.called).to.be.false;
+            });
         });
 
         // tests for keepProtectionMediaKeysMaximumOpenSessions feature

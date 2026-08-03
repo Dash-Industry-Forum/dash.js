@@ -69,6 +69,10 @@ export class SettingsController {
                 gaps: {
                     jumpGaps: this._isChecked('opt-jump-gaps')
                 },
+                protection: {
+                    ignoreEmeEncryptedEvent: this._isChecked('opt-ignore-eme-encrypted-event'),
+                    ignoreInitDataFromManifest: this._isChecked('opt-ignore-init-data-from-manifest')
+                },
                 buffer: {
                     stallThreshold: parseFloat($('#opt-stall-threshold').value) || 0.5,
                     lowLatencyStallThreshold: parseFloat($('#opt-ll-stall-threshold').value) || 0.3,
@@ -465,7 +469,8 @@ export class SettingsController {
             'opt-imsc-rollup', 'opt-imsc-forced-only',
             'opt-apply-service-desc', 'opt-use-suggested-pd',
             'opt-cmcd-enabled', 'opt-cmsd-enabled', 'opt-cmsd-apply-mb',
-            'opt-enhancement-enabled'
+            'opt-enhancement-enabled',
+            'opt-ignore-eme-encrypted-event', 'opt-ignore-init-data-from-manifest'
         ];
 
         for (const id of settingsCheckboxes) {
@@ -579,6 +584,8 @@ export class SettingsController {
         this._setChecked('opt-save-last-media', s?.streaming?.saveLastMediaSettingsForCurrentStreamingSession);
         this._setChecked('opt-local-storage', s?.streaming?.lastBitrateCachingInfo?.enabled);
         this._setChecked('opt-jump-gaps', s?.streaming?.gaps?.jumpGaps);
+        this._setChecked('opt-ignore-eme-encrypted-event', s?.streaming?.protection?.ignoreEmeEncryptedEvent);
+        this._setChecked('opt-ignore-init-data-from-manifest', s?.streaming?.protection?.ignoreInitDataFromManifest);
         this._setChecked('opt-content-steering', s?.streaming?.applyContentSteering);
         this._setChecked('opt-catchup-enabled', !!s?.streaming?.liveCatchup?.enabled);
 

@@ -22,6 +22,10 @@ function ProtectionModelMock (config) {
         return Promise.resolve();
     };
 
+    this.selectKeySystem = function (keySystemAccess) {
+        return Promise.resolve(keySystemAccess && keySystemAccess.keySystem ? keySystemAccess.keySystem : null);
+    };
+
     this.getSessionTokens = function () { return sessions; };
     this.createKeySession = function (keySystemMetadata) {
         const keyId = keySystemMetadata && keySystemMetadata.keyId !== undefined ? keySystemMetadata.keyId : nextId;

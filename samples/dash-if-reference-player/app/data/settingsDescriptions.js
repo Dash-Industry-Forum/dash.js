@@ -37,6 +37,12 @@ const SETTINGS_DESCRIPTIONS = {
     'opt-content-steering':
         'Set to true if dash.js should apply content steering during playback.',
 
+    'opt-ignore-eme-encrypted-event':
+        'If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.',
+
+    'opt-ignore-init-data-from-manifest':
+        'If set to true the player will not create key sessions from initialization data signaled in the manifest (e.g. cenc:pssh in ContentProtection elements). Instead, key sessions are only created from the initialization data provided by the EME "encrypted" event, which is derived from the media itself.\n\nOnly enable this for content that carries initialization data inband (e.g. pssh boxes in the init segments or the ContentEncKeyID of WebM tracks). For content without inband initialization data no "encrypted" event is fired and license acquisition never starts.\n\nDo not combine with Ignore EME Encrypted Event, as this would disable license acquisition entirely.',
+
     'opt-catchup-enabled':
         'Use this parameter to enable the catchup mode for non low-latency streams.',
 

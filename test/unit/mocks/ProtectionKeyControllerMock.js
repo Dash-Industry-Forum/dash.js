@@ -20,6 +20,10 @@ function ProtectionKeyControllerMock () {
         return [];
     };
 
+    this.isClearKey = function (/*keySystem*/) {
+        return false;
+    };
+
     this.getLicenseServer = function () {
         return null;
     };

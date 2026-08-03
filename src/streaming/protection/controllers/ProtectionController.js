@@ -157,8 +157,11 @@ function ProtectionController(config) {
                 if (supportedKeySystemsMetadata.length === 0) {
                     supportedKeySystemsMetadata = keySystemsMetadata;
                 }
-                // Save config for creating key session once we selected a key system
-                pendingMediaTypesToHandle.push(keySystemsMetadata);
+                // Save config for creating key session once we selected a key system.
+                // If the application chose to ignore the init data from the manifest, sessions are created from the initData of the EME encrypted events instead.
+                if (!settings.get().streaming.protection.ignoreInitDataFromManifest) {
+                    pendingMediaTypesToHandle.push(keySystemsMetadata);
+                }
             }
         })
 
