@@ -799,7 +799,7 @@ function ProtectionController(config) {
         try {
             // Key ids can be signaled in different formats (dashed UUID from the manifest, plain hex from initData).
             // Compare in normalized form.
-            const normalizedKeyId = keyId.replace(/-/g, '').toLowerCase();
+            const normalizedKeyId = Utils.normalizeKeyId(keyId);
             const sessions = protectionModel.getSessionTokens();
             for (let i = 0; i < sessions.length; i++) {
                 if (sessions[i].normalizedKeyId === normalizedKeyId) {

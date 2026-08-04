@@ -1,5 +1,6 @@
 import ProtectionErrors from '../../../src/streaming/protection/errors/ProtectionErrors.js';
 import DashJSError from '../../../src/streaming/vo/DashJSError.js';
+import Utils from '../../../src/core/Utils.js';
 
 function ProtectionModelMock (config) {
 
@@ -34,7 +35,7 @@ function ProtectionModelMock (config) {
         const session = {
             id: nextId++,
             keyId: keyId,
-            normalizedKeyId: keyId && typeof keyId === 'string' ? keyId.replace(/-/g, '').toLowerCase() : '',
+            normalizedKeyId: Utils.normalizeKeyId(keyId),
             initData: keySystemMetadata.initData,
             sessionType: sessionType,
             sessionId: sessionId,

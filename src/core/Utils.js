@@ -275,6 +275,15 @@ class Utils {
         return decoder.decode(uint8Array);
     }
 
+    /**
+     * Normalizes a key id for comparison. Key ids can be signaled as dashed UUID (manifest) or as plain hex (initData).
+     * @param {string} keyId
+     * @returns {string} the normalized key id, empty string if the provided value is not a usable string
+     */
+    static normalizeKeyId(keyId) {
+        return keyId && typeof keyId === 'string' ? keyId.replace(/-/g, '').toLowerCase() : '';
+    }
+
     static bufferSourceToHex(data) {
         const arr = Utils.bufferSourceToInt8(data)
         let hex = '';
