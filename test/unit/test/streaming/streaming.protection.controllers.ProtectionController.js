@@ -285,9 +285,9 @@ describe('ProtectionController', function () {
             ]);
             const initData = new Uint8Array([0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00]).buffer;
 
-            function _setKeyStatus(status) {
+            function _setKeyStatus(status, sessionIndex = 0) {
                 protectionController.updateKeyStatusesMap({
-                    sessionToken: {},
+                    sessionToken: protectionModelMock.getSessionTokens()[sessionIndex],
                     parsedKeyStatuses: [{ keyId: keyIdBytes.buffer, status }]
                 });
             }
@@ -312,19 +312,99 @@ describe('ProtectionController', function () {
             });
 
             it('should create a new session for a key that is expired or released', function () {
-                _setKeyStatus('expired');
+                _setKeyStatus('expired', 0);
                 protectionController.createKeySession({ keyId, initData });
                 expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(2);
 
-                _setKeyStatus('released');
+                _setKeyStatus('released', 1);
                 protectionController.createKeySession({ keyId, initData });
                 expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(3);
+            });
+
+            it('should not create more sessions while the replacement session has not reported key statuses yet', function () {
+                _setKeyStatus('expired', 0);
+                protectionController.createKeySession({ keyId, initData });
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(2);
+
+                // The key status map still reports the key as expired, but the replacement session is still acquiring its license
+                protectionController.createKeySession({ keyId, initData });
+                protectionController.createKeySession({ keyId, initData });
+
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(2);
             });
 
             it('should match key ids signaled as dashed UUID and as plain hex', function () {
                 protectionController.createKeySession({ keyId: '800AACAA522958AE888062B5695DB6BF', initData });
 
                 expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            });
+        });
+
+        describe('webm key renewal', function () {
+            const keySystem = { systemString: 'com.widevine.alpha' };
+            const webmKeyIdBytes = new Uint8Array(16).fill(0xab);
+            let webmSpy;
+
+            beforeEach(async function () {
+                webmSpy = sinon.spy(() => [{
+                    ks: keySystem,
+                    keyId: 'abababab-abab-abab-abab-abababababab',
+                    initData: webmKeyIdBytes.buffer,
+                    initDataType: 'webm'
+                }]);
+                protectionKeyControllerMock.getSupportedKeySystemMetadataForWebm = webmSpy;
+                protectionKeyControllerMock.getSupportedKeySystemMetadataFromContentProtection = () => [{
+                    ks: keySystem,
+                    keyId: '800aacaa-5229-58ae-8880-62b5695db6bf',
+                    initData: new Uint8Array([0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00]).buffer
+                }];
+                protectionModelMock.requestKeySystemAccess = () => Promise.resolve({ data: { keySystem } });
+
+                protectionController.setMediaElement({});
+                protectionController.initializeForMedia({
+                    type: 'video',
+                    codec: 'video/webm;codecs="vp09.00.10.08"',
+                    contentProtection: [{ schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed' }]
+                });
+                protectionController.handleKeySystemFromManifest();
+                await new Promise((resolve) => setTimeout(resolve, 0));
+                // Session from the manifest init data plus the session created by the first webm encrypted event
+                eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(webmKeyIdBytes.buffer, 'webm') });
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(2);
+            });
+
+            afterEach(function () {
+                protectionController.setMediaElement(null);
+            });
+
+            it('should create a new session for a repeated webm encrypted event once the key is expired', function () {
+                protectionController.updateKeyStatusesMap({
+                    sessionToken: protectionModelMock.getSessionTokens()[1],
+                    parsedKeyStatuses: [{ keyId: webmKeyIdBytes.buffer, status: 'expired' }]
+                });
+
+                eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(webmKeyIdBytes.buffer, 'webm') });
+
+                expect(webmSpy.calledTwice).to.be.true;
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(3);
+            });
+
+            it('should not create a new session for a repeated webm encrypted event while the key is usable', function () {
+                protectionController.updateKeyStatusesMap({
+                    sessionToken: protectionModelMock.getSessionTokens()[1],
+                    parsedKeyStatuses: [{ keyId: webmKeyIdBytes.buffer, status: 'usable' }]
+                });
+
+                eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(webmKeyIdBytes.buffer, 'webm') });
+
+                expect(webmSpy.calledOnce).to.be.true;
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(2);
+            });
+
+            it('should not create a new session for a repeated webm encrypted event while the first session is acquiring its license', function () {
+                eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(webmKeyIdBytes.buffer, 'webm') });
+
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(2);
             });
         });
 

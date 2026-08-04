@@ -803,17 +803,19 @@ function ProtectionController(config) {
             // Compare in normalized form.
             const normalizedKeyId = Utils.normalizeKeyId(keyId);
 
-            // A session for a key that is no longer valid does not count. We need a new session and license in that case.
-            // Note that a session without a key status yet does count, otherwise we would trigger a second license request
-            // while the first one is still in progress.
-            if (_isKeyIdOutdated(normalizedKeyId)) {
-                return false;
-            }
-
             const sessions = protectionModel.getSessionTokens();
             for (let i = 0; i < sessions.length; i++) {
                 if (sessions[i].normalizedKeyId === normalizedKeyId) {
-                    return true;
+                    // A session that has not reported any key status yet is still acquiring its license.
+                    // It counts as existing, otherwise we would trigger a second license request while the first one is still in progress.
+                    if (!sessions[i].hasTriggeredKeyStatusMapUpdate) {
+                        return true;
+                    }
+
+                    // Sessions whose key is known to be invalid do not count. We need a new session and license in that case.
+                    if (!_isKeyIdOutdated(normalizedKeyId)) {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -1329,8 +1331,12 @@ function ProtectionController(config) {
 
             // In case we are not using Clearky we can still get a url from the pssh.
             if (!url && !protectionKeyController.isClearKey(selectedKeySystem)) {
-                const psshData = CommonEncryption.getPSSHData(sessionToken.initData);
-                url = selectedKeySystem.getLicenseServerURLFromInitData(psshData);
+                try {
+                    const psshData = CommonEncryption.getPSSHData(sessionToken.initData);
+                    url = selectedKeySystem.getLicenseServerURLFromInitData(psshData);
+                } catch (e) {
+                    // initData that is not a PSSH box, for instance a raw webm key id, can not provide a license server url
+                }
 
                 // Still no url, check the keymessage
                 if (!url) {
@@ -1448,8 +1454,10 @@ function ProtectionController(config) {
         const isWebm = event.key.initDataType === ProtectionConstants.INITIALIZATION_DATA_TYPE_WEBM;
 
         if (selectedKeySystem) {
-            // sinf and webm initData are not PSSH boxes, compare them verbatim
-            const initDataForCheck = (isSinf || isWebm) ? abInitData : CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
+            // webm initData is a raw key id. Duplicate webm events are handled via key ids and key statuses further down,
+            // so that a new session can be created once the key is expired or released.
+            // sinf initData is not a PSSH box either, compare it verbatim.
+            const initDataForCheck = isWebm ? null : isSinf ? abInitData : CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
 
             if (initDataForCheck && _isInitDataDuplicate(initDataForCheck)) {
                 return;
