@@ -13,15 +13,6 @@
     <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
 
     <style>
-        .c2pa-controls label {
-            display: block;
-            margin-top: 8px;
-            font-weight: 600;
-        }
-        .c2pa-controls input[type="text"],
-        .c2pa-controls select {
-            width: 100%;
-        }
         .c2pa-summary {
             margin-top: 12px;
             font-size: 0.9em;
@@ -83,8 +74,9 @@
     };
 
     var STATUS_MESSAGES = {
-        continuityUnsupported: 'Continuity method cannot be validated: only the spec-defined continuity ' +
-            'method (manifest ID chain, §19.7.2) is supported. The segment\'s content hash is valid.'
+        continuityUnsupported: 'This segment\'s continuity method isn\'t recognized: this player only ' +
+            'implements the spec-default (manifest ID chain, §19.7.2). The content is still authentic ' +
+            '(its hash is valid), but continuity to the previous segment couldn\'t be confirmed.'
     };
 
     var player = null;
@@ -98,6 +90,12 @@
         document.getElementById('c2pa-load').addEventListener('click', reload);
         document.getElementById('c2pa-enabled').addEventListener('change', onEnabledChange);
         document.getElementById('c2pa-method').addEventListener('change', onMethodChange);
+        document.querySelectorAll('.c2pa-example').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('c2pa-url').value = btn.dataset.url;
+                reload();
+            });
+        });
 
         reload();
     }
@@ -209,21 +207,30 @@
     import {initSamplePage} from '../lib/sample-template.js';
 
     var sidePanel =
-        '<div class="c2pa-controls">' +
-        '  <h5>C2PA controls</h5>' +
-        '  <label for="c2pa-url">Signed DASH stream (MPD)</label>' +
-        '  <input type="text" id="c2pa-url" placeholder="https://.../manifest.mpd">' +
-        '  <label for="c2pa-enabled"><input type="checkbox" id="c2pa-enabled" checked> Enable C2PA checking</label>' +
-        '  <label for="c2pa-method">Method</label>' +
-        '  <select id="c2pa-method">' +
-        '    <option value="auto">auto (detect)</option>' +
-        '    <option value="19.3">19.3 (Manifest Box)</option>' +
-        '    <option value="19.4">19.4 (VSI)</option>' +
-        '  </select>' +
-        '  <button type="button" id="c2pa-load" class="btn btn-primary btn-sm" style="margin-top:10px;">Load</button>' +
-        '  <div class="c2pa-summary" id="c2pa-summary"></div>' +
-        '  <div class="c2pa-grid" id="c2pa-grid"></div>' +
-        '  <div class="c2pa-details" id="c2pa-details"></div>' +
+        '<div class="sample-side-panel">' +
+        '  <div class="sample-side-panel-header">C2PA controls</div>' +
+        '  <div class="sample-side-panel-body">' +
+        '    <label for="c2pa-url">Signed DASH stream (MPD)</label>' +
+        '    <input type="text" id="c2pa-url" placeholder="https://.../manifest.mpd">' +
+        '    <div>' +
+        '      <button type="button" class="btn btn-link btn-sm p-0 c2pa-example" ' +
+        '        data-url="https://live.unified-streaming.com/trusted_media/wdr.ism/.mpd">§19.4 VSI example</button>' +
+        '      &nbsp;|&nbsp;' +
+        '      <button type="button" class="btn btn-link btn-sm p-0 c2pa-example" ' +
+        '        data-url="https://ezdrm-live-signer-dash-outputbucket-sykaqzo1yxog.s3.us-east-1.amazonaws.com/processed/stream.mpd">§19.3 Manifest Box example</button>' +
+        '    </div>' +
+        '    <label for="c2pa-enabled"><input type="checkbox" id="c2pa-enabled" checked> Enable C2PA checking</label>' +
+        '    <label for="c2pa-method">Method</label>' +
+        '    <select id="c2pa-method">' +
+        '      <option value="auto">auto (detect)</option>' +
+        '      <option value="19.3">19.3 (Manifest Box)</option>' +
+        '      <option value="19.4">19.4 (VSI)</option>' +
+        '    </select>' +
+        '    <button type="button" id="c2pa-load" class="btn btn-primary btn-sm" style="margin-top:10px;">Load</button>' +
+        '    <div class="c2pa-summary" id="c2pa-summary"></div>' +
+        '    <div class="c2pa-grid" id="c2pa-grid"></div>' +
+        '    <div class="c2pa-details" id="c2pa-details"></div>' +
+        '  </div>' +
         '</div>';
 
     initSamplePage({
