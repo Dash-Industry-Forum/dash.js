@@ -209,6 +209,20 @@ describe('ProtectionController', function () {
                 expect(webmSpy.called).to.be.false;
             });
 
+            it('should not ignore webm initData when the key for its keyId is no longer usable', function () {
+                for (const status of ['released', 'expired', 'status-pending', 'internal-error']) {
+                    webmSpy.resetHistory();
+                    protectionController.updateKeyStatusesMap({
+                        sessionToken: {},
+                        parsedKeyStatuses: [{ keyId: keyIdBytes.buffer, status }]
+                    });
+
+                    eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(keyIdBytes.buffer, 'webm') });
+
+                    expect(webmSpy.calledOnce, `key status ${status} should not suppress the license request`).to.be.true;
+                }
+            });
+
             it('should ignore initData of unsupported types', function () {
                 eventBus.trigger(ProtectionEvents.NEED_KEY, { key: new NeedKey(keyIdBytes.buffer, 'keyids') });
 
@@ -260,6 +274,57 @@ describe('ProtectionController', function () {
                 await new Promise((resolve) => setTimeout(resolve, 0));
 
                 expect(createKeySessionSpy.called).to.be.false;
+            });
+        });
+
+        describe('createKeySession', function () {
+            const keyId = '800aacaa-5229-58ae-8880-62b5695db6bf';
+            const keyIdBytes = new Uint8Array([
+                0x80, 0x0a, 0xac, 0xaa, 0x52, 0x29, 0x58, 0xae,
+                0x88, 0x80, 0x62, 0xb5, 0x69, 0x5d, 0xb6, 0xbf
+            ]);
+            const initData = new Uint8Array([0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00]).buffer;
+
+            function _setKeyStatus(status) {
+                protectionController.updateKeyStatusesMap({
+                    sessionToken: {},
+                    parsedKeyStatuses: [{ keyId: keyIdBytes.buffer, status }]
+                });
+            }
+
+            beforeEach(function () {
+                protectionController.createKeySession({ keyId, initData });
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            });
+
+            it('should not create a second session while no key status is known yet', function () {
+                protectionController.createKeySession({ keyId, initData });
+
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            });
+
+            it('should not create a second session for a usable key', function () {
+                _setKeyStatus('usable');
+
+                protectionController.createKeySession({ keyId, initData });
+
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            });
+
+            it('should create a new session for a key that is expired or released', function () {
+                _setKeyStatus('expired');
+                protectionController.createKeySession({ keyId, initData });
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(2);
+
+                _setKeyStatus('released');
+                protectionController.createKeySession({ keyId, initData });
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(3);
+            });
+
+            it('should match key ids signaled as dashed UUID and as plain hex', function () {
+                protectionController.createKeySession({ keyId: '800AACAA522958AE888062B5695DB6BF', initData });
+
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
             });
         });
 

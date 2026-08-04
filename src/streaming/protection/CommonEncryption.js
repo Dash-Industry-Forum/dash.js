@@ -155,6 +155,11 @@ class CommonEncryption {
 
             /* Box size */
             size = dv.getUint32(byteCursor);
+            // A box size of 0 would reset the cursor to the start of the current box and loop endlessly.
+            // The provided data is not a valid list of PSSH boxes in that case.
+            if (size === 0) {
+                break;
+            }
             nextBox = byteCursor + size;
             byteCursor += 4;
 

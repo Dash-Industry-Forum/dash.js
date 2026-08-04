@@ -679,7 +679,9 @@ function ProtectionController(config) {
         // Enforce maximum number of open MediaKeySessions, if settings are provided
         _enforceMediaKeySessionLimit();
 
-        const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null);
+        // Only 'cenc' initData carries PSSH boxes. webm initData is a raw key id and sinf initData is a JSON wrapped sinf box.
+        const isPsshInitData = !keySystemMetadata || !keySystemMetadata.initDataType || keySystemMetadata.initDataType === ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
+        const initDataForKS = isPsshInitData ? CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null) : null;
         if (initDataForKS) {
 
             // Check for duplicate initData
@@ -800,6 +802,14 @@ function ProtectionController(config) {
             // Key ids can be signaled in different formats (dashed UUID from the manifest, plain hex from initData).
             // Compare in normalized form.
             const normalizedKeyId = Utils.normalizeKeyId(keyId);
+
+            // A session for a key that is no longer valid does not count. We need a new session and license in that case.
+            // Note that a session without a key status yet does count, otherwise we would trigger a second license request
+            // while the first one is still in progress.
+            if (_isKeyIdOutdated(normalizedKeyId)) {
+                return false;
+            }
+
             const sessions = protectionModel.getSessionTokens();
             for (let i = 0; i < sessions.length; i++) {
                 if (sessions[i].normalizedKeyId === normalizedKeyId) {
@@ -810,6 +820,32 @@ function ProtectionController(config) {
         } catch (e) {
             return false;
         }
+    }
+
+    /**
+     * Checks if we already have a usable key for the provided key id, for instance from a session created via manifest pssh data.
+     * @param {string} keyId
+     * @return {boolean}
+     * @private
+     */
+    function _hasUsableKeyForKeyId(keyId) {
+        const keyStatus = keyStatusMap.get(Utils.normalizeKeyId(keyId));
+
+        return keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.USABLE ||
+            keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_DOWNSCALED;
+    }
+
+    /**
+     * Checks if the key for the provided key id is known to be invalid. Such keys require a new license.
+     * @param {string} normalizedKeyId
+     * @return {boolean}
+     * @private
+     */
+    function _isKeyIdOutdated(normalizedKeyId) {
+        const keyStatus = keyStatusMap.get(normalizedKeyId);
+
+        return keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED ||
+            keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.RELEASED;
     }
 
     /**
@@ -1429,8 +1465,7 @@ function ProtectionController(config) {
         } else if (isWebm) {
             // If we already have a usable key for this keyId, for instance from a session created via manifest pssh data, there is no need for another session
             const keyId = abInitData && abInitData.byteLength === 16 ? Utils.bufferSourceToHex(abInitData) : null;
-            const keyStatus = keyId ? keyStatusMap.get(keyId) : null;
-            if (keyStatus && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED) {
+            if (keyId && _hasUsableKeyForKeyId(keyId)) {
                 logger.debug('DRM: Ignoring webm initData because a usable key for keyId ' + keyId + ' is already available');
                 return;
             }
