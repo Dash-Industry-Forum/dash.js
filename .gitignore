@@ -212,3 +212,5 @@ test-results
 .claude/settings.local.json
 
 .playwright-mcp
+
+*.tgz
