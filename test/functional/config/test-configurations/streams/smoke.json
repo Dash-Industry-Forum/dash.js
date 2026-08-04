@@ -139,6 +139,11 @@
       ]
     },
     {
+      "name": "Shaka Demo Assets: Angel-One (clear)",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd"
+    },
+    {
       "name": "1080p with PlayReady and Widevine DRM, single key",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
