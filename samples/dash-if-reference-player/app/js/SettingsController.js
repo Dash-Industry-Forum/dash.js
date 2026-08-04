@@ -13,6 +13,10 @@ export class SettingsController {
         this._autoPlay = true;
         this._loop = true;
         this._restoredProtData = null;
+        this._disabledTrackTypes = new Set();
+        this._blockedCodecs = new Set();
+        this._detectedCodecs = new Map();
+        this._filterReloadTimer = null;
     }
 
     static get _ARRAY_SETTING_PATHS() {
@@ -30,6 +34,11 @@ export class SettingsController {
         this._bindAll();
         this._syncFromPlayer();
         this._addTooltips();
+
+        // Track/codec debug filtering: applied by the reference UI via a custom capabilities filter.
+        // Registered once, the callback reads the current UI state. Applied on every manifest load/refresh.
+        this.player.registerCustomCapabilitiesFilter((representation) => this._applyTrackFilter(representation));
+        this.player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, (e) => this._updateDetectedCodecs(e.data));
     }
 
     /**
@@ -327,6 +336,12 @@ export class SettingsController {
         if (this._isChecked('opt-autoload')) {
             params.set('autoLoad', 'true');
         }
+        if (this._disabledTrackTypes.size > 0) {
+            params.set('disabledTrackTypes', [...this._disabledTrackTypes].join(','));
+        }
+        if (this._blockedCodecs.size > 0) {
+            params.set('blockedCodecs', [...this._blockedCodecs].join(','));
+        }
 
         const url = new URL(window.location.href.split('?')[0]);
         url.search = params.toString();
@@ -391,6 +406,24 @@ export class SettingsController {
         if (params.get('autoLoad') === 'true') {
             $('#opt-autoload').checked = true;
         }
+        if (params.get('disabledTrackTypes')) {
+            for (const type of params.get('disabledTrackTypes').split(',')) {
+                if (['video', 'audio', 'text'].includes(type)) {
+                    this._disabledTrackTypes.add(type);
+                    const checkbox = $(`#opt-filter-type-${type}`);
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
+                }
+            }
+        }
+        if (params.get('blockedCodecs')) {
+            for (const codecs of params.get('blockedCodecs').split(',')) {
+                if (codecs) {
+                    this._blockedCodecs.add(codecs);
+                }
+            }
+        }
 
         // Handle DRM protection data
         const protDataParam = params.get('protData');
@@ -405,7 +438,7 @@ export class SettingsController {
         // Handle dash.js settings
         const settingsObj = {};
         for (const [key, value] of params.entries()) {
-            if (['stream', 'mpd', 'autoplay', 'autoPlay', 'loop', 'muted', 'autoLoad', 'protData'].includes(key)) {
+            if (['stream', 'mpd', 'autoplay', 'autoPlay', 'loop', 'muted', 'autoLoad', 'protData', 'disabledTrackTypes', 'blockedCodecs'].includes(key)) {
                 continue;
             }
             this._setNestedValue(settingsObj, key, this._coerceType(value));
@@ -455,6 +488,19 @@ export class SettingsController {
         this._bindCheckbox('opt-muted', () => {
             this.player.setMute(this._isChecked('opt-muted'));
         });
+
+        // Track type filters (reference UI state, not dash.js settings)
+        for (const type of ['video', 'audio', 'text']) {
+            this._bindCheckbox(`opt-filter-type-${type}`, () => {
+                if (this._isChecked(`opt-filter-type-${type}`)) {
+                    this._disabledTrackTypes.delete(type);
+                } else {
+                    this._disabledTrackTypes.add(type);
+                }
+                this._renderCodecFilterList();
+                this._onTrackFilterChanged();
+            });
+        }
 
         // All streaming settings - bind change events
         const settingsCheckboxes = [
@@ -526,6 +572,168 @@ export class SettingsController {
     _applySettings() {
         const config = this.buildConfig();
         this.player.updateSettings(config);
+    }
+
+    /**
+     * The capabilities filter only runs when a manifest is (re)loaded, so for VOD content a filter
+     * change would have no effect. Reload the current source at the current playback position instead.
+     * Debounced so that toggling multiple checkboxes triggers a single reload.
+     * @private
+     */
+    _onTrackFilterChanged() {
+        clearTimeout(this._filterReloadTimer);
+        this._filterReloadTimer = setTimeout(() => {
+            let source = null;
+            try {
+                source = this.player.getSource();
+            } catch (e) {
+                // getSource() throws when no source has been attached yet — nothing to reload,
+                // the filter is applied on the first load anyway
+            }
+            if (!source) {
+                return;
+            }
+            let startTime = NaN;
+            try {
+                const time = this.player.time();
+                if (!isNaN(time) && time > 0) {
+                    startTime = time;
+                }
+            } catch (e) {
+                // No active stream — attach from the beginning
+            }
+            this.player.attachSource(source, startTime);
+        }, 500);
+    }
+
+    /**
+     * Custom capabilities filter callback. Returning false removes the Representation;
+     * AdaptationSets without remaining Representations are removed by dash.js.
+     * @param {Object} representation - parsed Representation (mimeType/codecs inherited from the AdaptationSet)
+     * @returns {boolean}
+     */
+    _applyTrackFilter(representation) {
+        const type = SettingsController._classifyRepresentationType(representation);
+        if (type && this._disabledTrackTypes.has(type)) {
+            return false;
+        }
+        if (representation && representation.codecs && this._blockedCodecs.has(representation.codecs)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Map a Representation to a media type based on mimeType/codecs.
+     * The capabilities filter callback has no contentType, so we classify via mimeType.
+     * @param {Object} representation
+     * @returns {string|null} 'video' | 'audio' | 'text' or null if unclassified (e.g. image/)
+     */
+    static _classifyRepresentationType(representation) {
+        const mimeType = representation ? representation.mimeType : null;
+        if (!mimeType) {
+            return null;
+        }
+        if (mimeType.startsWith('video/')) {
+            return 'video';
+        }
+        if (mimeType.startsWith('audio/')) {
+            return 'audio';
+        }
+        const codecs = representation.codecs || '';
+        if (mimeType.startsWith('text/') || mimeType === 'application/ttml+xml' ||
+            (mimeType === 'application/mp4' && /stpp|wvtt/.test(codecs))) {
+            return 'text';
+        }
+        return null;
+    }
+
+    /**
+     * Collect the unique codec strings from a parsed manifest and re-render the codec filter list.
+     * Called on every MANIFEST_LOADED; entries accumulate as a union, check state is preserved.
+     * @param {Object} manifest - parsed manifest object
+     */
+    _updateDetectedCodecs(manifest) {
+        if (!manifest || !manifest.Period) {
+            return;
+        }
+        for (const period of manifest.Period) {
+            for (const adaptationSet of (period.AdaptationSet || [])) {
+                for (const representation of (adaptationSet.Representation || [])) {
+                    const codecs = representation.codecs || adaptationSet.codecs;
+                    const mimeType = representation.mimeType || adaptationSet.mimeType;
+                    if (codecs && !this._detectedCodecs.has(codecs)) {
+                        this._detectedCodecs.set(codecs, SettingsController._classifyRepresentationType({ mimeType, codecs }) || '');
+                    }
+                }
+            }
+        }
+        this._renderCodecFilterList();
+    }
+
+    _renderCodecFilterList() {
+        const container = $('#codec-filter-list');
+        if (!container || this._detectedCodecs.size === 0) {
+            return;
+        }
+        container.replaceChildren();
+        // Also render codecs that were blocked via URL restore but not (yet) detected in a manifest
+        for (const codecs of this._blockedCodecs) {
+            if (!this._detectedCodecs.has(codecs)) {
+                this._detectedCodecs.set(codecs, '');
+            }
+        }
+
+        const groups = [
+            { type: 'video', title: 'Video Codecs' },
+            { type: 'audio', title: 'Audio Codecs' },
+            { type: 'text', title: 'Text Codecs' },
+            { type: '', title: 'Other Codecs' }
+        ];
+        const sortedEntries = [...this._detectedCodecs.entries()].sort();
+        for (const group of groups) {
+            const entries = sortedEntries.filter(([, type]) => type === group.type);
+            if (entries.length === 0) {
+                continue;
+            }
+            const typeDisabled = this._disabledTrackTypes.has(group.type);
+            const header = document.createElement('div');
+            header.className = 'option-section';
+            header.textContent = group.title + (typeDisabled ? ' (track type disabled)' : '');
+            container.appendChild(header);
+            for (const [codecs] of entries) {
+                container.appendChild(this._createCodecCheckbox(codecs, typeDisabled));
+            }
+        }
+    }
+
+    _createCodecCheckbox(codecs, typeDisabled) {
+        const id = `opt-codec-filter-${codecs.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'form-check';
+        const input = document.createElement('input');
+        input.className = 'form-check-input';
+        input.type = 'checkbox';
+        input.id = id;
+        // While the whole track type is disabled, show its codecs unchecked and not editable.
+        // The individual codec selection is kept in _blockedCodecs and restored when the type is re-enabled.
+        input.checked = typeDisabled ? false : !this._blockedCodecs.has(codecs);
+        input.disabled = !!typeDisabled;
+        input.addEventListener('change', () => {
+            if (input.checked) {
+                this._blockedCodecs.delete(codecs);
+            } else {
+                this._blockedCodecs.add(codecs);
+            }
+            this._onTrackFilterChanged();
+        });
+        const label = document.createElement('label');
+        label.className = 'form-check-label';
+        label.setAttribute('for', id);
+        label.textContent = codecs;
+        wrapper.appendChild(input);
+        wrapper.appendChild(label);
+        return wrapper;
     }
 
     _addTooltips() {

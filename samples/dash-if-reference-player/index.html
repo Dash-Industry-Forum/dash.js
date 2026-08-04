@@ -506,6 +506,36 @@
                 <!-- Controlbar is injected here by ControlBar.js from contrib/controlbar -->
             </div>
 
+            <!-- Track Filters (debug, applied by the reference UI, not a player setting) -->
+            <div class="option-card" id="track-filters-panel">
+                <div class="option-card-header">Track Filters</div>
+                <div class="option-card-body">
+                    <div class="option-section">Track Types</div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="opt-filter-type-video" checked>
+                        <label class="form-check-label" for="opt-filter-type-video">Video</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="opt-filter-type-audio" checked>
+                        <label class="form-check-label" for="opt-filter-type-audio">Audio</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="opt-filter-type-text" checked>
+                        <label class="form-check-label" for="opt-filter-type-text">Text</label>
+                    </div>
+
+                    <div id="codec-filter-list">
+                        <div class="option-section">Codecs</div>
+                        <span class="text-muted small">Load a stream to list its codecs</span>
+                    </div>
+
+                    <div class="text-muted small mt-2">
+                        Applied by the reference UI via a custom capabilities filter. Changing a filter reloads the
+                        stream at the current position. Embedded CEA captions cannot be filtered.
+                    </div>
+                </div>
+            </div>
+
             <!-- Notification Panel (errors, warnings, conformance violations) -->
             <div class="notification-panel" id="notification-panel">
                 <div class="notification-header">

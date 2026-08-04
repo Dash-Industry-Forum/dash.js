@@ -37,6 +37,15 @@ const SETTINGS_DESCRIPTIONS = {
     'opt-content-steering':
         'Set to true if dash.js should apply content steering during playback.',
 
+    'opt-filter-type-video':
+        'Uncheck to remove all video AdaptationSets. Applied by the reference UI via a custom capabilities filter; the stream is reloaded at the current position. Not a dash.js setting.',
+
+    'opt-filter-type-audio':
+        'Uncheck to remove all audio AdaptationSets. Applied by the reference UI via a custom capabilities filter; the stream is reloaded at the current position. Not a dash.js setting.',
+
+    'opt-filter-type-text':
+        'Uncheck to remove all text/subtitle AdaptationSets. Applied by the reference UI via a custom capabilities filter; the stream is reloaded at the current position. Embedded CEA-608/708 captions are carried in the video Representations and cannot be filtered this way. Not a dash.js setting.',
+
     'opt-ignore-eme-encrypted-event':
         'If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.',
 
