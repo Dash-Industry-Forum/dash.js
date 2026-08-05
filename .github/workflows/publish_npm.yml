@@ -25,5 +25,17 @@ jobs:
             -   name: Install
                 run: npm ci
 
-            -   name: Publish
-                run: npm publish
+            # The pack below runs with --ignore-scripts, so the prepack hook (and with it the
+            # prebuild -> ci:verify chain) never runs in this workflow. Gate explicitly.
+            -   name: Run unit tests and lint
+                run: npm run ci:verify
+
+            # Runs build:dist itself, packs the tarball with --ignore-scripts, asserts its
+            # contents, installs it into a consumer app and runs a playback smoke test.
+            # Publish only runs if this passes.
+            -   name: Pack and verify tarball
+                run: npm run test:package
+
+            # Publishing the tarball path skips prepack, so the exact verified artifact ships.
+            -   name: Publish verified tarball
+                run: npm publish dashjs-*.tgz
