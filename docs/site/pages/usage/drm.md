@@ -31,9 +31,9 @@ const protData = {
 player.setProtectionData(protData);
 ```
 
-A Widevine service certificate can be provided via the `serverCertificate` attribute as a Base64 encoded string. This
-avoids an additional certificate request to the license server. To unlock hardware backed playback (L1) specific
-robustness levels are required, see [Robustness levels](#robustness-levels-hard-software-drm).
+A Widevine service certificate can be provided directly or downloaded from a certificate server URL,
+see [Server certificates](#server-certificates). To unlock hardware backed playback (L1) specific robustness levels are
+required, see [Robustness levels](#robustness-levels-hard-software-drm).
 
 An example is available in
 the [Widevine sample](https://reference.dashif.org/dash.js/nightly/samples/drm/widevine.html).
@@ -64,7 +64,7 @@ player.setProtectionData(protData);
 
 PlayReady allows passing custom data to the CDM as part of the license acquisition. dash.js supports this via the
 `cdmData` attribute of the protection data, which is wrapped into a `PlayReadyCDMData` object and handed to the key
-session.
+session. A server certificate can be provided as well, see [Server certificates](#server-certificates).
 
 An example is available in
 the [PlayReady sample](https://reference.dashif.org/dash.js/nightly/samples/drm/playready.html).
@@ -97,14 +97,62 @@ const protData = {
 player.setProtectionData(protData);
 ```
 
-`serverCertificate` is the Base64 string representation of the DRM certificate. If it is not provided, dash.js
-attempts to download the certificate from the URLs signaled in the `ContentProtection` elements of the MPD. Certificate
-requests and responses can be modified via filters, see the
-[certificate wrapping sample](https://reference.dashif.org/dash.js/nightly/samples/drm/certificate-wrapping.html).
+In contrast to Widevine and PlayReady, FairPlay usually requires a server certificate before a license request can be
+made. If it is not provided via the API, dash.js attempts to download it from the certificate URLs signaled in the MPD,
+see [Server certificates](#server-certificates).
 
 An example is available in
 the [FairPlay sample](https://reference.dashif.org/dash.js/nightly/samples/drm/fairplay.html).
 
+## Server certificates
+
+Some DRM systems require or recommend a server certificate before license requests can be made — mandatory for
+FairPlay, optional for Widevine (service certificate) and PlayReady. dash.js supports providing the certificate for any
+key system in three ways:
+
+1. **Directly via the API** using the `serverCertificate` attribute as a Base64 encoded string. The certificate is
+   applied immediately and no certificate request is performed:
+
+```js
+const protData = {
+    "com.widevine.alpha": {
+        "serverURL": "https://license.example.com/AcquireLicense",
+        "serverCertificate": "<base64 encoded certificate>"
+    }
+};
+player.setProtectionData(protData);
+```
+
+2. **Via certificate server URLs in the API** using the `certUrls` attribute. dash.js downloads the certificate from
+   the provided URLs:
+
+```js
+const protData = {
+    "com.widevine.alpha": {
+        "serverURL": "https://license.example.com/AcquireLicense",
+        "certUrls": [
+            { "url": "https://certificates.example.com/widevine.der", "certType": "widevine" }
+        ]
+    }
+};
+player.setProtectionData(protData);
+```
+
+3. **Via certificate server URLs in the MPD** signaled in a `Certurl` element (for instance `dashif:Certurl`) under
+   the `ContentProtection` descriptor:
+
+```xml
+<ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed" value="Widevine">
+    <dashif:Certurl>https://certificates.example.com/widevine.der</dashif:Certurl>
+</ContentProtection>
+```
+
+URLs provided via the API take priority over URLs signaled in the MPD. The deduplicated candidates are requested
+sequentially, the first successfully downloaded certificate is applied and cached for the key system. The number of
+retries per URL can be configured via `streaming.retryAttempts`. Certificate requests and responses can be modified via
+filters, see the
+[certificate wrapping sample](https://reference.dashif.org/dash.js/nightly/samples/drm/certificate-wrapping.html) and
+the [external certificate URL sample](https://reference.dashif.org/dash.js/nightly/samples/drm/fairplay-external-certificate-url.html).
 
 ## License server settings
 
