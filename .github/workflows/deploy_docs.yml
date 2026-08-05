@@ -4,7 +4,7 @@ name: deploy_docs
 on:
   push:
     branches:
-      - fh/pagesDeployment
+      - fix/pagesDeployment
     paths:
       - 'docs/site/**'
       - 'src/**'
