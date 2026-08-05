@@ -22,7 +22,7 @@ hero:
 features:
   - icon: 🎬
     title: MPEG-DASH Playback
-    details: Spec-compliant DASH playback built on the Media Source Extensions, for VoD and live content.
+    details: Specification compliant MPEG-DASH playback built on the Media Source Extensions and the Encrypted Media Extensions, for VoD and live content.
     link: /pages/usage/
   - icon: ⚡
     title: Low Latency Streaming

@@ -22,10 +22,10 @@ export default withMermaid({
             { text: 'Quickstart', link: '/pages/quickstart/' },
             { text: 'Usage', link: '/pages/usage/' },
             { text: 'Developers', link: '/pages/developers/' },
+            { text: 'API Reference', link: `${base}api/`, target: '_blank' },
             {
                 text: 'Resources',
                 items: [
-                    { text: 'API Documentation', link: 'https://cdn.dashjs.org/latest/jsdoc/index.html' },
                     { text: 'Sample Section', link: 'https://reference.dashif.org/dash.js/nightly/samples/index.html' },
                     { text: 'Reference Client', link: 'https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html' }
                 ]

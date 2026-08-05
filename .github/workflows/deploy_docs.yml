@@ -43,6 +43,8 @@ jobs:
         env:
           BASE_PATH: ${{ steps.pages.outputs.base_path }}
         run: DOCS_BASE="${BASE_PATH:-}/" npm run docs:build
+      - name: Generate API reference (JSDoc)
+        run: npx jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/site/.vitepress/dist/api
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
