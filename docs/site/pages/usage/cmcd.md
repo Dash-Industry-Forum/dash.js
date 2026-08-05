@@ -53,5 +53,64 @@ player.updateSettings({
 })
 ````
 
+## CMCD Version 2
+
+CMCD version 2 extends version 1 with additional keys and new reporting modes. dash.js supports CMCD v2 based on
+the [Common Media Library](https://github.com/streaming-video-technology-alliance/common-media-library). To enable it,
+set `version: 2` in the CMCD settings.
+
+### Additional keys
+
+Among others, the following v2 keys are reported by dash.js:
+
+| Key   | Description                                                                  |
+|-------|------------------------------------------------------------------------------|
+| `ltc` | Live latency: the delay between the live edge and the current playback position |
+| `msd` | Media start delay: time from the playback request until the first frame is rendered |
+| `sta` | Player state (e.g. playing, paused, seeking)                                 |
+| `e`   | Event that triggered an event mode report                                    |
+
+### Reporting modes
+
+In addition to the v1 request mode (CMCD data attached to segment and MPD requests as query parameters or HTTP
+headers), version 2 introduces dedicated reporting targets. dash.js supports these via the `eventTargets` setting:
+
+- **Response mode**: reports are sent to a reporting endpoint after a response was received (`rr` event).
+- **Event mode**: reports are triggered by player events such as play state changes (`ps`) or errors, or periodically
+  via a time interval (`t`).
+- **Batching**: reports can be collected and sent in batches using the `batchSize` attribute.
+
+Each target is configured individually:
+
+````js
+player.updateSettings({
+    streaming: {
+        cmcd: {
+            enabled: true,
+            version: 2,
+            eventTargets: [
+                {
+                    enabled: true,
+                    url: 'https://example.com/cmcd/response-mode',
+                    events: ['rr'],
+                    includeInRequests: ['segment']
+                },
+                {
+                    enabled: true,
+                    url: 'https://example.com/cmcd/event-mode',
+                    events: ['ps'],
+                    interval: 10,
+                    enabledKeys: ['e', 'msd', 'sta']
+                }
+            ]
+        }
+    },
+})
+````
+
 ## Example
-An example illustrating CMCD reporting can be found in our dash.js [sample section](https://reference.dashif.org/dash.js/latest/samples/advanced/cmcd.html).
+
+An example illustrating CMCD reporting can be found in our
+dash.js [sample section](https://reference.dashif.org/dash.js/latest/samples/advanced/cmcd.html). A dedicated CMCD v2
+example including response and event mode reporting is available in
+the [CMCD v2 sample](https://reference.dashif.org/dash.js/nightly/samples/cmcd/cmcd-v2.html).

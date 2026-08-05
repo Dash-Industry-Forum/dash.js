@@ -11,6 +11,101 @@ dash.js offers support for playback of DRM protected content. In this context, m
 Multiple samples implementing the functionalities described in this documentation can be found in
 the [DRM section](http://reference.dashif.org/dash.js/nightly/samples/).
 
+## Widevine
+
+Google Widevine is supported on Chromium based browsers (Chrome, Edge, Opera), Firefox, Android and many smart TV
+platforms. dash.js registers the key system under the system string `com.widevine.alpha`
+(`urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed`). Widevine protected DASH content is typically encrypted using the
+`cenc` scheme, `cbcs` is supported on newer CDM versions.
+
+The initialization data is taken from the `cenc:pssh` element in the MPD or from the `encrypted` event thrown by the
+EME. If the license server URL is signaled in the MPD (for instance via `dashif:Laurl`), playback works without any
+additional configuration. Otherwise, provide the license server URL via the protection data:
+
+```js
+const protData = {
+    "com.widevine.alpha": {
+        "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense"
+    }
+};
+player.setProtectionData(protData);
+```
+
+A Widevine service certificate can be provided via the `serverCertificate` attribute as a Base64 encoded string. This
+avoids an additional certificate request to the license server. To unlock hardware backed playback (L1) specific
+robustness levels are required, see [Robustness levels](#robustness-levels-hard-software-drm).
+
+An example is available in
+the [Widevine sample](https://reference.dashif.org/dash.js/nightly/samples/drm/widevine.html).
+
+## PlayReady
+
+Microsoft PlayReady is supported on Windows (Edge), Xbox and a large number of smart TVs and set-top boxes. dash.js
+registers the key system under the system string `com.microsoft.playready`
+(`urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95`). Depending on the platform, additional system strings such as
+`com.microsoft.playready.recommendation` and `com.microsoft.playready.hardware` are available. The `recommendation`
+key system is required for `cbcs` encrypted content and can be prioritized via the
+[system string priority](#key-system-string-priority). PlayReady protected DASH content is commonly encrypted using
+the `cenc` scheme.
+
+The initialization data is taken from the PlayReady header in the `mspr:pro`/`cenc:pssh` elements of the MPD or from
+the `encrypted` event thrown by the EME. If the license server URL is signaled in the MPD (for instance via
+`dashif:Laurl` or the PlayReady header), playback works without any additional configuration. Otherwise, provide the
+license server URL via the protection data:
+
+```js
+const protData = {
+    "com.microsoft.playready": {
+        "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense"
+    }
+};
+player.setProtectionData(protData);
+```
+
+PlayReady allows passing custom data to the CDM as part of the license acquisition. dash.js supports this via the
+`cdmData` attribute of the protection data, which is wrapped into a `PlayReadyCDMData` object and handed to the key
+session.
+
+An example is available in
+the [PlayReady sample](https://reference.dashif.org/dash.js/nightly/samples/drm/playready.html).
+
+## FairPlay
+
+Apple FairPlay Streaming is supported on Apple platforms (Safari on macOS, iOS and iPadOS). dash.js registers the key
+system under the system string `com.apple.fps` (`urn:uuid:94ce86fb-07ff-4f43-adb8-93d2fa968ca2`). FairPlay protected
+DASH content is typically encrypted using the `cbcs` scheme.
+
+In contrast to Widevine and PlayReady, FairPlay does not use PSSH data from the manifest — the initialization data is
+provided by the platform via the `encrypted` event (`sinf` init data type). If the license server URL and certificate
+are signaled in the MPD (for instance via `dashif:laurl`), playback works without any additional configuration:
+
+```js
+const player = dashjs.MediaPlayer().create();
+player.initialize(video, url, true);
+```
+
+Otherwise, provide the license server URL — and, if required by your DRM provider, the FairPlay server certificate —
+via the protection data:
+
+```js
+const protData = {
+    "com.apple.fps": {
+        "serverURL": "https://fairplay-license.example.com/license",
+        "serverCertificate": "<base64 encoded certificate>"
+    }
+};
+player.setProtectionData(protData);
+```
+
+`serverCertificate` is the Base64 string representation of the DRM certificate. If it is not provided, dash.js
+attempts to download the certificate from the URLs signaled in the `ContentProtection` elements of the MPD. Certificate
+requests and responses can be modified via filters, see the
+[certificate wrapping sample](https://reference.dashif.org/dash.js/nightly/samples/drm/certificate-wrapping.html).
+
+An example is available in
+the [FairPlay sample](https://reference.dashif.org/dash.js/nightly/samples/drm/fairplay.html).
+
+
 ## License server settings
 
 In order to specify the license server for a DRM system use the `serverURL` attribute:
@@ -77,42 +172,6 @@ var protData = {
     }
 };
 ````
-
-## FairPlay
-
-Apple FairPlay Streaming is supported on Apple platforms (Safari on macOS, iOS and iPadOS). dash.js registers the key
-system under the system string `com.apple.fps` (`urn:uuid:94ce86fb-07ff-4f43-adb8-93d2fa968ca2`). FairPlay protected
-DASH content is typically encrypted using the `cbcs` scheme.
-
-In contrast to Widevine and PlayReady, FairPlay does not use PSSH data from the manifest — the initialization data is
-provided by the platform via the `encrypted` event (`sinf` init data type). If the license server URL and certificate
-are signaled in the MPD (for instance via `dashif:laurl`), playback works without any additional configuration:
-
-```js
-const player = dashjs.MediaPlayer().create();
-player.initialize(video, url, true);
-```
-
-Otherwise, provide the license server URL — and, if required by your DRM provider, the FairPlay server certificate —
-via the protection data:
-
-```js
-const protData = {
-    "com.apple.fps": {
-        "serverURL": "https://fairplay-license.example.com/license",
-        "serverCertificate": "<base64 encoded certificate>"
-    }
-};
-player.setProtectionData(protData);
-```
-
-`serverCertificate` is the Base64 string representation of the DRM certificate. If it is not provided, dash.js
-attempts to download the certificate from the URLs signaled in the `ContentProtection` elements of the MPD. Certificate
-requests and responses can be modified via filters, see the
-[certificate wrapping sample](https://reference.dashif.org/dash.js/nightly/samples/drm/certificate-wrapping.html).
-
-An example is available in
-the [FairPlay sample](https://reference.dashif.org/dash.js/nightly/samples/drm/fairplay.html).
 
 ## DRM specific headers
 
