@@ -22,7 +22,7 @@ export default withMermaid({
             { text: 'Quickstart', link: '/pages/quickstart/' },
             { text: 'Usage', link: '/pages/usage/' },
             { text: 'Developers', link: '/pages/developers/' },
-            { text: 'API Reference', link: `${base}api/`, target: '_blank' },
+            { text: 'API Reference', link: '/api/', target: '_blank' },
             {
                 text: 'Resources',
                 items: [

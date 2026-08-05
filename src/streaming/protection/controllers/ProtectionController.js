@@ -323,7 +323,7 @@ function ProtectionController(config) {
     /**
      * Collect certificate URL objects for the selected key system from mediaInfo content protection data
      * @param {string|null} preferredType
-     * @return {Array<{url:string, certType:string|null}>}
+     * @return {Array<{url: string, certType: (string|null)}>}
      * @private
      */
     function _getCertificateUrlsForSelectedKeySystem() {
