@@ -6,6 +6,15 @@ title: Installation / Build
 
 There are multiple ways to obtain the bundled `dist` files of dash.js for usage in your application.
 
+## Which branch should I use?
+
+- Use the `master` branch if you want the approved and stable public releases without contributing back.
+- Use the `development` branch if you want to improve or extend dash.js — make your changes there and submit a pull
+  request against it.
+
+Migrating from version 4.x? The [migration guide](../developers/migration-guides/4-to-5.html) covers all changes to
+build files, settings and APIs in version 5.
+
 ## Bundle formats
 
 ### Version 4.x and older

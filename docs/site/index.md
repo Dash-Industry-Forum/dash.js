@@ -46,45 +46,46 @@ features:
     link: /pages/developers/architecture/
 ---
 
-## Which branch should I use?
+## Get started in 30 seconds
 
-- Use the `master` branch if you want the approved and stable public releases without contributing back.
-- Use the `development` branch if you want to improve or extend dash.js — make your changes there and submit a pull request against it.
+Include dash.js from the CDN, add a video element and point the player to an MPD:
 
-Migrating from version 4.x? The [migration guide](pages/developers/migration-guides/4-to-5.html) covers all changes to build files, settings and APIs in version 5.
+```html
+<script src="https://cdn.dashjs.org/latest/modern/umd/dash.all.min.js"></script>
+<video id="video" controls></video>
+<script>
+    dashjs.MediaPlayer().create().initialize(
+        document.querySelector('#video'),
+        'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+        true
+    );
+</script>
+```
 
-## CDN hosted files
+Or install it as a package:
 
-We provide the latest minified files of all releases on a global CDN, free to use in production environments. An overview of the dash.js releases can be found on [GitHub](https://github.com/Dash-Industry-Forum/dash.js/releases).
+```sh
+npm install dashjs
+```
 
-### Version 5.x and newer
+The [Quickstart](pages/quickstart/index.html) covers all installation options — CDN builds, npm, bundle formats and
+building from source — and the basic [player setup](pages/quickstart/setup.html).
 
-Replace `vx.x.x` with the release version, for instance `v5.0.0`:
+## Why dash.js?
 
-- `UMD legacy`
-    - Minified Build: [http://cdn.dashjs.org/vx.x.x/legacy/umd/dash.all.min.js](http://cdn.dashjs.org/v5.0.0/legacy/umd/dash.all.min.js)
-    - Debug Build: [http://cdn.dashjs.org/vx.x.x/legacy/umd/dash.all.debug.js](http://cdn.dashjs.org/v5.0.0/legacy/umd/dash.all.debug.js)
-- `UMD modern`
-    - Minified Build: [http://cdn.dashjs.org/vx.x.x/modern/umd/dash.all.min.js](http://cdn.dashjs.org/v5.0.0/modern/umd/dash.all.min.js)
-    - Debug Build: [http://cdn.dashjs.org/vx.x.x/modern/umd/dash.all.debug.js](http://cdn.dashjs.org/v5.0.0/modern/umd/dash.all.debug.js)
-- `ESM modern`
-    - Minified Build: [http://cdn.dashjs.org/vx.x.x/modern/esm/dash.all.min.js](http://cdn.dashjs.org/v5.0.0/modern/esm/dash.all.min.js)
-    - Debug Build: [http://cdn.dashjs.org/vx.x.x/modern/esm/dash.all.debug.js](http://cdn.dashjs.org/v5.0.0/modern/esm/dash.all.debug.js)
-
-### Version 4.x and older
-
-All releases prior to version 5.0.0 are available under the following URLs. Replace `vx.x.x` with the release version, for instance `v3.1.0`:
-
-- [http://cdn.dashjs.org/vx.x.x/dash.all.min.js](http://cdn.dashjs.org/v3.1.0/dash.all.min.js)
-- [http://cdn.dashjs.org/vx.x.x/dash.all.debug.js](http://cdn.dashjs.org/v3.1.0/dash.all.debug.js)
-
-Multiple examples how to use dash.js in your TypeScript or Webpack based JavaScript project can be found in `samples/modules`.
+- **Reference client of the DASH Industry Forum**: dash.js is developed alongside
+  the [DASH-IF Interoperability Guidelines](https://dashif.org/guidelines/iop-v5/) and serves as the reference for new
+  MPEG-DASH features. See the [feature overview](pages/features/index_features.html) for what is supported.
+- **Production ready**: used by broadcasters, streaming platforms and device manufacturers worldwide, from desktop
+  browsers to smart TVs and set-top boxes.
+- **Open source and extensible**: BSD-licensed, driven by an active community, with a modular architecture that lets
+  you replace or extend almost any component.
 
 ## Getting help
 
 The full [API Documentation](https://cdn.dashjs.org/latest/jsdoc/index.html) describes all public methods, interfaces, properties, and events.
 
-For help, join the [#dashjs Slack channel](https://join.slack.com/t/dashif/shared_invite/zt-191r8cjva-4bu_5_SJ1U~d_oltjqWkEQ), our [email list](https://groups.google.com/d/forum/dashjs) and read the documentation on this website.
+For help, join the [#dashjs Slack channel](https://join.slack.com/t/dashif/shared_invite/zt-191r8cjva-4bu_5_SJ1U~d_oltjqWkEQ), our [email list](https://groups.google.com/d/forum/dashjs), file an issue on [GitHub](https://github.com/Dash-Industry-Forum/dash.js/issues) or read the documentation on this website.
 
 ## License
 
