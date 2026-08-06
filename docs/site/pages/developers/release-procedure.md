@@ -49,13 +49,24 @@ reused, even after unpublishing. The steps below exist to make sure a broken bui
 
 ### 3. Release candidate (recommended for major or risky releases)
 
-* Set the `version` field in `package.json` (repository root) to `x.y.z-rc.0`, either by editing it
-  directly or by running:
+Do the RC version bump on a throwaway branch so the `-rc.N` commits never land in the main branch —
+only the workflow needs to see them.
+
+* Create a throwaway branch from the release state, following the existing RC naming convention:
+  ```bash
+  git checkout -b RC_vX.X.X
+  ```
+* Set the `version` field to `x.y.z-rc.0` (updates `package.json` and `package-lock.json`):
   ```bash
   npm version x.y.z-rc.0 --no-git-tag-version
   ```
-* Commit and push the `package.json` change, then dispatch the workflow on that branch with
-  `dry_run: false` and `tag: next`.
+* Commit and push the branch:
+  ```bash
+  git commit -am "Bump version to x.y.z-rc.0"
+  git push -u origin RC_vX.X.X
+  ```
+* Dispatch `Publish to NPM` with `dry_run: false` and `tag: next`, and **select the RC branch in the
+  "Use workflow from" dropdown** — the workflow publishes the `package.json` of the branch it runs on.
 * This is a real publish to the real registry, but `latest` stays untouched. The workflow blocks
   prerelease versions on the `latest` tag.
 * Verify from the outside, exactly like a user would:
@@ -64,7 +75,10 @@ reused, even after unpublishing. The steps below exist to make sure a broken bui
   npm install dashjs@next
   ```
   Load the player and play a stream.
-* If the RC is broken: fix, bump to `-rc.1`, repeat. Nothing is lost.
+* If the RC is broken: fix on the RC branch, bump to `-rc.1`, repeat. Nothing is lost.
+* The RC branch is throwaway — delete it once the final version is published (see "Delete All RC
+  Branches" above). The final release in step 4 happens on the regular release branch, so no RC
+  version bump ever pollutes its history.
 
 ### 4. Final publish
 
