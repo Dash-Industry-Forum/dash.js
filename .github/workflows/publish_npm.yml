@@ -105,14 +105,12 @@ jobs:
                 with:
                     name: npm-package
 
+            # Node 24 bundles npm >= 11.5.1, which is required for trusted publishing (OIDC).
             -   uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
                 with:
                     node-version: 24
                     registry-url: "https://registry.npmjs.org"
                     package-manager-cache: false
-
-            -   name: Update npm (trusted publishing needs >= 11.5.1)
-                run: npm install -g npm@latest
 
             # Publishing the tarball path skips prepack, so the exact verified artifact ships.
             # --ignore-scripts also blocks any publish lifecycle hooks.

@@ -5,6 +5,9 @@ on:
         branches:
             - 'master'
 
+permissions:
+    contents: read
+
 jobs:
     build:
         if: github.repository == 'Dash-Industry-Forum/dash.js'
@@ -13,6 +16,8 @@ jobs:
             version: ${{ steps.set_version.outputs.version }}
         steps:
             -   uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
             -   name: Run build

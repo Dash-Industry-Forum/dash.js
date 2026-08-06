@@ -18,6 +18,9 @@ concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
+permissions:
+    contents: read
+
 jobs:
     build_and_unit_test:
         runs-on: ubuntu-24.04
@@ -25,6 +28,8 @@ jobs:
             # On push events, actions/checkout checks out the branch directly (no merge with a target branch).
             # This only verifies the branch in isolation, unlike pull_request events which test a merge commit.
             -   uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
             -   name: Build and run unit tests
