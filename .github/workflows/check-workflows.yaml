@@ -1,0 +1,21 @@
+name: Lint CI workflows
+on:
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["**"]
+jobs:
+    zizmor:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            actions: read
+        steps:
+            - name: Checkout the repository
+              uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+              with:
+                  persist-credentials: false
+            - name: Run zizmor
+              uses: zizmorcore/zizmor-action@6599ee8b7a49aef6a770f63d261d214911a7ce02 # v0.6.0
+              with:
+                  advanced-security: false
