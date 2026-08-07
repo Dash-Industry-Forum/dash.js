@@ -50,6 +50,8 @@ import ProtectionEvents from '../protection/ProtectionEvents.js';
 import ProtectionErrors from '../protection/errors/ProtectionErrors.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
+const PLAYBACK_ENDED_SEEK_TOLERANCE = 0.5;
+const PLAYBACK_ENDED_STUCK_SEEK_THRESHOLD = 1000;
 const DVR_WAITING_OFFSET = 2;
 
 function StreamController() {
@@ -64,7 +66,7 @@ function StreamController() {
         protectionData, extUrlQueryInfoController,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
-        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
+        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, stuckSeekingAtStreamEndTicks, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
         pendingDynamicToStaticUpdate;
 
@@ -363,6 +365,8 @@ function StreamController() {
     /**
      * Initialize playback for the first period.
      * @param {array} streamsInfo
+     * @param {function} resolve
+     * @param {function} reject
      * @private
      */
     function _initializeForFirstStream(streamsInfo, resolve, reject) {
@@ -574,8 +578,7 @@ function StreamController() {
 
     /**
      * Activates a new stream.
-     * @param {number} seekTime
-     * @param {boolean} keepBuffers
+     * @param {object} inputParameters
      */
     function _activateStream(inputParameters) {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
@@ -628,7 +631,16 @@ function StreamController() {
      */
     function _onPlaybackSeeking(e) {
         const newTime = e.seekTime;
-        const seekToStream = getStreamForTime(newTime);
+        let seekToStream = getStreamForTime(newTime);
+
+        // A seek to a time at or beyond the end of the last period is not assigned to any stream. Route it to the last stream so playback can end there.
+        if (!seekToStream && !isNaN(newTime) && streams.length > 0) {
+            const lastStream = streams[streams.length - 1];
+            const lastStreamEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
+            if (newTime >= lastStreamEnd) {
+                seekToStream = lastStream;
+            }
+        }
 
         if (!seekToStream || seekToStream === activeStream) {
             _cancelPreloading();
@@ -638,6 +650,8 @@ function StreamController() {
             _handleOuterPeriodSeek(e, seekToStream);
         }
 
+        // The timer is stopped once PLAYBACK_ENDED was fired for the last stream. A seek can resume playback afterwards.
+        _startPlaybackEndedTimerInterval();
         _createPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
 
@@ -994,8 +1008,29 @@ function StreamController() {
     function _startPlaybackEndedTimerInterval() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
-                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 && !playbackController.isSeeking()) {
-                    eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
+                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0) {
+                    if (!playbackController.isSeeking()) {
+                        stuckSeekingAtStreamEndTicks = 0;
+                        eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
+                    } else if (activeStream && getActiveStreamInfo().isLast && activeStream.getHasFinishedBuffering()) {
+                        // A seek to the very end of the stream can remain pending forever, for instance when it targets the exact
+                        // duration of the MediaSource: the buffers were flushed by the seek and no segment covers the requested time.
+                        if (mediaSource && mediaSource.readyState === 'open' &&
+                            mediaSourceController.hasBufferedDataUntil(mediaSource, playbackController.getTime() - PLAYBACK_ENDED_SEEK_TOLERANCE)) {
+                            // All data is buffered, the end of stream was just never (re-)signaled: do it now so the browser can complete the seek
+                            mediaSourceController.signalEndOfStream(mediaSource);
+                        }
+                        stuckSeekingAtStreamEndTicks += 1;
+                        if (stuckSeekingAtStreamEndTicks * PLAYBACK_ENDED_TIMER_INTERVAL >= PLAYBACK_ENDED_STUCK_SEEK_THRESHOLD) {
+                            logger.warn('Playback is stuck seeking at the end of the stream. Firing the ended event manually.');
+                            stuckSeekingAtStreamEndTicks = 0;
+                            eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
+                        }
+                    } else {
+                        stuckSeekingAtStreamEndTicks = 0;
+                    }
+                } else {
+                    stuckSeekingAtStreamEndTicks = 0;
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
         }
@@ -1010,6 +1045,7 @@ function StreamController() {
             clearInterval(playbackEndedTimerInterval);
             playbackEndedTimerInterval = null;
         }
+        stuckSeekingAtStreamEndTicks = 0;
     }
 
     /**
@@ -1335,7 +1371,6 @@ function StreamController() {
 
     /**
      * In order to calculate the initial live delay we might require the duration of the segments.
-     * @param {array} streamInfos
      * @param {object} manifestInfo
      * @return {number}
      * @private
@@ -1354,7 +1389,6 @@ function StreamController() {
 
     /**
      * Callback handler after the steering manifest was updated
-     * @param {object} e
      * @private
      */
     function _onSteeringManifestUpdated() {
@@ -1710,6 +1744,7 @@ function StreamController() {
         isPaused = false;
         autoPlay = true;
         playbackEndedTimerInterval = null;
+        stuckSeekingAtStreamEndTicks = 0;
         pendingDynamicToStaticUpdate = false;
         firstLicenseIsFetched = false;
         preloadingStreams = [];

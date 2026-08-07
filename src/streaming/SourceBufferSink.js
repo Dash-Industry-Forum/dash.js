@@ -105,9 +105,12 @@ function SourceBufferSink(config) {
     }
 
     function _handleChangeTypeError(e) {
-        logger.error(e);
         if (typeof e?.name === 'string' && e.name === 'NotSupportedError') {
+            // Recoverable: disable changeType and reset the SourceBuffers for future track switches instead
+            logger.warn(e);
             settings.update({streaming: {buffer: {useChangeType: false, resetSourceBuffersForTrackSwitch: true}}});
+        } else {
+            logger.error(e);
         }
     }
 
@@ -145,7 +148,7 @@ function SourceBufferSink(config) {
 
         } catch (e) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-            if ((mediaInfo.type == Constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1) || (codec.indexOf('text/vtt') !== -1)) {
+            if ((mediaInfo.type === Constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1) || (codec.indexOf('text/vtt') !== -1)) {
                 return _initializeForText(streamInfo);
             }
             return Promise.reject(e);
