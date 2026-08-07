@@ -89,7 +89,7 @@ function vsiEngineReturningSequences(seqs) {
     return {engine, calls};
 }
 
-function createCoordinator({engine, method = 'auto', detector, isCryptoAvailable}) {
+function createCoordinator({engine, method = 'auto', detector, isCryptoAvailable, loadEngine}) {
     const events = [];
     const eventBus = {
         trigger: (type, payload, filters) => events.push({type, payload, filters})
@@ -102,7 +102,7 @@ function createCoordinator({engine, method = 'auto', detector, isCryptoAvailable
         settings,
         detector,
         isCryptoAvailable: isCryptoAvailable || (() => true),
-        loadEngine: () => Promise.resolve(engine)
+        loadEngine: loadEngine || (() => Promise.resolve(engine))
     });
     return {coordinator, events};
 }
@@ -481,6 +481,42 @@ describe('C2paValidationCoordinator', function () {
             expect(segmentStatuses(events)).to.deep.equal([[10, 'valid'], [10, 'valid']]);
         });
 
+        it('should not enumerate a gap from an invalid segment claiming a forged sequence number', async () => {
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            const outcomes = [
+                vsiSegmentOutcome({isValid: true, errorCodes: [], seq: 10}),
+                vsiSegmentOutcome({isValid: false, errorCodes: ['livevideo.segment.invalid'], seq: 1000000000})
+            ];
+            let index = 0;
+            engine.validateC2paSegment = async () => outcomes[index++];
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 1000));
+            await coordinator.handleSegment(mediaInput('stream3', 2000));
+
+            expect(segmentStatuses(events)).to.deep.equal([
+                [10, 'valid'],
+                [1000000000, 'invalid']
+            ]);
+        });
+
+        it('should emit a single bounded record instead of enumerating a gap larger than the limit', async () => {
+            const {engine} = vsiEngineReturningSequences([10, 500]);
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 1000));
+            await coordinator.handleSegment(mediaInput('stream3', 2000));
+
+            const validated = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(validated.map((record) => [record.segmentNumber, record.status, record.missingCount])).to.deep.equal([
+                [10, 'valid', null],
+                [NaN, 'missing', 489],
+                [500, 'valid', null]
+            ]);
+        });
+
         it('should not report a gap when a track resumes after an ABR switch to a sibling representation', async () => {
             const {engine} = vsiEngineReturningSequences([10, 999, 50]);
             const {coordinator, events} = createCoordinator({engine});
@@ -539,9 +575,46 @@ describe('C2paValidationCoordinator', function () {
             const statuses = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED).map((record) => record.status);
             expect(statuses).to.deep.equal(['valid', 'valid']);
         });
+
+        it('should reset every currently active track on a seek without losing classification', async () => {
+            const {coordinator, events} = createValidVsiCoordinator();
+            const audioMediaInput = (trackKey, segmentNumber) =>
+                Object.assign({}, mediaInput(trackKey, segmentNumber), {mediaType: 'audio'});
+
+            await coordinator.handleSegment(initInput('stream3', 'video'));
+            await coordinator.handleSegment(initInput('stream-audio', 'audio'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(audioMediaInput('stream-audio', 500));
+
+            coordinator.resetActiveSequences();
+
+            // Re-observing the same sequence numbers reads as fresh baselines (valid), not
+            // as replays, because the seek reset both active tracks' sequence state.
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(audioMediaInput('stream-audio', 500));
+
+            const statuses = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED).map((record) => record.status);
+            expect(statuses).to.deep.equal(['valid', 'valid', 'valid', 'valid']);
+        });
     });
 
     describe('error handling and unverified degradation', function () {
+
+        it('should emit a single c2pa.engineUnavailable error when the engine fails to load, not once per track', async () => {
+            const {coordinator, events} = createCoordinator({
+                loadEngine: () => Promise.reject(new Error('network error'))
+            });
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(initInput('stream4'));
+
+            const errors = eventsOfType(events, MediaPlayerEvents.C2PA_ERROR);
+            expect(errors.length).to.equal(1);
+            expect(errors[0].errorCodes).to.deep.equal(['c2pa.engineUnavailable']);
+
+            const initEvents = eventsOfType(events, MediaPlayerEvents.C2PA_INIT_PROCESSED);
+            expect(initEvents.map((e) => e.method)).to.deep.equal([null, null]);
+        });
 
         it('should emit unverified without calling the engine when Web Crypto is unavailable', async () => {
             const {engine, calls} = createEngine({
@@ -647,18 +720,33 @@ describe('C2paValidationCoordinator', function () {
             expect(events[0].payload.method).to.equal('19.4');
         });
 
-        it('should use the detector to classify media segments in auto mode', async () => {
+        it('should use the detector to classify a media segment when its track has no init classification', async () => {
+            const {detector, calls: detectorCalls} = countingDetector('19.4');
+            const {engine} = createEngine({segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})});
+            const {coordinator, events} = createCoordinator({engine, method: 'auto', detector});
+
+            // No init segment was ever seen for this track (e.g. joined the stream mid-broadcast).
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(detectorCalls.count).to.equal(1);
+            expect(events[0].payload.status).to.equal('valid');
+            expect(events[0].payload.method).to.equal('19.4');
+        });
+
+        it('should trust the track\'s init classification over the detector for its media segments', async () => {
             const {engine} = createEngine({
                 initValidation: vsiInitValidation([{kid: 'key-1'}]),
                 segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
             });
-            const {detector, calls: detectorCalls} = countingDetector('19.4');
+            // Deliberately returns a different method: if the detector were still consulted
+            // despite a known init classification, this segment would validate as §19.3 instead.
+            const {detector, calls: detectorCalls} = countingDetector('19.3');
             const {coordinator, events} = createCoordinator({engine, method: 'auto', detector});
 
             await coordinator.handleSegment(initInput('stream3'));
             await coordinator.handleSegment(mediaInput('stream3', 289));
 
-            expect(detectorCalls.count).to.equal(1);
+            expect(detectorCalls.count).to.equal(0);
             expect(events[1].payload.status).to.equal('valid');
             expect(events[1].payload.method).to.equal('19.4');
         });

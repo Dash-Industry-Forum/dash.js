@@ -2,6 +2,7 @@ import C2paController from '../../../../src/streaming/c2pa/C2paController.js';
 import Settings from '../../../../src/core/Settings.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import FactoryMaker from '../../../../src/core/FactoryMaker.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import {expect} from 'chai';
 
 function createCustomParametersModelMock() {
@@ -99,5 +100,44 @@ describe('C2paController', function () {
         enableC2pa();
 
         expect(customParametersModel.interceptors.length).to.equal(0);
+    });
+
+    it('should clear source state on resetForNewSource without detaching the interceptor', () => {
+        enableC2pa();
+        controller.initialize();
+        expect(customParametersModel.interceptors.length).to.equal(1);
+
+        controller.resetForNewSource();
+
+        expect(customParametersModel.interceptors.length).to.equal(1);
+    });
+
+    it('should allow resetForNewSource before C2PA was ever enabled', () => {
+        controller.initialize();
+
+        expect(() => controller.resetForNewSource()).to.not.throw();
+    });
+
+    it('should not throw on a seek or period switch whether or not C2PA is enabled', () => {
+        controller.initialize();
+        eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKED);
+        eventBus.trigger(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED);
+
+        enableC2pa();
+        eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKED);
+        eventBus.trigger(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED);
+
+        expect(customParametersModel.interceptors.length).to.equal(1);
+    });
+
+    it('should stop reacting to seek/period events after reset', () => {
+        enableC2pa();
+        controller.initialize();
+        controller.reset();
+
+        expect(() => {
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKED);
+            eventBus.trigger(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED);
+        }).to.not.throw();
     });
 });

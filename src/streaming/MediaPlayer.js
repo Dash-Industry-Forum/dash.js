@@ -2579,6 +2579,9 @@ function MediaPlayer() {
         textController.reset();
         cmcdController.reset();
         cmsdModel.reset();
+        if (c2paController) {
+            c2paController.resetForNewSource();
+        }
     }
 
     function _resetPlaybackSessionSpecificSettings() {

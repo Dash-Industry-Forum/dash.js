@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import Constants from '../constants/Constants.js';
+
 /**
  * @module C2paOptions
  * @description Defaults and validation for the C2PA scanning options exposed through
@@ -62,10 +64,24 @@ export const C2PA_METHOD_VSI = '19.4';
 export const C2PA_METHODS = [C2PA_METHOD_AUTO, C2PA_METHOD_MANIFEST_BOX, C2PA_METHOD_VSI];
 
 /**
+ * `SegmentInput.kind` for an initialization segment. The contract between
+ * {@link module:C2paScanner} (producer) and {@link module:C2paValidationCoordinator}
+ * (consumer).
+ * @constant {string}
+ */
+export const SEGMENT_KIND_INIT = 'init';
+
+/**
+ * `SegmentInput.kind` for a media segment.
+ * @constant {string}
+ */
+export const SEGMENT_KIND_MEDIA = 'media';
+
+/**
  * Media types scanned when the operator does not restrict them.
  * @constant {Array.<string>}
  */
-export const DEFAULT_C2PA_MEDIA_TYPES = ['video', 'audio'];
+export const DEFAULT_C2PA_MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO];
 
 /**
  * @typedef {Object} C2paOptions

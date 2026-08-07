@@ -31,10 +31,12 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import BoxParser from '../utils/BoxParser.js';
 import C2paScanner from './C2paScanner.js';
 import C2paValidationCoordinator from './C2paValidationCoordinator.js';
 import BoxParsingDetector from './detection/BoxParsingDetector.js';
+import { normalizeC2paOptions } from './C2paOptions.js';
 
 /**
  * @module C2paController
@@ -44,7 +46,6 @@ import BoxParsingDetector from './detection/BoxParsingDetector.js';
  * disabled it holds nothing heavy — no interceptor, no dynamic import of the validation
  * engine — which is the zero-cost path required when C2PA is off. It reacts to the
  * `SETTING_UPDATED_C2PA_ENABLED` event so the operator can enable/disable at runtime.
- * See ADR-0002.
  */
 function C2paController() {
     const context = this.context;
@@ -94,6 +95,8 @@ function C2paController() {
         }
         if (!subscribed) {
             eventBus.on(Events.SETTING_UPDATED_C2PA_ENABLED, _onEnabledChanged, instance);
+            eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onSeekOrPeriodSwitch, instance);
+            eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onSeekOrPeriodSwitch, instance);
             subscribed = true;
         }
         _applyEnabledState();
@@ -101,6 +104,13 @@ function C2paController() {
 
     function _onEnabledChanged() {
         _applyEnabledState();
+    }
+
+    // A seek/period switch isn't a continuity break; reset so it doesn't read as one.
+    function _onSeekOrPeriodSwitch() {
+        if (coordinator) {
+            coordinator.resetActiveSequences();
+        }
     }
 
     function _applyEnabledState() {
@@ -112,8 +122,8 @@ function C2paController() {
     }
 
     function _isEnabled() {
-        const streaming = settings && typeof settings.get === 'function' ? settings.get().streaming : null;
-        return !!(streaming && streaming.c2pa && streaming.c2pa.enabled);
+        const streaming = settings ? settings.get().streaming : null;
+        return normalizeC2paOptions(streaming && streaming.c2pa).enabled;
     }
 
     function _attach() {
@@ -146,18 +156,27 @@ function C2paController() {
             eventBus,
             detector
         });
-        const c2pa = settings.get().streaming.c2pa;
+        const c2pa = normalizeC2paOptions(settings.get().streaming.c2pa);
         scanner = C2paScanner(context).create({
             customParametersModel,
             segmentHandler: coordinator.handleSegment,
-            mediaTypes: c2pa ? c2pa.mediaTypes : undefined
+            mediaTypes: c2pa.mediaTypes
         });
+    }
+
+    // Clears per-track state on source change, without detaching the interceptor.
+    function resetForNewSource() {
+        if (coordinator) {
+            coordinator.reset();
+        }
     }
 
     function reset() {
         _detach();
         if (eventBus && subscribed) {
             eventBus.off(Events.SETTING_UPDATED_C2PA_ENABLED, _onEnabledChanged, instance);
+            eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onSeekOrPeriodSwitch, instance);
+            eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onSeekOrPeriodSwitch, instance);
             subscribed = false;
         }
         scanner = null;
@@ -168,6 +187,7 @@ function C2paController() {
     instance = {
         setConfig,
         initialize,
+        resetForNewSource,
         reset
     };
 

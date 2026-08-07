@@ -14,7 +14,7 @@ emitted, and the validation engine (`@svta/cml-c2pa`) is never imported.
   `MediaPlayer.initialize()`. Lazily creates the scanner/coordinator/detector and
   registers the response interceptor only while `streaming.c2pa.enabled` is true; reacts
   to `SETTING_UPDATED_C2PA_ENABLED` so the operator can toggle at runtime without
-  reloading the source. See ADR-0002 for the zero-cost-when-disabled design.
+  reloading the source.
 - **`C2paScanner`** — a thin adapter over dash.js's public response interceptor API
   (`customParametersModel.addResponseInterceptor`). Observes every fetched init/media
   segment, copies its bytes (mandatory: dash.js transfers the original `ArrayBuffer` to
@@ -59,7 +59,11 @@ player.updateSettings({
   Payload: `{ trackKey, method, manifestId, issuer, sessionKeyCount, isValid, errorCodes }`.
 - **`C2PA_SEGMENT_VALIDATED`** — once per media segment (plus synthetic records for any
   gap detected in the signed sequence). Payload: `{ segmentNumber, mediaType, method,
-  status, keyId, hash, manifestId, issuer, previousManifestId, errorCodes, timestamp }`.
+  status, keyId, hash, manifestId, issuer, previousManifestId, errorCodes, missingCount,
+  timestamp }`. The sequence number only drives the gap check on a `valid` record, so a
+  segment that failed validation can never claim a forged number and trigger it. A gap
+  larger than 100 is not enumerated segment by segment; instead a single `missing` record
+  is emitted with `missingCount` set to the gap size and `segmentNumber: NaN`.
   `status` is one of `valid`, `invalid`, `replayed`, `reordered`, `missing`,
   `continuityInvalid`, `continuityUnsupported`, `unverified`. Both are ManifestBox-only
   (§19.3): in each case the segment's own content hash matched (it's authentic, not
@@ -101,3 +105,10 @@ from that:
   awaits a track's own init promise before validating that track's first media segment,
   so this doesn't race — but any change to `handleSegment`'s dispatch order should keep
   that invariant.
+- **A stripped or corrupted C2PA box reads as "never signed"**: `@svta/cml-c2pa` throws
+  for both a plain init segment with no C2PA data and one whose C2PA box is present but
+  malformed, with no stable, documented way to tell them apart (only the exception's free
+  text message differs, which is not a contract we build behavior on). An attacker who
+  strips or corrupts the init segment's C2PA box therefore downgrades that track to
+  "non-C2PA" rather than surfacing as tampered. This is a known limitation of the current
+  threat model, not something dash.js can currently close on its own.

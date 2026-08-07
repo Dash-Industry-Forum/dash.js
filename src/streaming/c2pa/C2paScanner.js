@@ -29,11 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest.js';
-import { DEFAULT_C2PA_MEDIA_TYPES } from './C2paOptions.js';
-
-const SEGMENT_KIND_INIT = 'init';
-const SEGMENT_KIND_MEDIA = 'media';
+import { DEFAULT_C2PA_MEDIA_TYPES, SEGMENT_KIND_INIT, SEGMENT_KIND_MEDIA } from './C2paOptions.js';
 
 // dash.js 5.x does not reliably populate the representation id and req.index resets
 // per DASH period, so a stable per-representation trackKey is derived from the segment
@@ -74,15 +72,18 @@ const SEGMENT_ROLE_PREFIX_PATTERN = /^(?:init|chunk)-/;
  */
 function C2paScanner(config) {
     config = config || {};
+    const context = this.context;
     const customParametersModel = config.customParametersModel;
     const segmentHandler = config.segmentHandler;
     const mediaTypes = Array.isArray(config.mediaTypes) ? config.mediaTypes : DEFAULT_C2PA_MEDIA_TYPES.slice();
 
     let instance,
+        logger,
         interceptor,
         registered;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         registered = false;
         interceptor = _interceptResponse;
     }
@@ -125,7 +126,8 @@ function C2paScanner(config) {
                 _forwardWithoutBlocking(segmentInput);
             }
         } catch (e) {
-            // Scanning must never interfere with playback; swallow and deliver the response untouched.
+            // Scanning must never interfere with playback; swallow and log instead.
+            logger.warn('C2PA scanning failed for this response:', e);
         }
         return Promise.resolve(response);
     }
@@ -188,7 +190,10 @@ function C2paScanner(config) {
      * @returns {Uint8Array}
      */
     function _copySegmentBytes(data) {
-        return new Uint8Array(data).slice();
+        const view = data instanceof Uint8Array ? data : new Uint8Array(data);
+        const copy = new Uint8Array(view.byteLength);
+        copy.set(view);
+        return copy;
     }
 
     function _fileNameFromUrl(url) {

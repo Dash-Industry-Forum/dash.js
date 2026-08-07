@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import Debug from '../../../core/Debug.js';
 import { C2PA_METHOD_MANIFEST_BOX, C2PA_METHOD_VSI } from '../C2paOptions.js';
 import { NON_C2PA_DETECTION_RESULT } from './C2paDetector.js';
 
@@ -61,9 +62,10 @@ const JUMBF_UUID = [
  */
 function BoxParsingDetector(config) {
     config = config || {};
+    const context = this.context;
     const boxParser = config.boxParser;
 
-    let instance;
+    let instance, logger;
 
     /**
      * @param {import('../C2paScanner.js').SegmentInput} segmentInput
@@ -92,12 +94,16 @@ function BoxParsingDetector(config) {
         try {
             return boxParser.parse(_toArrayBuffer(bytes));
         } catch (e) {
+            logger.warn('Failed to parse a media segment while detecting its C2PA method:', e);
             return null;
         }
     }
 
+    // The scanner's copy already starts at byte 0, so this is usually a no-op copy.
     function _toArrayBuffer(bytes) {
-        return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+        return bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
+            ? bytes.buffer
+            : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
     }
 
     function _hasVsiEmsg(isoFile) {
@@ -127,6 +133,8 @@ function BoxParsingDetector(config) {
     instance = {
         detect
     };
+
+    logger = Debug(context).getInstance().getLogger(instance);
 
     return instance;
 }

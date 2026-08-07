@@ -107,6 +107,7 @@
   },
   "dependencies": {
     "@svta/cml-608": "1.0.2",
+    "@svta/cml-c2pa": "1.1.1",
     "@svta/cml-cmcd": "2.3.2",
     "@svta/cml-cmsd": "1.0.6",
     "@svta/cml-dash": "1.0.6",
@@ -120,9 +121,6 @@
     "imsc": "^1.1.5",
     "localforage": "^1.10.0",
     "path-browserify": "^1.0.1"
-  },
-  "optionalDependencies": {
-    "@svta/cml-c2pa": "^1.1.1"
   },
   "repository": {
     "type": "git",

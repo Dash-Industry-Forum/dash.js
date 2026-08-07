@@ -28,16 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MediaPlayerEvents from '../MediaPlayerEvents.js';
-
 /**
  * @module C2paEvents
- * @description Event-name constants and payload typedefs for the C2PA scanning module.
- *
- * The event names are the same public identifiers declared on {@link MediaPlayerEvents}
- * so that consumers subscribing through the player receive exactly these types; this
- * module re-exposes them for internal use and documents the payload shapes dispatched
- * alongside each event.
+ * @description Payload typedefs for the C2PA events declared on {@link MediaPlayerEvents}
+ * (`C2PA_INIT_PROCESSED`, `C2PA_SEGMENT_VALIDATED`, `C2PA_ERROR`).
  */
 
 /**
@@ -64,6 +58,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
  * @property {?string} issuer Issuer of the signing certificate, when applicable.
  * @property {?string} previousManifestId Manifest id of the previous segment in the continuity chain, when applicable.
  * @property {Array.<string>} errorCodes Stable, narrowed error codes describing any validation failure.
+ * @property {?number} missingCount Gap size for a bounded `missing` record (`segmentNumber` is `NaN`).
  * @property {number} timestamp Epoch milliseconds at which the record was produced.
  */
 
@@ -90,15 +85,3 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
  * @property {number} timestamp Epoch milliseconds at which the error was produced.
  */
 
-/**
- * Event-name constants dispatched by the C2PA scanning module. Values mirror the
- * public identifiers on {@link MediaPlayerEvents}.
- * @enum {string}
- */
-const C2paEvents = {
-    C2PA_INIT_PROCESSED: MediaPlayerEvents.C2PA_INIT_PROCESSED,
-    C2PA_SEGMENT_VALIDATED: MediaPlayerEvents.C2PA_SEGMENT_VALIDATED,
-    C2PA_ERROR: MediaPlayerEvents.C2PA_ERROR
-};
-
-export default C2paEvents;

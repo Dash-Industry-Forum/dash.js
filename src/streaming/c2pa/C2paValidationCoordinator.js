@@ -30,10 +30,11 @@
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
 import EventBus from '../../core/EventBus.js';
+import Debug from '../../core/Debug.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
-import { C2PA_METHOD_AUTO, C2PA_METHOD_MANIFEST_BOX, C2PA_METHOD_VSI } from './C2paOptions.js';
-
-const SEGMENT_KIND_INIT = 'init';
+import {
+    C2PA_METHOD_AUTO, C2PA_METHOD_MANIFEST_BOX, C2PA_METHOD_VSI, normalizeC2paOptions, SEGMENT_KIND_INIT
+} from './C2paOptions.js';
 const STATUS_VALID = 'valid';
 const STATUS_INVALID = 'invalid';
 const STATUS_REPLAYED = 'replayed';
@@ -43,6 +44,7 @@ const STATUS_UNVERIFIED = 'unverified';
 const STATUS_CONTINUITY_INVALID = 'continuityInvalid';
 const STATUS_CONTINUITY_UNSUPPORTED = 'continuityUnsupported';
 const SEQUENCE_OK = 'ok';
+const MAX_REPORTED_MISSING_SEGMENTS = 100;
 
 const CONTINUITY_METHOD_INVALID_CODE = 'livevideo.continuityMethod.invalid';
 const CONTINUITY_METHOD_UNSUPPORTED_CODE = 'livevideo.continuityMethod.unsupported';
@@ -52,17 +54,19 @@ const MANIFEST_BOX_CONTINUITY_CODES = [
 ];
 
 // dash.js-side diagnostic codes (not CML codes).
-// Emitted when a forced method does not match a segment's actual structure (AC#12).
+// Emitted when a forced method does not match a segment's actual structure.
 const FORCED_METHOD_MISMATCH_CODE = 'c2pa.forcedMethodMismatch';
-// Emitted when the runtime lacks a secure context / Web Crypto (AC#15).
+// Emitted when the runtime lacks a secure context / Web Crypto.
 const CRYPTO_UNAVAILABLE_CODE = 'c2pa.cryptoUnavailable';
 // Emitted when the validation engine throws unexpectedly.
 const VALIDATION_ERROR_CODE = 'c2pa.validationError';
+// Emitted once per session when the validation engine fails to load.
+const ENGINE_UNAVAILABLE_CODE = 'c2pa.engineUnavailable';
 
 /**
  * Guarded dynamic import of the validation engine. Keeps `@svta/cml-c2pa` out of both
- * default bundles (code-split, loaded only when C2PA is enabled). A missing package
- * rejects and is caught by the caller, degrading to no validation rather than breaking.
+ * default bundles; a rejection is caught by the caller and reported once via
+ * {@link ENGINE_UNAVAILABLE_CODE}.
  * @returns {Promise<Object>}
  */
 function loadC2paEngine() {
@@ -71,7 +75,7 @@ function loadC2paEngine() {
 
 /**
  * Whether Web Crypto is usable. Browsers only expose `crypto.subtle` in secure contexts,
- * so its presence covers both the "no secure context" and "no Web Crypto" cases (AC#15).
+ * so its presence covers both the "no secure context" and "no Web Crypto" cases.
  * @returns {boolean}
  */
 function _defaultCryptoAvailable() {
@@ -108,18 +112,22 @@ function C2paValidationCoordinator(config) {
     const isCryptoAvailable = config.isCryptoAvailable || _defaultCryptoAvailable;
 
     let instance,
+        logger,
         trackStates,
         sequenceTracker,
         activeTrackKeyByMediaType,
         initPromises,
-        enginePromise;
+        enginePromise,
+        engineErrorReported;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         trackStates = {};
         sequenceTracker = {};
         activeTrackKeyByMediaType = {};
         initPromises = {};
         enginePromise = null;
+        engineErrorReported = false;
     }
 
     /**
@@ -172,7 +180,7 @@ function C2paValidationCoordinator(config) {
 
     async function _handleInitSegment(input) {
         if (!isCryptoAvailable()) {
-            // AC#15: without Web Crypto we cannot validate; keep the track active (skip:false)
+            // Without Web Crypto we cannot validate; keep the track active (skip:false)
             // so its media segments surface as `unverified` rather than being dropped.
             trackStates[input.trackKey] = {
                 method: null,
@@ -190,6 +198,12 @@ function C2paValidationCoordinator(config) {
         }
 
         const engine = await _getEngine();
+        if (!engine && !engineErrorReported) {
+            // Once per session, not once per segment.
+            engineErrorReported = true;
+            _emitError(input, input.segmentNumber, ENGINE_UNAVAILABLE_CODE,
+                'The C2PA validation engine failed to load; validation is disabled for this session.');
+        }
         const validation = await _validateInit(engine, input.bytes);
         const method = _classify(validation);
 
@@ -214,7 +228,7 @@ function C2paValidationCoordinator(config) {
     async function _handleMediaSegment(input) {
         const state = trackStates[input.trackKey];
         if (state && state.skip) {
-            // AC#16: a non-C2PA track in auto mode is never parsed or validated again.
+            // A non-C2PA track in auto mode is never parsed or validated again.
             return;
         }
         const forced = _forcedMethod() !== null;
@@ -225,7 +239,7 @@ function C2paValidationCoordinator(config) {
         }
 
         if (!isCryptoAvailable()) {
-            // AC#15: emit `unverified` rather than calling the engine (which would throw).
+            // Emit `unverified` rather than calling the engine (which would throw).
             _emitUnverified(input, method, CRYPTO_UNAVAILABLE_CODE, 'Web Crypto is unavailable in this context');
             return;
         }
@@ -238,20 +252,22 @@ function C2paValidationCoordinator(config) {
     }
 
     /**
-     * Emits a validated media record, applying the lean per-track sequence check on the
-     * authoritative signed sequence number (AC#7, AC#8): reports gaps as `missing` records
-     * and overrides the status to `replayed` / `reordered` on a duplicate / out-of-order
-     * sequence. Records without a sequence number are emitted unchanged.
+     * Emits a validated media record, sequence-checking the signed number on a `valid`
+     * record only: a forged number on a failed one must never drive the gap loop below.
      */
     function _emitValidatedWithSequence(input, record) {
         const sequenceNumber = record.segmentNumber;
-        if (typeof sequenceNumber === 'number' && !isNaN(sequenceNumber)) {
+        if (record.status === STATUS_VALID && typeof sequenceNumber === 'number' && !isNaN(sequenceNumber)) {
             const sequence = _checkSequence(input.trackKey, sequenceNumber);
-            sequence.missing.forEach((missingNumber) => {
-                _emitSegmentValidated(_sequenceRecord(input, STATUS_MISSING, record.method, missingNumber));
-            });
+            if (sequence.missingCount > MAX_REPORTED_MISSING_SEGMENTS) {
+                _emitSegmentValidated(_sequenceRecord(input, STATUS_MISSING, record.method, NaN, sequence.missingCount));
+            } else {
+                sequence.missing.forEach((missingNumber) => {
+                    _emitSegmentValidated(_sequenceRecord(input, STATUS_MISSING, record.method, missingNumber));
+                });
+            }
             if (sequence.status !== SEQUENCE_OK) {
-                record.status = sequence.status;
+                record = Object.assign({}, record, { status: sequence.status });
             }
         }
         _emitSegmentValidated(record);
@@ -261,35 +277,39 @@ function C2paValidationCoordinator(config) {
      * Lean per-track sequence check driven by the signed sequence number. Detects
      * replays (same as last), reorders (below last) and gaps (skipped numbers). No
      * cross-track correlation. Segments without a number (NaN) are not sequence-checked.
-     * @returns {{status: string, missing: Array.<number>}}
+     * A gap over {@link MAX_REPORTED_MISSING_SEGMENTS} isn't enumerated, only counted.
+     * @returns {{status: string, missing: Array.<number>, missingCount: number}}
      */
     function _checkSequence(trackKey, segmentNumber) {
         if (isNaN(segmentNumber)) {
-            return { status: SEQUENCE_OK, missing: [] };
+            return { status: SEQUENCE_OK, missing: [], missingCount: 0 };
         }
 
         const lastSequenceNumber = sequenceTracker[trackKey];
         if (lastSequenceNumber === undefined) {
             sequenceTracker[trackKey] = segmentNumber;
-            return { status: SEQUENCE_OK, missing: [] };
+            return { status: SEQUENCE_OK, missing: [], missingCount: 0 };
         }
 
         if (segmentNumber === lastSequenceNumber) {
-            return { status: STATUS_REPLAYED, missing: [] };
+            return { status: STATUS_REPLAYED, missing: [], missingCount: 0 };
         }
         if (segmentNumber < lastSequenceNumber) {
-            return { status: STATUS_REORDERED, missing: [] };
+            return { status: STATUS_REORDERED, missing: [], missingCount: 0 };
         }
 
+        const missingCount = segmentNumber - lastSequenceNumber - 1;
         const missing = [];
-        for (let skipped = lastSequenceNumber + 1; skipped < segmentNumber; skipped++) {
-            missing.push(skipped);
+        if (missingCount > 0 && missingCount <= MAX_REPORTED_MISSING_SEGMENTS) {
+            for (let skipped = lastSequenceNumber + 1; skipped < segmentNumber; skipped++) {
+                missing.push(skipped);
+            }
         }
         sequenceTracker[trackKey] = segmentNumber;
-        return { status: SEQUENCE_OK, missing };
+        return { status: SEQUENCE_OK, missing, missingCount };
     }
 
-    function _sequenceRecord(input, status, method, segmentNumber) {
+    function _sequenceRecord(input, status, method, segmentNumber, missingCount) {
         return {
             segmentNumber,
             mediaType: input.mediaType,
@@ -301,14 +321,15 @@ function C2paValidationCoordinator(config) {
             issuer: null,
             previousManifestId: null,
             errorCodes: [],
+            missingCount: missingCount || null,
             timestamp: Date.now()
         };
     }
 
     /**
-     * Resolves which method validates a media segment. A forced method (AC#11) is used
-     * directly and the detector is skipped; in `auto` mode the injected detector classifies
-     * the segment, falling back to the track's init classification when no detector is set.
+     * Resolves which method validates a media segment. A forced method skips the detector;
+     * in `auto` mode, a track already classified from its init trusts that classification,
+     * and the detector only runs when there's none to trust.
      * @returns {?string}
      */
     function _resolveMediaMethod(input, state) {
@@ -316,10 +337,13 @@ function C2paValidationCoordinator(config) {
         if (forced) {
             return forced;
         }
+        if (state && state.method) {
+            return state.method;
+        }
         if (detector && typeof detector.detect === 'function') {
             return detector.detect(input).method;
         }
-        return state ? state.method : null;
+        return null;
     }
 
     async function _validateVsiSegment(input, state, forced) {
@@ -335,14 +359,14 @@ function C2paValidationCoordinator(config) {
         try {
             outcome = await engine.validateC2paSegment(input.bytes, sessionKeys, sequenceState);
         } catch (e) {
-            // AC#6: never propagate a validation failure to the pipeline; surface it instead.
+            // Never propagate a validation failure to the pipeline; surface it instead.
             _emitUnverified(input, C2PA_METHOD_VSI, VALIDATION_ERROR_CODE, _errorMessage(e));
             return;
         }
 
         if (!outcome) {
-            // No C2PA emsg box. Under a forced method this is a mismatch (AC#12); in auto
-            // mode the segment simply carries no VSI provenance.
+            // No C2PA emsg box. Under a forced method this is a mismatch; in auto mode the
+            // segment simply carries no VSI provenance.
             if (forced) {
                 _emitSegmentValidated(_forcedMismatchRecord(input, C2PA_METHOD_VSI));
             }
@@ -368,8 +392,8 @@ function C2paValidationCoordinator(config) {
         try {
             outcome = await engine.validateC2paManifestBoxSegment(input.bytes, lastManifestId, manifestBoxState);
         } catch (e) {
-            // Under a forced method a throw means the forced structure is absent (AC#12);
-            // in auto mode it is an unexpected engine failure surfaced as `unverified` (AC#6).
+            // Under a forced method a throw means the forced structure is absent; in auto
+            // mode it is an unexpected engine failure surfaced as `unverified`.
             if (forced) {
                 _emitSegmentValidated(_forcedMismatchRecord(input, C2PA_METHOD_MANIFEST_BOX));
             } else {
@@ -404,6 +428,7 @@ function C2paValidationCoordinator(config) {
             issuer: null,
             previousManifestId: null,
             errorCodes: [FORCED_METHOD_MISMATCH_CODE],
+            missingCount: null,
             timestamp: Date.now()
         };
     }
@@ -422,6 +447,7 @@ function C2paValidationCoordinator(config) {
             issuer: result.issuer,
             previousManifestId: result.previousManifestId,
             errorCodes,
+            missingCount: null,
             timestamp: Date.now()
         };
     }
@@ -452,6 +478,7 @@ function C2paValidationCoordinator(config) {
             issuer: state ? state.issuer : null,
             previousManifestId: null,
             errorCodes: _mapErrorCodes(result.errorCodes),
+            missingCount: null,
             timestamp: Date.now()
         };
     }
@@ -463,7 +490,8 @@ function C2paValidationCoordinator(config) {
         try {
             return await engine.validateC2paInitSegment(bytes);
         } catch (e) {
-            // The init segment carries no C2PA information (or could not be parsed).
+            // The common case (a plain, never-signed stream); debug level, see README.md.
+            logger.debug('No usable C2PA data in this init segment:', _errorMessage(e));
             return null;
         }
     }
@@ -487,12 +515,11 @@ function C2paValidationCoordinator(config) {
     }
 
     function _methodSetting() {
-        if (!settings || typeof settings.get !== 'function') {
+        if (!settings) {
             return C2PA_METHOD_AUTO;
         }
         const streaming = settings.get().streaming;
-        const c2pa = streaming && streaming.c2pa;
-        return c2pa && c2pa.method ? c2pa.method : C2PA_METHOD_AUTO;
+        return normalizeC2paOptions(streaming && streaming.c2pa).method;
     }
 
     function _emitInitProcessed(input, validation, method, errorCodes) {
@@ -524,6 +551,7 @@ function C2paValidationCoordinator(config) {
             issuer: null,
             previousManifestId: null,
             errorCodes: [errorCode],
+            missingCount: null,
             timestamp: Date.now()
         });
         _emitError(input, input.segmentNumber, errorCode, message);
@@ -567,26 +595,40 @@ function C2paValidationCoordinator(config) {
 
     function _getEngine() {
         if (!enginePromise) {
-            enginePromise = Promise.resolve().then(() => loadEngine()).catch(() => null);
+            enginePromise = Promise.resolve().then(() => loadEngine()).catch((e) => {
+                logger.error('Failed to load the C2PA validation engine (@svta/cml-c2pa):', e);
+                return null;
+            });
         }
         return enginePromise;
     }
 
     /**
-     * Clears all per-track state. Called on teardown / source change so nothing leaks
-     * across sources.
+     * Clears all per-track state. Called on teardown / source change so a new stream
+     * never inherits a previous one's state (they can share a filename-derived trackKey).
      */
     function reset() {
         trackStates = {};
         sequenceTracker = {};
         activeTrackKeyByMediaType = {};
+        initPromises = {};
         enginePromise = null;
+        engineErrorReported = false;
     }
 
     /**
-     * Clears the sequence and continuity state of a single track. Called on seek / period
-     * change so the jump does not read as a replay, reorder, gap or continuity break; the
-     * track's classification and session keys are kept.
+     * Resets every currently active track's sequence state (one per media type). Called
+     * on seek / period change so the jump doesn't read as a replay, reorder or gap.
+     */
+    function resetActiveSequences() {
+        Object.keys(activeTrackKeyByMediaType).forEach((mediaType) => {
+            resetSequenceForTrack(activeTrackKeyByMediaType[mediaType]);
+        });
+    }
+
+    /**
+     * Clears the sequence and continuity state of a single track; the track's
+     * classification and session keys are kept.
      * @param {string} trackKey
      */
     function resetSequenceForTrack(trackKey) {
@@ -602,6 +644,7 @@ function C2paValidationCoordinator(config) {
     instance = {
         handleSegment,
         reset,
+        resetActiveSequences,
         resetSequenceForTrack
     };
 
