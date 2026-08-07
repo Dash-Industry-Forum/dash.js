@@ -17,12 +17,20 @@
             margin-top: 12px;
             font-size: 0.9em;
         }
+        .c2pa-grid-row {
+            margin-top: 8px;
+        }
+        .c2pa-grid-label {
+            font-size: 0.75em;
+            font-weight: 600;
+            opacity: 0.7;
+        }
         .c2pa-grid {
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
-            margin-top: 8px;
-            max-height: 220px;
+            margin-top: 2px;
+            max-height: 110px;
             overflow-y: auto;
         }
         .c2pa-chip {
@@ -181,7 +189,9 @@
         chip.addEventListener('click', function () {
             showDetails(e);
         });
-        var grid = document.getElementById('c2pa-grid');
+        // A separate row per media type, so a track validating both video and audio
+        // doesn't read as one jumbled interleaved sequence.
+        var grid = document.getElementById('c2pa-grid-' + e.mediaType) || document.getElementById('c2pa-grid-video');
         grid.appendChild(chip);
         while (grid.childElementCount > MAX_VISIBLE_SEGMENT_CHIPS) {
             grid.removeChild(grid.firstElementChild);
@@ -203,7 +213,8 @@
     }
 
     function resetPanel() {
-        document.getElementById('c2pa-grid').innerHTML = '';
+        document.getElementById('c2pa-grid-video').innerHTML = '';
+        document.getElementById('c2pa-grid-audio').innerHTML = '';
         document.getElementById('c2pa-details').textContent = '';
         setSummary('');
     }
@@ -234,7 +245,14 @@
         '    </select>' +
         '    <button type="button" id="c2pa-load" class="btn btn-primary btn-sm" style="margin-top:10px;">Load</button>' +
         '    <div class="c2pa-summary" id="c2pa-summary"></div>' +
-        '    <div class="c2pa-grid" id="c2pa-grid"></div>' +
+        '    <div class="c2pa-grid-row">' +
+        '      <div class="c2pa-grid-label">Video</div>' +
+        '      <div class="c2pa-grid" id="c2pa-grid-video"></div>' +
+        '    </div>' +
+        '    <div class="c2pa-grid-row">' +
+        '      <div class="c2pa-grid-label">Audio</div>' +
+        '      <div class="c2pa-grid" id="c2pa-grid-audio"></div>' +
+        '    </div>' +
         '    <div class="c2pa-details" id="c2pa-details"></div>' +
         '  </div>' +
         '</div>';
