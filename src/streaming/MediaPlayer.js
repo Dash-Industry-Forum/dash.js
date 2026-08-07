@@ -486,6 +486,7 @@ function MediaPlayer() {
         }
         if (c2paController) {
             c2paController.reset();
+            c2paController = null;
         }
         if (customParametersModel) {
             customParametersModel.reset();
