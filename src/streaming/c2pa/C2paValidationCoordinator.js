@@ -35,16 +35,13 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import {
     C2PA_METHOD_AUTO, C2PA_METHOD_MANIFEST_BOX, C2PA_METHOD_VSI, normalizeC2paOptions, SEGMENT_KIND_INIT
 } from './C2paOptions.js';
+import C2paSequenceTracker, { MAX_REPORTED_MISSING_SEGMENTS, SEQUENCE_OK } from './C2paSequenceTracker.js';
 const STATUS_VALID = 'valid';
 const STATUS_INVALID = 'invalid';
-const STATUS_REPLAYED = 'replayed';
-const STATUS_REORDERED = 'reordered';
 const STATUS_MISSING = 'missing';
 const STATUS_UNVERIFIED = 'unverified';
 const STATUS_CONTINUITY_INVALID = 'continuityInvalid';
 const STATUS_CONTINUITY_UNSUPPORTED = 'continuityUnsupported';
-const SEQUENCE_OK = 'ok';
-const MAX_REPORTED_MISSING_SEGMENTS = 100;
 
 const CONTINUITY_METHOD_INVALID_CODE = 'livevideo.continuityMethod.invalid';
 const CONTINUITY_METHOD_UNSUPPORTED_CODE = 'livevideo.continuityMethod.unsupported';
@@ -101,6 +98,8 @@ function _defaultCryptoAvailable() {
  * classify each media segment. When the method is forced the detector is skipped.
  * @param {function(): boolean} [config.isCryptoAvailable] Reports whether Web Crypto is
  * usable; defaults to a real secure-context check. Injectable for testing.
+ * @param {function(): number} [config.now] Clock used for `SegmentRecord.timestamp`;
+ * defaults to `Date.now`. Injectable for testing.
  */
 function C2paValidationCoordinator(config) {
     config = config || {};
@@ -110,6 +109,7 @@ function C2paValidationCoordinator(config) {
     const loadEngine = config.loadEngine || loadC2paEngine;
     const detector = config.detector;
     const isCryptoAvailable = config.isCryptoAvailable || _defaultCryptoAvailable;
+    const now = config.now || Date.now;
 
     let instance,
         logger,
@@ -123,7 +123,7 @@ function C2paValidationCoordinator(config) {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         trackStates = {};
-        sequenceTracker = {};
+        sequenceTracker = C2paSequenceTracker(context).create();
         activeTrackKeyByMediaType = {};
         initPromises = {};
         enginePromise = null;
@@ -258,7 +258,7 @@ function C2paValidationCoordinator(config) {
     function _emitValidatedWithSequence(input, record) {
         const sequenceNumber = record.segmentNumber;
         if (record.status === STATUS_VALID && typeof sequenceNumber === 'number' && !isNaN(sequenceNumber)) {
-            const sequence = _checkSequence(input.trackKey, sequenceNumber);
+            const sequence = sequenceTracker.check(input.trackKey, sequenceNumber);
             if (sequence.missingCount > MAX_REPORTED_MISSING_SEGMENTS) {
                 _emitSegmentValidated(_sequenceRecord(input, STATUS_MISSING, record.method, NaN, sequence.missingCount));
             } else {
@@ -273,57 +273,35 @@ function C2paValidationCoordinator(config) {
         _emitSegmentValidated(record);
     }
 
-    /**
-     * Lean per-track sequence check driven by the signed sequence number. Detects
-     * replays (same as last), reorders (below last) and gaps (skipped numbers). No
-     * cross-track correlation. Segments without a number (NaN) are not sequence-checked.
-     * A gap over {@link MAX_REPORTED_MISSING_SEGMENTS} isn't enumerated, only counted.
-     * @returns {{status: string, missing: Array.<number>, missingCount: number}}
-     */
-    function _checkSequence(trackKey, segmentNumber) {
-        if (isNaN(segmentNumber)) {
-            return { status: SEQUENCE_OK, missing: [], missingCount: 0 };
-        }
-
-        const lastSequenceNumber = sequenceTracker[trackKey];
-        if (lastSequenceNumber === undefined) {
-            sequenceTracker[trackKey] = segmentNumber;
-            return { status: SEQUENCE_OK, missing: [], missingCount: 0 };
-        }
-
-        if (segmentNumber === lastSequenceNumber) {
-            return { status: STATUS_REPLAYED, missing: [], missingCount: 0 };
-        }
-        if (segmentNumber < lastSequenceNumber) {
-            return { status: STATUS_REORDERED, missing: [], missingCount: 0 };
-        }
-
-        const missingCount = segmentNumber - lastSequenceNumber - 1;
-        const missing = [];
-        if (missingCount > 0 && missingCount <= MAX_REPORTED_MISSING_SEGMENTS) {
-            for (let skipped = lastSequenceNumber + 1; skipped < segmentNumber; skipped++) {
-                missing.push(skipped);
-            }
-        }
-        sequenceTracker[trackKey] = segmentNumber;
-        return { status: SEQUENCE_OK, missing, missingCount };
-    }
-
     function _sequenceRecord(input, status, method, segmentNumber, missingCount) {
-        return {
+        return _createSegmentRecord({
             segmentNumber,
             mediaType: input.mediaType,
             method: method || null,
             status,
+            missingCount: missingCount || null
+        });
+    }
+
+    /**
+     * The default {@link module:C2paEvents.SegmentRecord} shape; each builder below only
+     * overrides the fields it actually has.
+     */
+    function _createSegmentRecord(overrides) {
+        return Object.assign({
+            segmentNumber: NaN,
+            mediaType: null,
+            method: null,
+            status: null,
             keyId: null,
             hash: null,
             manifestId: null,
             issuer: null,
             previousManifestId: null,
             errorCodes: [],
-            missingCount: missingCount || null,
-            timestamp: Date.now()
-        };
+            missingCount: null,
+            timestamp: now()
+        }, overrides);
     }
 
     /**
@@ -417,39 +395,29 @@ function C2paValidationCoordinator(config) {
     }
 
     function _forcedMismatchRecord(input, method) {
-        return {
+        return _createSegmentRecord({
             segmentNumber: input.segmentNumber,
             mediaType: input.mediaType,
             method,
             status: STATUS_INVALID,
-            keyId: null,
-            hash: null,
-            manifestId: null,
-            issuer: null,
-            previousManifestId: null,
-            errorCodes: [FORCED_METHOD_MISMATCH_CODE],
-            missingCount: null,
-            timestamp: Date.now()
-        };
+            errorCodes: [FORCED_METHOD_MISMATCH_CODE]
+        });
     }
 
     function _toManifestBoxSegmentRecord(input, outcome) {
         const result = outcome.result;
         const errorCodes = _mapErrorCodes(result.errorCodes);
-        return {
+        return _createSegmentRecord({
             segmentNumber: _sequenceNumberOf(result, input),
             mediaType: input.mediaType,
             method: C2PA_METHOD_MANIFEST_BOX,
             status: _manifestBoxStatus(result.isValid, errorCodes),
-            keyId: null,
             hash: result.bmffHashHex,
             manifestId: outcome.nextManifestId,
             issuer: result.issuer,
             previousManifestId: result.previousManifestId,
-            errorCodes,
-            missingCount: null,
-            timestamp: Date.now()
-        };
+            errorCodes
+        });
     }
 
     function _manifestBoxStatus(isValid, errorCodes) {
@@ -467,7 +435,7 @@ function C2paValidationCoordinator(config) {
     }
 
     function _toVsiSegmentRecord(input, result, state) {
-        return {
+        return _createSegmentRecord({
             segmentNumber: _sequenceNumberOf(result, input),
             mediaType: input.mediaType,
             method: C2PA_METHOD_VSI,
@@ -476,11 +444,8 @@ function C2paValidationCoordinator(config) {
             hash: result.bmffHashHex,
             manifestId: result.manifestId,
             issuer: state ? state.issuer : null,
-            previousManifestId: null,
-            errorCodes: _mapErrorCodes(result.errorCodes),
-            missingCount: null,
-            timestamp: Date.now()
-        };
+            errorCodes: _mapErrorCodes(result.errorCodes)
+        });
     }
 
     async function _validateInit(engine, bytes) {
@@ -540,20 +505,13 @@ function C2paValidationCoordinator(config) {
     }
 
     function _emitUnverified(input, method, errorCode, message) {
-        _emitSegmentValidated({
+        _emitSegmentValidated(_createSegmentRecord({
             segmentNumber: input.segmentNumber,
             mediaType: input.mediaType,
             method: method || null,
             status: STATUS_UNVERIFIED,
-            keyId: null,
-            hash: null,
-            manifestId: null,
-            issuer: null,
-            previousManifestId: null,
-            errorCodes: [errorCode],
-            missingCount: null,
-            timestamp: Date.now()
-        });
+            errorCodes: [errorCode]
+        }));
         _emitError(input, input.segmentNumber, errorCode, message);
     }
 
@@ -609,7 +567,7 @@ function C2paValidationCoordinator(config) {
      */
     function reset() {
         trackStates = {};
-        sequenceTracker = {};
+        sequenceTracker.reset();
         activeTrackKeyByMediaType = {};
         initPromises = {};
         enginePromise = null;
@@ -632,7 +590,7 @@ function C2paValidationCoordinator(config) {
      * @param {string} trackKey
      */
     function resetSequenceForTrack(trackKey) {
-        delete sequenceTracker[trackKey];
+        sequenceTracker.resetForTrack(trackKey);
         const state = trackStates[trackKey];
         if (state) {
             state.sequenceState = undefined;
