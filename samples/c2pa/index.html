@@ -171,6 +171,8 @@
         );
     }
 
+    var MAX_VISIBLE_SEGMENT_CHIPS = 300;
+
     function onSegmentValidated(e) {
         var chip = document.createElement('div');
         chip.className = 'c2pa-chip ' + e.status;
@@ -179,7 +181,11 @@
         chip.addEventListener('click', function () {
             showDetails(e);
         });
-        document.getElementById('c2pa-grid').appendChild(chip);
+        var grid = document.getElementById('c2pa-grid');
+        grid.appendChild(chip);
+        while (grid.childElementCount > MAX_VISIBLE_SEGMENT_CHIPS) {
+            grid.removeChild(grid.firstElementChild);
+        }
     }
 
     function onC2paError(e) {
