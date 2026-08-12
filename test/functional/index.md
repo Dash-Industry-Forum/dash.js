@@ -43,6 +43,15 @@ license servers that enforce certificate revocation reject every license request
 `x-axdrm-errormessage: ... DRM client models with revoked certificates are not allowed to receive
 licenses`).
 
+In addition, Edge renders protected content through Media Foundation and enforces the license's
+output-protection policy via the display driver (OPM/HDCP). **DRM tests on Edge must run in an
+unlocked console session with an active display.** If the workstation is locked, the displays are
+off, or the session is an RDP session, every vector whose license requires output protection fails
+with `MEDIA_ERR_DECODE ... MediaFoundationRenderer error: kOnPlaybackError (0xC0262500 /
+"The driver does not support OPM")`. Affected in the smoke suite: the Axinom `v7-MultiDRM-*` and
+the LiveSim2 EZDRM vectors; not affected: Angel-One and the Axinom cbcs single-key vector, whose
+licenses allow unprotected outputs. This is an environment condition, not a player or test defect.
+
 Therefore the `edge_custom` launcher in `config/test-configurations/local-windows.json` sets
 `edgeDataDir` to a persistent profile directory. One-time setup on a new machine: seed that
 directory with the current component CDM by copying `%LOCALAPPDATA%\Microsoft\Edge\User
