@@ -50,8 +50,6 @@ import ProtectionEvents from '../protection/ProtectionEvents.js';
 import ProtectionErrors from '../protection/errors/ProtectionErrors.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
-const PLAYBACK_ENDED_SEEK_TOLERANCE = 0.5;
-const PLAYBACK_ENDED_STUCK_SEEK_THRESHOLD = 1000;
 const DVR_WAITING_OFFSET = 2;
 
 function StreamController() {
@@ -66,7 +64,7 @@ function StreamController() {
         protectionData, extUrlQueryInfoController,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
-        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, stuckSeekingAtStreamEndTicks, preloadingStreams, settings,
+        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
         pendingDynamicToStaticUpdate;
 
@@ -1009,29 +1007,8 @@ function StreamController() {
     function _startPlaybackEndedTimerInterval() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
-                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0) {
-                    if (!playbackController.isSeeking()) {
-                        stuckSeekingAtStreamEndTicks = 0;
-                        eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
-                    } else if (activeStream && getActiveStreamInfo().isLast && activeStream.getHasFinishedBuffering()) {
-                        // A seek to the very end of the stream can remain pending forever, for instance when it targets the exact
-                        // duration of the MediaSource: the buffers were flushed by the seek and no segment covers the requested time.
-                        if (mediaSource && mediaSource.readyState === 'open' &&
-                            mediaSourceController.hasBufferedDataUntil(mediaSource, playbackController.getTime() - PLAYBACK_ENDED_SEEK_TOLERANCE)) {
-                            // All data is buffered, the end of stream was just never (re-)signaled: do it now so the browser can complete the seek
-                            mediaSourceController.signalEndOfStream(mediaSource);
-                        }
-                        stuckSeekingAtStreamEndTicks += 1;
-                        if (stuckSeekingAtStreamEndTicks * PLAYBACK_ENDED_TIMER_INTERVAL >= PLAYBACK_ENDED_STUCK_SEEK_THRESHOLD) {
-                            logger.warn('Playback is stuck seeking at the end of the stream. Firing the ended event manually.');
-                            stuckSeekingAtStreamEndTicks = 0;
-                            eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
-                        }
-                    } else {
-                        stuckSeekingAtStreamEndTicks = 0;
-                    }
-                } else {
-                    stuckSeekingAtStreamEndTicks = 0;
+                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 && !playbackController.isSeeking()) {
+                    eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
         }
@@ -1046,7 +1023,6 @@ function StreamController() {
             clearInterval(playbackEndedTimerInterval);
             playbackEndedTimerInterval = null;
         }
-        stuckSeekingAtStreamEndTicks = 0;
     }
 
     /**
@@ -1745,7 +1721,6 @@ function StreamController() {
         isPaused = false;
         autoPlay = true;
         playbackEndedTimerInterval = null;
-        stuckSeekingAtStreamEndTicks = 0;
         pendingDynamicToStaticUpdate = false;
         firstLicenseIsFetched = false;
         preloadingStreams = [];

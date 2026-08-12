@@ -150,23 +150,6 @@ function MediaSourceController() {
         }
     }
 
-    /**
-     * Checks whether the buffered data covers the provided media time.
-     * Uses the highest buffered end across all source buffers, so buffers that legitimately
-     * end earlier (e.g. text) do not block the check.
-     * @param {object} source
-     * @param {number} time
-     * @return {boolean}
-     */
-    function hasBufferedDataUntil(source, time) {
-        if (!source || isNaN(time)) {
-            return false;
-        }
-
-        const highestBufferedEnd = _getHighestBufferedEnd(source);
-        return !isNaN(highestBufferedEnd) && highestBufferedEnd >= time;
-    }
-
     function signalEndOfStream(source) {
         if (!source || source.readyState !== 'open') {
             logger.debug(`signalEndOfStream: not applicable, MediaSource readyState is ${source ? source.readyState : 'unavailable'}`);
@@ -217,7 +200,6 @@ function MediaSourceController() {
         clearSeekableRange,
         createMediaSource,
         detachMediaSource,
-        hasBufferedDataUntil,
         setConfig,
         setDuration,
         setSeekable,
