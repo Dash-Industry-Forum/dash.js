@@ -295,6 +295,32 @@ describe('StreamController', function () {
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
                 });
 
+                it('should clamp a seek time far beyond the last period to the actual end of content', function (done) {
+                    doneFn = function (err) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        // activeStream is only assigned by _switchStream() right after INITIAL_STREAM_SWITCH is
+                        // triggered, so defer to the next tick to let that synchronous call complete first.
+                        setTimeout(() => {
+                            try {
+                                const seekEvent = { seekTime: 999999999 };
+                                eventBus.trigger(Events.PLAYBACK_SEEKING, seekEvent);
+                                expect(seekEvent.seekTime).to.equal(staticStreamInfo.start + staticStreamInfo.duration);
+                                done();
+                            } catch (e) {
+                                done(e);
+                            }
+                        }, 0);
+                    };
+
+                    expectedStartTime = staticStreamInfo.start;
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
                 it('should start static stream at #t', function (done) {
                     doneFn = done;
 
