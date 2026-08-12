@@ -49,7 +49,8 @@ version). Do this **continuously**, not only at the end:
 * Cut the release branch `RC_vX.X.X` from `development`. From this point,
   `development` stays open for next-version work — only fixes for this release go
   onto `RC_vX.X.X`.
-* Update the version numbers in `package.json` on the `RC_vX.X.X` branch to `X.X.X-rc.N`.
+* Keep the version numbers in `package.json` on the `RC_vX.X.X` branch at the final `X.X.X` release version. Use a
+  short-lived `_npm` branch for any `X.X.X-rc.N` npm prerelease builds.
 * Every change pulled into this release gets a release candidate, even if the
   changes are minor.
 * Create the Release Notes and share them on the Google Groups mailing list for
@@ -74,10 +75,10 @@ version). Do this **continuously**, not only at the end:
 * Pull `master` locally and build the `dist` files with `npm run build`.
 * Push the resulting `dist` files to `master`.
 * Draft the release with the Git Release UI:
-  * Tag the release with the version number, e.g. `vX.X.X`.
-  * Title the release `dash.js vX.X.X`.
-  * Add the release notes created beforehand.
-  * Save as a draft for now.
+    * Tag the release with the version number, e.g. `vX.X.X`.
+    * Title the release `dash.js vX.X.X`.
+    * Add the release notes created beforehand.
+    * Save as a draft for now.
 * Update and upload the archive index page for the player.
 * Publish the Git release by opening the saved draft and clicking publish.
 * Publish to npm following the procedure below.
