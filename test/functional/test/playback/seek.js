@@ -1,5 +1,7 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
+import {expect} from 'chai';
 import {
     checkIsPlaying,
     checkIsProgressing,
@@ -66,7 +68,11 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
         it(`Seek() to large value`, async () => {
             playerAdapter.pause();
+            // Register before seeking: the seek must actually complete, a forever-pending seek is a bug.
+            const seekedPromise = playerAdapter.waitForEvent(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME, MediaPlayerEvents.PLAYBACK_SEEKED);
             playerAdapter.seek(999999999999);
+            const seekCompleted = await seekedPromise;
+            expect(seekCompleted).to.be.true;
 
             // For live we expect to be playing close to the live edge, For VoD we are at the end of the stream.
             const targetTime = playerAdapter.isDynamic() ? playerAdapter.getDuration() - playerAdapter.getCurrentLiveLatency() : playerAdapter.getDuration();

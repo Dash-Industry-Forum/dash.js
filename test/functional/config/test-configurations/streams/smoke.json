@@ -24,6 +24,18 @@
       ]
     },
     {
+      "name": "Multiperiod 2 periods",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/5a/nomor/1.mpd",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-ended",
+        "playback/seek-to-presentation-time"
+      ]
+    },
+    {
       "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, single key, Widevine+PlayReady",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/Dash/protected_dash_1080p_h264_singlekey/manifest.mpd",
