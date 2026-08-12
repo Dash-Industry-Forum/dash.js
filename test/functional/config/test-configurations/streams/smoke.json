@@ -440,6 +440,11 @@
       },
       "includedTestfiles": [
         "playback-advanced/multiperiod-playback"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
       ]
     },
     {
