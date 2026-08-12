@@ -305,18 +305,31 @@ function SourceBufferSink(config) {
 
     function abortBeforeAppend() {
         return new Promise((resolve) => {
-            _waitForUpdateEnd(() => {
-                // Save the append window, which is reset on abort().
-                const appendWindowStart = buffer.appendWindowStart;
-                const appendWindowEnd = buffer.appendWindowEnd;
-
-                if (buffer) {
-                    buffer.abort();
-                    buffer.appendWindowStart = appendWindowStart;
-                    buffer.appendWindowEnd = appendWindowEnd;
+            try {
+                if (mediaSource.readyState !== 'open') {
+                    resolve();
+                    return;
                 }
+                _waitForUpdateEnd(() => {
+                    try {
+                        // The MediaSource can transition out of 'open' while waiting for updateend
+                        if (buffer && mediaSource.readyState === 'open') {
+                            // Save the append window, which is reset on abort().
+                            const appendWindowStart = buffer.appendWindowStart;
+                            const appendWindowEnd = buffer.appendWindowEnd;
+
+                            buffer.abort();
+                            buffer.appendWindowStart = appendWindowStart;
+                            buffer.appendWindowEnd = appendWindowEnd;
+                        }
+                        resolve();
+                    } catch (e) {
+                        resolve();
+                    }
+                });
+            } catch (e) {
                 resolve();
-            });
+            }
         });
     }
 

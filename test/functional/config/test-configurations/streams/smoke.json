@@ -240,11 +240,15 @@
           "browser": "edge",
           "drm": {
             "com.microsoft.playready": {
+              "priority": 0,
               "systemStringPriority": [
                 "com.microsoft.playready.recommendation"
               ],
               "audioRobustness": "2000",
               "videoRobustness": "2000"
+            },
+            "com.widevine.alpha": {
+              "priority": 1
             }
           },
           "settings": {
