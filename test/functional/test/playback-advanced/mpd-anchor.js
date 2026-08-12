@@ -38,7 +38,8 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
             let startTime = playerAdapter.generateValidStartPosition();
             startTime -= Constants.TEST_INPUTS.MPD_ANCHOR.VOD_RANDOM_SUBTRACT_OFFSET;
-            startTime = Math.max(startTime, 0);
+            // Floor at 1s, not 0: #t=0 equals the default start position, no seek is performed and PLAYBACK_SEEKED never fires
+            startTime = Math.max(startTime, 1);
             playerAdapter.attachSource(`${mpd}#t=${startTime}`);
 
             let seeked = await playerAdapter.waitForEvent(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME, dashjs.MediaPlayer.events.PLAYBACK_SEEKED);

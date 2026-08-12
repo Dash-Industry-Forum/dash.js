@@ -74,8 +74,8 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             const seekCompleted = await seekedPromise;
             expect(seekCompleted).to.be.true;
 
-            // For live we expect to be playing close to the live edge, For VoD we are at the end of the stream.
-            const targetTime = playerAdapter.isDynamic() ? playerAdapter.getDuration() - playerAdapter.getCurrentLiveLatency() : playerAdapter.getDuration();
+            // For live we expect to be playing close to the live edge. For VoD we are at the end of the stream minus the seekDurationBackoff.
+            const targetTime = playerAdapter.isDynamic() ? playerAdapter.getDuration() - playerAdapter.getCurrentLiveLatency() : playerAdapter.getDuration() - playerAdapter.getSettings().streaming.seekDurationBackoff;
             const allowedDifference = playerAdapter.isDynamic() ? Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE_LIVE_EDGE : Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE;
 
             checkTimeWithinThresholdForDvrWindow(playerAdapter, targetTime, allowedDifference);

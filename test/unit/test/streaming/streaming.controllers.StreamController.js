@@ -295,7 +295,7 @@ describe('StreamController', function () {
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
                 });
 
-                it('should clamp a seek time far beyond the last period to the actual end of content', function (done) {
+                it('should clamp a seek time far beyond the last period to the end of content minus the seekDurationBackoff', function (done) {
                     doneFn = function (err) {
                         if (err) {
                             done(err);
@@ -307,7 +307,8 @@ describe('StreamController', function () {
                             try {
                                 const seekEvent = { seekTime: 999999999 };
                                 eventBus.trigger(Events.PLAYBACK_SEEKING, seekEvent);
-                                expect(seekEvent.seekTime).to.equal(staticStreamInfo.start + staticStreamInfo.duration);
+                                const expectedTime = staticStreamInfo.start + staticStreamInfo.duration - settings.get().streaming.seekDurationBackoff;
+                                expect(seekEvent.seekTime).to.equal(expectedTime);
                                 done();
                             } catch (e) {
                                 done(e);

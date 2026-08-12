@@ -637,7 +637,14 @@ function StreamController() {
             const lastStreamEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
             if (newTime >= lastStreamEnd) {
                 seekToStream = lastStream;
-                e.seekTime = lastStreamEnd;
+                // Clamp overshooting seeks to slightly before the end of the content. A playhead resting exactly at the
+                // (post endOfStream) MediaSource duration is in the "ended" state, where play() restarts from the
+                // beginning instead of finishing playback, and seeking to the exact duration does not complete reliably.
+                const seekDurationBackoff = !isNaN(settings.get().streaming.seekDurationBackoff) ? settings.get().streaming.seekDurationBackoff : 0;
+                e.seekTime = Math.max(lastStream.getStartTime(), lastStreamEnd - seekDurationBackoff);
+                // Corrective internal seek: move the video element to the clamped target as well, instead of leaving it
+                // wherever the browser clamped the original overshooting seek (usually the exact MediaSource duration).
+                playbackController.seek(e.seekTime, false, true);
             }
         }
 
