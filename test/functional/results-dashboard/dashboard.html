@@ -330,9 +330,13 @@
         }).join('');
 
         const filtered = applyFilters(all);
-        const failures = all.filter((c) => c.status === 'fail' &&
-            (state.browserFilter === 'all' || c.browser === state.browserFilter) &&
-            (!state.search || `${c.suite} ${c.title}`.toLowerCase().includes(state.search.toLowerCase())));
+        // The failure cards respect all filters too; they are only shown when the
+        // status filter includes failed tests.
+        const failures = ['all', 'fail'].includes(state.statusFilter)
+            ? all.filter((c) => c.status === 'fail' &&
+                (state.browserFilter === 'all' || c.browser === state.browserFilter) &&
+                (!state.search || `${c.suite} ${c.title}`.toLowerCase().includes(state.search.toLowerCase())))
+            : [];
 
         detail.innerHTML = `
             <h2>${fmtDate(state.activeId)}</h2>
@@ -369,13 +373,23 @@
     }
 
     function renderFailures(failures) {
-        return failures.map((c) => `
-            <div class="fail-card">
-                <div class="suite">${esc(c.testfile)} · ${esc(c.vector)}<span class="browser-chip">${esc(c.browser)}</span></div>
-                <div class="case">✕ ${esc(c.title)}</div>
-                <div class="mpd"><a href="${esc(c.mpd)}" target="_blank" rel="noopener">${esc(c.mpd)}</a></div>
-                <pre>${esc(c.failure || '')}</pre>
-            </div>`).join('');
+        // One card per suite (testfile + vector), all failing cases of that suite inside
+        const bySuite = new Map();
+        for (const c of failures) {
+            const key = `${c.testfile} ${c.vector} ${c.mpd}`;
+            if (!bySuite.has(key)) { bySuite.set(key, []); }
+            bySuite.get(key).push(c);
+        }
+        return [...bySuite.values()].map((cs) => {
+            const { testfile, vector, mpd } = cs[0];
+            return `<div class="fail-card">
+                <div class="suite">${esc(testfile)} · ${esc(vector)}</div>
+                <div class="mpd"><a href="${esc(mpd)}" target="_blank" rel="noopener">${esc(mpd)}</a></div>
+                ${cs.map((c) => `
+                    <div class="case">✕ ${esc(c.title)}<span class="browser-chip">${esc(c.browser)}</span></div>
+                    <pre>${esc(c.failure || '')}</pre>`).join('')}
+            </div>`;
+        }).join('');
     }
 
     function renderTree(cases) {

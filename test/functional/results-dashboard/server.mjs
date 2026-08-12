@@ -93,7 +93,7 @@ function loadSession(id) {
 }
 
 function sendJson(res, statusCode, payload) {
-    res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+    res.writeHead(statusCode, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));
 }
 
@@ -101,7 +101,7 @@ const server = http.createServer((req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     try {
         if (url.pathname === '/' || url.pathname === '/index.html') {
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
             res.end(fs.readFileSync(path.join(__dirname, 'dashboard.html')));
         } else if (url.pathname === '/api/sessions') {
             sendJson(res, 200, listSessions());
