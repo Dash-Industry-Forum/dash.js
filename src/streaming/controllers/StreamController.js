@@ -639,6 +639,7 @@ function StreamController() {
             const lastStreamEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
             if (newTime >= lastStreamEnd) {
                 seekToStream = lastStream;
+                e.seekTime = lastStreamEnd;
             }
         }
 
