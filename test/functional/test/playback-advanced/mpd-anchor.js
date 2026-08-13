@@ -48,6 +48,18 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             checkTimeWithinThresholdForDvrWindow(playerAdapter, startTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
         });
 
+        it(`Attach with #t beyond duration and expect playback to end`, async function () {
+            if (item.type === Constants.CONTENT_TYPES.LIVE) {
+                this.skip();
+            }
+
+            // The start time is clamped to slightly before the end of the content, so playback ends after a short play-through
+            const endedPromise = playerAdapter.waitForEvent(Constants.TEST_INPUTS.SEEK_ENDED.EVENT_WAITING_TIME, dashjs.MediaPlayer.events.PLAYBACK_ENDED);
+            playerAdapter.attachSource(`${mpd}#t=999999999`);
+            const endedEventThrown = await endedPromise;
+            expect(endedEventThrown).to.be.true;
+        });
+
         it(`Attach with #posix and expect live delay to correspond`, async function () {
             if (item.type === Constants.CONTENT_TYPES.VOD) {
                 this.skip();

@@ -346,6 +346,17 @@ describe('StreamController', function () {
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
                 });
 
+                it('should clamp the start time if #t is beyond the end of the content', function (done) {
+                    doneFn = done;
+
+                    uriFragmentModelMock.setURIFragmentData({ t: '999999999' });
+
+                    expectedStartTime = staticStreamInfo.start + staticStreamInfo.duration - settings.get().streaming.seekDurationBackoff;
+
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
                 it('should start static stream at period start if #t is before period start', function (done) {
                     doneFn = done;
 
@@ -418,7 +429,6 @@ describe('StreamController', function () {
                             return;
                         }
                         setTimeout(() => {
-                            playbackControllerMock.setIsDynamic(true);
                             try {
                                 const seekEvent = { seekTime: 999999999 };
                                 eventBus.trigger(Events.PLAYBACK_SEEKING, seekEvent);
@@ -426,8 +436,6 @@ describe('StreamController', function () {
                                 done();
                             } catch (e) {
                                 done(e);
-                            } finally {
-                                playbackControllerMock.setIsDynamic(false);
                             }
                         }, 0);
                     };

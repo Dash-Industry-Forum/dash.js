@@ -438,8 +438,17 @@ function StreamController() {
 
     function _calculateStartTimeAndSwitchStream() {
         // Figure out the correct start time and the correct start period
-        const startTime = _getInitialStartTime();
-        let streamForTime = getStreamForTime(startTime);
+        const seekEvent = { seekTime: _getInitialStartTime() };
+        let streamForTime = getStreamForTime(seekEvent.seekTime);
+
+        // A start time at or beyond the end of the content (e.g. an MPD anchor #t= past the duration) is clamped here.
+        // The initial seek is performed internally and does not dispatch PLAYBACK_SEEKING, so the clamp in
+        // _onPlaybackSeeking never sees it.
+        if (!streamForTime) {
+            streamForTime = _handleSeekBeyondEndOfContent(seekEvent);
+        }
+
+        const startTime = seekEvent.seekTime;
         const initialStream = streamForTime !== null ? streamForTime : streams[0];
 
         eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
@@ -661,7 +670,9 @@ function StreamController() {
      * @private
      */
     function _handleSeekBeyondEndOfContent(e) {
-        if (isNaN(e.seekTime) || streams.length === 0 || playbackController.getIsDynamic()) {
+        // adapter.getIsDynamic() instead of playbackController.getIsDynamic(): the latter is only initialized once the
+        // first stream is activated, but this function also runs for the initial start time before activation.
+        if (isNaN(e.seekTime) || streams.length === 0 || adapter.getIsDynamic()) {
             return null;
         }
 
@@ -676,6 +687,8 @@ function StreamController() {
 
         // Corrective internal seek: move the video element to the clamped target as well, instead of leaving it
         // wherever the browser clamped the original overshooting seek (usually the exact MediaSource duration).
+        // During startup no seek was performed yet and PlaybackController is not initialized: this is a no-op then,
+        // the initial seek uses the clamped time via _switchStream.
         playbackController.seek(e.seekTime, false, true);
 
         return lastStream;
