@@ -369,7 +369,9 @@ const CmcdPropertyMap = {
 
     /**
      * V2: Target sendResponseReceivedForRequestTypes filter
-     * Note: This only applies to the rr event, and is target-specific, requires context
+     * Note: This only applies to the rr event, and is target-specific, requires context.
+     * No default: an absent list must stay undefined so it falls back to the
+     * top-level includeRequestTypes, while an explicit empty list disables rr.
      */
     targetSendResponseReceivedForRequestType: {
         version: [2],
@@ -377,8 +379,7 @@ const CmcdPropertyMap = {
             {
                 path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].sendResponseReceivedForRequestTypes',
                 priority: 1,
-                type: 'array',
-                default: []
+                type: 'array'
             }
         ]
     }

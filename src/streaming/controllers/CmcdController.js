@@ -40,6 +40,7 @@ import {
     CmcdReporter,
     CMCD_QUERY,
     CMCD_HEADERS,
+    CMCD_EVENT_RESPONSE_RECEIVED,
 } from '@svta/cml-cmcd';
 import Debug from '../../core/Debug.js';
 
@@ -60,9 +61,10 @@ import Utils from '../../core/Utils.js';
  *
  * EVENT MODE - CMCD reports are POSTed to the configured reporting targets
  * (`streaming.cmcd.eventTargets`), triggered by event types (ps, e, t, rr, ...).
- * One reporter per configured target (`eventModeReporters`). The rr (response
+ * A single reporter (`eventModeReporter`) owns all targets. The rr (response
  * received) event is additionally filtered per target by
- * `sendResponseReceivedForRequestTypes`.
+ * `sendResponseReceivedForRequestTypes`, compiled into a per-target
+ * `transform` that cancels non-matching rr reports.
  */
 function CmcdController() {
     let cmcdConfigAccessor,
@@ -70,7 +72,7 @@ function CmcdController() {
         cmcdSessionId,
         dashMetrics,
         errHandler,
-        eventModeReporters,
+        eventModeReporter,
         instance,
         logger,
         mediaPlayerModel,
@@ -156,7 +158,7 @@ function CmcdController() {
 
     function _resetInitialSettings() {
         reportersNeedRebuild = false;
-        eventModeReporters = [];
+        eventModeReporter = null;
         cmcdSessionId = null;
     }
 
@@ -190,9 +192,9 @@ function CmcdController() {
             requestModeReporter.stop(true);
             requestModeReporter = null;
         }
-        if (eventModeReporters) {
-            eventModeReporters.forEach(({ reporter }) => reporter.stop(true));
-            eventModeReporters = null;
+        if (eventModeReporter) {
+            eventModeReporter.stop(true);
+            eventModeReporter = null;
         }
 
         cmcdConfigAccessor.clearManifestParams();
@@ -274,16 +276,12 @@ function CmcdController() {
     function _createReporters() {
         const targets = _buildEnabledEventTargets();
         requestModeReporter = _createReporter([]);
-        eventModeReporters = targets
-            .map((target) => ({
-                sendResponseReceivedForRequestTypes: target.sendResponseReceivedForRequestTypes,
-                reporter: _createReporter([target]),
-            }));
+        eventModeReporter = targets.length ? _createReporter(targets) : null;
     }
 
     function _startReporters() {
         requestModeReporter.start();
-        eventModeReporters.forEach(({ reporter }) => reporter.start())
+        eventModeReporter?.start();
     }
 
     function _createReporter(eventTargets) {
@@ -354,7 +352,15 @@ function CmcdController() {
                 interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
                 batchSize: accessor.get('targetBatchSize') || 1,
                 enabledKeys: accessor.get('targetKeys'),
-                sendResponseReceivedForRequestTypes,
+                // An explicit empty sendResponseReceivedForRequestTypes disables rr for this
+                // target; only a null/undefined list falls back to the top-level includeRequestTypes.
+                transform: (data, request) => {
+                    if (data.e !== CMCD_EVENT_RESPONSE_RECEIVED) {
+                        return data;
+                    }
+                    const requestType = request?.customData?.request?.type;
+                    return cmcdModel.isIncludedInRequestFilter(requestType, sendResponseReceivedForRequestTypes) ? data : null;
+                },
             });
 
             return result;
@@ -375,10 +381,9 @@ function CmcdController() {
         }
 
         requestModeReporter.stop(true);
-        eventModeReporters.forEach(({ reporter }) => reporter.stop(true));
+        eventModeReporter?.stop(true);
         _createReporters();
-        requestModeReporter.start();
-        eventModeReporters.forEach(({ reporter }) => reporter.start());
+        _startReporters();
     }
 
     function _customRequester(request) {
@@ -452,7 +457,7 @@ function CmcdController() {
 
             // Route MSD through update() for the reporter's internal send-once tracking.
             // Deliberately only the request-mode reporter: each reporter tracks
-            // msd independently, the event-mode reporters receive it on their own paths.
+            // msd independently, the event-mode reporter receives it on its own paths.
             const msdData = cmcdModel.calculateMsd();
             if (msdData.msd !== undefined) {
                 requestModeReporter.update(msdData);
@@ -500,40 +505,8 @@ function CmcdController() {
      * Event mode
      * ------------------------------------------------------------------ */
 
-    /**
-     * The handler that is triggered for CMCD event mode events (e.g., play, pause, error). Note that response received (rr) events are handled by getCmcdResponseReceivedInterceptors.
-     * @param event
-     */
-    function _triggerEventModeReport(event) {
-        if (!requestModeReporter) {
-            return;
-        }
-
-        if (!eventModeReporters?.length) {
-            return;
-        }
-
-        const cmcdData = cmcdModel.getEventModeData();
-
-        // Route media start delay (MSD) through update() for the reporter's internal send-once tracking
-        const msdData = cmcdModel.calculateMsd();
-        if (msdData.msd !== undefined) {
-            _updateAllReporters(msdData);
-        }
-
-        // Pass event-mode data as transient per-event data (not persisted)
-        eventModeReporters.forEach(({ reporter }) => reporter.recordEvent(event, cmcdData));
-    }
-
     function getCmcdResponseReceivedInterceptors() {
         return [_cmcdResponseReceivedInterceptor];
-    }
-
-    // EVENT MODE rr filter: per-target sendResponseReceivedForRequestTypes.
-    // An explicit empty list disables rr reports for the target; only a
-    // null/undefined list falls back to the top-level includeRequestTypes.
-    function _shouldTargetReportResponseReceived(requestType, sendResponseReceivedForRequestTypes) {
-        return cmcdModel.isIncludedInRequestFilter(requestType, sendResponseReceivedForRequestTypes);
     }
 
     function _cmcdResponseReceivedInterceptor(response) {
@@ -547,11 +520,7 @@ function CmcdController() {
     }
 
     function _handleResponseReceivedEvent(response) {
-        if (!requestModeReporter) {
-            return;
-        }
-
-        if (!eventModeReporters?.length) {
+        if (!eventModeReporter) {
             return;
         }
 
@@ -584,10 +553,8 @@ function CmcdController() {
         }
 
         try {
-            const requestType = response.request?.customData?.request?.type;
-            eventModeReporters
-                .filter(({ sendResponseReceivedForRequestTypes }) => _shouldTargetReportResponseReceived(requestType, sendResponseReceivedForRequestTypes))
-                .forEach(({ reporter }) => reporter.recordResponseReceived(response, { ...eventData, ...additionalData }));
+            // Per-target filtering by request type happens in each target's transform
+            eventModeReporter.recordResponseReceived(response, { ...eventData, ...additionalData });
         } catch (e) {
             logger.warn('Failed to record response received in CMCD reporter.', e);
         }
@@ -628,17 +595,25 @@ function CmcdController() {
     }
 
     function _updateAllReporters(data) {
-        if (requestModeReporter) {
-            requestModeReporter.update(data);
-        }
-        if (eventModeReporters) {
-            eventModeReporters.forEach(({ reporter }) => reporter.update(data));
-        }
+        requestModeReporter?.update(data);
+        eventModeReporter?.update(data);
     }
 
     function _onPlaybackStateChange(state) {
-        _updateAllReporters({ sta: state });
-        _triggerEventModeReport(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
+        requestModeReporter?.update({ sta: state });
+
+        if (!eventModeReporter) {
+            return;
+        }
+
+        // A single combined update(): snapshot data is persisted first, then the sta
+        // change auto-fires the ps event (deduped against the last emitted value).
+        const data = { ...cmcdModel.getEventModeData(), sta: state };
+        const msdData = cmcdModel.calculateMsd();
+        if (msdData.msd !== undefined) {
+            data.msd = msdData.msd;
+        }
+        eventModeReporter.update(data);
     }
 
     function _onPlaybackRateChanged(data) {
@@ -671,12 +646,24 @@ function CmcdController() {
             return;
         }
 
-        const errorCode = errorData.error?.code || errorData.error?.data?.code;
-        if (errorCode) {
-            _updateAllReporters({ ec: errorCode });
+        if (!eventModeReporter) {
+            return;
         }
 
-        _triggerEventModeReport(Constants.CMCD_REPORTING_EVENTS.ERROR);
+        // Route media start delay (MSD) through update() for the reporter's internal send-once tracking
+        const msdData = cmcdModel.calculateMsd();
+        if (msdData.msd !== undefined) {
+            _updateAllReporters(msdData);
+        }
+
+        // ec is transient per-event data: it must not persist into later reports
+        const eventData = { ...cmcdModel.getEventModeData() };
+        const errorCode = errorData.error?.code || errorData.error?.data?.code;
+        if (errorCode) {
+            eventData.ec = errorCode;
+        }
+
+        eventModeReporter.recordEvent(Constants.CMCD_REPORTING_EVENTS.ERROR, eventData);
     }
 
     function _onBufferLevelStateChanged(data) {
