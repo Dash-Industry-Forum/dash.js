@@ -631,21 +631,8 @@ function StreamController() {
         const newTime = e.seekTime;
         let seekToStream = getStreamForTime(newTime);
 
-        // A seek to a time at or beyond the end of the last period is not assigned to any stream. Route it to the last stream so playback can end there.
-        if (!seekToStream && !isNaN(newTime) && streams.length > 0) {
-            const lastStream = streams[streams.length - 1];
-            const lastStreamEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
-            if (newTime >= lastStreamEnd) {
-                seekToStream = lastStream;
-                // Clamp overshooting seeks to slightly before the end of the content. A playhead resting exactly at the
-                // (post endOfStream) MediaSource duration is in the "ended" state, where play() restarts from the
-                // beginning instead of finishing playback, and seeking to the exact duration does not complete reliably.
-                const seekDurationBackoff = !isNaN(settings.get().streaming.seekDurationBackoff) ? settings.get().streaming.seekDurationBackoff : 0;
-                e.seekTime = Math.max(lastStream.getStartTime(), lastStreamEnd - seekDurationBackoff);
-                // Corrective internal seek: move the video element to the clamped target as well, instead of leaving it
-                // wherever the browser clamped the original overshooting seek (usually the exact MediaSource duration).
-                playbackController.seek(e.seekTime, false, true);
-            }
+        if (!seekToStream) {
+            seekToStream = _handleSeekBeyondEndOfContent(e);
         }
 
         if (!seekToStream || seekToStream === activeStream) {
@@ -659,6 +646,39 @@ function StreamController() {
         // The timer is stopped once PLAYBACK_ENDED was fired for the last stream. A seek can resume playback afterwards.
         _startPlaybackEndedTimerInterval();
         _createPlaylistMetrics(PlayList.SEEK_START_REASON);
+    }
+
+    /**
+     * A seek to a time at or beyond the end of the last period is not assigned to any stream. Route it to the last
+     * stream and clamp the seek target to slightly before the end of the content, so playback can end there.
+     * A playhead resting exactly at the (post endOfStream) MediaSource duration is in the "ended" state, where play()
+     * restarts from the beginning instead of finishing playback, and seeking to the exact duration does not complete reliably.
+     * Static manifests only: on a dynamic manifest with a finite announced duration (planned-end live event) the last
+     * period's end can lie beyond the current live edge, and clamping would actively park the playhead in a region
+     * without segments. Live seek targets are constrained by the DVR window logic instead.
+     * @param {object} e - the PLAYBACK_SEEKING event payload; e.seekTime is adjusted in place when clamping applies
+     * @return {object|null} the stream to seek to, or null if this is not a seek beyond the end of the content
+     * @private
+     */
+    function _handleSeekBeyondEndOfContent(e) {
+        if (isNaN(e.seekTime) || streams.length === 0 || playbackController.getIsDynamic()) {
+            return null;
+        }
+
+        const lastStream = streams[streams.length - 1];
+        const lastStreamEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
+        if (e.seekTime < lastStreamEnd) {
+            return null;
+        }
+
+        const seekDurationBackoff = !isNaN(settings.get().streaming.seekDurationBackoff) ? settings.get().streaming.seekDurationBackoff : 0;
+        e.seekTime = Math.max(lastStream.getStartTime(), lastStreamEnd - seekDurationBackoff);
+
+        // Corrective internal seek: move the video element to the clamped target as well, instead of leaving it
+        // wherever the browser clamped the original overshooting seek (usually the exact MediaSource duration).
+        playbackController.seek(e.seekTime, false, true);
+
+        return lastStream;
     }
 
     /**

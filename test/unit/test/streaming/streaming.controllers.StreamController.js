@@ -411,6 +411,38 @@ describe('StreamController', function () {
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
                 });
 
+                it('should not clamp a seek time beyond the announced end of a dynamic stream with finite duration', function (done) {
+                    doneFn = function (err) {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        setTimeout(() => {
+                            playbackControllerMock.setIsDynamic(true);
+                            try {
+                                const seekEvent = { seekTime: 999999999 };
+                                eventBus.trigger(Events.PLAYBACK_SEEKING, seekEvent);
+                                expect(seekEvent.seekTime).to.equal(999999999);
+                                done();
+                            } catch (e) {
+                                done(e);
+                            } finally {
+                                playbackControllerMock.setIsDynamic(false);
+                            }
+                        }, 0);
+                    };
+
+                    expectedStartTime = liveStartTime;
+                    // Planned-end live event: dynamic manifest with a finite announced duration
+                    getStreamsInfoStub.returns([{
+                        manifestInfo: { isDynamic: true, dvrWindowSize: 30, minBufferTime: 4 },
+                        start: 10,
+                        duration: 600,
+                        id: '1'
+                    }]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
                 it('should start dynamic stream at #t', function (done) {
                     doneFn = done;
 
