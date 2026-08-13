@@ -1672,6 +1672,7 @@ export class MediaPlayerSettingClass {
     };
     streaming?: {
         abandonLoadTimeout?: number,
+        seekDurationBackoff?: number,
         wallclockTimeUpdateInterval?: number,
         manifestUpdateRetryInterval?: number,
         liveUpdateTimeThresholdInMilliseconds?: number,

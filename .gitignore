@@ -197,8 +197,8 @@ test/unit/test/**/__screenshots__
 test/functional/results
 test/functional/config/selenium/jars
 samples/custom
+samples/test
 samples/mpds/
-samples/test/
 samples/modules/webpack/package-lock.json
 samples/modules/webpack/dist
 samples/modules/webpack/node_modules
@@ -211,6 +211,13 @@ test-results
 
 .claude/settings.local.json
 
-.playwright-mcp
+#################
+## VitePress docs site (docs/site)
+#################
+docs/site/.vitepress/dist
+docs/site/.vitepress/cache
+
 
 *.tgz
+.playwright-mcp
+.opencode
