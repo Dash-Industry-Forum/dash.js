@@ -5,7 +5,8 @@ import {
     checkIsPlaying,
     checkIsProgressing,
     checkTimeWithinThresholdForDvrWindow,
-    initializeDashJsAdapter
+    initializeDashJsAdapter,
+    isLiveContent
 } from '../common/common.js';
 
 const TESTCASE = Constants.TESTCASES.PLAYBACK_ADVANCED.ATTACH_AT_NON_ZERO;
@@ -47,6 +48,18 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             await checkIsPlaying(playerAdapter, true)
             checkTimeWithinThresholdForDvrWindow(playerAdapter, 0, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
             await checkIsProgressing(playerAdapter);
+        })
+
+        it(`Attach with start time beyond duration and expect playback to end`, async function () {
+            if (isLiveContent(item)) {
+                this.skip();
+            }
+
+            // The start time is clamped to slightly before the end of the content, so playback ends after a short play-through
+            const endedPromise = playerAdapter.waitForEvent(Constants.TEST_INPUTS.SEEK_ENDED.EVENT_WAITING_TIME, dashjs.MediaPlayer.events.PLAYBACK_ENDED);
+            playerAdapter.attachSource(mpd, 999999999);
+            const endedEventThrown = await endedPromise;
+            expect(endedEventThrown).to.be.true;
         })
 
         for (let i = 0; i < Constants.TEST_INPUTS.ATTACH_AT_NON_ZERO.NUMBER_OF_RANDOM_ATTACHES; i++) {

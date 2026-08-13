@@ -1,13 +1,11 @@
 {
   "browsers": [
-    "edge_custom",
-    "firefox_custom",
     "chrome_custom"
   ],
   "hostname": "localhost",
   "port": 4200,
   "protocol": "http",
-  "concurrency": 3,
+  "concurrency": 1,
   "customLaunchers": {
     "chrome_custom": {
       "base": "Chrome",
@@ -18,19 +16,15 @@
         "--disable-search-engine-choice-screen"
       ]
     },
-    "edge_custom": {
-      "base": "Edge",
-      "edgeDataDir": "C:\\Users\\local_root\\.dashjs-edge-test-profile",
-      "flags": [
-        "--disable-web-security",
-        "--autoplay-policy=no-user-gesture-required",
-        "--disable-popup-blocking",
-        "--disable-search-engine-choice-screen"
-      ]
-    },
     "firefox_custom": {
       "base": "Firefox",
       "prefs": {}
+    },
+    "safari_custom": {
+      "base": "SafariNative",
+      "flags": [
+        "--disable-popup-blocking"
+      ]
     }
   },
   "reporters": [
