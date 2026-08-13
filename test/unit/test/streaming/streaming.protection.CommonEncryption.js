@@ -66,6 +66,25 @@ describe('CommonEncryption', () => {
 
     });
 
+    describe('parsePSSHList', () => {
+
+        it('should return an empty result for data that does not contain any PSSH box', () => {
+            const initData = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]).buffer;
+
+            expect(CommonEncryption.parsePSSHList(initData)).to.be.empty;
+        });
+
+        it('should terminate for data starting with a box size of zero, for instance a webm key id', () => {
+            // A box size of zero must not reset the parsing cursor, otherwise the parsing loop never terminates
+            const initData = new Uint8Array([
+                0x00, 0x00, 0x00, 0x00, 0x11, 0x22, 0x33, 0x44,
+                0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc
+            ]).buffer;
+
+            expect(CommonEncryption.parsePSSHList(initData)).to.be.empty;
+        });
+    });
+
     describe('getLicenseServerUrlFromMediaInfo', () => {
         let mediaInfo;
         let schemeIdUri = 'abcd-efgh';

@@ -45,6 +45,7 @@ import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import Utils from '../../../core/Utils.js';
 
 const SYSTEM_STRING_PRIORITY = {};
 SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
@@ -311,11 +312,14 @@ function DefaultProtectionModel(config) {
         const sessionToken = _createSessionToken(mediaKeySession, keySystemMetadata);
 
         // Determine the initDataType for generateRequest():
+        // - Explicit initDataType from the metadata (e.g. 'webm' from an encrypted event): use it
         // - ClearKey with keys: use 'keyids'
         // - FairPlay: use 'sinf'
         // - All others: use 'cenc'
         let dataType;
-        if (keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || (keySystemMetadata.protData && keySystemMetadata.protData.clearkeys))) {
+        if (keySystemMetadata.initDataType) {
+            dataType = keySystemMetadata.initDataType;
+        } else if (keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || (keySystemMetadata.protData && keySystemMetadata.protData.clearkeys))) {
             dataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS;
         } else if (keySystem.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
             dataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF;
@@ -467,7 +471,7 @@ function DefaultProtectionModel(config) {
         const token = { // Implements SessionToken
             session: session,
             keyId: keySystemMetadata.keyId,
-            normalizedKeyId: keySystemMetadata && keySystemMetadata.keyId && typeof keySystemMetadata.keyId === 'string' ? keySystemMetadata.keyId.replace(/-/g, '').toLowerCase() : '',
+            normalizedKeyId: Utils.normalizeKeyId(keySystemMetadata ? keySystemMetadata.keyId : null),
             initData: keySystemMetadata.initData,
             sessionId: keySystemMetadata.sessionId,
             sessionType: keySystemMetadata.sessionType,

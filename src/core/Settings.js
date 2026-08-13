@@ -110,6 +110,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                keepProtectionMediaKeys: false,
  *                keepProtectionMediaKeysMaximumOpenSessions: -1,
  *                ignoreEmeEncryptedEvent: false,
+ *                ignoreInitDataFromManifest: false,
  *                detectPlayreadyMessageFormat: true,
  *                ignoreKeyStatuses: false,
  *            },
@@ -749,6 +750,15 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [ignoreEmeEncryptedEvent=false]
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  *
+ * @property {boolean} [ignoreInitDataFromManifest=false]
+ * If set to true the player will not create key sessions from initialization data signaled in the manifest (e.g. cenc:pssh in ContentProtection elements).
+ * Instead, key sessions are only created from the initialization data provided by the EME "encrypted" event, which is derived from the media itself.
+ * Key system selection still uses the ContentProtection elements from the manifest.
+ * Only enable this for content that carries initialization data inband (e.g. pssh boxes in the init segments or the ContentEncKeyID of WebM tracks).
+ * For content without inband initialization data no "encrypted" event is fired and license acquisition never starts.
+ * Note that license acquisition starts with the first "encrypted" event, which can increase the startup delay.
+ * Do not combine with ignoreEmeEncryptedEvent, as this would disable license acquisition entirely.
+ *
  * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
  *
@@ -1272,6 +1282,7 @@ function Settings() {
                 keepProtectionMediaKeys: false,
                 keepProtectionMediaKeysMaximumOpenSessions: -1,
                 ignoreEmeEncryptedEvent: false,
+                ignoreInitDataFromManifest: false,
                 detectPlayreadyMessageFormat: true,
                 ignoreKeyStatuses: false,
             },

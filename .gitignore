@@ -217,6 +217,7 @@ test-results
 docs/site/.vitepress/dist
 docs/site/.vitepress/cache
 
+
 *.tgz
 .playwright-mcp
 .opencode

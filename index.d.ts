@@ -1715,6 +1715,7 @@ export class MediaPlayerSettingClass {
             keepProtectionMediaKeys?: boolean,
             keepProtectionMediaKeysMaximumOpenSessions?: number,
             ignoreEmeEncryptedEvent?: boolean,
+            ignoreInitDataFromManifest?: boolean,
             detectPlayreadyMessageFormat?: boolean,
             ignoreKeyStatuses?: boolean,
         },

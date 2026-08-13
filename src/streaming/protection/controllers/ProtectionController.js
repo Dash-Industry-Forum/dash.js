@@ -157,8 +157,11 @@ function ProtectionController(config) {
                 if (supportedKeySystemsMetadata.length === 0) {
                     supportedKeySystemsMetadata = keySystemsMetadata;
                 }
-                // Save config for creating key session once we selected a key system
-                pendingMediaTypesToHandle.push(keySystemsMetadata);
+                // Save config for creating key session once we selected a key system.
+                // If the application chose to ignore the init data from the manifest, sessions are created from the initData of the EME encrypted events instead.
+                if (!settings.get().streaming.protection.ignoreInitDataFromManifest) {
+                    pendingMediaTypesToHandle.push(keySystemsMetadata);
+                }
             }
         })
 
@@ -638,6 +641,7 @@ function ProtectionController(config) {
         if (keySystemMetadata.protData && keySystemMetadata.protData.hasOwnProperty('clearkeys') && Object.keys(keySystemMetadata.protData.clearkeys).length !== 0) {
             const initData = { kids: Object.keys(keySystemMetadata.protData.clearkeys) };
             keySystemMetadata.initData = new TextEncoder().encode(JSON.stringify(initData));
+            keySystemMetadata.initDataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS;
         }
     }
 
@@ -675,7 +679,9 @@ function ProtectionController(config) {
         // Enforce maximum number of open MediaKeySessions, if settings are provided
         _enforceMediaKeySessionLimit();
 
-        const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null);
+        // Only 'cenc' initData carries PSSH boxes. webm initData is a raw key id and sinf initData is a JSON wrapped sinf box.
+        const isPsshInitData = !keySystemMetadata || !keySystemMetadata.initDataType || keySystemMetadata.initDataType === ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
+        const initDataForKS = isPsshInitData ? CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null) : null;
         if (initDataForKS) {
 
             // Check for duplicate initData
@@ -793,16 +799,55 @@ function ProtectionController(config) {
         }
 
         try {
+            // Key ids can be signaled in different formats (dashed UUID from the manifest, plain hex from initData).
+            // Compare in normalized form.
+            const normalizedKeyId = Utils.normalizeKeyId(keyId);
+
             const sessions = protectionModel.getSessionTokens();
             for (let i = 0; i < sessions.length; i++) {
-                if (sessions[i].getKeyId() === keyId) {
-                    return true;
+                if (sessions[i].normalizedKeyId === normalizedKeyId) {
+                    // A session that has not reported any key status yet is still acquiring its license.
+                    // It counts as existing, otherwise we would trigger a second license request while the first one is still in progress.
+                    if (!sessions[i].hasTriggeredKeyStatusMapUpdate) {
+                        return true;
+                    }
+
+                    // Sessions whose key is known to be invalid do not count. We need a new session and license in that case.
+                    if (!_isKeyIdOutdated(normalizedKeyId)) {
+                        return true;
+                    }
                 }
             }
             return false;
         } catch (e) {
             return false;
         }
+    }
+
+    /**
+     * Checks if we already have a usable key for the provided key id, for instance from a session created via manifest pssh data.
+     * @param {string} keyId
+     * @return {boolean}
+     * @private
+     */
+    function _hasUsableKeyForKeyId(keyId) {
+        const keyStatus = keyStatusMap.get(Utils.normalizeKeyId(keyId));
+
+        return keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.USABLE ||
+            keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_DOWNSCALED;
+    }
+
+    /**
+     * Checks if the key for the provided key id is known to be invalid. Such keys require a new license.
+     * @param {string} normalizedKeyId
+     * @return {boolean}
+     * @private
+     */
+    function _isKeyIdOutdated(normalizedKeyId) {
+        const keyStatus = keyStatusMap.get(normalizedKeyId);
+
+        return keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED ||
+            keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.RELEASED;
     }
 
     /**
@@ -1286,8 +1331,12 @@ function ProtectionController(config) {
 
             // In case we are not using Clearky we can still get a url from the pssh.
             if (!url && !protectionKeyController.isClearKey(selectedKeySystem)) {
-                const psshData = CommonEncryption.getPSSHData(sessionToken.initData);
-                url = selectedKeySystem.getLicenseServerURLFromInitData(psshData);
+                try {
+                    const psshData = CommonEncryption.getPSSHData(sessionToken.initData);
+                    url = selectedKeySystem.getLicenseServerURLFromInitData(psshData);
+                } catch (e) {
+                    // initData that is not a PSSH box, for instance a raw webm key id, can not provide a license server url
+                }
 
                 // Still no url, check the keymessage
                 if (!url) {
@@ -1375,10 +1424,11 @@ function ProtectionController(config) {
 
         logger.debug('DRM: onNeedKey');
 
-        // Ignore unsupported initData types (only cenc and sinf are supported)
+        // Ignore unsupported initData types (only cenc, sinf and webm are supported)
         if (event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC &&
-            event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF) {
-            logger.warn('DRM:  Only \'cenc\' and \'sinf\' initData are supported!  Ignoring initData of type: ' + event.key.initDataType);
+            event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF &&
+            event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_WEBM) {
+            logger.warn('DRM:  Only \'cenc\', \'sinf\' and \'webm\' initData are supported!  Ignoring initData of type: ' + event.key.initDataType);
             return;
         }
 
@@ -1401,9 +1451,13 @@ function ProtectionController(config) {
         }
 
         const isSinf = event.key.initDataType === ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF;
+        const isWebm = event.key.initDataType === ProtectionConstants.INITIALIZATION_DATA_TYPE_WEBM;
 
         if (selectedKeySystem) {
-            const initDataForCheck = isSinf ? abInitData : CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
+            // webm initData is a raw key id. Duplicate webm events are handled via key ids and key statuses further down,
+            // so that a new session can be created once the key is expired or released.
+            // sinf initData is not a PSSH box either, compare it verbatim.
+            const initDataForCheck = isWebm ? null : isSinf ? abInitData : CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
 
             if (initDataForCheck && _isInitDataDuplicate(initDataForCheck)) {
                 return;
@@ -1416,6 +1470,22 @@ function ProtectionController(config) {
         if (isSinf) {
             // sinf data is FairPlay-specific; match against the FairPlay key system directly
             supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataForSinf(abInitData, applicationProvidedProtectionData, sessionType);
+        } else if (isWebm) {
+            // If we already have a usable key for this keyId, for instance from a session created via manifest pssh data, there is no need for another session
+            const keyId = abInitData && abInitData.byteLength === 16 ? Utils.bufferSourceToHex(abInitData) : null;
+            if (keyId && _hasUsableKeyForKeyId(keyId)) {
+                logger.debug('DRM: Ignoring webm initData because a usable key for keyId ' + keyId + ' is already available');
+                return;
+            }
+
+            // webm initData is the raw KeyID and carries no key system UUIDs; match against the ContentProtection elements from the manifest
+            const contentProtectionElements = [];
+            mediaInfoArr.forEach((mediaInfo) => {
+                if (mediaInfo && mediaInfo.contentProtection) {
+                    contentProtectionElements.push(...mediaInfo.contentProtection);
+                }
+            });
+            supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataForWebm(abInitData, contentProtectionElements, applicationProvidedProtectionData, sessionType);
         } else {
             supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
         }

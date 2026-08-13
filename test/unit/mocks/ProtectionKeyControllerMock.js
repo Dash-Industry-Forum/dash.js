@@ -4,8 +4,24 @@ function ProtectionKeyControllerMock () {
         return [{}];
     };
 
+    this.getSupportedKeySystemMetadataFromSegmentPssh = function (/*initData, protDataSet, sessionType*/) {
+        return [];
+    };
+
+    this.getSupportedKeySystemMetadataForSinf = function (/*initData, protDataSet, sessionType*/) {
+        return [];
+    };
+
+    this.getSupportedKeySystemMetadataForWebm = function (/*initData, contentProtectionElements, protDataSet, sessionType*/) {
+        return [];
+    };
+
     this.getSupportedKeySystems = function () {
         return [];
+    };
+
+    this.isClearKey = function (/*keySystem*/) {
+        return false;
     };
 
     this.getLicenseServer = function () {
