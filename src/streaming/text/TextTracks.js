@@ -792,7 +792,7 @@ function TextTracks(config) {
     }
 
     function _getCueInformationForNonHtml(currentItem, timeOffset) {
-        let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
+        let cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, currentItem.data);
         cue.cueID = Utils.generateUuid();
         return cue;
     }

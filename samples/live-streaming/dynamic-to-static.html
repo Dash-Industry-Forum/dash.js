@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic to static transition</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="sample-content-custom">
+    <div class="row mt-4">
+        <div class="col-md-7">
+            <div class="sample-video-wrapper"><video></video></div>
+        </div>
+        <div class="col-md-5">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Transition status</div>
+                <div class="sample-metrics-body">
+                    <div class="metric-row">
+                        <span class="metric-label">MPD type</span>
+                        <span class="metric-value" id="mpd-type">dynamic</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">DYNAMIC_TO_STATIC event</span>
+                        <span class="metric-value" id="transition-event">Waiting</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Final duration</span>
+                        <span class="metric-value" id="final-duration">Waiting</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script class="code">
+    async function init() {
+        var url = 'https://livesim2.dashif.org/livesim2/startrel_-20/stoprel_6/testpic_2s/Manifest.mpd';
+        var video = document.querySelector('video');
+        var player = dashjs.MediaPlayer().create();
+        var mpdType = document.getElementById('mpd-type');
+        var transitionEvent = document.getElementById('transition-event');
+        var finalDuration = document.getElementById('final-duration');
+        var transitionPending = false;
+
+        player.on(dashjs.MediaPlayer.events.DYNAMIC_TO_STATIC, function () {
+            transitionPending = true;
+            transitionEvent.textContent = 'Received';
+        });
+
+        video.addEventListener('durationchange', function () {
+            if (transitionPending && !player.isDynamic() && isFinite(video.duration)) {
+                mpdType.textContent = 'static';
+                finalDuration.textContent = video.duration.toFixed(2) + ' s';
+                transitionPending = false;
+            }
+        });
+
+        player.initialize(video, url, true);
+        await createControlBar(player, video, document.querySelector('.sample-video-wrapper'));
+    }
+</script>
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    initSamplePage({
+        title: 'Dynamic to static transition',
+        description: 'Plays a LiveSim2 stream that ends shortly after loading and publishes a final static MPD. After the final MPD is applied, the controlbar changes from LIVE to STATIC and the duration becomes finite.',
+        category: 'Live',
+        layout: 'custom',
+        onInit: () => init()
+    });
+</script>
+</body>
+</html>
