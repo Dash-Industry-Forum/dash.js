@@ -363,6 +363,8 @@ function StreamController() {
     /**
      * Initialize playback for the first period.
      * @param {array} streamsInfo
+     * @param {function} resolve
+     * @param {function} reject
      * @private
      */
     function _initializeForFirstStream(streamsInfo, resolve, reject) {
@@ -436,8 +438,17 @@ function StreamController() {
 
     function _calculateStartTimeAndSwitchStream() {
         // Figure out the correct start time and the correct start period
-        const startTime = _getInitialStartTime();
-        let streamForTime = getStreamForTime(startTime);
+        const seekEvent = { seekTime: _getInitialStartTime() };
+        let streamForTime = getStreamForTime(seekEvent.seekTime);
+
+        // A start time at or beyond the end of the content (e.g. an MPD anchor #t= past the duration) is clamped here.
+        // The initial seek is performed internally and does not dispatch PLAYBACK_SEEKING, so the clamp in
+        // _onPlaybackSeeking never sees it.
+        if (!streamForTime) {
+            streamForTime = _handleSeekBeyondEndOfContent(seekEvent);
+        }
+
+        const startTime = seekEvent.seekTime;
         const initialStream = streamForTime !== null ? streamForTime : streams[0];
 
         eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
@@ -574,8 +585,7 @@ function StreamController() {
 
     /**
      * Activates a new stream.
-     * @param {number} seekTime
-     * @param {boolean} keepBuffers
+     * @param {object} inputParameters
      */
     function _activateStream(inputParameters) {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
@@ -628,7 +638,11 @@ function StreamController() {
      */
     function _onPlaybackSeeking(e) {
         const newTime = e.seekTime;
-        const seekToStream = getStreamForTime(newTime);
+        let seekToStream = getStreamForTime(newTime);
+
+        if (!seekToStream) {
+            seekToStream = _handleSeekBeyondEndOfContent(e);
+        }
 
         if (!seekToStream || seekToStream === activeStream) {
             _cancelPreloading();
@@ -638,7 +652,46 @@ function StreamController() {
             _handleOuterPeriodSeek(e, seekToStream);
         }
 
+        // The timer is stopped once PLAYBACK_ENDED was fired for the last stream. A seek can resume playback afterwards.
+        _startPlaybackEndedTimerInterval();
         _createPlaylistMetrics(PlayList.SEEK_START_REASON);
+    }
+
+    /**
+     * A seek to a time at or beyond the end of the last period is not assigned to any stream. Route it to the last
+     * stream and clamp the seek target to slightly before the end of the content, so playback can end there.
+     * A playhead resting exactly at the (post endOfStream) MediaSource duration is in the "ended" state, where play()
+     * restarts from the beginning instead of finishing playback, and seeking to the exact duration does not complete reliably.
+     * Static manifests only: on a dynamic manifest with a finite announced duration (planned-end live event) the last
+     * period's end can lie beyond the current live edge, and clamping would actively park the playhead in a region
+     * without segments. Live seek targets are constrained by the DVR window logic instead.
+     * @param {object} e - the PLAYBACK_SEEKING event payload; e.seekTime is adjusted in place when clamping applies
+     * @return {object|null} the stream to seek to, or null if this is not a seek beyond the end of the content
+     * @private
+     */
+    function _handleSeekBeyondEndOfContent(e) {
+        // adapter.getIsDynamic() instead of playbackController.getIsDynamic(): the latter is only initialized once the
+        // first stream is activated, but this function also runs for the initial start time before activation.
+        if (isNaN(e.seekTime) || streams.length === 0 || adapter.getIsDynamic()) {
+            return null;
+        }
+
+        const lastStream = streams[streams.length - 1];
+        const lastStreamEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
+        if (e.seekTime < lastStreamEnd) {
+            return null;
+        }
+
+        const seekDurationBackoff = !isNaN(settings.get().streaming.seekDurationBackoff) ? settings.get().streaming.seekDurationBackoff : 0;
+        e.seekTime = Math.max(lastStream.getStartTime(), lastStreamEnd - seekDurationBackoff);
+
+        // Corrective internal seek: move the video element to the clamped target as well, instead of leaving it
+        // wherever the browser clamped the original overshooting seek (usually the exact MediaSource duration).
+        // During startup no seek was performed yet and PlaybackController is not initialized: this is a no-op then,
+        // the initial seek uses the clamped time via _switchStream.
+        playbackController.seek(e.seekTime, false, true);
+
+        return lastStream;
     }
 
     /**
@@ -1335,7 +1388,6 @@ function StreamController() {
 
     /**
      * Callback handler after the steering manifest was updated
-     * @param {object} e
      * @private
      */
     function _onSteeringManifestUpdated() {
