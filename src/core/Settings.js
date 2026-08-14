@@ -396,6 +396,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
  *
+ * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the partial segment duration (segment duration / k) is used instead.
+ *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
  * @property {number} [liveDelay=NaN]
  * Equivalent in seconds of setLiveDelayFragmentCount.

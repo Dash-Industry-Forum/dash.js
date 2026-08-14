@@ -9,6 +9,10 @@ function AdapterMock() {
         return null;
     };
 
+    this.getFragmentDurationForLiveDelayCalculation = function () {
+        return NaN;
+    };
+
     this.getAvailabilityStartTime = function () {
         return null;
     };

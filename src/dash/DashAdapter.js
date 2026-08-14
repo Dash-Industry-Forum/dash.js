@@ -461,6 +461,48 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the fragment duration to be used for the live delay calculation.
+     * For SSR/L3D content using partial segments (k > 1) the request unit at the live edge is the partial segment,
+     * so the effective duration is segmentDuration / k. Without partial segments manifestInfo.maxFragmentDuration is used.
+     * @param {object} streamInfo
+     * @param {object} manifestInfo
+     * @returns {number} fragment duration in seconds, or NaN
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getFragmentDurationForLiveDelayCalculation(streamInfo, manifestInfo) {
+        try {
+            let hasPartialSegments = false;
+            let maxEffectiveSegmentDuration = NaN;
+
+            [Constants.VIDEO, Constants.AUDIO].forEach((type) => {
+                getAllMediaInfoForType(streamInfo, type).forEach((mediaInfo) => {
+                    getVoRepresentations(mediaInfo).forEach((voRepresentation) => {
+                        if (voRepresentation && !isNaN(voRepresentation.segmentDuration) && voRepresentation.segmentDuration > 0) {
+                            const k = voRepresentation.k > 1 ? voRepresentation.k : 1;
+                            if (k > 1) {
+                                hasPartialSegments = true;
+                            }
+                            const effectiveSegmentDuration = voRepresentation.segmentDuration / k;
+                            maxEffectiveSegmentDuration = isNaN(maxEffectiveSegmentDuration) ? effectiveSegmentDuration : Math.max(maxEffectiveSegmentDuration, effectiveSegmentDuration);
+                        }
+                    });
+                });
+            });
+
+            if (hasPartialSegments && !isNaN(maxEffectiveSegmentDuration)) {
+                return maxEffectiveSegmentDuration;
+            }
+            if (manifestInfo && Number.isFinite(manifestInfo.maxFragmentDuration)) {
+                return manifestInfo.maxFragmentDuration;
+            }
+            return NaN;
+        } catch (e) {
+            return NaN;
+        }
+    }
+
+    /**
      * Returns the event for the given parameters.
      * @param {object} eventBox
      * @param {object} eventStreams
@@ -1332,6 +1374,7 @@ function DashAdapter() {
         getEssentialProperties,
         getEvent,
         getEventsFor,
+        getFragmentDurationForLiveDelayCalculation,
         getFramerate,
         getIndexForRepresentation,
         getIsDVB,

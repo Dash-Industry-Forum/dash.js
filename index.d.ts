@@ -1098,6 +1098,8 @@ export interface DashAdapter {
 
     getEventsFor(info: object, voRepresentation: object): Array<Event>;
 
+    getFragmentDurationForLiveDelayCalculation(streamInfo: object, manifestInfo: object): number;
+
     getFramerate(representation: object): number;
 
     getIndexForRepresentation(representationId: string, periodIdx: number): number;
