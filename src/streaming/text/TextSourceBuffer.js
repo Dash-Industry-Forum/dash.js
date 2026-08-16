@@ -468,6 +468,12 @@ function TextSourceBuffer(config) {
 
                 const allCcData = _extractCea608Data(bytes, samplesInfo.sampleList);
 
+                // _extractCea608Data returns null when there are no samples,
+                // which happens for any chunk that is not fragmented ISOBMFF.
+                if (!allCcData) {
+                    return;
+                }
+
                 for (let fieldNr = 0; fieldNr < embeddedCea608FieldParsers.length; fieldNr++) {
                     const ccData = allCcData.fields[fieldNr];
                     const fieldParser = embeddedCea608FieldParsers[fieldNr];
