@@ -5443,7 +5443,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 // Shove both of these into the global scope
-var context = typeof window !== 'undefined' && window || global;
+var context = typeof window !== 'undefined' && window || typeof globalThis !== 'undefined' && globalThis || {};
 var dashjs = context.dashjs;
 if (!dashjs) {
   dashjs = context.dashjs = {};
@@ -5451,7 +5451,6 @@ if (!dashjs) {
 dashjs.MssHandler = _MssHandler_js__WEBPACK_IMPORTED_MODULE_0__["default"];
 /* harmony default export */ __webpack_exports__["default"] = (dashjs);
 
-__webpack_exports__ = __webpack_exports__["default"];
 var __webpack_exports__MssHandler = __webpack_exports__.MssHandler;
 var __webpack_exports__default = __webpack_exports__["default"];
 export { __webpack_exports__MssHandler as MssHandler, __webpack_exports__default as default };

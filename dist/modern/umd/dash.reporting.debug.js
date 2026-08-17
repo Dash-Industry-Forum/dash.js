@@ -5183,6 +5183,7 @@ __webpack_require__.r(__webpack_exports__);
  *        },
  *        streaming: {
  *            abandonLoadTimeout: 10000,
+ *            seekDurationBackoff: 0.5,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
@@ -5191,6 +5192,7 @@ __webpack_require__.r(__webpack_exports__);
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
+ *            ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
  *            enableManifestDurationMismatchFix: true,
  *            parseInbandPrft: false,
  *            enableManifestTimescaleMismatchFix: false,
@@ -5360,6 +5362,7 @@ __webpack_require__.r(__webpack_exports__);
  *             abr: {
  *                 limitBitrateByPortal: false,
  *                 usePixelRatioInLimitBitrateByPortal: false,
+ *                 hybridSwitchBufferTime: 12,
  *                rules: {
  *                     throughputRule: {
  *                         active: true
@@ -5901,6 +5904,9 @@ __webpack_require__.r(__webpack_exports__);
  * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
+ * @property {number} [hybridSwitchBufferTime=12]
+ * When the throughput rule and the Bola rule are both active, this value defines the buffer level in seconds when the player will switch from throughput to Bola.
+ *
  * @property {module:Settings~AbrRules} [rules]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time we switch to a dynamic mode.
  * In the dynamic mode either ThroughputRule or BolaRule are active but not both at the same time.
@@ -6159,6 +6165,11 @@ __webpack_require__.r(__webpack_exports__);
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
+ * @property {number} [seekDurationBackoff=0.5]
+ * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of last period - seekDurationBackoff).
+ *
+ * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
+ * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and seek to the exact end of the content.
  * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
@@ -6175,6 +6186,8 @@ __webpack_require__.r(__webpack_exports__);
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
+ * @property {boolean} [ignoreFinalStaticManifestOnDynamicToStaticTransition=false]
+ * Set to true if dash.js should ignore the final static manifest when a stream transitions from dynamic to static (legacy behavior up to v5.2.0). When set to false the duration, the seekable range and the segment information are derived from the final static manifest.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
@@ -6327,6 +6340,7 @@ function Settings() {
     },
     streaming: {
       abandonLoadTimeout: 10000,
+      seekDurationBackoff: 0.5,
       wallclockTimeUpdateInterval: 100,
       manifestUpdateRetryInterval: 100,
       liveUpdateTimeThresholdInMilliseconds: 0,
@@ -6335,6 +6349,7 @@ function Settings() {
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
       applyContentSteering: true,
+      ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
       enableManifestDurationMismatchFix: true,
       parseInbandPrft: false,
       enableManifestTimescaleMismatchFix: false,
@@ -6538,6 +6553,7 @@ function Settings() {
         usePixelRatioInLimitBitrateByPortal: false,
         limitBitrateByPortalMinimum: 0,
         enableSupplementalPropertyAdaptationSetSwitching: true,
+        hybridSwitchBufferTime: 12,
         rules: {
           throughputRule: {
             active: true,
@@ -12759,7 +12775,7 @@ function CmcdController() {
         ...additionalData
       });
     } catch (e) {
-      logger.error(e);
+      logger.warn('Failed to record response received in CMCD reporter.', e);
     }
   }
   function getCmcdParametersFromManifest() {
@@ -15261,7 +15277,8 @@ function CmcdModel() {
     _rebufferingStartTime = {},
     _rebufferingDuration = {},
     _streamType,
-    _streamingFormat;
+    _streamingFormat,
+    _topBitrateCache;
   let context = this.context;
   function setup() {
     cmcdConfigAccessor = (0,_cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
@@ -15450,10 +15467,19 @@ function CmcdModel() {
   }
   function _getTopBitrateByType(mediaInfo) {
     try {
+      // Within a single request's data build the same representation list backs both tb and
+      // tpb. Reuse the result so the list is rebuilt once per mediaInfo, not per key.
+      if (_topBitrateCache && _topBitrateCache.has(mediaInfo)) {
+        return _topBitrateCache.get(mediaInfo);
+      }
       const bitrates = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map(rep => {
         return rep.bitrateInKbit;
       });
-      return Math.max(...bitrates);
+      const tb = Math.max(...bitrates);
+      if (_topBitrateCache) {
+        _topBitrateCache.set(mediaInfo, tb);
+      }
+      return tb;
     } catch (e) {
       return null;
     }
@@ -15820,6 +15846,10 @@ function CmcdModel() {
     }
   }
   function deriveCmcdDataForRequest(request) {
+    // Share one top-bitrate computation across this request's data build (tb and tpb both
+    // resolve it from the representation list). Scoped to the call, so a later request still
+    // recomputes and runtime setting changes remain reflected.
+    _topBitrateCache = new Map();
     try {
       _updateLastMediaTypeRequest(request.type, request.mediaType);
       let cmcdData = {};
@@ -15842,6 +15872,8 @@ function CmcdModel() {
       return cmcdData;
     } catch (e) {
       return null;
+    } finally {
+      _topBitrateCache = null;
     }
   }
   function isIncludedInRequestFilter(type, includeInRequests) {
@@ -18327,8 +18359,8 @@ function normalizeCertUrls(raw) {
 /**
  * Deduplicates an array of Certurl descriptor objects by URL + certType combination.
  * Keeps first occurrence order stable.
- * @param {Array<{url:string, certType:string|null}>} list
- * @returns {Array<{url:string, certType:string|null}>}
+ * @param {Array<{url: string, certType: (string|null)}>} list
+ * @returns {Array<{url: string, certType: (string|null)}>}
  */
 function dedupeCertUrls(list) {
   if (!Array.isArray(list) || list.length === 0) {

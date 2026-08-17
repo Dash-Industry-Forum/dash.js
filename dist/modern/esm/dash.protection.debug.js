@@ -6364,7 +6364,7 @@ function ProtectionController(config) {
   /**
    * Collect certificate URL objects for the selected key system from mediaInfo content protection data
    * @param {string|null} preferredType
-   * @return {Array<{url:string, certType:string|null}>}
+   * @return {Array<{url: string, certType: (string|null)}>}
    * @private
    */
   function _getCertificateUrlsForSelectedKeySystem() {
@@ -6946,8 +6946,8 @@ function ProtectionController(config) {
    * @ignore
    */
   function setProtectionData(data) {
-    applicationProvidedProtectionData = data;
-    protectionKeyController.setProtectionData(data);
+    applicationProvidedProtectionData = _utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_8__["default"].sanitizeProtectionDataCertUrls(data);
+    protectionKeyController.setProtectionData(applicationProvidedProtectionData);
   }
 
   /**
@@ -11850,8 +11850,8 @@ function normalizeCertUrls(raw) {
 /**
  * Deduplicates an array of Certurl descriptor objects by URL + certType combination.
  * Keeps first occurrence order stable.
- * @param {Array<{url:string, certType:string|null}>} list
- * @returns {Array<{url:string, certType:string|null}>}
+ * @param {Array<{url: string, certType: (string|null)}>} list
+ * @returns {Array<{url: string, certType: (string|null)}>}
  */
 function dedupeCertUrls(list) {
   if (!Array.isArray(list) || list.length === 0) {
@@ -12411,7 +12411,6 @@ factory.events = _ProtectionEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"];
 factory.errors = _errors_ProtectionErrors_js__WEBPACK_IMPORTED_MODULE_3__["default"];
 _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_7__["default"].updateClassFactory(Protection.__dashjs_factory_name, factory);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
-__webpack_exports__ = __webpack_exports__["default"];
 var __webpack_exports__default = __webpack_exports__["default"];
 export { __webpack_exports__default as default };
 

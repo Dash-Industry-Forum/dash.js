@@ -24509,6 +24509,7 @@ __webpack_require__.r(__webpack_exports__);
  *        },
  *        streaming: {
  *            abandonLoadTimeout: 10000,
+ *            seekDurationBackoff: 0.5,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
@@ -24517,6 +24518,7 @@ __webpack_require__.r(__webpack_exports__);
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
+ *            ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
  *            enableManifestDurationMismatchFix: true,
  *            parseInbandPrft: false,
  *            enableManifestTimescaleMismatchFix: false,
@@ -24686,6 +24688,7 @@ __webpack_require__.r(__webpack_exports__);
  *             abr: {
  *                 limitBitrateByPortal: false,
  *                 usePixelRatioInLimitBitrateByPortal: false,
+ *                 hybridSwitchBufferTime: 12,
  *                rules: {
  *                     throughputRule: {
  *                         active: true
@@ -25227,6 +25230,9 @@ __webpack_require__.r(__webpack_exports__);
  * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
+ * @property {number} [hybridSwitchBufferTime=12]
+ * When the throughput rule and the Bola rule are both active, this value defines the buffer level in seconds when the player will switch from throughput to Bola.
+ *
  * @property {module:Settings~AbrRules} [rules]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time we switch to a dynamic mode.
  * In the dynamic mode either ThroughputRule or BolaRule are active but not both at the same time.
@@ -25485,6 +25491,11 @@ __webpack_require__.r(__webpack_exports__);
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
+ * @property {number} [seekDurationBackoff=0.5]
+ * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of last period - seekDurationBackoff).
+ *
+ * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
+ * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and seek to the exact end of the content.
  * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
@@ -25501,6 +25512,8 @@ __webpack_require__.r(__webpack_exports__);
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
+ * @property {boolean} [ignoreFinalStaticManifestOnDynamicToStaticTransition=false]
+ * Set to true if dash.js should ignore the final static manifest when a stream transitions from dynamic to static (legacy behavior up to v5.2.0). When set to false the duration, the seekable range and the segment information are derived from the final static manifest.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
@@ -25654,6 +25667,7 @@ function Settings() {
     },
     streaming: {
       abandonLoadTimeout: 10000,
+      seekDurationBackoff: 0.5,
       wallclockTimeUpdateInterval: 100,
       manifestUpdateRetryInterval: 100,
       liveUpdateTimeThresholdInMilliseconds: 0,
@@ -25662,6 +25676,7 @@ function Settings() {
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
       applyContentSteering: true,
+      ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
       enableManifestDurationMismatchFix: true,
       parseInbandPrft: false,
       enableManifestTimescaleMismatchFix: false,
@@ -25841,6 +25856,7 @@ function Settings() {
         usePixelRatioInLimitBitrateByPortal: false,
         limitBitrateByPortalMinimum: 0,
         enableSupplementalPropertyAdaptationSetSwitching: true,
+        hybridSwitchBufferTime: 12,
         rules: {
           throughputRule: {
             active: true,
@@ -32891,7 +32907,7 @@ function CmcdController() {
     try {
       cmcdReporter.recordResponseReceived(response, _objectSpread(_objectSpread({}, eventData), additionalData));
     } catch (e) {
-      logger.error(e);
+      logger.warn('Failed to record response received in CMCD reporter.', e);
     }
   }
   function getCmcdParametersFromManifest() {
@@ -35627,8 +35643,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var core_js_modules_es_array_filter_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array.filter.js */ "./node_modules/core-js/modules/es.array.filter.js");
 /* harmony import */ var core_js_modules_es_array_find_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array.find.js */ "./node_modules/core-js/modules/es.array.find.js");
 /* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.array.from.js */ "./node_modules/core-js/modules/es.array.from.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.array.from.js */ "./node_modules/core-js/modules/es.array.from.js");
 /* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
 /* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
 /* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
@@ -35639,26 +35655,27 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var core_js_modules_es_iterator_for_each_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.iterator.for-each.js */ "./node_modules/core-js/modules/es.iterator.for-each.js");
 /* harmony import */ var core_js_modules_es_iterator_map_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.iterator.map.js */ "./node_modules/core-js/modules/es.iterator.map.js");
 /* harmony import */ var core_js_modules_es_iterator_reduce_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.iterator.reduce.js */ "./node_modules/core-js/modules/es.iterator.reduce.js");
-/* harmony import */ var core_js_modules_es_object_assign_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.object.assign.js */ "./node_modules/core-js/modules/es.object.assign.js");
-/* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.object.keys.js */ "./node_modules/core-js/modules/es.object.keys.js");
-/* harmony import */ var core_js_modules_es_object_get_own_property_descriptor_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.object.get-own-property-descriptor.js */ "./node_modules/core-js/modules/es.object.get-own-property-descriptor.js");
-/* harmony import */ var core_js_modules_es_object_get_own_property_descriptors_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.object.get-own-property-descriptors.js */ "./node_modules/core-js/modules/es.object.get-own-property-descriptors.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.map.js */ "./node_modules/core-js/modules/es.map.js");
+/* harmony import */ var core_js_modules_es_object_assign_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.object.assign.js */ "./node_modules/core-js/modules/es.object.assign.js");
+/* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.object.keys.js */ "./node_modules/core-js/modules/es.object.keys.js");
+/* harmony import */ var core_js_modules_es_object_get_own_property_descriptor_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.object.get-own-property-descriptor.js */ "./node_modules/core-js/modules/es.object.get-own-property-descriptor.js");
+/* harmony import */ var core_js_modules_es_object_get_own_property_descriptors_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.object.get-own-property-descriptors.js */ "./node_modules/core-js/modules/es.object.get-own-property-descriptors.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
+/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
 /* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each.js */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
-/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
-/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
-/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
-/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
-/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../../dash/models/DashManifestModel.js */ "./src/dash/models/DashManifestModel.js");
-/* harmony import */ var _cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../cmcd/config/CmcdConfigAccessor.js */ "./src/streaming/cmcd/config/CmcdConfigAccessor.js");
+/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
+/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../../dash/models/DashManifestModel.js */ "./src/dash/models/DashManifestModel.js");
+/* harmony import */ var _cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ../cmcd/config/CmcdConfigAccessor.js */ "./src/streaming/cmcd/config/CmcdConfigAccessor.js");
 
 
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
@@ -35666,6 +35683,7 @@ function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t =
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+
 
 
 
@@ -35737,7 +35755,7 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 
 var RTP_SAFETY_FACTOR = 5;
-var REQUEST_TYPE_TO_CMCD_FILTER = (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.INIT_SEGMENT_TYPE, 'segment'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.MEDIA_SEGMENT_TYPE, 'segment'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.XLINK_EXPANSION_TYPE, 'xlink'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.MPD_TYPE, 'mpd'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.CONTENT_STEERING_TYPE, 'steering'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.OTHER_TYPE, 'other');
+var REQUEST_TYPE_TO_CMCD_FILTER = (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.INIT_SEGMENT_TYPE, 'segment'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.MEDIA_SEGMENT_TYPE, 'segment'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.XLINK_EXPANSION_TYPE, 'xlink'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.MPD_TYPE, 'mpd'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.CONTENT_STEERING_TYPE, 'steering'), _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.OTHER_TYPE, 'other');
 function CmcdModel() {
   var instance,
     dashMetrics,
@@ -35756,10 +35774,11 @@ function CmcdModel() {
     _rebufferingStartTime = {},
     _rebufferingDuration = {},
     _streamType,
-    _streamingFormat;
+    _streamingFormat,
+    _topBitrateCache;
   var context = this.context;
   function setup() {
-    cmcdConfigAccessor = (0,_cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_40__["default"])(context).getInstance();
+    cmcdConfigAccessor = (0,_cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_41__["default"])(context).getInstance();
     resetInitialSettings();
   }
   function setConfig(config) {
@@ -35788,12 +35807,12 @@ function CmcdModel() {
   function _toInnerList(videoValue, audioValue) {
     var values = [];
     if (_isValidValue(videoValue)) {
-      values.push((0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(videoValue, {
+      values.push((0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(videoValue, {
         v: true
       }));
     }
     if (_isValidValue(audioValue)) {
-      values.push((0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(audioValue, {
+      values.push((0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(audioValue, {
         a: true
       }));
     }
@@ -35813,20 +35832,20 @@ function CmcdModel() {
     var pb = _getPlayheadBitrate(mediaType);
     var nextRequest = _probeNextRequest(mediaType);
     var ot;
-    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO) {
-      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.VIDEO;
+    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO) {
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.VIDEO;
     }
-    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO) {
-      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.AUDIO;
+    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO) {
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.AUDIO;
     }
-    if (request.mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].ENHANCEMENT) {
-      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.OTHER;
+    if (request.mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].ENHANCEMENT) {
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.OTHER;
     }
-    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].TEXT) {
+    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].TEXT) {
       if (request.representation.mediaInfo.mimeType === 'application/mp4') {
-        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.TIMED_TEXT;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.TIMED_TEXT;
       } else {
-        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.CAPTION;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.CAPTION;
       }
     }
     var rtp = cmcdConfigAccessor.has('rtp') ? cmcdConfigAccessor.get('rtp') : _calculateRtp(request);
@@ -35835,17 +35854,17 @@ function CmcdModel() {
     }
     if (nextRequest) {
       if (request.url !== nextRequest.url) {
-        var relativeUrl = _core_Utils_js__WEBPACK_IMPORTED_MODULE_36__["default"].getRelativeUrl(request.url, nextRequest.url);
+        var relativeUrl = _core_Utils_js__WEBPACK_IMPORTED_MODULE_37__["default"].getRelativeUrl(request.url, nextRequest.url);
         var params = nextRequest.range ? {
           r: nextRequest.range
         } : undefined;
-        data.nor = [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(relativeUrl, params)];
+        data.nor = [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(relativeUrl, params)];
       }
     }
     if (encodedBitrate) {
-      var videoBr = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO ? encodedBitrate : null;
-      var audioBr = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO ? encodedBitrate : null;
-      data.br = _toInnerList(videoBr, audioBr) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(encodedBitrate, {})];
+      var videoBr = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO ? encodedBitrate : null;
+      var audioBr = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO ? encodedBitrate : null;
+      data.br = _toInnerList(videoBr, audioBr) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(encodedBitrate, {})];
     }
     if (ot) {
       data.ot = ot;
@@ -35854,41 +35873,41 @@ function CmcdModel() {
       data.d = d;
     }
     if (!isNaN(mtp)) {
-      var videoMtp = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO ? mtp : null;
-      var audioMtp = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO ? mtp : null;
-      data.mtp = _toInnerList(videoMtp, audioMtp) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(mtp, {})];
+      var videoMtp = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO ? mtp : null;
+      var audioMtp = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO ? mtp : null;
+      data.mtp = _toInnerList(videoMtp, audioMtp) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(mtp, {})];
     }
     if (!isNaN(dl)) {
       data.dl = dl;
     }
     if (!isNaN(bl)) {
-      var videoBl = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO ? bl : null;
-      var audioBl = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO ? bl : null;
-      data.bl = _toInnerList(videoBl, audioBl) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(bl, {})];
+      var videoBl = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO ? bl : null;
+      var audioBl = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO ? bl : null;
+      data.bl = _toInnerList(videoBl, audioBl) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(bl, {})];
     }
     if (!isNaN(tb) && isFinite(tb)) {
-      var videoTb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO ? tb : null;
-      var audioTb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO ? tb : null;
-      data.tb = _toInnerList(videoTb, audioTb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(tb, {})];
+      var videoTb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO ? tb : null;
+      var audioTb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO ? tb : null;
+      data.tb = _toInnerList(videoTb, audioTb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(tb, {})];
     }
     if (tpb !== null && !isNaN(tpb)) {
-      var videoTpb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO ? tpb : null;
-      var audioTpb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO ? tpb : null;
-      data.tpb = _toInnerList(videoTpb, audioTpb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(tpb, {})];
+      var videoTpb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO ? tpb : null;
+      var audioTpb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO ? tpb : null;
+      data.tpb = _toInnerList(videoTpb, audioTpb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(tpb, {})];
     }
     if (pb !== null && !isNaN(pb)) {
-      var videoPb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO ? pb : null;
-      var audioPb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO ? pb : null;
-      data.pb = _toInnerList(videoPb, audioPb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(pb, {})];
+      var videoPb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO ? pb : null;
+      var audioPb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO ? pb : null;
+      data.pb = _toInnerList(videoPb, audioPb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(pb, {})];
     }
     if (_bufferLevelStarved[mediaType]) {
       data.bs = true;
       _bufferLevelStarved[mediaType] = false;
     }
     if (_rebufferingDuration[mediaType]) {
-      var videoBsd = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO ? _rebufferingDuration[mediaType] : null;
-      var audioBsd = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO ? _rebufferingDuration[mediaType] : null;
-      data.bsd = _toInnerList(videoBsd, audioBsd) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.toCmcdValue)(_rebufferingDuration[mediaType], {})];
+      var videoBsd = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO ? _rebufferingDuration[mediaType] : null;
+      var audioBsd = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO ? _rebufferingDuration[mediaType] : null;
+      data.bsd = _toInnerList(videoBsd, audioBsd) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.toCmcdValue)(_rebufferingDuration[mediaType], {})];
       delete _rebufferingDuration[mediaType];
     }
     if (_isStartup[mediaType] || !_initialMediaRequestsDone[mediaType]) {
@@ -35912,13 +35931,13 @@ function CmcdModel() {
   }
   function _calculateCmcdDataForRequestForInitSegment() {
     var data = getGenericCmcdData();
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.INIT;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.INIT;
     data.su = true;
     return data;
   }
   function _calculateCmcdDataForRequestForOther() {
     var data = getGenericCmcdData();
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.OTHER;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.OTHER;
     return data;
   }
   function _getEncodedBitrateData() {
@@ -35928,8 +35947,8 @@ function CmcdModel() {
     if (!activeStream) {
       return data;
     }
-    var videoRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO);
-    var audioRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO);
+    var videoRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO);
+    var audioRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO);
     var videoBr = videoRep ? Math.round(videoRep.bitrateInKbit) : null;
     var audioBr = audioRep ? Math.round(audioRep.bitrateInKbit) : null;
     var brValues = _toInnerList(videoBr, audioBr);
@@ -35947,10 +35966,19 @@ function CmcdModel() {
   }
   function _getTopBitrateByType(mediaInfo) {
     try {
+      // Within a single request's data build the same representation list backs both tb and
+      // tpb. Reuse the result so the list is rebuilt once per mediaInfo, not per key.
+      if (_topBitrateCache && _topBitrateCache.has(mediaInfo)) {
+        return _topBitrateCache.get(mediaInfo);
+      }
       var bitrates = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map(function (rep) {
         return rep.bitrateInKbit;
       });
-      return Math.max.apply(Math, (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__["default"])(bitrates));
+      var tb = Math.max.apply(Math, (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__["default"])(bitrates));
+      if (_topBitrateCache) {
+        _topBitrateCache.set(mediaInfo, tb);
+      }
+      return tb;
     } catch (e) {
       return null;
     }
@@ -35975,8 +36003,8 @@ function CmcdModel() {
   }
   function _getPlayheadBitrateData() {
     var data = {};
-    var videoPb = _getPlayheadBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO);
-    var audioPb = _getPlayheadBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO);
+    var videoPb = _getPlayheadBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO);
+    var audioPb = _getPlayheadBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO);
     var pbValues = _toInnerList(videoPb, audioPb);
     if (pbValues) {
       data.pb = pbValues;
@@ -35999,14 +36027,14 @@ function CmcdModel() {
   }
   function _getTopBitrateData() {
     var data = {};
-    var videoTb = _getTopBitrateDataForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO);
-    var audioTb = _getTopBitrateDataForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO);
+    var videoTb = _getTopBitrateDataForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO);
+    var audioTb = _getTopBitrateDataForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO);
     var tbValues = _toInnerList(videoTb, audioTb);
     if (tbValues) {
       data.tb = tbValues;
     }
-    var videoTpb = _getTopPlayableBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO);
-    var audioTpb = _getTopPlayableBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO);
+    var videoTpb = _getTopPlayableBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO);
+    var audioTpb = _getTopPlayableBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO);
     var tpbValues = _toInnerList(videoTpb, audioTpb);
     if (tpbValues) {
       data.tpb = tpbValues;
@@ -36049,8 +36077,8 @@ function CmcdModel() {
   }
   function _getMeasuredThroughputData() {
     var data = {};
-    var videoMtp = _getMeasuredThroughputByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO);
-    var audioMtp = _getMeasuredThroughputByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO);
+    var videoMtp = _getMeasuredThroughputByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO);
+    var audioMtp = _getMeasuredThroughputByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO);
     var mtpValues = _toInnerList(videoMtp, audioMtp);
     if (mtpValues) {
       data.mtp = mtpValues;
@@ -36082,8 +36110,8 @@ function CmcdModel() {
   }
   function _getBufferLevelData() {
     var data = {};
-    var videoBl = _getBufferLevelByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO);
-    var audioBl = _getBufferLevelByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO);
+    var videoBl = _getBufferLevelByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO);
+    var audioBl = _getBufferLevelByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO);
     var blValues = _toInnerList(videoBl, audioBl);
     if (blValues) {
       data.bl = blValues;
@@ -36093,7 +36121,7 @@ function CmcdModel() {
   function onBufferLevelStateChanged(data) {
     try {
       if (data.state && data.mediaType) {
-        if (data.state === _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_35__["default"].BUFFER_EMPTY) {
+        if (data.state === _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_36__["default"].BUFFER_EMPTY) {
           if (!_bufferLevelStarved[data.mediaType]) {
             _bufferLevelStarved[data.mediaType] = true;
           }
@@ -36199,7 +36227,7 @@ function CmcdModel() {
     return data;
   }
   function _shouldIncludeDroppedFrames(mediaType) {
-    return mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO || mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO || mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].OTHER;
+    return mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO || mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO || mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].OTHER;
   }
   function getEventModeData() {
     var cmcdData = _objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread(_objectSpread({}, getGenericCmcdData()), _getAggregatedBitrateData()), _getEncodedBitrateData()), _getBufferLevelData()), _getMeasuredThroughputData()), _getPlayheadBitrateData()), _getTopBitrateData());
@@ -36287,10 +36315,10 @@ function CmcdModel() {
   }
   function onManifestLoaded(data) {
     try {
-      var dashManifestModel = (0,_dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_39__["default"])(context).getInstance();
+      var dashManifestModel = (0,_dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_40__["default"])(context).getInstance();
       var isDynamic = dashManifestModel.getIsDynamic(data.data);
-      _streamType = isDynamic ? "".concat(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdStreamType.LIVE) : "".concat(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdStreamType.VOD);
-      _streamingFormat = data.protocol && data.protocol === 'MSS' ? "".concat(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdStreamingFormat.SMOOTH) : "".concat(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdStreamingFormat.DASH);
+      _streamType = isDynamic ? "".concat(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdStreamType.LIVE) : "".concat(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdStreamType.VOD);
+      _streamingFormat = data.protocol && data.protocol === 'MSS' ? "".concat(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdStreamingFormat.SMOOTH) : "".concat(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdStreamingFormat.DASH);
       return {
         st: _streamType,
         sf: _streamingFormat
@@ -36324,28 +36352,34 @@ function CmcdModel() {
     }
   }
   function deriveCmcdDataForRequest(request) {
+    // Share one top-bitrate computation across this request's data build (tb and tpb both
+    // resolve it from the representation list). Scoped to the call, so a later request still
+    // recomputes and runtime setting changes remain reflected.
+    _topBitrateCache = new Map();
     try {
       _updateLastMediaTypeRequest(request.type, request.mediaType);
       var cmcdData = {};
       if (isIncludedInRequestFilter(request.type)) {
-        if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.MPD_TYPE) {
+        if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.MPD_TYPE) {
           return _calculateCmcdDataForRequestForMpd(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
           _initForMediaType(request.mediaType);
           return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.INIT_SEGMENT_TYPE) {
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.INIT_SEGMENT_TYPE) {
           return _calculateCmcdDataForRequestForInitSegment(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.OTHER_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.XLINK_EXPANSION_TYPE) {
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.OTHER_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.XLINK_EXPANSION_TYPE) {
           return _calculateCmcdDataForRequestForOther(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.LICENSE) {
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.LICENSE) {
           return _calculateCmcdDataForRequestForLicense(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_34__.HTTPRequest.CONTENT_STEERING_TYPE) {
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_35__.HTTPRequest.CONTENT_STEERING_TYPE) {
           return _calculateCmcdDataForRequestForSteering(request);
         }
       }
       return cmcdData;
     } catch (e) {
       return null;
+    } finally {
+      _topBitrateCache = null;
     }
   }
   function isIncludedInRequestFilter(type, includeInRequests) {
@@ -36358,25 +36392,25 @@ function CmcdModel() {
   }
   function _updateLastMediaTypeRequest(type, mediatype) {
     // Video > Audio > None
-    if (mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO || mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO) {
-      if (!_lastMediaTypeRequest || _lastMediaTypeRequest === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO) {
+    if (mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO || mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO) {
+      if (!_lastMediaTypeRequest || _lastMediaTypeRequest === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO) {
         _lastMediaTypeRequest = mediatype;
       }
     }
   }
   function _calculateCmcdDataForRequestForSteering(request) {
     var data = !_lastMediaTypeRequest ? getGenericCmcdData() : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.OTHER;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.OTHER;
     return data;
   }
   function _calculateCmcdDataForRequestForLicense() {
     var data = getGenericCmcdData();
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.KEY;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.KEY;
     return data;
   }
   function _calculateCmcdDataForRequestForMpd() {
     var data = getGenericCmcdData();
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.MANIFEST;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_34__.CmcdObjectType.MANIFEST;
     return data;
   }
   function _getAggregatedBitrateData() {
@@ -36390,8 +36424,8 @@ function CmcdModel() {
     }
 
     // Get current representations
-    var videoRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO);
-    var audioRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO);
+    var videoRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO);
+    var audioRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO);
     var currentVideoBitrate = videoRep ? videoRep.bitrateInKbit : 0;
     var currentAudioBitrate = audioRep ? audioRep.bitrateInKbit : 0;
 
@@ -36402,8 +36436,8 @@ function CmcdModel() {
     }
 
     // Calculate top aggregated bitrate
-    var allVideoReps = activeStream.getRepresentationsByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].VIDEO) || [];
-    var allAudioReps = activeStream.getRepresentationsByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_37__["default"].AUDIO) || [];
+    var allVideoReps = activeStream.getRepresentationsByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].VIDEO) || [];
+    var allAudioReps = activeStream.getRepresentationsByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_38__["default"].AUDIO) || [];
     var topVideoBitrate = allVideoReps.reduce(function (max, rep) {
       return Math.max(max, rep.bitrateInKbit);
     }, 0);
@@ -36459,7 +36493,7 @@ function CmcdModel() {
   return instance;
 }
 CmcdModel.__dashjs_factory_name = 'CmcdModel';
-/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_38__["default"].getSingletonFactory(CmcdModel));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_39__["default"].getSingletonFactory(CmcdModel));
 
 /***/ }),
 
@@ -39104,8 +39138,8 @@ function normalizeCertUrls(raw) {
 /**
  * Deduplicates an array of Certurl descriptor objects by URL + certType combination.
  * Keeps first occurrence order stable.
- * @param {Array<{url:string, certType:string|null}>} list
- * @returns {Array<{url:string, certType:string|null}>}
+ * @param {Array<{url: string, certType: (string|null)}>} list
+ * @returns {Array<{url: string, certType: (string|null)}>}
  */
 function dedupeCertUrls(list) {
   if (!Array.isArray(list) || list.length === 0) {

@@ -13195,12 +13195,6 @@ if (undefined === atob) {
 }
 */
 
-if (typeof exports !== 'undefined') {
-  exports.decode = BASE64.decode;
-  exports.decodeArray = BASE64.decodeArray;
-  exports.encode = BASE64.encode;
-  exports.encodeASCII = BASE64.encodeASCII;
-}
 /* harmony default export */ __webpack_exports__["default"] = (BASE64);
 
 /***/ }),
@@ -13259,7 +13253,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 // Shove both of these into the global scope
-var context = typeof window !== 'undefined' && window || global;
+var context = typeof window !== 'undefined' && window || typeof globalThis !== 'undefined' && globalThis || {};
 var dashjs = context.dashjs;
 if (!dashjs) {
   dashjs = context.dashjs = {};
@@ -20296,6 +20290,7 @@ __webpack_require__.r(__webpack_exports__);
  *        },
  *        streaming: {
  *            abandonLoadTimeout: 10000,
+ *            seekDurationBackoff: 0.5,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
@@ -20304,6 +20299,7 @@ __webpack_require__.r(__webpack_exports__);
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
+ *            ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
  *            enableManifestDurationMismatchFix: true,
  *            parseInbandPrft: false,
  *            enableManifestTimescaleMismatchFix: false,
@@ -20473,6 +20469,7 @@ __webpack_require__.r(__webpack_exports__);
  *             abr: {
  *                 limitBitrateByPortal: false,
  *                 usePixelRatioInLimitBitrateByPortal: false,
+ *                 hybridSwitchBufferTime: 12,
  *                rules: {
  *                     throughputRule: {
  *                         active: true
@@ -21014,6 +21011,9 @@ __webpack_require__.r(__webpack_exports__);
  * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
+ * @property {number} [hybridSwitchBufferTime=12]
+ * When the throughput rule and the Bola rule are both active, this value defines the buffer level in seconds when the player will switch from throughput to Bola.
+ *
  * @property {module:Settings~AbrRules} [rules]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time we switch to a dynamic mode.
  * In the dynamic mode either ThroughputRule or BolaRule are active but not both at the same time.
@@ -21272,6 +21272,11 @@ __webpack_require__.r(__webpack_exports__);
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
+ * @property {number} [seekDurationBackoff=0.5]
+ * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of last period - seekDurationBackoff).
+ *
+ * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
+ * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and seek to the exact end of the content.
  * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
@@ -21288,6 +21293,8 @@ __webpack_require__.r(__webpack_exports__);
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
+ * @property {boolean} [ignoreFinalStaticManifestOnDynamicToStaticTransition=false]
+ * Set to true if dash.js should ignore the final static manifest when a stream transitions from dynamic to static (legacy behavior up to v5.2.0). When set to false the duration, the seekable range and the segment information are derived from the final static manifest.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
@@ -21440,6 +21447,7 @@ function Settings() {
     },
     streaming: {
       abandonLoadTimeout: 10000,
+      seekDurationBackoff: 0.5,
       wallclockTimeUpdateInterval: 100,
       manifestUpdateRetryInterval: 100,
       liveUpdateTimeThresholdInMilliseconds: 0,
@@ -21448,6 +21456,7 @@ function Settings() {
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
       applyContentSteering: true,
+      ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
       enableManifestDurationMismatchFix: true,
       parseInbandPrft: false,
       enableManifestTimescaleMismatchFix: false,
@@ -21651,6 +21660,7 @@ function Settings() {
         usePixelRatioInLimitBitrateByPortal: false,
         limitBitrateByPortalMinimum: 0,
         enableSupplementalPropertyAdaptationSetSwitching: true,
+        hybridSwitchBufferTime: 12,
         rules: {
           throughputRule: {
             active: true,
@@ -22226,7 +22236,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   getVersionString: function() { return /* binding */ getVersionString; }
 /* harmony export */ });
-const VERSION = '5.2.0';
+const VERSION = '5.2.1';
 function getVersionString() {
   return VERSION;
 }
@@ -23185,7 +23195,9 @@ function DashAdapter() {
       } else {
         calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
       }
-      const duration = eventBox.event_duration / timescale;
+
+      // An event_duration of 0xFFFFFFFF indicates an unknown duration (e.g. ID3 events, see https://aomediacodec.github.io/id3-emsg/)
+      const duration = eventBox.event_duration === 0xFFFFFFFF ? NaN : eventBox.event_duration / timescale;
       const id = eventBox.id;
       const messageData = eventBox.message_data;
       event.eventStream = eventStream;
@@ -23531,6 +23543,9 @@ function DashAdapter() {
   }
   function reset() {
     voPeriods = [];
+  }
+  function destroy() {
+    cea608parser = null;
   }
 
   /**
@@ -23941,6 +23956,7 @@ function DashAdapter() {
     applyPatchToManifest,
     areMediaInfosEqual,
     convertAdaptationToMediaInfo,
+    destroy,
     getAllMediaInfoForType,
     getAvailabilityStartTime,
     getBandwidthForRepresentation,
@@ -26465,7 +26481,7 @@ function RepresentationController(config) {
   const type = config.type;
   const streamInfo = config.streamInfo;
   const segmentsController = config.segmentsController;
-  const isDynamic = config.isDynamic;
+  let isDynamic = config.isDynamic;
   let instance, voAvailableRepresentations, currentVoRepresentation;
   function setup() {
     resetInitialSettings();
@@ -26481,6 +26497,9 @@ function RepresentationController(config) {
     if (!abrController || !dashMetrics || !playbackController || !timelineConverter) {
       throw new Error(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].MISSING_CONFIG_ERROR);
     }
+  }
+  function setIsDynamic(value) {
+    isDynamic = value;
   }
   function getCurrentRepresentation() {
     // Video RepresentationController should return a representation of type video, and enhancement
@@ -26710,6 +26729,7 @@ function RepresentationController(config) {
     getType,
     prepareQualityChange,
     reset,
+    setIsDynamic,
     updateData
   };
   setup();
@@ -29129,7 +29149,7 @@ function DashParser(config) {
     let manifest;
     const startTime = window.performance.now();
     manifest = parseXml(data);
-    if (!manifest) {
+    if (!manifest || !manifest.MPD && !manifest.Patch) {
       throw new Error('failed to parse the manifest');
     }
 
@@ -29830,7 +29850,7 @@ function ObjectIron(mappers) {
     if (exception) {
       for (const [key, values] of Object.entries(exception)) {
         let attr = element[key];
-        if (values.some(v => attr.match(v))) {
+        if (attr && values.some(v => attr.match(v))) {
           allowMapping = false;
         }
       }
@@ -29845,7 +29865,7 @@ function ObjectIron(mappers) {
           childNode[propertyName].push(propertyElementFromParent);
         } else {
           // non-Array Properties can be:
-          // - certain elements (e.g. SegmentList, see ISO 23009-1 (6th ed), clause 5.3.9.1) or 
+          // - certain elements (e.g. SegmentList, see ISO 23009-1 (6th ed), clause 5.3.9.1) or
           // - attributes (e.g. codecs)
           _mergeValues(propertyElementFromParent, childNode[propertyName]);
         }
@@ -30838,22 +30858,25 @@ function TimelineConverter() {
     return _calcTimeShiftBufferWindowForDynamicManifest(streams);
   }
   function _calcTimeshiftBufferForStaticManifest(streams) {
-    // Static Range Finder. We iterate over all periods and return the total duration
+    // Static Range Finder. Account for periods that are not contiguous.
     const range = {
       start: NaN,
       end: NaN
     };
-    let duration = 0;
     let start = NaN;
+    let end = NaN;
     streams.forEach(stream => {
       const streamInfo = stream.getStreamInfo();
-      duration += streamInfo.duration;
       if (isNaN(start) || streamInfo.start < start) {
         start = streamInfo.start;
       }
+      const streamEnd = streamInfo.start + streamInfo.duration;
+      if (isNaN(end) || streamEnd > end) {
+        end = streamEnd;
+      }
     });
     range.start = start;
-    range.end = start + duration;
+    range.end = end;
     return range;
   }
   function _calcTimeShiftBufferWindowForDynamicManifest(streams) {
@@ -33880,7 +33903,7 @@ function ManifestLoader(config) {
           // If there is a mismatch between the manifest's specified duration and the total duration of all periods,
           // and the specified duration is greater than the total duration of all periods,
           // overwrite the manifest's duration attribute. This is a patch for if a manifest is generated incorrectly.
-          if (settings && settings.get().streaming.enableManifestDurationMismatchFix && manifest.mediaPresentationDuration && manifest.Period.length > 1) {
+          if (settings && settings.get().streaming.enableManifestDurationMismatchFix && manifest.mediaPresentationDuration && manifest.Period?.length > 1) {
             const sumPeriodDurations = manifest.Period.reduce((totalDuration, period) => totalDuration + period.duration, 0);
             if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
               logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');
@@ -34038,6 +34061,7 @@ function ManifestUpdater() {
   }
   function initialize() {
     resetInitialSettings();
+    locationSelector.initialize();
     eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAMS_COMPOSED, _onStreamsComposed, this);
     eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_9__["default"].PLAYBACK_STARTED, _onPlaybackStarted, this);
     eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_9__["default"].PLAYBACK_PAUSED, _onPlaybackPaused, this);
@@ -34058,6 +34082,7 @@ function ManifestUpdater() {
     eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_9__["default"].PLAYBACK_PAUSED, _onPlaybackPaused, this);
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAMS_COMPOSED, _onStreamsComposed, this);
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].INTERNAL_MANIFEST_LOADED, _onManifestLoaded, this);
+    locationSelector.reset();
     resetInitialSettings();
   }
   function _stopManifestRefreshTimer() {
@@ -34162,12 +34187,16 @@ function ManifestUpdater() {
     }
 
     // See DASH-IF IOP v4.3 section 4.6.4 "Transition Phase between Live and On-Demand"
-    // Stop manifest update, ignore static manifest and signal end of dynamic stream to detect end of stream
-    if (manifestModel.getValue() && manifestModel.getValue().type === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].DYNAMIC && manifest.type === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].STATIC) {
+    // Stop the manifest updates and signal the end of the dynamic stream. If enabled, apply the final static manifest so that duration, seekable range and segment information reflect the static MPD.
+    const currentManifest = manifestModel.getValue();
+    if (currentManifest && currentManifest.type === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].DYNAMIC && manifest.type === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].STATIC) {
       eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].DYNAMIC_TO_STATIC);
-      isUpdating = false;
       isStopped = true;
-      return;
+      if (settings.get().streaming.ignoreFinalStaticManifestOnDynamicToStaticTransition) {
+        // Legacy behavior: ignore the final static manifest
+        isUpdating = false;
+        return;
+      }
     }
     manifestModel.setValue(manifest);
     const date = new Date();
@@ -34327,12 +34356,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dash_utils_TimelineConverter_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../dash/utils/TimelineConverter.js */ "./src/dash/utils/TimelineConverter.js");
 /* harmony import */ var _models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ./models/URIFragmentModel.js */ "./src/streaming/models/URIFragmentModel.js");
 /* harmony import */ var _streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ../streaming/utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
-/* harmony import */ var _utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./utils/CertUrlUtils.js */ "./src/streaming/utils/CertUrlUtils.js");
-/* harmony import */ var _models_VideoModel_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./models/VideoModel.js */ "./src/streaming/models/VideoModel.js");
-/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
-/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ./utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
-/* harmony import */ var _core_Version_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ../core/Version.js */ "./src/core/Version.js");
-/* harmony import */ var _svta_cml_608__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! @svta/cml-608 */ "./node_modules/@svta/cml-608/dist/index.js");
+/* harmony import */ var _models_VideoModel_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./models/VideoModel.js */ "./src/streaming/models/VideoModel.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ./utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
+/* harmony import */ var _core_Version_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ../core/Version.js */ "./src/core/Version.js");
+/* harmony import */ var _svta_cml_608__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! @svta/cml-608 */ "./node_modules/@svta/cml-608/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -34363,7 +34391,6 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 
 
 
@@ -34486,7 +34513,7 @@ function MediaPlayer() {
     _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].extend(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"]);
     mediaPlayerModel = (0,_models_MediaPlayerModel_js__WEBPACK_IMPORTED_MODULE_33__["default"])(context).getInstance();
     customParametersModel = (0,_models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
-    videoModel = (0,_models_VideoModel_js__WEBPACK_IMPORTED_MODULE_47__["default"])(context).getInstance();
+    videoModel = (0,_models_VideoModel_js__WEBPACK_IMPORTED_MODULE_46__["default"])(context).getInstance();
     uriFragmentModel = (0,_models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_44__["default"])(context).getInstance();
   }
 
@@ -34643,7 +34670,7 @@ function MediaPlayer() {
       });
       adapter.setConfig({
         constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        cea608parser: new _svta_cml_608__WEBPACK_IMPORTED_MODULE_51__.Cta608Parser(),
+        cea608parser: new _svta_cml_608__WEBPACK_IMPORTED_MODULE_50__.Cta608Parser(),
         errHandler: errHandler,
         BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"]
       });
@@ -34752,6 +34779,13 @@ function MediaPlayer() {
    */
   function destroy() {
     reset();
+    if (videoModel) {
+      videoModel.destroy();
+      videoModel = null;
+    }
+    if (adapter) {
+      adapter.destroy();
+    }
     _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__["default"].deleteSingletonInstances(context);
   }
 
@@ -34815,7 +34849,7 @@ function MediaPlayer() {
    * @instance
    */
   function getVersion() {
-    return (0,_core_Version_js__WEBPACK_IMPORTED_MODULE_50__.getVersionString)();
+    return (0,_core_Version_js__WEBPACK_IMPORTED_MODULE_49__.getVersionString)();
   }
 
   /**
@@ -34929,7 +34963,7 @@ function MediaPlayer() {
     if (!playbackInitialized) {
       throw PLAYBACK_NOT_INITIALIZED_ERROR;
     }
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__.checkParameterType)(value, 'number');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(value, 'number');
     if (isNaN(value)) {
       throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].BAD_ARGUMENT_ERROR;
     }
@@ -34959,7 +34993,7 @@ function MediaPlayer() {
     if (!playbackInitialized) {
       throw PLAYBACK_NOT_INITIALIZED_ERROR;
     }
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__.checkParameterType)(seektime, 'number');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(seektime, 'number');
     if (isNaN(seektime)) {
       throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].BAD_ARGUMENT_ERROR;
     }
@@ -35067,7 +35101,7 @@ function MediaPlayer() {
    * @instance
    */
   function setMute(value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__.checkParameterType)(value, 'boolean');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(value, 'boolean');
     getVideoElement().muted = value;
   }
 
@@ -35314,7 +35348,7 @@ function MediaPlayer() {
    *
    */
   function setAutoPlay(value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__.checkParameterType)(value, 'boolean');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(value, 'boolean');
     autoPlay = value;
   }
 
@@ -35963,16 +35997,23 @@ function MediaPlayer() {
   }
 
   /**
-   * This method allows to set media settings that will be used to pick the initial track. Format of the settings
-   * is following: <br />
-   * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
-   *  index: indexValue,
-   *  viewpoint: viewpointValue (object:{schemeIdUri,value} or value-primitive),
-   *  audioChannelConfiguration: audioChannelConfigurationValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')),
-   *  accessibility: accessibilityValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
-   *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011'))
-   * }
+   * This method allows to set media settings that will be used to pick the initial track. The settings object supports the following properties:
+   * <ul>
+   * <li><code>lang</code>: a string primitive, a string object, or a RegExp object to match</li>
+   * <li><code>index</code>: the index of the track</li>
+   * <li><code>viewpoint</code>: object <code>{schemeIdUri, value}</code> or value-primitive</li>
+   * <li><code>audioChannelConfiguration</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')</li>
+   * <li><code>accessibility</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+   * <li><code>role</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+   * <li><code>codec</code>: full codec string as exposed in MediaInfo.codec, e.g. <code>'audio/mp4;codecs="ec-3"'</code>, compared with strict equality</li>
+   * </ul>
    *
+   * @example
+   * player.setInitialMediaSettingsFor('audio', {
+   *     lang: 'de',
+   *     role: 'main',
+   *     codec: 'audio/mp4;codecs="ec-3"'
+   * });
    * @param {MediaType} type
    * @param {Object} value
    * @memberof module:MediaPlayer
@@ -35988,14 +36029,19 @@ function MediaPlayer() {
   }
 
   /**
-   * This method returns media settings that is used to pick the initial track. Format of the settings
-   * is following:
-   * {lang: langValue,
-   *  index: indexValue,
-   *  viewpoint: viewpointValue,
-   *  audioChannelConfiguration: audioChannelConfigurationValue,
-   *  accessibility: accessibilityValue,
-   *  role: roleValue}
+   * This method returns the media settings that are used to pick the initial track.
+   *
+   * @example
+   * // Returned object has the following format:
+   * {
+   *     lang: langValue,
+   *     index: indexValue,
+   *     viewpoint: viewpointValue,
+   *     audioChannelConfiguration: audioChannelConfigurationValue,
+   *     accessibility: accessibilityValue,
+   *     role: roleValue,
+   *     codec: codecValue
+   * }
    * @param {MediaType} type
    * @returns {Object}
    * @memberof module:MediaPlayer
@@ -36281,8 +36327,7 @@ function MediaPlayer() {
    * @instance
    */
   function setProtectionData(value) {
-    const sanitizedValue = _utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_46__["default"].sanitizeProtectionDataCertUrls(value);
-    protectionData = sanitizedValue;
+    protectionData = value;
 
     // Propagate changes in case StreamController is already created
     if (streamController) {
@@ -36901,7 +36946,7 @@ function MediaPlayer() {
         events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
         constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
         debug: debug,
-        initSegmentType: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_48__.HTTPRequest.INIT_SEGMENT_TYPE,
+        initSegmentType: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_47__.HTTPRequest.INIT_SEGMENT_TYPE,
         BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"],
         ISOBoxer: codem_isoboxer__WEBPACK_IMPORTED_MODULE_27__,
         settings: settings
@@ -37010,6 +37055,9 @@ function MediaPlayer() {
     }
     if (value.accessibility !== undefined) {
       output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+    }
+    if (value.codec !== undefined) {
+      output.codec = value.codec;
     }
     return output;
   }
@@ -38102,8 +38150,9 @@ function SourceBufferSink(config) {
     });
   }
   function _handleChangeTypeError(e) {
-    logger.error(e);
     if (typeof e?.name === 'string' && e.name === 'NotSupportedError') {
+      // Recoverable: disable changeType and reset the SourceBuffers for future track switches instead
+      logger.warn(e);
       settings.update({
         streaming: {
           buffer: {
@@ -38112,6 +38161,8 @@ function SourceBufferSink(config) {
           }
         }
       });
+    } else {
+      logger.error(e);
     }
   }
   function _copyPreviousSinkData(oldSourceBufferSink) {
@@ -38140,7 +38191,7 @@ function SourceBufferSink(config) {
       return Promise.all(promises);
     } catch (e) {
       // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-      if (mediaInfo.type == _constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].TEXT && !mediaInfo.isFragmented || codec.indexOf('codecs="stpp') !== -1 || codec.indexOf('codecs="vtt') !== -1 || codec.indexOf('text/vtt') !== -1) {
+      if (mediaInfo.type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].TEXT && !mediaInfo.isFragmented || codec.indexOf('codecs="stpp') !== -1 || codec.indexOf('codecs="vtt') !== -1 || codec.indexOf('text/vtt') !== -1) {
         return _initializeForText(streamInfo);
       }
       return Promise.reject(e);
@@ -38283,17 +38334,30 @@ function SourceBufferSink(config) {
   }
   function abortBeforeAppend() {
     return new Promise(resolve => {
-      _waitForUpdateEnd(() => {
-        // Save the append window, which is reset on abort().
-        const appendWindowStart = buffer.appendWindowStart;
-        const appendWindowEnd = buffer.appendWindowEnd;
-        if (buffer) {
-          buffer.abort();
-          buffer.appendWindowStart = appendWindowStart;
-          buffer.appendWindowEnd = appendWindowEnd;
+      try {
+        if (mediaSource.readyState !== 'open') {
+          resolve();
+          return;
         }
+        _waitForUpdateEnd(() => {
+          try {
+            // The MediaSource can transition out of 'open' while waiting for updateend
+            if (buffer && mediaSource.readyState === 'open') {
+              // Save the append window, which is reset on abort().
+              const appendWindowStart = buffer.appendWindowStart;
+              const appendWindowEnd = buffer.appendWindowEnd;
+              buffer.abort();
+              buffer.appendWindowStart = appendWindowStart;
+              buffer.appendWindowEnd = appendWindowEnd;
+            }
+            resolve();
+          } catch (e) {
+            resolve();
+          }
+        });
+      } catch (e) {
         resolve();
-      });
+      }
     });
   }
   function remove(range) {
@@ -38613,6 +38677,7 @@ function Stream(config) {
    * Initialize the events
    */
   function initialize() {
+    segmentBlacklistController.initialize();
     registerEvents();
     registerProtectionEvents();
     textController.initializeForStream(streamInfo);
@@ -39954,6 +40019,14 @@ function StreamProcessor(config) {
   function _noMediaRequestGenerated(rescheduleIfNoRequest) {
     const representation = representationController.getCurrentRepresentation();
 
+    // A missing media request can also mean that the last segment has already
+    // been requested. Handle completion before applying gap seek fixes;
+    // otherwise a static VOD tail can be misclassified as a manifest gap.
+    const hasHandledBufferingComplete = checkAndHandleCompletedBuffering();
+    if (hasHandledBufferingComplete) {
+      return;
+    }
+
     // If  this statement is true we might be stuck. A static manifest does not change and we did not find a valid request for the target time
     // There is no point in trying again. We need to adjust the time in order to find a valid request. This can happen if the user/app seeked into a gap.
     // For dynamic manifests this can also happen especially if we jump over the gap in the previous period and are using SegmentTimeline and in case there is a positive eptDelta at the beginning of the period we are stuck.
@@ -39973,12 +40046,6 @@ function StreamProcessor(config) {
     } catch (e) {
       logger.error(e);
     }
-
-    // Check if the media is finished. If so, no need to schedule another request
-    const hasHandledBufferingComplete = checkAndHandleCompletedBuffering();
-    if (hasHandledBufferingComplete) {
-      return;
-    }
     if (rescheduleIfNoRequest) {
       _noValidRequest();
     }
@@ -39986,9 +40053,15 @@ function StreamProcessor(config) {
   function _getAdjustedTimeForStaticManifest(representation) {
     let adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, currentMediaInfo, representation, settings.get().streaming.gaps.threshold);
     if (isNaN(adjustedTime)) {
-      // If there is no valid target time ahead and the buffering time is within the duration of one segment we slightly adjust it
-      if (bufferingTime >= representation.adaptation.period.mpd.mediaPresentationDuration - representation.segmentDuration) {
-        adjustedTime = bufferingTime - 0.1;
+      const period = representation.adaptation.period;
+      const periodEnd = period.start + period.duration;
+
+      // If there is no valid target time ahead and the buffering time is within the duration of one segment we slightly adjust it.
+      // Restrict the tail-time fallback to the final period — for any earlier period, an inter-period gap jump should advance into the
+      // next period rather than seeking backward inside the current one.
+      // <= : a seek to the exact stream end lands precisely on periodEnd and must be adjusted as well, otherwise the seek never completes.
+      if (streamInfo.isLast && isFinite(periodEnd) && bufferingTime <= periodEnd && bufferingTime >= periodEnd - representation.segmentDuration) {
+        adjustedTime = Math.max(period.start, bufferingTime - 0.1);
       }
     }
     return adjustedTime;
@@ -40595,6 +40668,11 @@ function StreamProcessor(config) {
   }
   function updateStreamInfo(newStreamInfo) {
     streamInfo = newStreamInfo;
+    if (streamInfo.manifestInfo.isDynamic !== isDynamic) {
+      isDynamic = streamInfo.manifestInfo.isDynamic;
+      dashHandler.initialize(isDynamic);
+      representationController.setIsDynamic(isDynamic);
+    }
     if (!isBufferingCompleted()) {
       return bufferController.updateAppendWindow();
     }
@@ -43007,6 +43085,9 @@ function AbrController() {
     return voRepresentations;
   }
   function _sortForSameMediaInfos(a, b) {
+    return _sortForSameCodecs(a, b);
+  }
+  function _sortForSameCodecs(a, b) {
     if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
       return a.pixelsPerSecond - b.pixelsPerSecond;
     }
@@ -43017,6 +43098,10 @@ function AbrController() {
     return _sortBySegmentSequenceProperties(a, b);
   }
   function _sortForDifferentMediaInfos(a, b) {
+    // if the codec family is the same we can sort by pixelsPerSecond. But should take bootstrap and non-bootstrap Representations into account (L3D-DASH)
+    if (a.codecFamily && b.codecFamily && a.codecFamily === b.codecFamily) {
+      return _sortForSameCodecFamilyInDifferentMediaInfos(a, b);
+    }
     if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
       return a.pixelsPerSecond - b.pixelsPerSecond;
     }
@@ -43029,11 +43114,25 @@ function AbrController() {
     }
     return _sortBySegmentSequenceProperties(a, b);
   }
-  function _sortBySegmentSequenceProperties(a, b) {
+  function _compareBootstrapRepresentations(a, b) {
     const isABootstrapRepresentation = a.isBootstrapRepresentation();
     const isBBootstrapRepresentation = b.isBootstrapRepresentation();
-    if (isABootstrapRepresentation !== isBBootstrapRepresentation) {
-      return isABootstrapRepresentation ? -1 : 1;
+    if (isABootstrapRepresentation === isBBootstrapRepresentation) {
+      return 0;
+    }
+    return isABootstrapRepresentation ? -1 : 1;
+  }
+  function _sortForSameCodecFamilyInDifferentMediaInfos(a, b) {
+    const bootstrapComparison = _compareBootstrapRepresentations(a, b);
+    if (bootstrapComparison !== 0) {
+      return bootstrapComparison;
+    }
+    return _sortForSameCodecs(a, b);
+  }
+  function _sortBySegmentSequenceProperties(a, b) {
+    const bootstrapComparison = _compareBootstrapRepresentations(a, b);
+    if (bootstrapComparison !== 0) {
+      return bootstrapComparison;
     }
     return b.k - a.k;
   }
@@ -43413,9 +43512,9 @@ function AbrController() {
    */
   function _updateDynamicAbrStrategy(mediaType, bufferLevel) {
     try {
-      const bufferTimeDefault = mediaPlayerModel.getBufferTimeDefault();
-      const switchOnThreshold = bufferTimeDefault;
-      const switchOffThreshold = 0.5 * bufferTimeDefault;
+      const hybridSwitchBufferTime = settings.get().streaming.abr.hybridSwitchBufferTime;
+      const switchOnThreshold = hybridSwitchBufferTime;
+      const switchOffThreshold = 0.5 * hybridSwitchBufferTime;
       const isUsingBolaRule = abrRulesCollection.getBolaState(mediaType);
       const shouldUseBolaRule = bufferLevel >= (isUsingBolaRule ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
       abrRulesCollection.setBolaState(mediaType, shouldUseBolaRule);
@@ -43570,7 +43669,6 @@ function BaseURLController() {
   function setup() {
     baseURLTreeModel = (0,_models_BaseURLTreeModel_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create();
     baseURLSelector = (0,_utils_BaseURLSelector_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create();
-    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, onBlackListChanged, instance);
   }
   function setConfig(config) {
     if (config.baseURLTreeModel) {
@@ -43590,8 +43688,50 @@ function BaseURLController() {
     baseURLTreeModel.update(manifest);
     baseURLSelector.chooseSelector(adapter.getIsDVB(manifest));
     eventBus.trigger(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_7__["default"].BASE_URLS_UPDATED, {
-      baseUrls: getBaseUrls(manifest)
+      baseUrls: getBaseUrlsForEventPayload(manifest)
     });
+  }
+  function getBaseUrlsForEventPayload(manifest) {
+    // Reuse the BaseURLs the tree model already collected during update() instead of
+    // re-extracting them from every manifest node.
+    const {
+      rootBaseUrls,
+      childBaseUrls
+    } = baseURLTreeModel.getBaseUrlsForPayload();
+    const uniqueBaseUrls = [];
+    const addedBaseUrls = {};
+    const includeRootBaseUrls = _shouldIncludeRootBaseUrls(manifest, childBaseUrls);
+    const targetBaseUrls = includeRootBaseUrls ? rootBaseUrls.concat(childBaseUrls) : childBaseUrls;
+    targetBaseUrls.forEach(baseUrl => {
+      const key = `${baseUrl.serviceLocation}_${baseUrl.url}`;
+      if (!addedBaseUrls[key]) {
+        uniqueBaseUrls.push(baseUrl);
+        addedBaseUrls[key] = true;
+      }
+    });
+    return uniqueBaseUrls;
+  }
+  function _shouldIncludeRootBaseUrls(manifest, childBaseUrls) {
+    if (!manifest || manifest.BaseURL || childBaseUrls.length === 0) {
+      return true;
+    }
+    if (childBaseUrls.some(baseUrl => urlUtils.isRelative(baseUrl.url))) {
+      return true;
+    }
+    if (!manifest.Period || manifest.Period.length === 0) {
+      return true;
+    }
+    return manifest.Period.some(period => _usesInheritedBaseUrl(period));
+  }
+  function _usesInheritedBaseUrl(element) {
+    if (!element || element.BaseURL) {
+      return false;
+    }
+    const children = element.AdaptationSet || element.Representation;
+    if (!children || children.length === 0) {
+      return true;
+    }
+    return children.some(child => _usesInheritedBaseUrl(child));
   }
   function resolve(path) {
     const baseUrls = baseURLTreeModel.getForPath(path);
@@ -43617,26 +43757,29 @@ function BaseURLController() {
     }
   }
   function reset() {
+    eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, onBlackListChanged, instance);
     baseURLTreeModel.reset();
     baseURLSelector.reset();
   }
   function getBaseUrls(manifest) {
-    return baseURLTreeModel.getBaseUrls(manifest);
+    return baseURLTreeModel.getAvailableBaseUrlsForElement(manifest);
   }
   function initialize(data) {
+    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, onBlackListChanged, instance);
     // report config to baseURLTreeModel and baseURLSelector
     baseURLTreeModel.setConfig({
       adapter,
       contentSteeringController
     });
+    baseURLSelector.initialize();
     update(data);
   }
   instance = {
-    reset,
+    getBaseUrls,
     initialize,
+    reset,
     resolve,
     setConfig,
-    getBaseUrls,
     update
   };
   setup();
@@ -43747,7 +43890,7 @@ function BlackListController(config) {
     }
     return settings.get().streaming.blacklistExpiryTime;
   }
-  function setup() {
+  function initialize() {
     if (addBlacklistEventName) {
       eventBus.on(addBlacklistEventName, onAddBlackList, instance);
     }
@@ -43767,9 +43910,9 @@ function BlackListController(config) {
     add: add,
     remove: remove,
     contains: contains,
+    initialize: initialize,
     reset: reset
   };
-  setup();
   return instance;
 }
 BlackListController.__dashjs_factory_name = 'BlackListController';
@@ -46040,7 +46183,7 @@ function CmcdController() {
         ...additionalData
       });
     } catch (e) {
-      logger.error(e);
+      logger.warn('Failed to record response received in CMCD reporter.', e);
     }
   }
   function getCmcdParametersFromManifest() {
@@ -47696,8 +47839,8 @@ function MediaController() {
         filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsRole, localSettings);
       }
       filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAccessibility, localSettings);
-      filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, localSettings);
       filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsCodec, localSettings);
+      filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, localSettings);
       logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
     }
 
@@ -47959,10 +48102,9 @@ function MediaController() {
     return settings.id === undefined || settings.id === null || track.id === settings.id;
   }
   function matchSettingsViewPoint(settings, track) {
-    const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
+    return !settings.viewpoint || !!track.viewpoint.filter(function (item) {
       return _compareDescriptorType(item, settings.viewpoint);
     })[0];
-    return matchViewPoint;
   }
   function matchSettingsRole(settings, track, isTrackActive = false) {
     if (!track.roles) {
@@ -47990,10 +48132,9 @@ function MediaController() {
     return matchAccessibility;
   }
   function matchSettingsAudioChannelConfig(settings, track) {
-    let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
+    return !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
       return _compareDescriptorType(item, settings.audioChannelConfiguration);
     })[0];
-    return matchAudioChannelConfiguration;
   }
   function matchSettingsCodec(settings, track) {
     return !settings.codec || settings.codec === track.codec;
@@ -48355,8 +48496,7 @@ function MediaController() {
     return current.track ? [current.track] : tracks;
   }
   function _trackSelectionModeHighestSelectionPriority(tracks) {
-    let tmpArr = getTracksWithHighestSelectionPriority(tracks);
-    return tmpArr;
+    return getTracksWithHighestSelectionPriority(tracks);
   }
   function _trackSelectionModeHighestBitrate(tracks) {
     let tmpArr = getTracksWithHighestBitrate(tracks);
@@ -48561,7 +48701,7 @@ function MediaSourceController() {
     if (!mediaSource || mediaSource.readyState !== 'open') {
       return;
     }
-    if (value === null && isNaN(value)) {
+    if (value === null || isNaN(value)) {
       return;
     }
     if (mediaSource.duration === value) {
@@ -48570,12 +48710,31 @@ function MediaSourceController() {
     if (value === Infinity && !settings.get().streaming.buffer.mediaSourceDurationInfinity) {
       value = Math.pow(2, 32);
     }
-    if (!isBufferUpdating(mediaSource)) {
+    if (!_isBufferUpdating(mediaSource)) {
+      // Setting the duration below the highest presentation timestamp of any buffered coded frames throws an InvalidStateError. Clamp the duration to the highest buffered end time, for instance when applying the final duration after a transition from dynamic to static.
+      const highestBufferedEnd = _getHighestBufferedEnd(mediaSource);
+      if (highestBufferedEnd > value) {
+        value = highestBufferedEnd;
+      }
       logger.info('Set MediaSource duration:' + value);
       mediaSource.duration = value;
     } else {
       setTimeout(setDuration.bind(null, value), 50);
     }
+  }
+  function _getHighestBufferedEnd(source) {
+    let highestBufferedEnd = NaN;
+    const buffers = source.sourceBuffers;
+    for (let i = 0; i < buffers.length; i++) {
+      const buffered = buffers[i].buffered;
+      if (buffered && buffered.length > 0) {
+        const end = buffered.end(buffered.length - 1);
+        if (isNaN(highestBufferedEnd) || end > highestBufferedEnd) {
+          highestBufferedEnd = end;
+        }
+      }
+    }
+    return highestBufferedEnd;
   }
   function setSeekable(start, end) {
     if (mediaSource && typeof mediaSource.setLiveSeekableRange === 'function' && typeof mediaSource.clearLiveSeekableRange === 'function' && mediaSource.readyState === 'open' && start >= 0 && start < end) {
@@ -48583,23 +48742,31 @@ function MediaSourceController() {
       mediaSource.setLiveSeekableRange(start, end);
     }
   }
+  function clearSeekableRange() {
+    if (mediaSource && typeof mediaSource.clearLiveSeekableRange === 'function' && mediaSource.readyState === 'open') {
+      mediaSource.clearLiveSeekableRange();
+    }
+  }
   function signalEndOfStream(source) {
     if (!source || source.readyState !== 'open') {
+      logger.debug(`signalEndOfStream: not applicable, MediaSource readyState is ${source ? source.readyState : 'unavailable'}`);
       return;
     }
     let buffers = source.sourceBuffers;
     for (let i = 0; i < buffers.length; i++) {
       if (buffers[i].updating) {
+        logger.debug('signalEndOfStream: not applicable, a SourceBuffer is still updating');
         return;
       }
       if (buffers[i].buffered.length === 0) {
+        logger.debug('signalEndOfStream: not applicable, a SourceBuffer holds no data');
         return;
       }
     }
     logger.info('call to mediaSource endOfStream');
     source.endOfStream();
   }
-  function isBufferUpdating(source) {
+  function _isBufferUpdating(source) {
     let buffers = source.sourceBuffers;
     for (let i = 0; i < buffers.length; i++) {
       if (buffers[i].updating) {
@@ -48623,6 +48790,7 @@ function MediaSourceController() {
   }
   instance = {
     attachMediaSource,
+    clearSeekableRange,
     createMediaSource,
     detachMediaSource,
     setConfig,
@@ -49441,6 +49609,12 @@ function PlaybackController() {
    */
   function _onStreamsComposed() {
     manifestUpdateInProgress = false;
+
+    // Refresh the cached streamInfo so values such as the duration reflect the updated manifest
+    const activeStreamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+    if (activeStreamInfo && streamInfo && activeStreamInfo.id === streamInfo.id) {
+      streamInfo = activeStreamInfo;
+    }
   }
   function _checkEnableLowLatency(mediaInfo) {
     if (mediaInfo && mediaInfo.supplementalProperties && mediaInfo.supplementalProperties.find(item => item.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME)) {
@@ -50061,7 +50235,7 @@ const DVR_WAITING_OFFSET = 2;
 function StreamController() {
   const context = this.context;
   const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
-  let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter, dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController, segmentBaseController, uriFragmentModel, abrController, throughputController, mediaController, eventController, initCache, errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData, extUrlQueryInfoController, autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings, firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
+  let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter, dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController, segmentBaseController, uriFragmentModel, abrController, throughputController, mediaController, eventController, initCache, errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData, extUrlQueryInfoController, autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel, playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused, initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings, firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation, pendingDynamicToStaticUpdate;
   function setup() {
     logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance().getLogger(instance);
     timeSyncController = (0,_TimeSyncController_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
@@ -50125,6 +50299,7 @@ function StreamController() {
     eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_10__["default"].BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
     eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_10__["default"].QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
     eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_10__["default"].CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_10__["default"].DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
     if (_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED) {
       eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
     }
@@ -50148,6 +50323,7 @@ function StreamController() {
     eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_10__["default"].BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
     eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_10__["default"].QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
     eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_10__["default"].CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_10__["default"].DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
     if (_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED) {
       eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
     }
@@ -50248,6 +50424,7 @@ function StreamController() {
         });
       }).then(() => {
         eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].STREAMS_COMPOSED);
+        _handlePendingDynamicToStaticUpdate();
         // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
         _checkIfPrebufferingCanStart();
       }).catch(e => {
@@ -50258,6 +50435,34 @@ function StreamController() {
       hasInitialisationError = true;
       reset();
     }
+  }
+
+  /**
+   * The stream transitioned from dynamic to static. Once the final static manifest has been applied and the streams have been recomposed, update the MediaSource duration and the seekable range.
+   * @private
+   */
+  function _onDynamicToStatic() {
+    if (settings.get().streaming.ignoreFinalStaticManifestOnDynamicToStaticTransition) {
+      // Legacy behavior: the final static manifest is not applied, no update required
+      return;
+    }
+    pendingDynamicToStaticUpdate = true;
+  }
+
+  /**
+   * Updates the MediaSource duration and seekable range after the transition from dynamic to static.
+   * @private
+   */
+  function _handlePendingDynamicToStaticUpdate() {
+    if (!pendingDynamicToStaticUpdate || adapter.getIsDynamic() || !mediaSource) {
+      return;
+    }
+    pendingDynamicToStaticUpdate = false;
+    _setMediaDuration();
+    // Recalculate the range using the final static manifest instead of the previous live DVR window.
+    addDVRMetric();
+    // With a finite duration the seekable range is derived from the duration, the live seekable range only applies while the duration is Infinity. Clear it so it does not linger.
+    mediaSourceController.clearSeekableRange();
   }
 
   /**
@@ -50305,6 +50510,8 @@ function StreamController() {
   /**
    * Initialize playback for the first period.
    * @param {array} streamsInfo
+   * @param {function} resolve
+   * @param {function} reject
    * @private
    */
   function _initializeForFirstStream(streamsInfo, resolve, reject) {
@@ -50374,8 +50581,18 @@ function StreamController() {
   }
   function _calculateStartTimeAndSwitchStream() {
     // Figure out the correct start time and the correct start period
-    const startTime = _getInitialStartTime();
-    let streamForTime = getStreamForTime(startTime);
+    const seekEvent = {
+      seekTime: _getInitialStartTime()
+    };
+    let streamForTime = getStreamForTime(seekEvent.seekTime);
+
+    // A start time at or beyond the end of the content (e.g. an MPD anchor #t= past the duration) is clamped here.
+    // The initial seek is performed internally and does not dispatch PLAYBACK_SEEKING, so the clamp in
+    // _onPlaybackSeeking never sees it.
+    if (!streamForTime) {
+      streamForTime = _handleSeekBeyondEndOfContent(seekEvent);
+    }
+    const startTime = seekEvent.seekTime;
     const initialStream = streamForTime !== null ? streamForTime : streams[0];
     eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].INITIAL_STREAM_SWITCH, {
       startTime
@@ -50403,10 +50620,21 @@ function StreamController() {
       });
       let keepBuffers = false;
       let representationsFromPreviousPeriod = [];
-      let sourceBufferSinksFromPreviousPeriod = _getSourceBufferSinksFromPreviousPeriod(previousStream);
+      // Only reuse the previous period's SourceBuffers when the buffers can actually be kept
+      // (keepBuffers). _canSourceBuffersBeKept() already requires SourceBuffer.changeType()
+      // support, so on platforms without it (e.g. Chrome 68 / LG WebOS <= 5) keepBuffers is
+      // false and we fall back to a fresh-SourceBuffer ("cold") switch. keepBuffers is also
+      // false when the transition is incompatible (e.g. clear -> encrypted): in that case the
+      // previous SourceBufferSinks are reset/aborted by previousStream.deactivate(false), so
+      // they must NOT be handed to the next period - doing so would make the new stream reuse
+      // an already-cleared buffer and stall playback at the period boundary.
+      let sourceBufferSinksFromPreviousPeriod = new Map();
       activeStream = targetStream;
       if (previousStream) {
         keepBuffers = _canSourceBuffersBeKept(targetStream, previousStream);
+        if (keepBuffers) {
+          sourceBufferSinksFromPreviousPeriod = _getSourceBufferSinksFromPreviousPeriod(previousStream);
+        }
         representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
         previousStream.deactivate(keepBuffers);
       }
@@ -50495,8 +50723,7 @@ function StreamController() {
 
   /**
    * Activates a new stream.
-   * @param {number} seekTime
-   * @param {boolean} keepBuffers
+   * @param {object} inputParameters
    */
   function _activateStream(inputParameters) {
     const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
@@ -50546,7 +50773,10 @@ function StreamController() {
    */
   function _onPlaybackSeeking(e) {
     const newTime = e.seekTime;
-    const seekToStream = getStreamForTime(newTime);
+    let seekToStream = getStreamForTime(newTime);
+    if (!seekToStream) {
+      seekToStream = _handleSeekBeyondEndOfContent(e);
+    }
     if (!seekToStream || seekToStream === activeStream) {
       _cancelPreloading();
       _handleInnerPeriodSeek(e);
@@ -50554,7 +50784,44 @@ function StreamController() {
       _cancelPreloading(seekToStream);
       _handleOuterPeriodSeek(e, seekToStream);
     }
+
+    // The timer is stopped once PLAYBACK_ENDED was fired for the last stream. A seek can resume playback afterwards.
+    _startPlaybackEndedTimerInterval();
     _createPlaylistMetrics(_vo_metrics_PlayList_js__WEBPACK_IMPORTED_MODULE_7__.PlayList.SEEK_START_REASON);
+  }
+
+  /**
+   * A seek to a time at or beyond the end of the last period is not assigned to any stream. Route it to the last
+   * stream and clamp the seek target to slightly before the end of the content, so playback can end there.
+   * A playhead resting exactly at the (post endOfStream) MediaSource duration is in the "ended" state, where play()
+   * restarts from the beginning instead of finishing playback, and seeking to the exact duration does not complete reliably.
+   * Static manifests only: on a dynamic manifest with a finite announced duration (planned-end live event) the last
+   * period's end can lie beyond the current live edge, and clamping would actively park the playhead in a region
+   * without segments. Live seek targets are constrained by the DVR window logic instead.
+   * @param {object} e - the PLAYBACK_SEEKING event payload; e.seekTime is adjusted in place when clamping applies
+   * @return {object|null} the stream to seek to, or null if this is not a seek beyond the end of the content
+   * @private
+   */
+  function _handleSeekBeyondEndOfContent(e) {
+    // adapter.getIsDynamic() instead of playbackController.getIsDynamic(): the latter is only initialized once the
+    // first stream is activated, but this function also runs for the initial start time before activation.
+    if (isNaN(e.seekTime) || streams.length === 0 || adapter.getIsDynamic()) {
+      return null;
+    }
+    const lastStream = streams[streams.length - 1];
+    const lastStreamEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
+    if (e.seekTime < lastStreamEnd) {
+      return null;
+    }
+    const seekDurationBackoff = !isNaN(settings.get().streaming.seekDurationBackoff) ? settings.get().streaming.seekDurationBackoff : 0;
+    e.seekTime = Math.max(lastStream.getStartTime(), lastStreamEnd - seekDurationBackoff);
+
+    // Corrective internal seek: move the video element to the clamped target as well, instead of leaving it
+    // wherever the browser clamped the original overshooting seek (usually the exact MediaSource duration).
+    // During startup no seek was performed yet and PlaybackController is not initialized: this is a no-op then,
+    // the initial seek uses the clamped time via _switchStream.
+    playbackController.seek(e.seekTime, false, true);
+    return lastStream;
   }
 
   /**
@@ -50659,6 +50926,7 @@ function StreamController() {
       // Seamless period switch allowed only if:
       // - none of the periods uses contentProtection.
       // - AND changeType method is implemented
+      // TODO: If the codec family is the same or if there is period connectivity we can also use the same SourceBuffer
       return settings.get().streaming.buffer.reuseExistingSourceBuffers && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched) && capabilities.supportsChangeType() && settings.get().streaming.buffer.useChangeType;
     } catch (e) {
       return false;
@@ -51200,7 +51468,6 @@ function StreamController() {
 
   /**
    * In order to calculate the initial live delay we might require the duration of the segments.
-   * @param {array} streamInfos
    * @param {object} manifestInfo
    * @return {number}
    * @private
@@ -51218,7 +51485,6 @@ function StreamController() {
 
   /**
    * Callback handler after the steering manifest was updated
-   * @param {object} e
    * @private
    */
   function _onSteeringManifestUpdated() {
@@ -51545,6 +51811,7 @@ function StreamController() {
     isPaused = false;
     autoPlay = true;
     playbackEndedTimerInterval = null;
+    pendingDynamicToStaticUpdate = false;
     firstLicenseIsFetched = false;
     preloadingStreams = [];
     waitForPlaybackStartTimeout = null;
@@ -55208,7 +55475,7 @@ class Node {
   }
 }
 function BaseURLTreeModel() {
-  let instance, root, adapter, contentSteeringController;
+  let instance, root, payloadBaseUrls, adapter, contentSteeringController;
   const context = this.context;
   const objectUtils = (0,_utils_ObjectUtils_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
   function setup() {
@@ -55229,6 +55496,11 @@ function BaseURLTreeModel() {
   }
   function updateChildData(node, index, element) {
     const baseUrls = _getAvailableBaseUrls(element);
+
+    // Collect BaseURLs from the elements of the current manifest for the BASE_URLS_UPDATED payload.
+    // Doing this inside the live-manifest traversal avoids a second walk and ignores stale tree
+    // nodes left behind when a Period/AdaptationSet/Representation is removed across updates.
+    payloadBaseUrls.childBaseUrls.push(...baseUrls);
     if (!node[index]) {
       node[index] = new Node(baseUrls);
     } else {
@@ -55241,6 +55513,10 @@ function BaseURLTreeModel() {
   function getBaseURLCollectionsFromManifest(manifest) {
     checkConfig();
     const baseUrls = _getAvailableBaseUrls(manifest);
+    payloadBaseUrls = {
+      rootBaseUrls: baseUrls,
+      childBaseUrls: []
+    };
     if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
       root.data.baseUrls = baseUrls;
       root.data.selectedIdx = DEFAULT_INDEX;
@@ -55279,8 +55555,21 @@ function BaseURLTreeModel() {
     }
     return targetBaseUrls;
   }
-  function getBaseUrls(manifest) {
-    return _getAvailableBaseUrls(manifest);
+  function getAvailableBaseUrlsForElement(element) {
+    return _getAvailableBaseUrls(element);
+  }
+
+  /**
+   * Returns the root- and child-level BaseURLs collected from the manifest during the last
+   * update() call. Collected inline while traversing the live manifest, so it reflects removed
+   * or changed BaseURLs and never re-extracts them from the tree a second time.
+   * @returns {{rootBaseUrls: BaseURL[], childBaseUrls: BaseURL[]}}
+   */
+  function getBaseUrlsForPayload() {
+    return {
+      rootBaseUrls: payloadBaseUrls.rootBaseUrls.slice(),
+      childBaseUrls: payloadBaseUrls.childBaseUrls.slice()
+    };
   }
   function walk(callback, node) {
     const target = node || root;
@@ -55303,6 +55592,10 @@ function BaseURLTreeModel() {
   }
   function reset() {
     root = new Node();
+    payloadBaseUrls = {
+      rootBaseUrls: [],
+      childBaseUrls: []
+    };
   }
   function getForPath(path) {
     let target = root;
@@ -55318,12 +55611,13 @@ function BaseURLTreeModel() {
     return nodes.filter(n => n.baseUrls.length);
   }
   instance = {
-    reset,
-    update,
+    getAvailableBaseUrlsForElement,
+    getBaseUrlsForPayload,
     getForPath,
     invalidateSelectedIndexes,
+    reset,
     setConfig,
-    getBaseUrls
+    update
   };
   setup();
   return instance;
@@ -55415,7 +55709,8 @@ function CmcdModel() {
     _rebufferingStartTime = {},
     _rebufferingDuration = {},
     _streamType,
-    _streamingFormat;
+    _streamingFormat,
+    _topBitrateCache;
   let context = this.context;
   function setup() {
     cmcdConfigAccessor = (0,_cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
@@ -55604,10 +55899,19 @@ function CmcdModel() {
   }
   function _getTopBitrateByType(mediaInfo) {
     try {
+      // Within a single request's data build the same representation list backs both tb and
+      // tpb. Reuse the result so the list is rebuilt once per mediaInfo, not per key.
+      if (_topBitrateCache && _topBitrateCache.has(mediaInfo)) {
+        return _topBitrateCache.get(mediaInfo);
+      }
       const bitrates = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map(rep => {
         return rep.bitrateInKbit;
       });
-      return Math.max(...bitrates);
+      const tb = Math.max(...bitrates);
+      if (_topBitrateCache) {
+        _topBitrateCache.set(mediaInfo, tb);
+      }
+      return tb;
     } catch (e) {
       return null;
     }
@@ -55974,6 +56278,10 @@ function CmcdModel() {
     }
   }
   function deriveCmcdDataForRequest(request) {
+    // Share one top-bitrate computation across this request's data build (tb and tpb both
+    // resolve it from the representation list). Scoped to the call, so a later request still
+    // recomputes and runtime setting changes remain reflected.
+    _topBitrateCache = new Map();
     try {
       _updateLastMediaTypeRequest(request.type, request.mediaType);
       let cmcdData = {};
@@ -55996,6 +56304,8 @@ function CmcdModel() {
       return cmcdData;
     } catch (e) {
       return null;
+    } finally {
+      _topBitrateCache = null;
     }
   }
   function isIncludedInRequestFilter(type, includeInRequests) {
@@ -58523,10 +58833,18 @@ function VideoModel() {
     stalledStreams.length = 0;
     _disposeResizeObserver();
   }
+  function destroy() {
+    reset();
+    element = null;
+    TTMLRenderingDiv = null;
+    vttRenderingDiv = null;
+  }
   function _disposeResizeObserver() {
     try {
       if (resizeObserver && element) {
         resizeObserver.unobserve(element);
+      }
+      if (resizeObserver) {
         resizeObserver.disconnect();
         resizeObserver = null;
       }
@@ -58625,13 +58943,23 @@ function VideoModel() {
     return element;
   }
   function setElement(value) {
-    //add check of value type
-    if (value === null || value === undefined || value && /^(VIDEO|AUDIO)$/i.test(value.nodeName)) {
-      element = value;
-      _registerResizeObserver(element);
-    } else {
-      throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
+    // In case there was already an element stored in model
+    const isNewElement = element !== value;
+    if (element && !isNewElement) {
+      return;
     }
+    _unregisterResizeObserver(element);
+    element = value;
+
+    //add check of value type
+    if (value === null || value === undefined) {
+      return;
+    }
+    if (value && /^(VIDEO|AUDIO)$/i.test(value.nodeName)) {
+      _registerResizeObserver(element);
+      return;
+    }
+    throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
   }
   function _registerResizeObserver(element) {
     try {
@@ -58639,6 +58967,14 @@ function VideoModel() {
         return;
       }
       resizeObserver.observe(element);
+    } catch (e) {}
+  }
+  function _unregisterResizeObserver(element) {
+    try {
+      if (!resizeObserver || !element) {
+        return;
+      }
+      resizeObserver.unobserve(element);
     } catch (e) {}
   }
   function setSource(source) {
@@ -58920,6 +59256,7 @@ function VideoModel() {
     addEventListener,
     addTextTrack,
     appendChild,
+    destroy,
     getBufferRange,
     getClientHeight,
     getClientWidth,
@@ -61410,7 +61747,7 @@ function ProtectionController(config) {
   /**
    * Collect certificate URL objects for the selected key system from mediaInfo content protection data
    * @param {string|null} preferredType
-   * @return {Array<{url:string, certType:string|null}>}
+   * @return {Array<{url: string, certType: (string|null)}>}
    * @private
    */
   function _getCertificateUrlsForSelectedKeySystem() {
@@ -61992,8 +62329,8 @@ function ProtectionController(config) {
    * @ignore
    */
   function setProtectionData(data) {
-    applicationProvidedProtectionData = data;
-    protectionKeyController.setProtectionData(data);
+    applicationProvidedProtectionData = _utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_8__["default"].sanitizeProtectionDataCertUrls(data);
+    protectionKeyController.setProtectionData(applicationProvidedProtectionData);
   }
 
   /**
@@ -70597,7 +70934,7 @@ class CueIntervalTree {
    *
    * @param {IntervalTreeNode} newNode - Node to insert
    * @param {IntervalTreeNode|null} subTree - Current subtree root
-   * @returns {[IntervalTreeNode, boolean]} Tuple containing [newRoot, inserted]
+   * @returns {Array} Tuple containing [newRoot, inserted]
    * @private
    */
   _insert(newNode, subTree) {
@@ -70785,7 +71122,7 @@ class CueIntervalTree {
    *
    * @param {TextTrackCue} cue - The cue to remove
    * @param {IntervalTreeNode|null} node - Current subtree root
-   * @returns {[IntervalTreeNode|null, boolean]} Tuple containing [newRoot, removed]
+   * @returns {Array} Tuple containing [newRoot, removed]
    * @private
    */
   _remove(cue, node) {
@@ -72517,9 +72854,9 @@ function TextSourceBuffer(config) {
   function _appendFragmentedWebVtt(bytes, sampleList) {
     let i, j, k;
     const captionArray = [];
+    const timestampOffset = _getTimestampOffset();
     for (i = 0; i < sampleList.length; i++) {
       const sample = sampleList[i];
-      const timestampOffset = _getTimestampOffset();
       const start = timestampOffset + sample.cts / timescale;
       const end = start + sample.duration / timescale;
       instance.buffered.add(start, end);
@@ -72564,7 +72901,9 @@ function TextSourceBuffer(config) {
       }
     }
     if (captionArray.length > 0) {
-      textTracks.addCaptions(currFragmentedTrackIdx, 0, captionArray);
+      // Cue times are period-local media times; the MSE timestamp offset (Period@start - presentationTimeOffset)
+      // maps them to presentation time. Required for multiperiod content, see #5087.
+      textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, captionArray);
     }
   }
   function _appendText(bytes, chunk, codecType) {
@@ -73478,7 +73817,7 @@ function TextTracks(config) {
     return cue;
   }
   function _getCueInformationForNonHtml(currentItem, timeOffset) {
-    let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
+    let cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, currentItem.data);
     cue.cueID = _core_Utils_js__WEBPACK_IMPORTED_MODULE_6__["default"].generateUuid();
     return cue;
   }
@@ -74887,11 +75226,15 @@ function BaseURLSelector() {
     data.selectedIdx = data.baseUrls.indexOf(selectedBaseUrl);
     return selectedBaseUrl;
   }
+  function initialize() {
+    serviceLocationBlacklistController.initialize();
+  }
   function reset() {
     serviceLocationBlacklistController.reset();
   }
   instance = {
     chooseSelector: chooseSelector,
+    initialize: initialize,
     select: select,
     reset: reset,
     setConfig: setConfig
@@ -75292,7 +75635,7 @@ function Capabilities() {
    * Check if a codec is supported by the MediaSource. We use the MediaCapabilities API or the MSE to check.
    * @param {object} basicConfiguration
    * @param {string} type
-   * @return {Promise<>}
+   * @return {Promise}
    */
   function runCodecSupportCheck(basicConfiguration, type) {
     if (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VIDEO) {
@@ -75730,14 +76073,21 @@ function CapabilitiesFilter() {
     if (!period || !period.AdaptationSet || period.AdaptationSet.length === 0) {
       return;
     }
-    period.AdaptationSet = period.AdaptationSet.filter(as => {
+    const removedAdaptationSets = new Set();
+    const adaptationSets = period.AdaptationSet;
+    period.AdaptationSet = adaptationSets.filter(as => {
       if (adapter.getIsTypeOf(as, type)) {
         _filterUnsupportedRepresentationsOfAdaptation(as, type);
       }
       const supported = as.Representation && as.Representation.length > 0;
       if (!supported) {
+        removedAdaptationSets.add(as);
+        const remainingAdaptationSets = adaptationSets.filter(entry => {
+          return entry !== as && adapter.getIsTypeOf(entry, type) && !removedAdaptationSets.has(entry);
+        });
         eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_4__["default"].ADAPTATION_SET_REMOVED_NO_CAPABILITIES, {
-          adaptationSet: as
+          adaptationSet: as,
+          remainingAdaptationSets
         });
         logger.warn(`[CapabilitiesFilter] AdaptationSet with ID ${as.id ? as.id : 'undefined'} and codec ${as.codecs ? as.codecs : 'undefined'} has been removed because of no supported Representation`);
       }
@@ -76286,8 +76636,8 @@ function normalizeCertUrls(raw) {
 /**
  * Deduplicates an array of Certurl descriptor objects by URL + certType combination.
  * Keeps first occurrence order stable.
- * @param {Array<{url:string, certType:string|null}>} list
- * @returns {Array<{url:string, certType:string|null}>}
+ * @param {Array<{url: string, certType: (string|null)}>} list
+ * @returns {Array<{url: string, certType: (string|null)}>}
  */
 function dedupeCertUrls(list) {
   if (!Array.isArray(list) || list.length === 0) {
@@ -77660,6 +78010,9 @@ function LocationSelector() {
     });
     contentSteeringController = (0,_dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
   }
+  function initialize() {
+    blacklistController.initialize();
+  }
   function setConfig(config) {
     if (config.blacklistController) {
       blacklistController = config.blacklistController;
@@ -77718,6 +78071,7 @@ function LocationSelector() {
     blacklistController.reset();
   }
   instance = {
+    initialize,
     select,
     setConfig,
     reset
@@ -81211,14 +81565,14 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-dashjs.Protection = _src_streaming_protection_Protection_js__WEBPACK_IMPORTED_MODULE_2__["default"];
-dashjs.MetricsReporting = _src_streaming_metrics_MetricsReporting_js__WEBPACK_IMPORTED_MODULE_1__["default"];
-dashjs.MediaPlayerFactory = _src_streaming_MediaPlayerFactory_js__WEBPACK_IMPORTED_MODULE_3__["default"];
-dashjs.Debug = _src_core_Debug_js__WEBPACK_IMPORTED_MODULE_4__["default"];
-dashjs.supportsMediaSource = _src_streaming_utils_Capabilities_js__WEBPACK_IMPORTED_MODULE_6__.supportsMediaSource;
-dashjs.Constants = _src_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"];
-dashjs.ExternalSubtitle = _src_streaming_vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_7__["default"];
-/* harmony default export */ __webpack_exports__["default"] = (dashjs);
+_index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"].Protection = _src_streaming_protection_Protection_js__WEBPACK_IMPORTED_MODULE_2__["default"];
+_index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"].MetricsReporting = _src_streaming_metrics_MetricsReporting_js__WEBPACK_IMPORTED_MODULE_1__["default"];
+_index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"].MediaPlayerFactory = _src_streaming_MediaPlayerFactory_js__WEBPACK_IMPORTED_MODULE_3__["default"];
+_index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"].Debug = _src_core_Debug_js__WEBPACK_IMPORTED_MODULE_4__["default"];
+_index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"].supportsMediaSource = _src_streaming_utils_Capabilities_js__WEBPACK_IMPORTED_MODULE_6__.supportsMediaSource;
+_index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"].Constants = _src_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"];
+_index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"].ExternalSubtitle = _src_streaming_vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_7__["default"];
+/* harmony default export */ __webpack_exports__["default"] = (_index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
 }();
 __webpack_exports__ = __webpack_exports__["default"];

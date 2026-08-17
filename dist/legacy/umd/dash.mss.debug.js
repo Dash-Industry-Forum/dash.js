@@ -7884,6 +7884,25 @@ if (DESCRIPTORS && !FUNCTION_NAME_EXISTS) {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/modules/es.global-this.js":
+/*!********************************************************!*\
+  !*** ./node_modules/core-js/modules/es.global-this.js ***!
+  \********************************************************/
+/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
+
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var globalThis = __webpack_require__(/*! ../internals/global-this */ "./node_modules/core-js/internals/global-this.js");
+
+// `globalThis` object
+// https://tc39.es/ecma262/#sec-globalthis
+$({ global: true, forced: globalThis.globalThis !== globalThis }, {
+  globalThis: globalThis
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/modules/es.iterator.constructor.js":
 /*!*****************************************************************!*\
   !*** ./node_modules/core-js/modules/es.iterator.constructor.js ***!
@@ -17351,9 +17370,11 @@ var __webpack_exports__ = {};
   \**************************/
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   MssHandler: function() { return /* reexport safe */ _MssHandler_js__WEBPACK_IMPORTED_MODULE_0__["default"]; }
+/* harmony export */   MssHandler: function() { return /* reexport safe */ _MssHandler_js__WEBPACK_IMPORTED_MODULE_1__["default"]; }
 /* harmony export */ });
-/* harmony import */ var _MssHandler_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MssHandler.js */ "./src/mss/MssHandler.js");
+/* harmony import */ var core_js_modules_es_global_this_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.global-this.js */ "./node_modules/core-js/modules/es.global-this.js");
+/* harmony import */ var _MssHandler_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./MssHandler.js */ "./src/mss/MssHandler.js");
+
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -17388,12 +17409,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
 // Shove both of these into the global scope
-var context = typeof window !== 'undefined' && window || global;
+var context = typeof window !== 'undefined' && window || typeof globalThis !== 'undefined' && globalThis || {};
 var dashjs = context.dashjs;
 if (!dashjs) {
   dashjs = context.dashjs = {};
 }
-dashjs.MssHandler = _MssHandler_js__WEBPACK_IMPORTED_MODULE_0__["default"];
+dashjs.MssHandler = _MssHandler_js__WEBPACK_IMPORTED_MODULE_1__["default"];
 /* harmony default export */ __webpack_exports__["default"] = (dashjs);
 
 __webpack_exports__ = __webpack_exports__["default"];
