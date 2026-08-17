@@ -298,4 +298,65 @@ describe('Utils', () => {
             expect(result.browser).to.have.property('name');
         })
     })
+
+    describe('normalizeKeyId', () => {
+
+        it('should normalize a hyphenated UUID string', () => {
+            expect(Utils.normalizeKeyId('00112233-4455-6677-8899-aabbccddeeff')).to.equal('00112233445566778899aabbccddeeff');
+        })
+
+        it('should normalize an uppercase hyphenated UUID string', () => {
+            expect(Utils.normalizeKeyId('00112233-4455-6677-8899-AABBCCDDEEFF')).to.equal('00112233445566778899aabbccddeeff');
+        })
+
+        it('should normalize a compact lowercase hex string', () => {
+            expect(Utils.normalizeKeyId('00112233445566778899aabbccddeeff')).to.equal('00112233445566778899aabbccddeeff');
+        })
+
+        it('should normalize a compact uppercase hex string', () => {
+            expect(Utils.normalizeKeyId('00112233445566778899AABBCCDDEEFF')).to.equal('00112233445566778899aabbccddeeff');
+        })
+
+        it('should strip braces around a UUID string', () => {
+            expect(Utils.normalizeKeyId('{00112233-4455-6677-8899-aabbccddeeff}')).to.equal('00112233445566778899aabbccddeeff');
+        })
+
+        it('should normalize a Uint8Array', () => {
+            const bytes = Uint8Array.from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]);
+            expect(Utils.normalizeKeyId(bytes)).to.equal('00112233445566778899aabbccddeeff');
+        })
+
+        it('should normalize an ArrayBuffer', () => {
+            const bytes = Uint8Array.from([0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff]);
+            expect(Utils.normalizeKeyId(bytes.buffer)).to.equal('00112233445566778899aabbccddeeff');
+        })
+
+        it('should return null for null', () => {
+            expect(Utils.normalizeKeyId(null)).to.equal(null);
+        })
+
+        it('should return null for undefined', () => {
+            expect(Utils.normalizeKeyId(undefined)).to.equal(null);
+        })
+
+        it('should return null for an empty string', () => {
+            expect(Utils.normalizeKeyId('')).to.equal(null);
+        })
+
+        it('should return null for a malformed string', () => {
+            expect(Utils.normalizeKeyId('not-a-key-id')).to.equal(null);
+        })
+
+        it('should return null for a string that is too short', () => {
+            expect(Utils.normalizeKeyId('00112233-4455-6677-8899-aabbccddee')).to.equal(null);
+        })
+
+        it('should return null for a non-hex string of correct length', () => {
+            expect(Utils.normalizeKeyId('gg112233445566778899aabbccddeeff')).to.equal(null);
+        })
+
+        it('should return null for an unsupported type', () => {
+            expect(Utils.normalizeKeyId(12345)).to.equal(null);
+        })
+    })
 })

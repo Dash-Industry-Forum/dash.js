@@ -683,6 +683,11 @@ function ProtectionController(config) {
                 return;
             }
 
+            // Check if the CDM already reports every key referenced by this PSSH as usable
+            if (_shouldSkipKeySessionForUsableKeys(keySystemMetadata)) {
+                return;
+            }
+
             try {
                 keySystemMetadata.initData = initDataForKS;
                 protectionModel.createKeySession(keySystemMetadata);
@@ -700,6 +705,34 @@ function ProtectionController(config) {
                 error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + (selectedKeySystem ? selectedKeySystem.systemString : null) + '.  needkey/encrypted event contains no initData corresponding to that key system!')
             });
         }
+    }
+
+    /**
+     * Determines whether creating a new key session can be skipped because the CDM already
+     * reports every key ID referenced by this key system's PSSH as usable.
+     * @description Deliberately conservative: unlike areKeyIdsUsable(), this never assumes a key
+     * is usable when there is any uncertainty, since skipping incorrectly would prevent acquiring
+     * a still-missing key. Only an explicit 'usable' status for every referenced key ID skips the request.
+     * @param {object} keySystemMetadata
+     * @return {boolean}
+     * @private
+     */
+    function _shouldSkipKeySessionForUsableKeys(keySystemMetadata) {
+        if (!settings.get().streaming.protection.skipLicenseRequestsForUsableKeys) {
+            return false;
+        }
+
+        const keyIds = CommonEncryption.getKeyIdsForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null);
+        if (!keyIds || keyIds.length === 0 || keyStatusMap.size === 0) {
+            return false;
+        }
+
+        const allKeyIdsUsable = keyIds.every((keyId) => keyStatusMap.get(keyId) === ProtectionConstants.MEDIA_KEY_STATUSES.USABLE);
+        if (allKeyIdsUsable) {
+            logger.debug('DRM: Skipping key session creation - all key IDs referenced by the init data are already usable');
+        }
+
+        return allKeyIdsUsable;
     }
 
     /**

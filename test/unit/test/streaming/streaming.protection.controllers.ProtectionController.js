@@ -224,6 +224,148 @@ describe('ProtectionController', function () {
 
     });
 
+    describe('skipLicenseRequestsForUsableKeys guard', function () {
+        let protectionModelMock, settingsMock;
+        let originalGetPSSHForKeySystem, originalGetKeyIdsForKeySystem;
+        const KID_1 = '00112233445566778899aabbccddeeff';
+        const KID_2 = 'ffeeddccbbaa00998877665544332211';
+
+        function hexToUint8Array(hex) {
+            const bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+            }
+            return bytes;
+        }
+
+        function setKeyStatus(keyId, status) {
+            protectionController.updateKeyStatusesMap({
+                sessionToken: {},
+                parsedKeyStatuses: [{ keyId: hexToUint8Array(keyId), status }]
+            });
+        }
+
+        beforeEach(function () {
+            originalGetPSSHForKeySystem = CommonEncryption.getPSSHForKeySystem;
+            originalGetKeyIdsForKeySystem = CommonEncryption.getKeyIdsForKeySystem;
+
+            const protectionKeyControllerMock = new ProtectionKeyControllerMock();
+            settingsMock = { get: () => ({ streaming: { protection: { skipLicenseRequestsForUsableKeys: true } } }) };
+            protectionModelMock = new ProtectionModelMock({ events: ProtectionEvents, eventBus: eventBus });
+            protectionController = ProtectionController(context).create({
+                protectionKeyController: protectionKeyControllerMock,
+                events: ProtectionEvents,
+                debug: new DebugMock(),
+                protectionModel: protectionModelMock,
+                eventBus: eventBus,
+                constants: Constants,
+                settings: settingsMock
+            });
+
+            // Init data itself is irrelevant here; getKeyIdsForKeySystem is stubbed per test instead
+            CommonEncryption.getPSSHForKeySystem = () => new ArrayBuffer(8);
+        });
+
+        afterEach(function () {
+            CommonEncryption.getPSSHForKeySystem = originalGetPSSHForKeySystem;
+            CommonEncryption.getKeyIdsForKeySystem = originalGetKeyIdsForKeySystem;
+            protectionController.reset();
+        });
+
+        it('should skip creating a session when all referenced key IDs are already usable', function () {
+            CommonEncryption.getKeyIdsForKeySystem = () => [KID_1, KID_2];
+            setKeyStatus(KID_1, 'usable');
+            setKeyStatus(KID_2, 'usable');
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.getSessionTokens()).to.be.empty;
+        });
+
+        it('should create a session when one of several referenced key IDs is missing (multi-key case)', function () {
+            CommonEncryption.getKeyIdsForKeySystem = () => [KID_1, KID_2];
+            setKeyStatus(KID_1, 'usable');
+            // KID_2 has no entry in the key status map at all
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+        });
+
+        ['expired', 'output-restricted', 'status-pending', 'released', 'internal-error'].forEach((status) => {
+            it(`should create a session when one of several referenced key IDs has status "${status}"`, function () {
+                CommonEncryption.getKeyIdsForKeySystem = () => [KID_1, KID_2];
+                setKeyStatus(KID_1, 'usable');
+                setKeyStatus(KID_2, status);
+
+                protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            });
+        });
+
+        it('should create a session when no key IDs can be extracted from the init data (e.g. version 0 PSSH)', function () {
+            CommonEncryption.getKeyIdsForKeySystem = () => [];
+            setKeyStatus(KID_1, 'usable');
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+        });
+
+        it('should create a session when the selected key system has no matching PSSH box', function () {
+            CommonEncryption.getKeyIdsForKeySystem = () => null;
+            setKeyStatus(KID_1, 'usable');
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+        });
+
+        it('should create a session when the key status map is still empty', function () {
+            CommonEncryption.getKeyIdsForKeySystem = () => [KID_1, KID_2];
+            // updateKeyStatusesMap is never called
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+        });
+
+        it('should never skip when the setting is disabled, even if all keys are usable', function () {
+            settingsMock.get = () => ({ streaming: { protection: { skipLicenseRequestsForUsableKeys: false } } });
+            CommonEncryption.getKeyIdsForKeySystem = () => [KID_1, KID_2];
+            setKeyStatus(KID_1, 'usable');
+            setKeyStatus(KID_2, 'usable');
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+        });
+
+        it('should never skip when the setting is left unspecified in the config object', function () {
+            settingsMock.get = () => ({ streaming: { protection: {} } });
+            CommonEncryption.getKeyIdsForKeySystem = () => [KID_1, KID_2];
+            setKeyStatus(KID_1, 'usable');
+            setKeyStatus(KID_2, 'usable');
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+        });
+
+        it('should leave FairPlay/sinf init data (no matching PSSH box) unaffected by the guard', function () {
+            // Simulates the sinf path: getPSSHForKeySystem finds no PSSH for the selected key system,
+            // so createKeySession() never reaches the guard at all.
+            CommonEncryption.getPSSHForKeySystem = () => null;
+            CommonEncryption.getKeyIdsForKeySystem = () => [KID_1];
+            setKeyStatus(KID_1, 'usable');
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'fairplay-kid', sessionType: 'temporary' });
+
+            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+        });
+    });
+
     describe('CMCD integration', function () {
         let protectionModelMock, settingsMock, cmcdControllerMock, customParametersModelMock, protectionKeyControllerMock;
         let xhrMock, requests;

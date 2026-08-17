@@ -287,7 +287,7 @@ function ProtectionKeyController() {
             if (ks.uuid in pssh) {
                 supportedKS.push({
                     ks: ks,
-                    initData: pssh[ks.uuid],
+                    initData: pssh[ks.uuid].box,
                     protData: protData,
                     cdmData: ks.getCDMData(protData ? protData.cdmData : null),
                     sessionId: _getSessionId(protData),

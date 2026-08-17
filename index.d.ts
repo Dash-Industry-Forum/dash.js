@@ -1717,6 +1717,7 @@ export class MediaPlayerSettingClass {
             ignoreEmeEncryptedEvent?: boolean,
             detectPlayreadyMessageFormat?: boolean,
             ignoreKeyStatuses?: boolean,
+            skipLicenseRequestsForUsableKeys?: boolean,
         },
         buffer?: {
             enableSeekDecorrelationFix?: boolean,

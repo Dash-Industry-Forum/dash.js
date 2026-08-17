@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Rotation (Future Keys)</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+    <style>
+        #event-log {
+            height: 220px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+
+<script class="code">
+    var keySessionCount = 0;
+    var licenseRequestCount = 0;
+    var player;
+
+    // Reference content: video/audio encrypted with a new key roughly every 10 seconds
+    // (High Frequency Key Rotation). Each license response includes the current key
+    // plus a number of upcoming "future" keys, so playback can continue across several
+    // crypto periods without a new license request once skipLicenseRequestsForUsableKeys
+    // recognizes those keys are already usable.
+    // Note: this is a shared Irdeto test/staging environment (not production), also used
+    // by Irdeto partners for integration testing.
+    var STREAM_URL = 'https://control-cdn.dev.ott.irdeto.com/dashjs-test-streams/video-content2.mpd';
+    var PROT_DATA = {
+        'com.widevine.alpha': {
+            serverURL: 'https://dub-tctr-control.test.ott.irdeto.com/licenseServer/widevine/v1/irdeto-poc/license?contentId=video-content2'
+        },
+        'com.microsoft.playready': {
+            serverURL: 'https://dub-tctr-control.test.ott.irdeto.com/licenseServer/playready/v1/irdeto-poc/license?contentId=video-content2'
+        }
+    };
+
+    async function init(video, wrapper) {
+        player = dashjs.MediaPlayer().create();
+
+        var protectionEvents = dashjs.Protection.events;
+        player.on(protectionEvents.KEY_SESSION_CREATED, function (e) {
+            if (e.error) {
+                log('KEY_SESSION_CREATED error: ' + e.error);
+                return;
+            }
+            keySessionCount++;
+            updateCounters();
+            log('KEY_SESSION_CREATED (MediaKeySession #' + keySessionCount + ')');
+        });
+        player.on(protectionEvents.LICENSE_REQUEST_COMPLETE, function (e) {
+            if (e.error) {
+                log('LICENSE_REQUEST_COMPLETE error: ' + e.error);
+                return;
+            }
+            licenseRequestCount++;
+            updateCounters();
+            log('LICENSE_REQUEST_COMPLETE (#' + licenseRequestCount + ')');
+        });
+        player.on(dashjs.MediaPlayer.events.ERROR, function (e) {
+            log('ERROR: ' + JSON.stringify(e.error));
+        });
+
+        document.getElementById('attach_button').onclick = function () {
+            attach();
+        };
+
+        player.initialize(video, null, true);
+        player.setProtectionData(PROT_DATA);
+
+        await createControlBar(player, video, wrapper);
+        attach();
+    }
+
+    function attach() {
+        clearLog();
+        keySessionCount = 0;
+        licenseRequestCount = 0;
+        updateCounters();
+
+        var skipUsableKeys = document.getElementById('skip-usable-keys-checkbox').checked;
+        player.updateSettings({
+            streaming: {
+                protection: {
+                    skipLicenseRequestsForUsableKeys: skipUsableKeys
+                }
+            }
+        });
+        player.attachSource(STREAM_URL);
+    }
+
+    function updateCounters() {
+        document.getElementById('key-session-count').textContent = keySessionCount;
+        document.getElementById('license-request-count').textContent = licenseRequestCount;
+    }
+
+    function log(message) {
+        var logPanel = document.getElementById('event-log');
+        var entry = document.createElement('div');
+        entry.textContent = '[' + new Date().toISOString().substr(11, 8) + '] ' + message;
+        logPanel.appendChild(entry);
+        logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    function clearLog() {
+        document.getElementById('event-log').innerHTML = '';
+    }
+</script>
+
+<div class="sample-content-custom">
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="skip-usable-keys-checkbox" checked>
+                <label class="form-check-label" for="skip-usable-keys-checkbox">
+                    streaming.protection.skipLicenseRequestsForUsableKeys
+                </label>
+            </div>
+            <button type="button" class="btn btn-primary mt-2" id="attach_button">(Re)attach source</button>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="sample-video-wrapper" id="video-wrapper">
+                <video></video>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">MediaKeySessions created</div>
+                <div class="sample-metrics-body"><span id="key-session-count">0</span></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">License requests completed</div>
+                <div class="sample-metrics-body"><span id="license-request-count">0</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Protection events</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-log" id="event-log"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    initSamplePage({
+        title: 'Key Rotation (Future Keys)',
+        description: 'Plays Widevine/PlayReady-protected content whose content key rotates roughly every 10 seconds. Each license response also includes a number of upcoming ("future") keys, so once a key has been reported as usable by the CDM, dash.js does not need to request a license for it again. Toggle <code>streaming.protection.skipLicenseRequestsForUsableKeys</code> below, then use "(Re)attach source" to restart playback and compare the counters: with the setting enabled (the default), both counters should stop growing once the CDM already holds the upcoming keys; with it disabled, a new MediaKeySession and license request is issued for every crypto period. <br><br>Note: this reference stream and license servers run on a shared Irdeto test/staging environment (not production), also used by Irdeto partners for integration testing.',
+        category: 'DRM',
+        httpWarning: true,
+        layout: 'custom',
+        onInit: (video, container, wrapper) => init(video, wrapper)
+    });
+</script>
+</body>
+</html>
