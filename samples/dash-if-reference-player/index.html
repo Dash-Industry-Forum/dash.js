@@ -20,7 +20,7 @@
     <script src="../../dist/modern/umd/dash.mss.debug.js"></script>
 
     <!-- Chart.js (UMD, exposes global Chart) -->
-    <script src="vendor/chart.js/chart.umd.js"></script>
+    <script src="../lib/chartjs/chart.umd.js"></script>
 </head>
 <body>
 <div class="main-container">
@@ -108,6 +108,10 @@
                 <div class="option-card">
                     <div class="option-card-header">Playback</div>
                     <div class="option-card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="opt-autoload">
+                            <label class="form-check-label" for="opt-autoload">Auto Load</label>
+                        </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="opt-autoplay" checked>
                             <label class="form-check-label" for="opt-autoplay">Auto Play</label>

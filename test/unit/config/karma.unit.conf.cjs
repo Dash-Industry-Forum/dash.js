@@ -1,4 +1,8 @@
 module.exports = function (config) {
+    // Coverage instrumentation slows down compilation and execution considerably,
+    // so it is only enabled when the COVERAGE environment variable is set.
+    const useCoverage = !!process.env.COVERAGE;
+
     config.set({
 
         // base path that will be used to resolve all patterns (eg. files, exclude)
@@ -25,7 +29,7 @@ module.exports = function (config) {
         ],
 
         // list of files / patterns to exclude
-        exclude: [],
+        exclude: ['test/unit/test/**/__screenshots__/**'],
 
         client: {
             useIframe: false,
@@ -46,7 +50,7 @@ module.exports = function (config) {
         // test results reporter to use
         // possible values: 'dots', 'progress'
         // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-        reporters: ['mocha', 'coverage', 'junit'],
+        reporters: useCoverage ? ['mocha', 'coverage', 'junit'] : ['mocha', 'junit'],
 
         junitReporter: {
             outputDir: 'test/unit/results/junit', // results will be saved as $outputDir/$browserName.xml
@@ -75,7 +79,7 @@ module.exports = function (config) {
                             {
                                 loader: 'babel-loader',
                                 options: {
-                                    plugins: ['istanbul']
+                                    plugins: useCoverage ? ['istanbul'] : []
                                 }
                             }
                         ]
@@ -83,14 +87,16 @@ module.exports = function (config) {
                 ]
             },
             mode: 'development',
-            cache: false,
+            cache: {
+                type: 'filesystem'
+            },
             resolve: {
                 fallback: {
                     stream: require.resolve('stream-browserify'),
                     timers: require.resolve('timers-browserify'),
                 },
             },
-            devtool: 'inline-source-map', // Enable source maps for debugging
+            devtool: 'eval-cheap-module-source-map', // Enable source maps for debugging
         },
 
         // web server port
@@ -109,9 +115,23 @@ module.exports = function (config) {
         // enable / disable watching file and executing tests whenever any file changes
         autoWatch: false,
 
+        customLaunchers: {
+            // Firefox throttles timers in background windows (tests run in a popup because
+            // useIframe is false), which stalls async tests for seconds at a time.
+            // These prefs disable the throttling.
+            FirefoxHeadlessNoThrottling: {
+                base: 'FirefoxHeadless',
+                prefs: {
+                    'dom.min_background_timeout_value': 4,
+                    'dom.min_background_timeout_value_without_budget_throttling': 4,
+                    'dom.timeout.enable_budget_timer_throttling': false
+                }
+            }
+        },
+
         // start these browsers
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: ['ChromeHeadless', 'FirefoxHeadless'],
+        browsers: ['ChromeHeadless', 'FirefoxHeadlessNoThrottling'],
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
@@ -119,6 +139,6 @@ module.exports = function (config) {
 
         // Concurrency level
         // how many browser should be started simultaneous
-        concurrency: 1
+        concurrency: Infinity
     })
 }

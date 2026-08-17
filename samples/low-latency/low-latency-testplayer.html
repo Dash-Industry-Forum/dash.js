@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low latency testplayer</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../lib/chartjs/chart.umd.js"></script>
+    <script src="../lib/sweetalert2/sweetalert2.all.min.js"></script>
+
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+
+    <style>
+        #metric-chart {
+            max-height: 400px;
+            min-height: 400px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sample-content-custom">
+    <div class="sample-warning">
+        <ul class="mb-0">
+            <li>The additional ABR rules listed under "ABR rules" are disabled automatically for L2A-LL and LoL+. Both L2A-LL and LoL+ are standalone rules.</li>
+            <li>It is not possible to switch between the ABR rules dynamically. To change the ABR rule, reload the stream.</li>
+        </ul>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Manifest URL</span>
+                <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
+                       value="https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd">
+                <button type="button" id="load-button" class="btn btn-primary">Load stream</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-7">
+            <div class="sample-video-wrapper" id="video-wrapper">
+                <video></video>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Wall clock reference time</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-clock">
+                        <span id="min"> </span><span id="sec"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="sample-metrics mt-3">
+                <div class="sample-metrics-header">Metrics</div>
+                <div class="sample-metrics-body">
+                    <div class="metric-row">
+                        <span class="metric-label">Seconds behind live</span>
+                        <span class="metric-value" id="latency-tag">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Video buffer</span>
+                        <span class="metric-value" id="buffer-tag">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Video index downloading</span>
+                        <span class="metric-value"><span id="video-index">-</span>/<span id="video-max-index">-</span></span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Video bitrate (kbit/s)</span>
+                        <span class="metric-value" id="video-bitrate">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Playback rate</span>
+                        <span class="metric-value" id="playbackrate-tag">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="sample-side-panel">
+                <div class="sample-side-panel-header">Settings</div>
+                <div class="sample-side-panel-body" style="max-height:none;">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6>General</h6>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Target latency (sec)</span>
+                                <input type="number" id="target-latency" class="form-control" value="3" step="0.5">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Max drift (sec)</span>
+                                <input type="number" id="max-drift" class="form-control" value="0" step="0.5" min="0">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Live threshold (sec)</span>
+                                <input type="number" id="live-threshold" class="form-control" value="30" step="0.5" min="0">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Maximum catch-up playback rate</span>
+                                <input type="number" id="max-catchup-playback-rate" class="form-control" value="0.1" step="0.05" max="0.5" min="0.0">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Minimum catch-up playback rate</span>
+                                <input type="number" id="min-catchup-playback-rate" class="form-control" value="-0.1" step="0.05" max="0.0" min="-0.5">
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <h6>Step parameters</h6>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Start min</span>
+                                <input type="number" id="step-start-min" class="form-control" value="1" step="0.05" max="30.0" min="0.0">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Start max</span>
+                                <input type="number" id="step-start-max" class="form-control" value="1" step="0.05" max="30.0" min="0.0">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Stop min</span>
+                                <input type="number" id="step-stop-min" class="form-control" value="0.1" step="0.05" max="30.0" min="0.0">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Stop max</span>
+                                <input type="number" id="step-stop-max" class="form-control" value="0.1" step="0.05" max="30.0" min="0.0">
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <h6>ABR rules</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-throughput" checked>
+                                <label class="form-check-label" for="abr-throughput">ThroughputRule</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-bola" checked>
+                                <label class="form-check-label" for="abr-bola">BolaRule</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-insufficient" checked>
+                                <label class="form-check-label" for="abr-insufficient">InsufficientBufferRule</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-switch" checked>
+                                <label class="form-check-label" for="abr-switch">SwitchHistoryRule</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-dropped" checked>
+                                <label class="form-check-label" for="abr-dropped">DroppedFramesRule</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-abandon">
+                                <label class="form-check-label" for="abr-abandon">AbandonRequestRule</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-lolp">
+                                <label class="form-check-label" for="abr-lolp">LoLPRule</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-l2a">
+                                <label class="form-check-label" for="abr-l2a">L2aRule</label>
+                            </div>
+
+                            <h6 class="mt-4">Catch-up mechanism</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="catchup" value="liveCatchupModeDefault" id="liveCatchupModeDefault" checked>
+                                <label class="form-check-label" for="liveCatchupModeDefault">Default</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="catchup" value="liveCatchupModeLoLP" id="liveCatchupModeLoLP">
+                                <label class="form-check-label" for="liveCatchupModeLoLP">LoL+ based</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="catchup" value="liveCatchupModeStep" id="liveCatchupModeStep">
+                                <label class="form-check-label" for="liveCatchupModeStep">Step based</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="live-catchup-enabled" checked>
+                                <label class="form-check-label" for="live-catchup-enabled">Enabled</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <h6>Additional APIs</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="network-api">
+                                <label class="form-check-label" for="network-api">Network Information API</label>
+                            </div>
+
+                            <h6 class="mt-4">Download time estimation</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="download-estimation" value="lowLatencyDownloadTimeCalculationModeDownloadedData" id="abrFetchThroughputCalculationDownloadedData">
+                                <label class="form-check-label" for="abrFetchThroughputCalculationDownloadedData">Data chunks</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="download-estimation" value="lowLatencyDownloadTimeCalculationModeMoofParsing" id="abrFetchThroughputCalculationMoofParsing" checked>
+                                <label class="form-check-label" for="abrFetchThroughputCalculationMoofParsing">moof parsing</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="download-estimation" value="abrFetchThroughputCalculationAAST" id="abrFetchThroughputCalculationAAST">
+                                <label class="form-check-label" for="abrFetchThroughputCalculationAAST">AAST decisioning</label>
+                            </div>
+
+                            <h6 class="mt-4">Throughput estimation mode</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation" value="throughputCalculationModeEwma" id="throughputCalculationModeEwma" checked>
+                                <label class="form-check-label" for="throughputCalculationModeEwma">Exponential weighted moving average (EWMA)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation" value="throughputCalculationModeZlema" id="throughputCalculationModeZlema">
+                                <label class="form-check-label" for="throughputCalculationModeZlema">Zero-latency exponential moving average (ZLEMA)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation" value="throughputCalculationModeArithmeticMean" id="throughputCalculationModeArithmeticMean">
+                                <label class="form-check-label" for="throughputCalculationModeArithmeticMean">Arithmetic mean</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation" value="throughputCalculationModeByteSizeWeightedArithmeticMean" id="throughputCalculationModeByteSizeWeightedArithmeticMean">
+                                <label class="form-check-label" for="throughputCalculationModeByteSizeWeightedArithmeticMean">Byte size weighted arithmetic mean</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation" value="throughputCalculationModeDateWeightedArithmeticMean" id="throughputCalculationModeDateWeightedArithmeticMean">
+                                <label class="form-check-label" for="throughputCalculationModeDateWeightedArithmeticMean">Date weighted arithmetic mean</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation" value="throughputCalculationModeHarmonicMean" id="throughputCalculationModeHarmonicMean">
+                                <label class="form-check-label" for="throughputCalculationModeHarmonicMean">Harmonic mean</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation" value="throughputCalculationModeByteSizeWeightedHarmonicMean" id="throughputCalculationModeByteSizeWeightedHarmonicMean">
+                                <label class="form-check-label" for="throughputCalculationModeByteSizeWeightedHarmonicMean">Byte size weighted harmonic mean</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation" value="throughputCalculationModeDateWeightedHarmonicMean" id="throughputCalculationModeDateWeightedHarmonicMean">
+                                <label class="form-check-label" for="throughputCalculationModeDateWeightedHarmonicMean">Date weighted harmonic mean</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="button" id="apply-settings-button" class="btn btn-primary">Apply</button>
+                            <button type="button" id="export-settings-button" class="btn btn-outline-secondary">Copy settings URL</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-lg-9">
+            <canvas id="metric-chart"></canvas>
+        </div>
+        <div class="col-lg-3">
+            <div class="sample-side-panel">
+                <div class="sample-side-panel-header">Chart settings</div>
+                <div class="sample-side-panel-body" style="max-height:none;">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="chart-enabled" checked>
+                        <label class="form-check-label" for="chart-enabled">Enabled</label>
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Interval (ms)</span>
+                        <input type="number" id="chart-interval" class="form-control" value="300" step="50" min="200">
+                    </div>
+                    <div class="input-group input-group-sm mb-3">
+                        <span class="input-group-text">Number of data points</span>
+                        <input type="number" id="chart-number-of-entries" class="form-control" value="30" step="1">
+                    </div>
+                    <button type="button" id="chart-settings-button" class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script class="code">
+    var METRIC_INTERVAL = 300;
+
+    var player = null;
+    var controlbar = null;
+    var video = null;
+    var chart = null;
+    var chartTimeout = null;
+    var chartReportingInterval = 300;
+    var chartNumberOfEntries = 30;
+    var chartData = {
+        playbackTime: 0,
+        lastTimeStamp: null
+    };
+    var domElements = {
+        settings: {},
+        metrics: {},
+        chart: {}
+    };
+
+    function init() {
+        setDomElements();
+        adjustSettingsByUrlParameters();
+        registerEventHandler();
+        startIntervalHandler();
+        setupLineChart();
+    }
+
+    function setDomElements() {
+        domElements.settings.targetLatency = document.getElementById('target-latency');
+        domElements.settings.maxDrift = document.getElementById('max-drift');
+        domElements.settings.liveThreshold = document.getElementById('live-threshold');
+        domElements.settings.maxCatchupPlaybackRate = document.getElementById('max-catchup-playback-rate');
+        domElements.settings.minCatchupPlaybackRate = document.getElementById('min-catchup-playback-rate');
+        domElements.settings.catchupEnabled = document.getElementById('live-catchup-enabled');
+
+        domElements.settings.minStartStepParameters = document.getElementById('step-start-min');
+        domElements.settings.maxStartStepParameters = document.getElementById('step-start-max');
+        domElements.settings.minStopStepParameters = document.getElementById('step-stop-min');
+        domElements.settings.maxStopStepParameters = document.getElementById('step-stop-max');
+
+        domElements.settings.abrThroughputRule = document.getElementById('abr-throughput');
+        domElements.settings.abrBolaRule = document.getElementById('abr-bola');
+        domElements.settings.abrInsufficientBufferRule = document.getElementById('abr-insufficient');
+        domElements.settings.abrDroppedFramesRule = document.getElementById('abr-dropped');
+        domElements.settings.abrAbandonRequestRule = document.getElementById('abr-abandon');
+        domElements.settings.abrSwitchHistoryRule = document.getElementById('abr-switch');
+        domElements.settings.abrLoLPRule = document.getElementById('abr-lolp');
+        domElements.settings.abrL2ARule = document.getElementById('abr-l2a');
+        domElements.settings.additionalApisNetworkInformation = document.getElementById('network-api');
+
+        domElements.chart.metricChart = document.getElementById('metric-chart');
+        domElements.chart.enabled = document.getElementById('chart-enabled');
+        domElements.chart.interval = document.getElementById('chart-interval');
+        domElements.chart.numberOfEntries = document.getElementById('chart-number-of-entries');
+
+        domElements.metrics.latencyTag = document.getElementById('latency-tag');
+        domElements.metrics.playbackrateTag = document.getElementById('playbackrate-tag');
+        domElements.metrics.bufferTag = document.getElementById('buffer-tag');
+        domElements.metrics.sec = document.getElementById('sec');
+        domElements.metrics.min = document.getElementById('min');
+        domElements.metrics.videoMaxIndex = document.getElementById('video-max-index');
+        domElements.metrics.videoIndex = document.getElementById('video-index');
+        domElements.metrics.videoBitrate = document.getElementById('video-bitrate');
+    }
+
+    async function load() {
+        if (player) {
+            unregisterDashEventHandler();
+            if (controlbar) {
+                controlbar.destroy();
+                controlbar = null;
+            }
+            player.reset();
+            chartData.playbackTime = 0;
+            chartData.lastTimeStamp = null;
+        }
+
+        var url = document.getElementById('manifest').value;
+
+        video = document.querySelector('video');
+        player = dashjs.MediaPlayer().create();
+        registerDashEventHandler();
+        applyParameters();
+        player.initialize(video, url, true);
+        controlbar = await createControlBar(player, video, document.getElementById('video-wrapper'));
+    }
+
+    function applyParameters() {
+        if (!player) {
+            return;
+        }
+
+        var settings = getCurrentSettings();
+
+        player.updateSettings({
+            debug: {
+                logLevel: dashjs.Debug.LOG_LEVEL_DEBUG
+            },
+            streaming: {
+                delay: {
+                    liveDelay: settings.targetLatency
+                },
+                liveCatchup: {
+                    enabled: settings.catchupEnabled,
+                    maxDrift: settings.maxDrift,
+                    liveThreshold: settings.liveThreshold,
+                    playbackRate: {
+                        min: settings.minCatchupPlaybackRate,
+                        max: settings.maxCatchupPlaybackRate
+                    },
+                    step: {
+                        start: { min: settings.minStartStepParameters, max: settings.maxStartStepParameters },
+                        stop: { min: settings.minStopStepParameters, max: settings.maxStopStepParameters }
+                    },
+                    mode: settings.catchupMechanism
+                },
+                abr: {
+                    rules: {
+                        throughputRule: { active: settings.abrThroughputRule },
+                        bolaRule: { active: settings.abrBolaRule },
+                        insufficientBufferRule: { active: settings.abrInsufficientBufferRule },
+                        switchHistoryRule: { active: settings.abrSwitchHistoryRule },
+                        droppedFramesRule: { active: settings.abrDroppedFramesRule },
+                        abandonRequestsRule: { active: settings.abrAbandonRequestRule },
+                        l2ARule: { active: settings.abrL2ARule },
+                        loLPRule: { active: settings.abrLoLPRule }
+                    },
+                    throughput: {
+                        averageCalculationMode: settings.throughputEstimation,
+                        lowLatencyDownloadTimeCalculationMode: settings.downloadTimeEstimation,
+                        useNetworkInformationApi: {
+                            fetch: settings.additionalApisNetworkInformation
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function exportSettings() {
+        var settings = getCurrentSettings();
+        var url = document.location.origin + document.location.pathname + '?';
+
+        for (var [key, value] of Object.entries(settings)) {
+            url += '&' + key + '=' + value;
+        }
+
+        url = encodeURI(url);
+
+        navigator.clipboard.writeText(url).then(function () {
+            Swal.fire({
+                position: 'top-end',
+                icon: 'success',
+                title: 'Settings URL copied to clipboard',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        });
+    }
+
+    function adjustSettingsByUrlParameters() {
+        var urlSearchParams = new URLSearchParams(window.location.search);
+        var params = Object.fromEntries(urlSearchParams.entries());
+
+        if (!params) {
+            return;
+        }
+
+        if (params.targetLatency !== undefined) {
+            domElements.settings.targetLatency.value = parseFloat(params.targetLatency).toFixed(1);
+        }
+        if (params.maxDrift !== undefined) {
+            domElements.settings.maxDrift.value = parseFloat(params.maxDrift).toFixed(1);
+        }
+        if (params.liveThreshold !== undefined) {
+            domElements.settings.liveThreshold.value = parseFloat(params.liveThreshold).toFixed(1);
+        }
+        if (params.minCatchupPlaybackRate !== undefined) {
+            domElements.settings.minCatchupPlaybackRate.value = parseFloat(params.minCatchupPlaybackRate).toFixed(2);
+        }
+        if (params.maxCatchupPlaybackRate !== undefined) {
+            domElements.settings.maxCatchupPlaybackRate.value = parseFloat(params.maxCatchupPlaybackRate).toFixed(2);
+        }
+        if (params.minStartStepParameters !== undefined) {
+            domElements.settings.minStartStepParameters.value = parseFloat(params.minStartStepParameters).toFixed(2);
+        }
+        if (params.maxStartStepParameters !== undefined) {
+            domElements.settings.maxStartStepParameters.value = parseFloat(params.maxStartStepParameters).toFixed(2);
+        }
+        if (params.minStopStepParameters !== undefined) {
+            domElements.settings.minStopStepParameters.value = parseFloat(params.minStopStepParameters).toFixed(2);
+        }
+        if (params.maxStopStepParameters !== undefined) {
+            domElements.settings.maxStopStepParameters.value = parseFloat(params.maxStopStepParameters).toFixed(2);
+        }
+        if (params.abrThroughputRule !== undefined) {
+            domElements.settings.abrThroughputRule.checked = params.abrThroughputRule === 'true';
+        }
+        if (params.abrBolaRule !== undefined) {
+            domElements.settings.abrBolaRule.checked = params.abrBolaRule === 'true';
+        }
+        if (params.abrInsufficientBufferRule !== undefined) {
+            domElements.settings.abrInsufficientBufferRule.checked = params.abrInsufficientBufferRule === 'true';
+        }
+        if (params.abrAbandonRequestRule !== undefined) {
+            domElements.settings.abrAbandonRequestRule.checked = params.abrAbandonRequestRule === 'true';
+        }
+        if (params.abrSwitchHistoryRule !== undefined) {
+            domElements.settings.abrSwitchHistoryRule.checked = params.abrSwitchHistoryRule === 'true';
+        }
+        if (params.abrDroppedFramesRule !== undefined) {
+            domElements.settings.abrDroppedFramesRule.checked = params.abrDroppedFramesRule === 'true';
+        }
+        if (params.abrL2ARule !== undefined) {
+            domElements.settings.abrL2ARule.checked = params.abrL2ARule === 'true';
+        }
+        if (params.abrLoLPRule !== undefined) {
+            domElements.settings.abrLoLPRule.checked = params.abrLoLPRule === 'true';
+        }
+        if (params.catchupEnabled !== undefined) {
+            domElements.settings.catchupEnabled.checked = params.catchupEnabled === 'true';
+        }
+        if (params.catchupMechanism !== undefined) {
+            document.getElementById(params.catchupMechanism).checked = true;
+        }
+        if (params.throughputEstimation !== undefined) {
+            document.getElementById(params.throughputEstimation).checked = true;
+        }
+        if (params.downloadTimeEstimation !== undefined) {
+            document.getElementById(params.downloadTimeEstimation).checked = true;
+        }
+        if (params.additionalApisNetworkInformation !== undefined) {
+            domElements.settings.additionalApisNetworkInformation.checked = params.additionalApisNetworkInformation === 'true';
+        }
+    }
+
+    function getCurrentSettings() {
+        return {
+            targetLatency: parseFloat(domElements.settings.targetLatency.value),
+            liveThreshold: parseFloat(domElements.settings.liveThreshold.value),
+            maxDrift: parseFloat(domElements.settings.maxDrift.value),
+            minCatchupPlaybackRate: parseFloat(domElements.settings.minCatchupPlaybackRate.value),
+            maxCatchupPlaybackRate: parseFloat(domElements.settings.maxCatchupPlaybackRate.value),
+            minStartStepParameters: parseFloat(domElements.settings.minStartStepParameters.value),
+            maxStartStepParameters: parseFloat(domElements.settings.maxStartStepParameters.value),
+            minStopStepParameters: parseFloat(domElements.settings.minStopStepParameters.value),
+            maxStopStepParameters: parseFloat(domElements.settings.maxStopStepParameters.value),
+            abrThroughputRule: domElements.settings.abrThroughputRule.checked,
+            abrBolaRule: domElements.settings.abrBolaRule.checked,
+            abrInsufficientBufferRule: domElements.settings.abrInsufficientBufferRule.checked,
+            abrDroppedFramesRule: domElements.settings.abrDroppedFramesRule.checked,
+            abrAbandonRequestRule: domElements.settings.abrAbandonRequestRule.checked,
+            abrSwitchHistoryRule: domElements.settings.abrSwitchHistoryRule.checked,
+            abrLoLPRule: domElements.settings.abrLoLPRule.checked,
+            abrL2ARule: domElements.settings.abrL2ARule.checked,
+            catchupMechanism: document.querySelector('input[name="catchup"]:checked').value,
+            catchupEnabled: domElements.settings.catchupEnabled.checked,
+            downloadTimeEstimation: document.querySelector('input[name="download-estimation"]:checked').value,
+            throughputEstimation: document.querySelector('input[name="throughput-estimation"]:checked').value,
+            additionalApisNetworkInformation: domElements.settings.additionalApisNetworkInformation.checked
+        };
+    }
+
+    function setupLineChart() {
+        var data = {
+            datasets: [
+                {
+                    label: 'Live delay',
+                    borderColor: '#3944bc',
+                    backgroundColor: '#3944bc'
+                },
+                {
+                    label: 'Buffer level',
+                    borderColor: '#d0312d',
+                    backgroundColor: '#d0312d'
+                },
+                {
+                    label: 'Playback rate',
+                    borderColor: '#3cb043',
+                    backgroundColor: '#3cb043'
+                }
+            ]
+        };
+        var config = {
+            type: 'line',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 0
+                },
+                scales: {
+                    y: {
+                        min: 0,
+                        ticks: {
+                            stepSize: 0.5
+                        },
+                        title: {
+                            display: true,
+                            text: 'Value in seconds'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Value in seconds'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Live data'
+                    }
+                }
+            }
+        };
+
+        // eslint-disable-next-line no-undef
+        chart = new Chart(domElements.chart.metricChart, config);
+
+        enableChart(true);
+    }
+
+    function enableChart(enabled) {
+        if (!enabled && chartTimeout) {
+            clearTimeout(chartTimeout);
+            chartTimeout = null;
+            return;
+        }
+
+        if (chartTimeout && enabled) {
+            return;
+        }
+
+        updateChartData();
+    }
+
+    function updateChartData() {
+        chartTimeout = setTimeout(function () {
+            if (player && player.isReady()) {
+                var data = chart.data;
+                if (data.datasets.length > 0) {
+                    if (data.labels.length > chartNumberOfEntries) {
+                        data.labels.shift();
+                    }
+
+                    if (chartData.lastTimeStamp) {
+                        chartData.playbackTime += Date.now() - chartData.lastTimeStamp;
+                    }
+
+                    data.labels.push(parseFloat(chartData.playbackTime / 1000).toFixed(3));
+
+                    chartData.lastTimeStamp = Date.now();
+
+                    for (var i = 0; i < data.datasets.length; i++) {
+                        if (data.datasets[i].data.length > chartNumberOfEntries) {
+                            data.datasets[i].data.shift();
+                        }
+                    }
+                    data.datasets[0].data.push(parseFloat(player.getCurrentLiveLatency()).toFixed(2));
+
+                    var dashMetrics = player.getDashMetrics();
+                    data.datasets[1].data.push(parseFloat(dashMetrics.getCurrentBufferLevel('video')).toFixed(2));
+
+                    data.datasets[2].data.push(parseFloat(player.getPlaybackRate()).toFixed(2));
+
+                    chart.update();
+                }
+            }
+            updateChartData();
+        }, chartReportingInterval);
+    }
+
+    function adjustChartSettings() {
+        if (!isNaN(parseInt(domElements.chart.interval.value))) {
+            chartReportingInterval = parseInt(domElements.chart.interval.value);
+        }
+
+        if (!isNaN(parseInt(domElements.chart.numberOfEntries.value))) {
+            chartNumberOfEntries = parseInt(domElements.chart.numberOfEntries.value);
+        }
+
+        enableChart(domElements.chart.enabled.checked);
+    }
+
+    function startIntervalHandler() {
+        setInterval(function () {
+            if (player && player.isReady()) {
+                var dashMetrics = player.getDashMetrics();
+
+                var currentLatency = parseFloat(player.getCurrentLiveLatency());
+                domElements.metrics.latencyTag.innerHTML = currentLatency + ' secs';
+
+                var currentPlaybackRate = player.getPlaybackRate();
+                domElements.metrics.playbackrateTag.innerHTML = Math.round(currentPlaybackRate * 1000) / 1000;
+
+                var currentBuffer = dashMetrics.getCurrentBufferLevel('video');
+                domElements.metrics.bufferTag.innerHTML = currentBuffer + ' secs';
+
+                var d = new Date();
+                var seconds = d.getSeconds();
+                domElements.metrics.sec.innerHTML = (seconds < 10 ? '0' : '') + seconds;
+                var minutes = d.getMinutes();
+                domElements.metrics.min.innerHTML = (minutes < 10 ? '0' : '') + minutes + ':';
+            }
+        }, METRIC_INTERVAL);
+    }
+
+    function registerEventHandler() {
+        document.getElementById('apply-settings-button').addEventListener('click', function () {
+            applyParameters();
+            Swal.fire({
+                position: 'top-end',
+                icon: 'success',
+                title: 'Settings applied',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        });
+
+        document.getElementById('load-button').addEventListener('click', function () {
+            load();
+        });
+
+        document.getElementById('export-settings-button').addEventListener('click', function () {
+            exportSettings();
+        });
+
+        document.getElementById('chart-settings-button').addEventListener('click', function () {
+            adjustChartSettings();
+            Swal.fire({
+                position: 'top-end',
+                icon: 'success',
+                title: 'Settings applied',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        });
+    }
+
+    function registerDashEventHandler() {
+        player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, onRepresentationSwitch, this);
+    }
+
+    function unregisterDashEventHandler() {
+        player.off(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, onRepresentationSwitch, this);
+    }
+
+    function onRepresentationSwitch(e) {
+        try {
+            if (e.mediaType === 'video') {
+                var numberOfRepresentations = player.getRepresentationsByType('video').length;
+                domElements.metrics.videoMaxIndex.innerHTML = numberOfRepresentations;
+                domElements.metrics.videoIndex.innerHTML = e.currentRepresentation.index + 1;
+                var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
+                domElements.metrics.videoBitrate.innerHTML = bitrate;
+            }
+        } catch (err) {
+            // ignore
+        }
+    }
+</script>
+
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+
+    initSamplePage({
+        title: 'Low latency testplayer',
+        description: 'Shows how to use dash.js to play low latency streams. All low-latency related settings, such as the different ABR algorithms (LoL+, L2A), are selectable. Adjust the settings and reload the stream to see their effect. For more information see the <a href="https://dashif.org/dash.js/pages/usage/low-latency.html" target="_blank" rel="noopener">documentation</a>.',
+        category: 'Live',
+        layout: 'custom',
+        onInit: () => init()
+    });
+</script>
+</body>
+</html>

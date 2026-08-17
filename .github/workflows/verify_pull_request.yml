@@ -4,38 +4,123 @@ on:
     pull_request:
         branches:
             - 'development'
+        paths-ignore:
+            - '*.md'
+            - 'docs/**'
+            - 'proposals/**'
+            - 'LICENSES/**'
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
 
 jobs:
-    merge_build_and_unit_test:
+    validate_and_unit_test:
         runs-on: ubuntu-24.04
         steps:
             # actions/checkout on pull_request events checks out the merge commit (refs/pull/<PR#>/merge),
             # which is the PR branch merged into the target branch (development). This ensures the build
             # and tests verify the code as it would look after merging.
             -   name: Checkout repository
-                uses: actions/checkout@v4
+                uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
-            -   name: Build and run unit tests
-                run: npm run build
+            -   name: Validate and run unit tests
+                run: npm run ci:verify
+
+    build_modern_artifact:
+        runs-on: ubuntu-24.04
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
+            -   name: Setup dash.js
+                uses: ./.github/actions/setup-dashjs
+            -   name: Build modern bundle
+                run: npm run webpack-build-modern
+            -   name: Upload modern dist artifacts
+                uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+                with:
+                    name: dist-modern
+                    path: dist/
+                    retention-days: 1
+
+    build_legacy_bundle:
+        needs: validate_and_unit_test
+        runs-on: ubuntu-24.04
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
+            -   name: Setup dash.js
+                uses: ./.github/actions/setup-dashjs
+            -   name: Build legacy bundle
+                run: npm run webpack-build-legacy
+            -   name: Upload legacy dist artifacts
+                uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+                with:
+                    name: dist-legacy
+                    path: dist/
+                    retention-days: 1
+
+    run_compliance_tests:
+        needs:
+            - build_modern_artifact
+            - build_legacy_bundle
+        runs-on: ubuntu-24.04
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
+            -   name: Setup dash.js
+                uses: ./.github/actions/setup-dashjs
+            -   name: Download modern dist artifacts
+                uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+                with:
+                    name: dist-modern
+                    path: dist/
+            -   name: Download legacy dist artifacts
+                uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+                with:
+                    name: dist-legacy
+                    path: dist/
+            -   name: Run compliance tests
+                run: npm run test:compliance
 
     run_functional_test_single_stream_lambdatest:
         if: github.event.pull_request.head.repo.fork == false
+        needs:
+            - validate_and_unit_test
+            - build_modern_artifact
         runs-on: ubuntu-24.04
         steps:
             # actions/checkout on pull_request events checks out the merge commit (refs/pull/<PR#>/merge),
             # which is the PR branch merged into the target branch (development). This ensures the
             # functional tests verify the code as it would look after merging.
             -   name: Checkout repository
-                uses: actions/checkout@v4
+                uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
             -   name: Install karma-webdriver-launcher
-                run: npm install karma-webdriver-launcher
-            -   name: Build modern bundle
-                run: npm run webpack-build-modern
+                # CI-only launcher for LambdaTest, deliberately not a devDependency
+                run: npm install karma-webdriver-launcher # zizmor: ignore[adhoc-packages]
+            -   name: Download dist artifacts
+                uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+                with:
+                    name: dist-modern
+                    path: dist/
             -   name: Start Tunnel
-                uses: LambdaTest/LambdaTest-tunnel-action@v2
+                uses: LambdaTest/LambdaTest-tunnel-action@1952f0f9958e5510872d1484ce54c48d1c1796c1 # v2.0.1
                 id: tunnel
                 with:
                     user: ${{ secrets.LT_USERNAME }}

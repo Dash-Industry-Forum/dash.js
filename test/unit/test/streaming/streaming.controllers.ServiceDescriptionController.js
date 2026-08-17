@@ -86,7 +86,6 @@ describe('ServiceDescriptionController', () => {
             serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
 
             const currentSettings = serviceDescriptionController.getServiceDescriptionSettings();
-            console.log('currentSettings', currentSettings)
             expect(currentSettings.liveDelay).to.be.NaN;
             expect(currentSettings.liveCatchup.maxDrift).to.be.NaN;
             expect(currentSettings.liveCatchup.playbackRate.min).to.be.NaN;

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Headless license acquisition</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+
+    <style>
+        #event-log {
+            height: 320px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sample-content-custom">
+
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <button type="button" id="get-license-btn" class="btn btn-primary">Get license</button>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Protection events</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-log" id="event-log"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script class="code">
+    function init() {
+        document.getElementById('get-license-btn').addEventListener('click', getLicense);
+    }
+
+    function getLicense() {
+        clearLog();
+
+        // Configuration for the Axinom test content (single key, PlayReady + Widevine).
+        var config = {
+            // From the manifest.
+            KID: '6e5a1d26-2757-47d7-8046-eaa5d1d34b5a',
+            audioPssh: 'AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQblodJidXR9eARuql0dNLWg==',
+            videoPssh: 'AAAANHBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAABQIARIQblodJidXR9eARuql0dNLWg==',
+            // From protData['com.widevine.alpha'].
+            serverURL: 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
+            httpRequestHeaders: {
+                'X-AxDRM-Message': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE'
+            },
+            audioRobustness: 'SW_SECURE_CRYPTO',
+            videoRobustness: 'SW_SECURE_DECODE'
+        };
+
+        // Create the MediaPlayer and obtain the ProtectionController. initialize()
+        // (without a view or source) sets up the internal capabilities required by
+        // the ProtectionController before any playback is attached.
+        var mediaPlayer = dashjs.MediaPlayer().create();
+        mediaPlayer.initialize();
+        var protectionController = mediaPlayer.getProtectionController();
+
+        // Set the protection data for the Widevine key system.
+        var protData = {
+            'com.widevine.alpha': config
+        };
+        protectionController.setProtectionData(protData);
+
+        // Build the audio/video info describing the protected content.
+        var audioInfo = {
+            codec: 'audio/mp4;codecs="mp4a.40.2"',
+            type: 'audio',
+            contentProtection: [{
+                value: 'Widevine',
+                schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
+                pssh: {
+                    __prefix: 'cenc',
+                    __text: config.audioPssh
+                },
+                'cenc:default_KID': config.KID
+            }]
+        };
+        var videoInfo = {
+            codec: 'video/mp4;codecs="avc1.640015"',
+            type: 'video',
+            contentProtection: [{
+                value: 'Widevine',
+                schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
+                pssh: {
+                    __prefix: 'cenc',
+                    __text: config.videoPssh
+                },
+                'cenc:default_KID': config.KID
+            }]
+        };
+
+        var sessionToken = null;
+
+        // Protection events are exposed on dashjs.Protection.events.
+        var protectionEvents = dashjs.Protection.events;
+
+        // Check whether the requested key system is available.
+        mediaPlayer.on(protectionEvents.KEY_SYSTEM_ACCESS_COMPLETE, function (e) {
+            if (e.error) {
+                log('KEY_SYSTEM_ACCESS_COMPLETE error: ' + e.error);
+            } else {
+                log('KEY_SYSTEM_ACCESS_COMPLETE: key system access granted.');
+            }
+        });
+
+        // Retrieve the session token once the key session has been created.
+        mediaPlayer.on(protectionEvents.KEY_SESSION_CREATED, function (e) {
+            if (e.error) {
+                log('KEY_SESSION_CREATED error: ' + e.error);
+            } else {
+                sessionToken = e.data;
+                log('KEY_SESSION_CREATED: session created.');
+            }
+        });
+
+        // Check the license request/response result.
+        mediaPlayer.on(protectionEvents.LICENSE_REQUEST_COMPLETE, function (e) {
+            if (e.error) {
+                log('LICENSE_REQUEST_COMPLETE error: ' + e.error);
+            } else {
+                log('LICENSE_REQUEST_COMPLETE: license received.');
+            }
+        });
+
+        // Inspect the key statuses once the license has been stored.
+        mediaPlayer.on(protectionEvents.KEY_STATUSES_CHANGED, function (e) {
+            log('KEY_STATUSES_CHANGED:');
+            e.data.session.keyStatuses.forEach(function (status, keyId) {
+                var sessionId = sessionToken ? sessionToken.session.sessionId : 'unknown';
+                log('  status = ' + status + ' for session ' + sessionId);
+            });
+        });
+
+        // Ensure the session has been closed so it can be reloaded afterwards.
+        mediaPlayer.on(protectionEvents.KEY_SESSION_CLOSED, function (e) {
+            if (e.error) {
+                log('KEY_SESSION_CLOSED error: ' + e.error);
+            } else {
+                log('KEY_SESSION_CLOSED: session closed.');
+            }
+        });
+
+        // Listen for errors.
+        mediaPlayer.on(protectionEvents.KEY_ERROR, function (e) {
+            log('KEY_ERROR: ' + JSON.stringify(e.error));
+        });
+        mediaPlayer.on(dashjs.MediaPlayer.events.ERROR, function (e) {
+            log('ERROR: ' + JSON.stringify(e.error));
+        });
+
+        // Register the media info, then trigger the key system selection and
+        // license acquisition. This mirrors the internal streaming flow where
+        // initializeForMedia() collects the media infos and
+        // handleKeySystemFromManifest() starts the license retrieval process.
+        log('Initializing protection for the video content...');
+        protectionController.initializeForMedia(videoInfo);
+        protectionController.handleKeySystemFromManifest();
+    }
+
+    function log(message) {
+        var logPanel = document.getElementById('event-log');
+        var entry = document.createElement('div');
+        entry.textContent = message;
+        logPanel.appendChild(entry);
+        logPanel.scrollTop = logPanel.scrollHeight;
+        console.log('[DASHJS-PROTECTION-PLUGIN] ' + message);
+    }
+
+    function clearLog() {
+        document.getElementById('event-log').innerHTML = '';
+    }
+</script>
+
+<script type="module">
+    import { initSamplePage } from '../lib/sample-template.js';
+
+    initSamplePage({
+        title: 'Headless license acquisition',
+        description: 'Acquires a DRM license using the ProtectionController API directly, without video playback. Demonstrates the full EME key session lifecycle: key system access, session creation, license request, and key status changes. Open the browser console for the raw event objects.',
+        category: 'DRM',
+        httpWarning: true,
+        layout: 'custom',
+        onInit: () => init()
+    });
+</script>
+</body>
+</html>

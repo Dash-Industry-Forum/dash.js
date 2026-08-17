@@ -110,14 +110,26 @@ function CapabilitiesFilter() {
             return;
         }
 
-        period.AdaptationSet = period.AdaptationSet.filter((as) => {
+        const removedAdaptationSets = new Set();
+        const adaptationSets = period.AdaptationSet;
+
+        period.AdaptationSet = adaptationSets.filter((as) => {
             if (adapter.getIsTypeOf(as, type)) {
                 _filterUnsupportedRepresentationsOfAdaptation(as, type);
             }
             const supported = as.Representation && as.Representation.length > 0;
             if (!supported) {
+                removedAdaptationSets.add(as);
+
+                const remainingAdaptationSets = adaptationSets.filter((entry) => {
+                    return entry !== as &&
+                        adapter.getIsTypeOf(entry, type) &&
+                        !removedAdaptationSets.has(entry);
+                });
+
                 eventBus.trigger(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, {
-                    adaptationSet: as
+                    adaptationSet: as,
+                    remainingAdaptationSets
                 });
                 logger.warn(`[CapabilitiesFilter] AdaptationSet with ID ${as.id ? as.id : 'undefined'} and codec ${as.codecs ? as.codecs : 'undefined'} has been removed because of no supported Representation`);
             }

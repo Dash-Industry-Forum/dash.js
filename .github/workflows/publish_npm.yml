@@ -1,32 +1,120 @@
 name: Publish to NPM
+run-name: ${{ inputs.dry_run && 'DRY RUN' || format('Publish ({0})', inputs.tag) }}
 
 on:
     workflow_dispatch:
+        inputs:
+            dry_run:
+                description: "Rehearse only: full pipeline, but npm publish runs with --dry-run"
+                type: boolean
+                default: true
+            tag:
+                description: "npm dist-tag to publish under ('next' for release candidates)"
+                type: string
+                default: "latest"
 
 jobs:
+    verify:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+
+        steps:
+            -   uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
+            -   uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+                with:
+                    node-version: 24
+                    cache: "npm"
+
+            -   name: Install
+                run: npm ci
+
+            # The pack in the build job runs with --ignore-scripts, so the prepack hook (and
+            # with it the prebuild -> ci:verify chain) never runs in this workflow. Gate explicitly.
+            -   name: Run unit tests and lint
+                run: npm run ci:verify
+
+    build:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+
+        steps:
+            -   uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
+            -   uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+                with:
+                    node-version: 24
+                    # Slower, but without cache poisoning risk in the job producing the artifact
+                    package-manager-cache: false
+
+            # npm versions are immutable - a published version number can never be reused.
+            # Fail fast before anything is built or shipped.
+            -   name: Check version can be published
+                env:
+                    NPM_TAG: ${{ inputs.tag }}
+                run: |
+                    VERSION=$(jq -r .version package.json)
+                    if [ -n "$(npm view "dashjs@$VERSION" version 2>/dev/null)" ]; then
+                        echo "::error::dashjs@$VERSION already exists on npm - bump the version in package.json first."
+                        exit 1
+                    fi
+                    case "$VERSION" in
+                        *-*)
+                            if [ "$NPM_TAG" = "latest" ]; then
+                                echo "::error::$VERSION is a prerelease - publish it under a different dist-tag (e.g. 'next'), not 'latest'."
+                                exit 1
+                            fi
+                            ;;
+                    esac
+
+            -   name: Install
+                run: npm ci
+
+            # Runs build:dist itself, packs the tarball with --ignore-scripts, asserts its
+            # contents, installs it into a consumer app and runs a playback smoke test.
+            # Publish only runs if this passes.
+            -   name: Pack and verify tarball
+                run: npm run test:package
+
+            -   name: Upload verified tarball
+                uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+                with:
+                    name: npm-package
+                    path: dashjs-*.tgz
+                    retention-days: 1
+
+    # Publishes via npm trusted publishing (OIDC). Runs no repository or dependency code:
+    # no checkout, no npm ci - only the verified tarball from the build job.
     publish:
         runs-on: ubuntu-latest
+        needs: [ verify, build ]
 
         permissions:
             contents: read
             id-token: write
 
         steps:
-            -   uses: actions/checkout@v4
-            -   uses: actions/setup-node@v4
+            -   name: Download verified tarball
+                uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
                 with:
-                    node-version: 20
-                    cache: "npm"
+                    name: npm-package
+
+            # Node 24 bundles npm >= 11.5.1, which is required for trusted publishing (OIDC).
+            -   uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+                with:
+                    node-version: 24
                     registry-url: "https://registry.npmjs.org"
+                    package-manager-cache: false
 
-            -   name: Update npm
-                run: npm install -g npm@latest
-
-            -   name: Install
-                run: npm ci
-
-            -   name: Build
-                run: npm run build
-
-            -   name: Publish
-                run: npm publish
+            # Publishing the tarball path skips prepack, so the exact verified artifact ships.
+            # --ignore-scripts also blocks any publish lifecycle hooks.
+            -   name: Publish verified tarball
+                env:
+                    NPM_TAG: ${{ inputs.tag }}
+                run: npm publish dashjs-*.tgz --ignore-scripts --tag "$NPM_TAG" ${{ inputs.dry_run && '--dry-run' || '' }}

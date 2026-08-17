@@ -225,6 +225,10 @@
     vertical-align: middle;
 }
 
+.cb-static-indicator {
+    color: #8a8aa0;
+}
+
 /* ---- Thumbnail preview ---- */
 .cb-thumbnail-container {
     position: absolute;
@@ -265,7 +269,7 @@
     border: 1px solid #2d2d50;
     border-radius: 6px;
     min-width: 180px;
-    max-height: min(400px, 60vh);
+    max-height: min(280px, 50vh);
     overflow-y: auto;
     padding: 0.25rem 0;
     margin-bottom: 0.5rem;

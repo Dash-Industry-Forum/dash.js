@@ -1,7 +1,7 @@
 {
   "browsers": [
-    "chrome_custom",
     "firefox_custom",
+    "chrome_custom",
     "safari_custom"
   ],
   "hostname": "localhost",

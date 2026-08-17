@@ -500,7 +500,8 @@ function DashAdapter() {
                 calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
             }
 
-            const duration = eventBox.event_duration / timescale;
+            // An event_duration of 0xFFFFFFFF indicates an unknown duration (e.g. ID3 events, see https://aomediacodec.github.io/id3-emsg/)
+            const duration = eventBox.event_duration === 0xFFFFFFFF ? NaN : eventBox.event_duration / timescale;
             const id = eventBox.id;
             const messageData = eventBox.message_data;
 
@@ -859,6 +860,10 @@ function DashAdapter() {
 
     function reset() {
         voPeriods = [];
+    }
+
+    function destroy() {
+        cea608parser = null;
     }
 
     /**
@@ -1315,6 +1320,7 @@ function DashAdapter() {
         applyPatchToManifest,
         areMediaInfosEqual,
         convertAdaptationToMediaInfo,
+        destroy,
         getAllMediaInfoForType,
         getAvailabilityStartTime,
         getBandwidthForRepresentation,

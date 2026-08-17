@@ -26,30 +26,22 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            -   uses: actions/checkout@v4
+            -   uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+                with:
+                    persist-credentials: false
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
             -   name: Run build
-                run: npm run build
+                run: npm run build:dist
             -   name: Find and Replace
                 if: inputs.deploy_type == 'samples'
-                uses: jacobtomlinson/gha-find-replace@v2
+                uses: jacobtomlinson/gha-find-replace@f1069b438f125e5395d84d1c6fd3b559a7880cb5 # 3.0.5
                 env:
                     replacement_string: ${{ format('{0} - commit <a href="https://github.com/Dash-Industry-Forum/dash.js/commit/{1}">{2}</a>', github.ref_name, github.sha, github.sha)}}
                 with:
                     find: "<!-- commit-info -->"
                     replace: ${{env.replacement_string}}
                     include: "samples/dash-if-reference-player*/index.html"
-            -   name: Build all samples
-                if: inputs.deploy_type == 'samples'
-                run: |
-                    for sample in "network-interceptor"; do
-                      echo "Building sample: $sample"
-                      cd samples/$sample
-                      npm install
-                      npm run build
-                      rm -rf node_modules
-                    done
             -   name: Build JSDoc
                 if: inputs.deploy_type == 'build'
                 run: npm run doc
@@ -69,7 +61,7 @@ jobs:
                     mkdir -p "$ENVNAME"
                     cp -R docs/jsdoc "$ENVNAME/jsdoc" && cp -R dist/modern/umd/* "$ENVNAME" && cp -R dist/* index.d.ts "$ENVNAME"
             -   name: Install SSH Key
-                uses: shimataro/ssh-key-action@v2
+                uses: shimataro/ssh-key-action@87a8f067114a8ce263df83e9ed5c849953548bc3 # v2.8.1
                 with:
                     key: ${{ secrets.private_key }}
                     known_hosts: unnecessary

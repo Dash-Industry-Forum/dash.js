@@ -1,58 +1,41 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
-    <title>CMCD Reporting from manifest</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMCD v1 reporting from manifest</title>
 
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
-    <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="../lib/main.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
 
     <style>
-        video {
-            width: 640px;
-            height: 360px;
-        }
-
-        #start, #receive {
-            height: 500px;
-            margin-top: 20px;
-            font-size: 10px;
-        }
-
-        .input-group {
-            align-items: center;
-            gap: 1.5rem;
-
-            .checkbox-and-text {
-                display: flex;
-                gap: 4px;
-            }
-        }
-
         figure.cdn-selection {
-            margin: 0 0 0 30px;
+            margin: 0 0 0 20px;
             display: inline-block;
+            text-align: center;
         }
 
         img.cdn-selection {
-            width: 70px;
+            width: 60px;
         }
 
-        .border {
-            border: 2px solid #dee2e6 !important;
+        .cdn-selection .figure-caption {
+            font-size: 0.75rem;
+            color: var(--rp-text-muted);
         }
 
-        #cdn-selection-container, #location-selection-container {
-            margin: 30px 0 0 0;
-        }
-
-        #trace {
-            height: 500px;
-            margin-top: 20px;
-            font-size: 10px;
+        #mpd-output pre {
+            background: var(--rp-bg-primary);
+            border: 1px solid var(--rp-border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.75rem;
+            max-height: 400px;
+            overflow: auto;
         }
     </style>
 
@@ -67,12 +50,13 @@
         let cdnSelectionImgDomElements = {};
         let locationSelectionImgDomElements = {};
 
-        function init() {
+        async function init(video, wrapper) {
             player = dashjs.MediaPlayer().create();
             document.getElementById('load-button').addEventListener('click', function () {
                 _load();
-            })
-            player.initialize(document.querySelector("video"), null, true);
+                _loadMPDContent();
+            });
+            player.initialize(video, null, true);
 
             player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, null);
             player.on(dashjs.MediaPlayer.events.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, null);
@@ -80,6 +64,7 @@
             player.on(dashjs.MediaPlayer.events.BASE_URLS_UPDATED, _onBaseUrlsUpdated, null);
             player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, _onManifestLoaded, null);
             player.on(CMCD_DATA_GENERATED, handleCmcdDataGeneratedEvent);
+            await createControlBar(player, video, wrapper);
         }
 
 
@@ -97,7 +82,6 @@
         }
 
         function getKeysForQueryMode(event) {
-            console.log(event);
             var cmcdData = {};
             var cmcdString = event.cmcdString;
 
@@ -303,12 +287,11 @@
             }
         }
 
-        async function  _loadMPDContent() {
+        async function _loadMPDContent() {
             var mpdOutput = document.getElementById('mpd-output');
             let mpdContent;
             mpdOutput.innerHTML = '';
             try {
-                const parser = new DOMParser();
                 const url = './mpds/basic-cmcd-config.mpd';
                 mpdContent = await fetch(url);
                 mpdContent = await mpdContent.text();
@@ -326,169 +309,126 @@
             }
         }
 
-        function initialize() {
-            document.getElementById('load-button').addEventListener('click', function () {
-                _loadMPDContent();
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            initialize();
-        });
-
     </script>
 </head>
 <body>
 
-<main>
-    <div class="container py-4">
-        <header class="pb-3 mb-4 border-bottom">
-            <img class=""
-                 src="../lib/img/dashjs-logo.png"
-                 width="200">
-        </header>
-        <div class="row">
-            <h1>CMCD Reporting from manifest</h1>
-            <div class="col-md-12">
-                <div class="h-100 p-5 border rounded-3">
-                    <h4>Description</h4>
-                    <p>
-                        This sample shows how to configure Common Media Client Data (CMCD - CTA 5004) reporting from manifest file.
-                        Also it shows how to enable or disable the configuration for CMCD from manifest, being able to configure it
-                        from player settings and ignore whatever the manifest configures for CMCD.<br />
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
 
-                        Now, the CMCD could be sent for these type of requests: segment, mpd, xlink, steering and other.
-                    </p>
-                    <p>
-                        If <b>applyParametersFromMpd</b> is true, the player will use the CMCD settings from the MPD if specified, ignoring whatever the player's own settings for CMCD.<br />
-                        If <b>applyParametersFromMpd</b> is false, the player won't use the CMCD settings from the MPD ignoring whatever the MPD has set for CMCD.
-                    </p>
+    var content = document.createElement('div');
+    content.innerHTML = `
+        <div class="sample-controls" style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.85rem; cursor:pointer;">
+                <input type="checkbox" id="applyParametersFromMpd" checked> applyParametersFromMpd
+            </label>
+            <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.85rem; cursor:pointer;">
+                <input type="checkbox" id="cmcdJS"> CMCD from player settings
+            </label>
+            <button type="button" id="load-button" class="btn btn-sm btn-primary">Load MPD</button>
+        </div>
 
-                    <p>
-                        In this sample, the source mpd has configurations for sending CMCD (see the <b>MPD Source</b> section after loading the MPD).
-                        Also, the player settings has CMCD configurations that will be load if "applyParametersFromMpd" checkbox is false and "CMCD from settings" is true.<br />
-
-                        If both checkbox are not selected, CMCD won't be sent eventhough it's configured in the settings or manifest file.
-                    </p>
+        <div class="sample-content">
+            <div class="sample-content-main">
+                <div class="sample-video-wrapper" id="video-wrapper">
+                    <video muted></video>
+                </div>
+                <div style="margin-top:0.5rem;">
+                    <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; display:block;">CMCD Data</label>
+                    <textarea class="sample-log" placeholder="Sent CMCD data will be displayed here" id="trace" style="min-height:200px;"></textarea>
                 </div>
             </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="input-group mb-3">
-                    <div class="checkbox-and-text">
-                        <input type="checkbox" id="applyParametersFromMpd" checked>applyParametersFromMpd</input>
-                    </div>
-                    <div class="checkbox-and-text">
-                        <input type="checkbox" id="cmcdJS">CMCD from player settings</input>
-                    </div>
-                    <button type="button" id="load-button" class="btn btn-success">
-                        Load MPD
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-md-6">
-                <video controls="true" muted></video>
-            </div>
-            <div class="col-md-6">
-                <div class="h-100 p-5 border rounded-3">
-                    <h5>CDN Selection</h5>
-                    <div id="cdn-selection-container"></div>
-                    <h5 style="margin-top: 20px">Location Selection</h5>
-                    <div id="location-selection-container">
+            <div class="sample-content-side">
+                <div class="sample-side-panel">
+                    <div class="sample-side-panel-header">CDN &amp; Location Selection</div>
+                    <div class="sample-side-panel-body">
+                        <strong style="font-size:0.8rem;">CDN Selection</strong>
+                        <div id="cdn-selection-container" style="margin:0.5rem 0 1rem;"></div>
+                        <strong style="font-size:0.8rem;">Location Selection</strong>
+                        <div id="location-selection-container" style="margin:0.5rem 0 0;"></div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="form-floating">
-                    <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
-                            id="trace"></textarea>
-                    <label for="trace">CMCD Data</label>
-                </div>
+
+        <div class="sample-metrics mb-3">
+            <div class="sample-metrics-header">MPD Source</div>
+            <div class="sample-metrics-body">
+                <div id="mpd-output"></div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
-                <p style=" font-weight: bold; font-size: 1.1em">MPD Source</p>
-                <div id="mpd-output" class="border"></div>
-            </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-md-6">
-                <div class="h-100 p-5 border rounded-3">
-                    <h5> Fragment Requests</h5>
+
+        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+            <div class="sample-metrics mb-3" style="flex:1; min-width:280px;">
+                <div class="sample-metrics-header">Fragment Requests</div>
+                <div class="sample-metrics-body">
                     <div class="table-responsive">
-                        <table class="table table-sm">
+                        <table class="sample-metric-table">
                             <thead>
-                            <tr>
-                                <th scope="col">Type</th>
-                                <th scope="col">Service Location</th>
-                                <th scope="col">Request URL</th>
-                            </tr>
+                                <tr>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Service Location</th>
+                                    <th scope="col">Request URL</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td>Audio</td>
-                                <td id="audio-service-location"></td>
-                                <td id="audio-request-url"></td>
-                            </tr>
-                            <tr>
-                                <td>Video</td>
-                                <td id="video-service-location"></td>
-                                <td id="video-request-url"></td>
-                            </tr>
+                                <tr>
+                                    <td>Audio</td>
+                                    <td id="audio-service-location"></td>
+                                    <td id="audio-request-url"></td>
+                                </tr>
+                                <tr>
+                                    <td>Video</td>
+                                    <td id="video-service-location"></td>
+                                    <td id="video-request-url"></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="h-100 p-5 border rounded-3">
-                    <h5> Manifest Requests</h5>
+            <div class="sample-metrics mb-3" style="flex:1; min-width:280px;">
+                <div class="sample-metrics-header">Manifest Requests</div>
+                <div class="sample-metrics-body">
                     <div class="table-responsive">
-                        <table class="table table-sm">
+                        <table class="sample-metric-table">
                             <thead>
-                            <tr>
-                                <th scope="col">Service Location</th>
-                                <th scope="col">Request URL</th>
-                            </tr>
+                                <tr>
+                                    <th scope="col">Service Location</th>
+                                    <th scope="col">Request URL</th>
+                                </tr>
                             </thead>
                             <tbody>
-                            <tr>
-                                <td id="manifest-service-location"></td>
-                                <td id="manifest-request-url"></td>
-                            </tr>
+                                <tr>
+                                    <td id="manifest-service-location"></td>
+                                    <td id="manifest-request-url"></td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            <div class="col-md-12 mt-2">
-                <div class="h-100 p-5 border rounded-3">
-                    <h5> Steering Data</h5>
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
+        </div>
+
+        <div class="sample-metrics mb-3">
+            <div class="sample-metrics-header">Steering Data</div>
+            <div class="sample-metrics-body">
+                <div class="table-responsive">
+                    <table class="sample-metric-table">
+                        <thead>
                             <tr>
                                 <th scope="col">Attribute</th>
                                 <th scope="col">Value</th>
                             </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
+                        </thead>
+                        <tbody>
                             <tr>
                                 <td>Timestamp</td>
                                 <td id="steering-request-timestamp"></td>
                             </tr>
                             <tr>
                                 <td>Request URL</td>
-                                <td>
-                                    <span id="steering-request-url"></span>
-                                </td>
+                                <td><span id="steering-request-url"></span></td>
                             </tr>
                             <tr>
                                 <td>Response - Version</td>
@@ -504,37 +444,43 @@
                             </tr>
                             <tr>
                                 <td>Response - Pathway Clones</td>
-                                <td>
-                                    <pre><span id="steering-pathway-cloning"></span></pre>
-                                </td>
+                                <td><pre style="margin:0; font-size:0.75rem;"><span id="steering-pathway-cloning"></span></pre></td>
                             </tr>
                             <tr>
                                 <td>Response - TTL</td>
                                 <td><span id="steering-ttl"></span></td>
                             </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="code-output"></div>
-            </div>
-        </div>
-        <footer class="pt-3 mt-4 text-muted border-top">
-            &copy; DASH-IF
-        </footer>
-    </div>
-</main>
+    `;
 
+    var descriptionHtml = '<p>This sample shows how to configure Common Media Client Data (CMCD - CTA-5004) reporting from a manifest file. '
+        + 'It also shows how to enable or disable the configuration for CMCD from the manifest, being able to configure it '
+        + 'from player settings and ignore whatever the manifest configures for CMCD.</p>'
+        + '<p>If <b>applyParametersFromMpd</b> is true, the player will use the CMCD settings from the MPD if specified, ignoring the player\'s own settings. '
+        + 'If false, the player won\'t use the CMCD settings from the MPD.</p>'
+        + '<p>In this sample, the source MPD has configurations for sending CMCD (see the <b>MPD Source</b> section after loading). '
+        + 'The player settings also have CMCD configurations that will be loaded if "applyParametersFromMpd" is unchecked and "CMCD from player settings" is checked. '
+        + 'If both checkboxes are not selected, CMCD won\'t be sent even though it\'s configured in the settings or manifest file.</p>';
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        init();
+    var descEl = document.createElement('div');
+    descEl.innerHTML = descriptionHtml;
+
+    initSamplePage({
+        title: 'CMCD v1 reporting from manifest',
+        description: descEl,
+        category: 'CMCD',
+        layout: 'custom',
+        content: content,
+        onInit: (video, container, wrapper) => {
+            video = container.querySelector('video');
+            wrapper = container.querySelector('#video-wrapper');
+            init(video, wrapper);
+        }
     });
 </script>
-<script src="../highlighter.js"></script>
 </body>
 </html>

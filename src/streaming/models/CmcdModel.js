@@ -72,7 +72,8 @@ function CmcdModel() {
         _rebufferingStartTime = {},
         _rebufferingDuration = {},
         _streamType,
-        _streamingFormat;
+        _streamingFormat,
+        _topBitrateCache;
 
     let context = this.context;
 
@@ -300,10 +301,19 @@ function CmcdModel() {
 
     function _getTopBitrateByType(mediaInfo) {
         try {
+            // Within a single request's data build the same representation list backs both tb and
+            // tpb. Reuse the result so the list is rebuilt once per mediaInfo, not per key.
+            if (_topBitrateCache && _topBitrateCache.has(mediaInfo)) {
+                return _topBitrateCache.get(mediaInfo);
+            }
             const bitrates = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => {
                 return rep.bitrateInKbit
             });
-            return Math.max(...bitrates)
+            const tb = Math.max(...bitrates);
+            if (_topBitrateCache) {
+                _topBitrateCache.set(mediaInfo, tb);
+            }
+            return tb;
         } catch (e) {
             return null;
         }
@@ -730,6 +740,10 @@ function CmcdModel() {
     }
 
     function deriveCmcdDataForRequest(request) {
+        // Share one top-bitrate computation across this request's data build (tb and tpb both
+        // resolve it from the representation list). Scoped to the call, so a later request still
+        // recomputes and runtime setting changes remain reflected.
+        _topBitrateCache = new Map();
         try {
             _updateLastMediaTypeRequest(request.type, request.mediaType);
             let cmcdData = {};
@@ -753,6 +767,8 @@ function CmcdModel() {
             return cmcdData;
         } catch (e) {
             return null;
+        } finally {
+            _topBitrateCache = null;
         }
     }
 

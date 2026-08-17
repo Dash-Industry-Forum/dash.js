@@ -54,6 +54,10 @@ function LocationSelector() {
         contentSteeringController = ContentSteeringController(context).getInstance();
     }
 
+    function initialize() {
+        blacklistController.initialize();
+    }
+
     function setConfig(config) {
         if (config.blacklistController) {
             blacklistController = config.blacklistController;
@@ -121,6 +125,7 @@ function LocationSelector() {
     }
 
     instance = {
+        initialize,
         select,
         setConfig,
         reset

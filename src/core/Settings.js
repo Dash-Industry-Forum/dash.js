@@ -61,6 +61,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *        },
  *        streaming: {
  *            abandonLoadTimeout: 10000,
+ *            seekDurationBackoff: 0.5,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
@@ -69,6 +70,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
+ *            ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
  *            enableManifestDurationMismatchFix: true,
  *            parseInbandPrft: false,
  *            enableManifestTimescaleMismatchFix: false,
@@ -238,6 +240,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *             abr: {
  *                 limitBitrateByPortal: false,
  *                 usePixelRatioInLimitBitrateByPortal: false,
+ *                 hybridSwitchBufferTime: 12,
  *                rules: {
  *                     throughputRule: {
  *                         active: true
@@ -780,6 +783,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
+ * @property {number} [hybridSwitchBufferTime=12]
+ * When the throughput rule and the Bola rule are both active, this value defines the buffer level in seconds when the player will switch from throughput to Bola.
+ *
  * @property {module:Settings~AbrRules} [rules]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time we switch to a dynamic mode.
  * In the dynamic mode either ThroughputRule or BolaRule are active but not both at the same time.
@@ -1038,6 +1044,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
+ * @property {number} [seekDurationBackoff=0.5]
+ * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of last period - seekDurationBackoff).
+ *
+ * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
+ * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and seek to the exact end of the content.
  * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
@@ -1054,6 +1065,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
+ * @property {boolean} [ignoreFinalStaticManifestOnDynamicToStaticTransition=false]
+ * Set to true if dash.js should ignore the final static manifest when a stream transitions from dynamic to static (legacy behavior up to v5.2.0). When set to false the duration, the seekable range and the segment information are derived from the final static manifest.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
@@ -1207,6 +1220,7 @@ function Settings() {
         },
         streaming: {
             abandonLoadTimeout: 10000,
+            seekDurationBackoff: 0.5,
             wallclockTimeUpdateInterval: 100,
             manifestUpdateRetryInterval: 100,
             liveUpdateTimeThresholdInMilliseconds: 0,
@@ -1215,6 +1229,7 @@ function Settings() {
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             applyContentSteering: true,
+            ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
             enableManifestDurationMismatchFix: true,
             parseInbandPrft: false,
             enableManifestTimescaleMismatchFix: false,
@@ -1402,6 +1417,7 @@ function Settings() {
                 usePixelRatioInLimitBitrateByPortal: false,
                 limitBitrateByPortalMinimum: 0,
                 enableSupplementalPropertyAdaptationSetSwitching: true,
+                hybridSwitchBufferTime: 12,
                 rules: {
                     throughputRule: {
                         active: true,

@@ -3,6 +3,8 @@ import AdapterMock from '../../mocks/AdapterMock.js';
 import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
 import Settings from '../../../../src/core/Settings.js';
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
+import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
 
 import {expect} from 'chai';
 
@@ -10,20 +12,25 @@ let adapterMock;
 let capabilitiesFilter;
 let settings;
 let capabilitiesMock;
-let customParametersModel = CustomParametersModel({}).getInstance();
+let customParametersModel;
+let context;
+let eventBus;
 
 describe('CapabilitiesFilter', function () {
     beforeEach(function () {
+        context = {};
         adapterMock = new AdapterMock();
         adapterMock.getIsTypeOf = function (as, type) {
             return (type === 'audio' && as.mimeType === 'audio/mp4') || (type === 'video' && as.mimeType === 'video/mp4');
         };
 
-        settings = Settings({}).getInstance();
+        settings = Settings(context).getInstance();
         capabilitiesMock = new CapabilitiesMock();
+        customParametersModel = CustomParametersModel(context).getInstance();
+        eventBus = EventBus(context).getInstance();
         customParametersModel.reset();
 
-        capabilitiesFilter = CapabilitiesFilter({}).getInstance();
+        capabilitiesFilter = CapabilitiesFilter(context).getInstance();
 
         capabilitiesFilter.setConfig({
             adapter: adapterMock,
@@ -31,6 +38,18 @@ describe('CapabilitiesFilter', function () {
             settings: settings,
             customParametersModel
         });
+    });
+
+    afterEach(function () {
+        if (eventBus) {
+            eventBus.reset();
+        }
+        if (settings) {
+            settings.reset();
+        }
+        if (customParametersModel) {
+            customParametersModel.reset();
+        }
     });
 
     describe('filterUnsupportedFeatures', function () {
@@ -107,6 +126,75 @@ describe('CapabilitiesFilter', function () {
                         done();
                     })
                     .catch((e) => {
+                        done(e);
+                    });
+            });
+
+            it('should include remaining same-type AdaptationSets in removal event payload', function (done) {
+                const adaptationSet1 = {
+                    id: '1',
+                    mimeType: 'audio/mp4',
+                    Representation: [
+                        {
+                            mimeType: 'audio/mp4',
+                            codecs: 'mp4a.40.1',
+                            audioSamplingRate: '48000'
+                        }
+                    ]
+                };
+                const adaptationSet2 = {
+                    id: '2',
+                    mimeType: 'audio/mp4',
+                    Representation: [
+                        {
+                            mimeType: 'audio/mp4',
+                            codecs: 'mp4a.40.2',
+                            audioSamplingRate: '48000'
+                        }
+                    ]
+                };
+                const adaptationSet3 = {
+                    id: '3',
+                    mimeType: 'audio/mp4',
+                    Representation: [
+                        {
+                            mimeType: 'audio/mp4',
+                            codecs: 'mp4a.40.5',
+                            audioSamplingRate: '48000'
+                        }
+                    ]
+                };
+
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [adaptationSet1, adaptationSet2, adaptationSet3]
+                    }]
+                };
+
+                const removedEvents = [];
+                const onAdaptationSetRemoved = function (e) {
+                    removedEvents.push(e);
+                };
+
+                capabilitiesMock.isCodecSupportedBasedOnTestedConfigurations = function (config) {
+                    return config.codec === 'audio/mp4;codecs="mp4a.40.5"';
+                };
+
+                eventBus.on(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, onAdaptationSetRemoved);
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(removedEvents).to.have.lengthOf(2);
+                        expect(removedEvents[0].adaptationSet.id).to.equal('1');
+                        expect(removedEvents[0].remainingAdaptationSets).to.deep.equal([adaptationSet2, adaptationSet3]);
+                        expect(removedEvents[1].adaptationSet.id).to.equal('2');
+                        expect(removedEvents[1].remainingAdaptationSets).to.deep.equal([adaptationSet3]);
+
+                        eventBus.off(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, onAdaptationSetRemoved);
+                        done();
+                    })
+                    .catch((e) => {
+                        eventBus.off(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, onAdaptationSetRemoved);
                         done(e);
                     });
             });

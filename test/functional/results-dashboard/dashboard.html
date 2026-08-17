@@ -1,0 +1,461 @@
+<!--
+  The copyright in this software is being made available under the BSD License,
+  included below. This software may be subject to other third party and contributor
+  rights, including patent rights, and no such rights are granted under this license.
+
+  Copyright (c) 2013, Dash Industry Forum.
+  All rights reserved.
+
+  Redistribution and use in source and binary forms, with or without modification,
+  are permitted provided that the following conditions are met:
+   * Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+   * Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation and/or
+   other materials provided with the distribution.
+   * Neither the name of Dash Industry Forum nor the names of its
+   contributors may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dash.js Functional Test Results</title>
+<style>
+    :root {
+        --bg: #f7f7f6;
+        --surface: #ffffff;
+        --border: #e2e2e0;
+        --ink: #1a1a19;
+        --ink-secondary: #55554f;
+        --ink-muted: #8a8a82;
+        --good: #0ca30c;
+        --critical: #d03b3b;
+        --skip: #8a8a82;
+        --good-bg: #e9f6e9;
+        --critical-bg: #fbeaea;
+        --skip-bg: #efefed;
+        --accent: #2757ab;
+    }
+    @media (prefers-color-scheme: dark) {
+        :root {
+            --bg: #131312;
+            --surface: #1a1a19;
+            --border: #33332f;
+            --ink: #f0f0ee;
+            --ink-secondary: #b5b5ac;
+            --ink-muted: #83837b;
+            --good-bg: #12300f;
+            --critical-bg: #3a1515;
+            --skip-bg: #262624;
+            --accent: #7ba3e0;
+        }
+    }
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font: 14px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        height: 100vh;
+    }
+    h1, h2, h3 { margin: 0; font-weight: 600; }
+
+    /* ---- sidebar: session list ---- */
+    #sidebar {
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        background: var(--surface);
+    }
+    #sidebar header {
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        background: var(--surface);
+    }
+    #sidebar header h1 { font-size: 15px; }
+    #sidebar header p { margin: 4px 0 0; color: var(--ink-muted); font-size: 12px; }
+    .session {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: none;
+        border-bottom: 1px solid var(--border);
+        background: none;
+        padding: 12px 16px;
+        cursor: pointer;
+        color: var(--ink);
+        font: inherit;
+    }
+    .session:hover { background: var(--bg); }
+    .session.active { background: var(--bg); box-shadow: inset 3px 0 0 var(--accent); }
+    .session .date { font-weight: 600; }
+    .session .meta { color: var(--ink-secondary); font-size: 12px; margin-top: 2px; }
+    .badge {
+        display: inline-block;
+        border-radius: 10px;
+        padding: 0 8px;
+        font-size: 12px;
+        font-weight: 600;
+        float: right;
+    }
+    .badge.ok { background: var(--good-bg); color: var(--good); }
+    .badge.fail { background: var(--critical-bg); color: var(--critical); }
+
+    /* ---- main ---- */
+    #main { overflow-y: auto; padding: 20px 24px; }
+    #placeholder { color: var(--ink-muted); margin-top: 40vh; text-align: center; }
+
+    .tiles { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+    .tile {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 18px;
+        min-width: 110px;
+    }
+    .tile .num { font-size: 24px; font-weight: 700; }
+    .tile .label { color: var(--ink-secondary); font-size: 12px; }
+    .tile.failed .num { color: var(--critical); }
+    .tile.passed .num { color: var(--good); }
+
+    /* per-browser stacked bar */
+    .browser-bars { display: grid; grid-template-columns: max-content 1fr max-content; gap: 6px 12px; align-items: center; margin: 12px 0 20px; max-width: 760px; }
+    .browser-bars .name { font-size: 13px; color: var(--ink-secondary); white-space: nowrap; }
+    .bar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; gap: 2px; background: var(--bg); }
+    .bar span { height: 100%; }
+    .bar .p { background: var(--good); }
+    .bar .f { background: var(--critical); }
+    .bar .s { background: var(--skip); }
+    .browser-bars .counts { font-size: 12px; color: var(--ink-secondary); white-space: nowrap; }
+
+    /* filters */
+    .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 16px 0; }
+    .filters input[type=search] {
+        flex: 1 1 240px;
+        max-width: 380px;
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--ink);
+        font: inherit;
+    }
+    .chip {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--ink-secondary);
+        border-radius: 14px;
+        padding: 3px 12px;
+        cursor: pointer;
+        font: inherit;
+        font-size: 13px;
+    }
+    .chip.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+    /* status glyphs — icon + text, never color alone */
+    .st { font-weight: 700; }
+    .st.pass { color: var(--good); }
+    .st.fail { color: var(--critical); }
+    .st.skip { color: var(--skip); }
+
+    /* failures section */
+    .fail-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--critical);
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin: 10px 0;
+    }
+    .fail-card .suite { color: var(--ink-secondary); font-size: 12px; }
+    .fail-card .case { font-weight: 600; margin: 2px 0 6px; }
+    .fail-card pre {
+        background: var(--bg);
+        border-radius: 6px;
+        padding: 10px;
+        margin: 8px 0 0;
+        font-size: 12px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+    }
+    .browser-chip {
+        display: inline-block;
+        background: var(--skip-bg);
+        color: var(--ink-secondary);
+        border-radius: 4px;
+        padding: 0 6px;
+        font-size: 11px;
+        margin-left: 6px;
+    }
+
+    /* results tree */
+    details.group { margin: 8px 0; }
+    details.group > summary {
+        cursor: pointer;
+        font-weight: 600;
+        padding: 8px 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        list-style: none;
+    }
+    details.group > summary::before { content: "▸ "; color: var(--ink-muted); }
+    details.group[open] > summary::before { content: "▾ "; }
+    details.group > summary .badge { float: right; margin-left: 8px; }
+    .suite-block {
+        margin: 8px 0 14px 14px;
+        border-left: 2px solid var(--border);
+        padding-left: 14px;
+    }
+    .suite-block h3 { font-size: 13px; }
+    .suite-block .mpd { font-size: 12px; }
+    .suite-block .mpd a { color: var(--accent); word-break: break-all; }
+    table.cases { border-collapse: collapse; margin-top: 6px; width: 100%; max-width: 900px; }
+    table.cases td { padding: 3px 12px 3px 0; font-size: 13px; vertical-align: top; }
+    table.cases td.t { color: var(--ink-muted); white-space: nowrap; text-align: right; }
+    .hidden { display: none; }
+</style>
+</head>
+<body>
+<nav id="sidebar">
+    <header>
+        <h1>Functional test sessions</h1>
+        <p id="sessionCount">loading…</p>
+    </header>
+    <div id="sessionList"></div>
+</nav>
+<main id="main">
+    <p id="placeholder">Select a test session on the left.</p>
+    <div id="detail" class="hidden"></div>
+</main>
+
+<script>
+    'use strict';
+
+    const state = { sessions: [], activeId: null, cases: [], statusFilter: 'all', browserFilter: 'all', search: '' };
+
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const fmtDate = (id) => new Date(Number(id)).toLocaleString();
+    const fmtDur = (sec) => sec >= 60 ? `${Math.floor(sec / 60)}m ${Math.round(sec % 60)}s` : `${Math.round(sec)}s`;
+    const shortBrowser = (name) => name.replace(/\s*\(.*\)\s*/, '').trim();
+
+    async function init() {
+        const sessions = await (await fetch('/api/sessions')).json();
+        state.sessions = sessions;
+        document.getElementById('sessionCount').textContent = `${sessions.length} sessions found`;
+        const list = document.getElementById('sessionList');
+        list.innerHTML = sessions.map((s) => {
+            const tests = s.browsers.reduce((n, b) => n + b.tests, 0);
+            const failures = s.browsers.reduce((n, b) => n + b.failures, 0);
+            const browsers = s.browsers.map((b) => shortBrowser(b.browser)).join(', ');
+            const badge = failures > 0 ? `<span class="badge fail">✕ ${failures}</span>` : '<span class="badge ok">✓ pass</span>';
+            return `<button class="session" data-id="${s.id}">
+                ${badge}
+                <div class="date">${fmtDate(s.id)}</div>
+                <div class="meta">${esc(browsers)} · ${tests} tests</div>
+            </button>`;
+        }).join('');
+        list.addEventListener('click', (e) => {
+            const el = e.target.closest('.session');
+            if (el) { selectSession(el.dataset.id); }
+        });
+        if (sessions.length) { selectSession(sessions[0].id); }
+    }
+
+    /**
+     * classname = "<browserSlug>.<testfile> - <vector> - <mpd>"; the browser slug never
+     * contains a dot (karma replaces them with underscores). The test title is the part
+     * of `name` after the suite string. Vector names may themselves contain " - ", the
+     * MPD URL never does, so: first segment = testfile, last = mpd, middle = vector.
+     */
+    function parseCase(tc, browser) {
+        const classname = tc.getAttribute('classname') || '';
+        const name = tc.getAttribute('name') || '';
+        const suite = classname.slice(classname.indexOf('.') + 1);
+        const title = name.startsWith(suite) ? name.slice(suite.length).trim() : name;
+        const parts = suite.split(' - ');
+        const failureEl = tc.querySelector('failure, error');
+        return {
+            browser,
+            testfile: parts[0] || suite,
+            vector: parts.slice(1, -1).join(' - ') || '(unknown vector)',
+            mpd: parts[parts.length - 1] || '',
+            suite,
+            title,
+            time: Number(tc.getAttribute('time')) || 0,
+            status: failureEl ? 'fail' : (tc.querySelector('skipped') ? 'skip' : 'pass'),
+            failure: failureEl ? failureEl.textContent.trim() : null,
+        };
+    }
+
+    async function selectSession(id) {
+        state.activeId = id;
+        document.querySelectorAll('.session').forEach((el) => el.classList.toggle('active', el.dataset.id === id));
+        const files = await (await fetch(`/api/session?id=${id}`)).json();
+        const parser = new DOMParser();
+        state.cases = [];
+        state.durations = [];
+        for (const file of files) {
+            const doc = parser.parseFromString(file.xml, 'text/xml');
+            const suiteEl = doc.querySelector('testsuite');
+            const browser = shortBrowser(suiteEl ? suiteEl.getAttribute('name') || file.browserDir : file.browserDir);
+            state.durations.push({ browser, time: suiteEl ? Number(suiteEl.getAttribute('time')) || 0 : 0 });
+            doc.querySelectorAll('testcase').forEach((tc) => state.cases.push(parseCase(tc, browser)));
+        }
+        state.statusFilter = 'all';
+        state.browserFilter = 'all';
+        state.search = '';
+        render();
+    }
+
+    function applyFilters(cases) {
+        const q = state.search.toLowerCase();
+        return cases.filter((c) =>
+            (state.statusFilter === 'all' || c.status === state.statusFilter) &&
+            (state.browserFilter === 'all' || c.browser === state.browserFilter) &&
+            (!q || `${c.suite} ${c.title}`.toLowerCase().includes(q))
+        );
+    }
+
+    function render() {
+        document.getElementById('placeholder').classList.add('hidden');
+        const detail = document.getElementById('detail');
+        detail.classList.remove('hidden');
+
+        const all = state.cases;
+        const counts = { pass: 0, fail: 0, skip: 0 };
+        all.forEach((c) => counts[c.status]++);
+        const browsers = [...new Set(all.map((c) => c.browser))];
+
+        const browserBars = browsers.map((browser) => {
+            const cs = all.filter((c) => c.browser === browser);
+            const n = { pass: 0, fail: 0, skip: 0 };
+            cs.forEach((c) => n[c.status]++);
+            const total = cs.length || 1;
+            const dur = (state.durations.find((d) => d.browser === browser) || {}).time || 0;
+            return `<div class="name">${esc(browser)}</div>
+                <div class="bar" role="img" aria-label="${n.pass} passed, ${n.fail} failed, ${n.skip} skipped">
+                    ${n.pass ? `<span class="p" style="flex:${n.pass / total}"></span>` : ''}
+                    ${n.fail ? `<span class="f" style="flex:${n.fail / total}"></span>` : ''}
+                    ${n.skip ? `<span class="s" style="flex:${n.skip / total}"></span>` : ''}
+                </div>
+                <div class="counts">✓ ${n.pass} · ✕ ${n.fail} · ○ ${n.skip} · ${fmtDur(dur)}</div>`;
+        }).join('');
+
+        const filtered = applyFilters(all);
+        // The failure cards respect all filters too; they are only shown when the
+        // status filter includes failed tests.
+        const failures = ['all', 'fail'].includes(state.statusFilter)
+            ? all.filter((c) => c.status === 'fail' &&
+                (state.browserFilter === 'all' || c.browser === state.browserFilter) &&
+                (!state.search || `${c.suite} ${c.title}`.toLowerCase().includes(state.search.toLowerCase())))
+            : [];
+
+        detail.innerHTML = `
+            <h2>${fmtDate(state.activeId)}</h2>
+            <div class="tiles">
+                <div class="tile"><div class="num">${all.length}</div><div class="label">Total cases</div></div>
+                <div class="tile passed"><div class="num">${counts.pass}</div><div class="label">✓ Passed</div></div>
+                <div class="tile failed"><div class="num">${counts.fail}</div><div class="label">✕ Failed</div></div>
+                <div class="tile"><div class="num">${counts.skip}</div><div class="label">○ Skipped</div></div>
+            </div>
+            <div class="browser-bars">${browserBars}</div>
+            <div class="filters">
+                <input type="search" id="search" placeholder="Filter by test, vector or MPD…" value="${esc(state.search)}">
+                ${['all', 'fail', 'pass', 'skip'].map((s) =>
+                    `<button class="chip ${state.statusFilter === s ? 'active' : ''}" data-status="${s}">${{ all: 'All', fail: '✕ Failed', pass: '✓ Passed', skip: '○ Skipped' }[s]}</button>`).join('')}
+                ${browsers.length > 1 ? `<select id="browserFilter">
+                    <option value="all">All browsers</option>
+                    ${browsers.map((b) => `<option ${state.browserFilter === b ? 'selected' : ''}>${esc(b)}</option>`).join('')}
+                </select>` : ''}
+            </div>
+            ${failures.length ? `<h3>Failures (${failures.length})</h3>${renderFailures(failures)}` : ''}
+            <h3 style="margin-top:20px">Results ${filtered.length !== all.length ? `(${filtered.length} of ${all.length})` : ''}</h3>
+            ${renderTree(filtered)}`;
+
+        detail.querySelector('#search').addEventListener('input', (e) => { state.search = e.target.value; render(); });
+        detail.querySelectorAll('.chip').forEach((chip) =>
+            chip.addEventListener('click', () => { state.statusFilter = chip.dataset.status; render(); }));
+        const browserSelect = detail.querySelector('#browserFilter');
+        if (browserSelect) {
+            browserSelect.addEventListener('change', (e) => { state.browserFilter = e.target.value; render(); });
+        }
+        const searchInput = detail.querySelector('#search');
+        searchInput.focus();
+        searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+    }
+
+    function renderFailures(failures) {
+        // One card per suite (testfile + vector), all failing cases of that suite inside
+        const bySuite = new Map();
+        for (const c of failures) {
+            const key = `${c.testfile} ${c.vector} ${c.mpd}`;
+            if (!bySuite.has(key)) { bySuite.set(key, []); }
+            bySuite.get(key).push(c);
+        }
+        return [...bySuite.values()].map((cs) => {
+            const { testfile, vector, mpd } = cs[0];
+            return `<div class="fail-card">
+                <div class="suite">${esc(testfile)} · ${esc(vector)}</div>
+                <div class="mpd"><a href="${esc(mpd)}" target="_blank" rel="noopener">${esc(mpd)}</a></div>
+                ${cs.map((c) => `
+                    <div class="case">✕ ${esc(c.title)}<span class="browser-chip">${esc(c.browser)}</span></div>
+                    <pre>${esc(c.failure || '')}</pre>`).join('')}
+            </div>`;
+        }).join('');
+    }
+
+    function renderTree(cases) {
+        const byTestfile = new Map();
+        for (const c of cases) {
+            if (!byTestfile.has(c.testfile)) { byTestfile.set(c.testfile, new Map()); }
+            const byVector = byTestfile.get(c.testfile);
+            const key = `${c.vector}\u0000${c.mpd}`;
+            if (!byVector.has(key)) { byVector.set(key, []); }
+            byVector.get(key).push(c);
+        }
+        return [...byTestfile.entries()].map(([testfile, byVector]) => {
+            const cs = [...byVector.values()].flat();
+            const fails = cs.filter((c) => c.status === 'fail').length;
+            const badge = fails ? `<span class="badge fail">✕ ${fails}</span>` : '<span class="badge ok">✓</span>';
+            return `<details class="group" ${fails ? 'open' : ''}>
+                <summary>${esc(testfile)} <span style="color:var(--ink-muted);font-weight:400">(${cs.length} cases)</span> ${badge}</summary>
+                ${[...byVector.entries()].map(([key, vcs]) => {
+                    const [vector, mpd] = key.split('\u0000');
+                    return `<div class="suite-block">
+                        <h3>${esc(vector)}</h3>
+                        <div class="mpd"><a href="${esc(mpd)}" target="_blank" rel="noopener">${esc(mpd)}</a></div>
+                        <table class="cases">${vcs.map((c) => `
+                            <tr>
+                                <td><span class="st ${c.status}">${{ pass: '✓', fail: '✕', skip: '○' }[c.status]}</span></td>
+                                <td>${esc(c.title)}<span class="browser-chip">${esc(c.browser)}</span></td>
+                                <td class="t">${c.time ? c.time.toFixed(1) + 's' : ''}</td>
+                            </tr>`).join('')}
+                        </table>
+                    </div>`;
+                }).join('')}
+            </details>`;
+        }).join('');
+    }
+
+    init();
+</script>
+</body>
+</html>

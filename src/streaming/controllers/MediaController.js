@@ -158,8 +158,8 @@ function MediaController() {
                 filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsRole, localSettings);
             }
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAccessibility, localSettings);
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, localSettings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsCodec, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, localSettings);
             logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
         }
 
@@ -201,7 +201,7 @@ function MediaController() {
                 return;
             }
         }
-        
+
         logger.info('addTrack with track.codec=\'' + track.codec + '\', track.type=\'' + track.type + '\', track.id=\'' + track.id + '\', track.index=' + track.index);
         mediaTracks.push(track);
     }
@@ -458,10 +458,9 @@ function MediaController() {
     }
 
     function matchSettingsViewPoint(settings, track) {
-        const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
+        return !settings.viewpoint || !!track.viewpoint.filter(function (item) {
             return _compareDescriptorType(item, settings.viewpoint);
         })[0];
-        return matchViewPoint;
     }
 
     function matchSettingsRole(settings, track, isTrackActive = false) {
@@ -493,10 +492,9 @@ function MediaController() {
     }
 
     function matchSettingsAudioChannelConfig(settings, track) {
-        let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
+        return !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
             return _compareDescriptorType(item, settings.audioChannelConfiguration);
         })[0];
-        return matchAudioChannelConfiguration;
     }
 
     function matchSettingsCodec(settings, track) {
@@ -904,9 +902,7 @@ function MediaController() {
     }
 
     function _trackSelectionModeHighestSelectionPriority(tracks) {
-        let tmpArr = getTracksWithHighestSelectionPriority(tracks);
-
-        return tmpArr;
+        return getTracksWithHighestSelectionPriority(tracks);
     }
 
     function _trackSelectionModeHighestBitrate(tracks) {

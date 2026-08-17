@@ -24,9 +24,48 @@
       ]
     },
     {
+      "name": "Multiperiod 2 periods",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/5a/nomor/1.mpd",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-ended",
+        "playback/seek-to-presentation-time"
+      ]
+    },
+    {
       "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, single key, Widevine+PlayReady",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/Dash/protected_dash_1080p_h264_singlekey/manifest.mpd",
+      "platformOverrides": [
+        {
+          "browser": "edge",
+          "drm": {
+            "com.microsoft.playready": {
+              "systemStringPriority": [
+                "com.microsoft.playready.recommendation"
+              ],
+              "audioRobustness": "2000",
+              "videoRobustness": "2000"
+            }
+          },
+          "settings": {
+            "streaming": {
+              "buffer": {
+                "useChangeType": false,
+                "resetSourceBuffersForTrackSwitch": true
+              },
+              "abr": {
+                "maxBitrate": {
+                  "video": 1200
+                }
+              }
+            }
+          }
+        }
+      ],
       "drm": {
         "com.widevine.alpha": {
           "serverURL": "https://drm-widevine-licensing.axprod.net/AcquireLicense",
@@ -59,6 +98,33 @@
       "name": "Multi-period 1080p with PlayReady and Widevine DRM, multiple keys",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
+      "platformOverrides": [
+        {
+          "browser": "edge",
+          "drm": {
+            "com.microsoft.playready": {
+              "systemStringPriority": [
+                "com.microsoft.playready.recommendation"
+              ],
+              "audioRobustness": "2000",
+              "videoRobustness": "2000"
+            }
+          },
+          "settings": {
+            "streaming": {
+              "buffer": {
+                "useChangeType": false,
+                "resetSourceBuffersForTrackSwitch": true
+              },
+              "abr": {
+                "maxBitrate": {
+                  "video": 1200
+                }
+              }
+            }
+          }
+        }
+      ],
       "drm": {
         "com.widevine.alpha": {
           "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
@@ -93,6 +159,33 @@
       "name": "1080p with PlayReady and Widevine DRM, multiple keys",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_1080p.mpd",
+      "platformOverrides": [
+        {
+          "browser": "edge",
+          "drm": {
+            "com.microsoft.playready": {
+              "systemStringPriority": [
+                "com.microsoft.playready.recommendation"
+              ],
+              "audioRobustness": "2000",
+              "videoRobustness": "2000"
+            }
+          },
+          "settings": {
+            "streaming": {
+              "buffer": {
+                "useChangeType": false,
+                "resetSourceBuffersForTrackSwitch": true
+              },
+              "abr": {
+                "maxBitrate": {
+                  "video": 1200
+                }
+              }
+            }
+          }
+        }
+      ],
       "drm": {
         "com.widevine.alpha": {
           "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
@@ -142,6 +235,37 @@
       "name": "1080p with PlayReady and Widevine DRM, single key",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
+      "platformOverrides": [
+        {
+          "browser": "edge",
+          "drm": {
+            "com.microsoft.playready": {
+              "priority": 0,
+              "systemStringPriority": [
+                "com.microsoft.playready.recommendation"
+              ],
+              "audioRobustness": "2000",
+              "videoRobustness": "2000"
+            },
+            "com.widevine.alpha": {
+              "priority": 1
+            }
+          },
+          "settings": {
+            "streaming": {
+              "buffer": {
+                "useChangeType": false,
+                "resetSourceBuffersForTrackSwitch": true
+              },
+              "abr": {
+                "maxBitrate": {
+                  "video": 1200
+                }
+              }
+            }
+          }
+        }
+      ],
       "drm": {
         "com.widevine.alpha": {
           "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
@@ -308,6 +432,41 @@
       ]
     },
     {
+      "name": "Multiperiod encrypted to unencrypted",
+      "type": "vod",
+      "url": "/base/test/functional/content/multi-period/enc-unenc.mpd",
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 16000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 1
+        }
+      },
+      "includedTestfiles": [
+        "playback-advanced/multiperiod-playback"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Multiperiod unencrypted to encrypted",
+      "type": "vod",
+      "url": "/base/test/functional/content/multi-period/unenc-enc.mpd",
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 10000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 1
+        }
+      },
+      "includedTestfiles": [
+        "playback-advanced/multiperiod-playback"
+      ]
+    },
+    {
       "name": "DASH-IF Multiperiod Segment Template",
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/periods_60/continuous_1/testpic_2s/Manifest.mpd",
@@ -323,6 +482,19 @@
       ]
     },
     {
+      "name": "Preload single period then play multiperiod",
+      "type": "vod",
+      "url": "/base/test/functional/content/preload/preload-singleperiod-play-multiperiod.mpd",
+      "testdata": {
+        "preloadSingleperiodPlayMultiperiod": {
+          "waitingTimeForPeriodSwitch": 15000
+        }
+      },
+      "includedTestfiles": [
+        "playback-advanced/preload-singleperiod-play-multiperiod"
+      ]
+    },
+    {
       "name": "TTML Segmented Subtitles Live (livesim2)",
       "url": "https://livesim2.dashif.org/livesim2/testpic_2s/multi_subs.mpd",
       "provider": "dashif",
@@ -333,6 +505,15 @@
         "playback/seek",
         "playback/seek-to-presentation-time",
         "text/*"
+      ]
+    },
+    {
+      "name": "L3D-DASH LiveSim2",
+      "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/chunkdur_0.5/ssras_2,1/chunkdurssr_2,0.2/testpic_2s_low_delay/Manifest.mpd",
+      "provider": "dashif",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/*"
       ]
     },
     {
@@ -355,26 +536,43 @@
       ]
     },
     {
-      "name": "Arte forced-subtitles",
-      "type": "vod",
-      "url": "https://arteamd1.akamaized.net/GPU/034000/034700/034755-230-A/221125154117/034755-230-A_8_DA_v20221125.mpd",
-      "includedTestfiles": [
-        "text/forced-subtitles"
-      ],
-      "testdata": {
-        "forcedSubtitles": {}
-      }
-    },
-    {
       "name": "Dynamic to static transition with LiveSim2",
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/stoprel_5/testpic_2s/Manifest.mpd",
       "includedTestfiles": [
         "feature-support/dynamic-to-static"
       ],
+      "settings": {
+        "streaming": {
+          "retryAttempts": {
+            "MediaSegment": 8
+          }
+        }
+      },
       "testdata": {
         "dynamicToStatic": {
           "runtime": 20000
+        }
+      }
+    },
+    {
+      "name": "Dynamic to static transition with LiveSim2 using an MPD Location element",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/startrel_-20/stoprel_6/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "feature-support/dynamic-to-static"
+      ],
+      "settings": {
+        "streaming": {
+          "retryAttempts": {
+            "MediaSegment": 8
+          }
+        }
+      },
+      "testdata": {
+        "dynamicToStatic": {
+          "runtime": 20000,
+          "checkReplay": true
         }
       }
     },
