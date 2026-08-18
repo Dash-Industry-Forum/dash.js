@@ -991,11 +991,12 @@ function DashManifestModel() {
     }
 
     function _getKValue(segmentTimeline) {
-        if (!segmentTimeline || !segmentTimeline.S) {
+        if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
             return 1;
         }
-        const s0 = segmentTimeline.S[0];
-        return s0.hasOwnProperty(DashConstants.K) ? s0.k : 1;
+        // @k may vary between S elements; consumers of Representation.k (low latency mode, live delay) care about the live edge, which is the last S element
+        const s = segmentTimeline.S[segmentTimeline.S.length - 1];
+        return s.hasOwnProperty(DashConstants.K) ? s.k : 1;
     }
 
     function _calcMseTimeOffset(representation) {

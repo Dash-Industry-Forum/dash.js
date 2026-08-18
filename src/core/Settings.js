@@ -397,7 +397,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
  *
- * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the partial segment duration (segment duration / k) is used instead.
+ * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the maximum effective segment duration across all audio, video and fragmented text adaptation sets is used instead.
+ * The effective segment duration is the partial segment duration (segment duration / k) for adaptation sets using partial segments, and the full segment duration otherwise.
+ * Consequently, the partial segment duration is only applied if all these adaptation sets use partial segments.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
  * @property {number} [liveDelay=NaN]

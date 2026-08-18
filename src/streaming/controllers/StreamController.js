@@ -391,9 +391,9 @@ function StreamController() {
                 serviceDescriptionController.applyServiceDescription(manifestInfo);
             }
 
-            // Compute and set the live delay
+            // Compute and set the live delay. The live edge is in the last period of the MPD.
             if (adapter.getIsDynamic()) {
-                const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(streamsInfo[0], manifestInfo);
+                const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(streamsInfo[streamsInfo.length - 1]);
                 playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
             }
 
@@ -933,12 +933,11 @@ function StreamController() {
      */
     function _onLiveDelaySettingUpdated() {
         if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0 && activeStream) {
-            const streamsInfo = adapter.getStreamsInfo()
-            if (streamsInfo.length > 0) {
-                const manifestInfo = streamsInfo[0].manifestInfo;
-                const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(streamsInfo[0], manifestInfo);
+            const streamInfo = activeStream.getStreamInfo();
+            if (streamInfo) {
+                const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(streamInfo);
 
-                playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
+                playbackController.computeAndSetLiveDelay(fragmentDuration, streamInfo.manifestInfo);
             }
         }
     }
