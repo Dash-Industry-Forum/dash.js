@@ -365,9 +365,9 @@ describe('getRepresentationsForAdaptation', function () {
         expect(representationArray).to.be.instanceOf(Array);
         expect(representationArray).not.to.be.empty;
         expect(representationArray[0].index).to.equals(0);
-        expect(representationArray[0].segmentDuration).to.equals(8);
+        expect(representationArray[0].segmentDuration).to.equals(2);
         expect(representationArray[0].k).to.equals(16);
-        expect(representationArray[0].getEffectiveSegmentDuration()).to.equals(0.5);
+        expect(representationArray[0].getEffectiveSegmentDuration()).to.equals(0.125);
     });
 
 
