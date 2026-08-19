@@ -982,11 +982,12 @@ function DashManifestModel() {
     }
 
     function calcSegmentDuration(segmentTimeline) {
-        if (!segmentTimeline || !segmentTimeline.S) {
+        if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
             return NaN;
         }
-        const s = segmentTimeline.S[segmentTimeline.S.length - 1];
-        return s.hasOwnProperty('d') ? s.d : NaN;
+        let s0 = segmentTimeline.S[0];
+        let s1 = segmentTimeline.S[1];
+        return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
     }
 
     function _getKValue(segmentTimeline) {
