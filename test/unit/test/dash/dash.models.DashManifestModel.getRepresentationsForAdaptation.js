@@ -338,7 +338,7 @@ describe('getRepresentationsForAdaptation', function () {
         expect(representationArray).to.be.empty;
     });
 
-    it('should not return an empty array when getRepresentationsForAdaptation is called and adaptation is defined', () => {
+    it('should use the live-edge SegmentTimeline duration and k value', () => {
         const voAdaptation = {
             period: {
                 index: 0,
@@ -348,11 +348,9 @@ describe('getRepresentationsForAdaptation', function () {
                             AdaptationSet: [{
                                 Representation: [{
                                     SegmentTemplate: {
+                                        timescale: 1000,
                                         SegmentTimeline: {
-                                            S: [{
-                                                d: 2,
-                                                r: 2
-                                            }]
+                                            S: [{ d: 2000, r: 2 }, { d: 8000, k: 16 }]
                                         }
                                     }
                                 }]
@@ -367,6 +365,9 @@ describe('getRepresentationsForAdaptation', function () {
         expect(representationArray).to.be.instanceOf(Array);
         expect(representationArray).not.to.be.empty;
         expect(representationArray[0].index).to.equals(0);
+        expect(representationArray[0].segmentDuration).to.equals(8);
+        expect(representationArray[0].k).to.equals(16);
+        expect(representationArray[0].getEffectiveSegmentDuration()).to.equals(0.5);
     });
 
 

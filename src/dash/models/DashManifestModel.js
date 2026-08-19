@@ -985,9 +985,8 @@ function DashManifestModel() {
         if (!segmentTimeline || !segmentTimeline.S) {
             return NaN;
         }
-        let s0 = segmentTimeline.S[0];
-        let s1 = segmentTimeline.S[1];
-        return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
+        const s = segmentTimeline.S[segmentTimeline.S.length - 1];
+        return s.hasOwnProperty('d') ? s.d : NaN;
     }
 
     function _getKValue(segmentTimeline) {
