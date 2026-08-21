@@ -58,7 +58,8 @@ function CmcdController() {
         logger,
         mediaPlayerModel,
         reporterNeedsRebuild,
-        urlLoader;
+        urlLoader,
+        _pendingErrorCodes;
 
 
     let context = this.context;
@@ -134,6 +135,12 @@ function CmcdController() {
 
     function _resetInitialSettings() {
         reporterNeedsRebuild = false;
+        // Error codes buffered per reporting channel until the next report of that channel flushes them
+        _pendingErrorCodes = {
+            request: [],
+            response: [],
+            event: []
+        };
     }
 
     function _initializeEventBus(autoPlay) {
@@ -250,17 +257,49 @@ function CmcdController() {
         if (errorData.error?.data?.request?.type === HTTPRequest.CMCD_EVENT) {
             return;
         }
-        // Update CmcdReporter with the error code.
-        // Per the CMCD v2 specification, ec is an inner list of strings and the list
-        // notation must be used even for a single error code, e.g. ec=("16")
-        if (cmcdReporter) {
-            const errorCode = errorData.error?.code || errorData.error?.data?.code;
-            if (errorCode) {
-                cmcdReporter.update({ ec: [String(errorCode)] });
-            }
+        // Per the CMCD v2 specification, error codes are buffered per report destination
+        // as they occur and reported as an inner list of strings, e.g. ec=("16" "27"),
+        // along with the next CMCD report. The buffers are flushed by the next report
+        // of each reporting channel (request, response, event).
+        const errorCode = errorData.error?.code || errorData.error?.data?.code;
+        if (errorCode) {
+            const code = String(errorCode);
+            _pendingErrorCodes.request.push(code);
+            _pendingErrorCodes.response.push(code);
+            _pendingErrorCodes.event.push(code);
         }
 
         triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.ERROR);
+    }
+
+    /**
+     * Returns the buffered error codes for the given reporting channel and clears its buffer.
+     * @param {string} channel - 'request', 'response' or 'event'
+     * @returns {Array.<string>} the buffered error codes
+     * @private
+     */
+    function _takeErrorCodes(channel) {
+        const codes = _pendingErrorCodes[channel];
+        _pendingErrorCodes[channel] = [];
+        return codes;
+    }
+
+    /**
+     * Checks whether at least one enabled event target is subscribed to the given event type,
+     * i.e. whether CmcdReporter.recordEvent() will actually record a report for it.
+     * @param {string} event
+     * @returns {boolean}
+     * @private
+     */
+    function _willAnyTargetRecordEvent(event) {
+        const targets = cmcdConfigAccessor.getEventTargets();
+        return targets.some((_target, index) => {
+            if (!isCmcdEnabled(index)) {
+                return false;
+            }
+            const events = cmcdConfigAccessor.getEventTarget(index).get('targetEvents');
+            return Array.isArray(events) && events.includes(event);
+        });
     }
 
     function _rebuildReporterIfNeeded() {
@@ -306,6 +345,12 @@ function CmcdController() {
             cmcdReporter.update(msdData);
         }
 
+        // Attach buffered error codes to the next event report and clear the buffer.
+        // Only flush when a target will actually record this event, so codes are not discarded unseen.
+        if (_pendingErrorCodes.event.length > 0 && _willAnyTargetRecordEvent(event)) {
+            cmcdData.ec = _takeErrorCodes('event');
+        }
+
         // Pass event-mode data as transient per-event data (not persisted)
         cmcdReporter.recordEvent(event, cmcdData);
     }
@@ -332,6 +377,11 @@ function CmcdController() {
             const msdData = cmcdModel.calculateMsd();
             if (msdData.msd !== undefined) {
                 cmcdReporter.update(msdData);
+            }
+
+            // Attach buffered error codes to this request report only, then clear the buffer
+            if (_pendingErrorCodes.request.length > 0) {
+                cmcdData.ec = _takeErrorCodes('request');
             }
 
             const decorated = cmcdReporter.createRequestReport(request, cmcdData);
@@ -561,6 +611,11 @@ function CmcdController() {
         // Collect dash.js-specific additional data
         const additionalData = {};
 
+        // Attach buffered error codes to this response report only, then clear the buffer
+        if (_pendingErrorCodes.response.length > 0) {
+            additionalData.ec = _takeErrorCodes('response');
+        }
+
         if (response.headers) {
             try {
                 const cmsdStaticHeader = response.headers['cmsd-static'];
@@ -614,6 +669,7 @@ function CmcdController() {
             cmcdReporter = null;
         }
 
+        _resetInitialSettings();
         cmcdModel.resetInitialSettings();
     }
 
