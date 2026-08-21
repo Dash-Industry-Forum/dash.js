@@ -250,11 +250,13 @@ function CmcdController() {
         if (errorData.error?.data?.request?.type === HTTPRequest.CMCD_EVENT) {
             return;
         }
-        // Update CmcdReporter with the error code
+        // Update CmcdReporter with the error code.
+        // Per the CMCD v2 specification, ec is an inner list of strings and the list
+        // notation must be used even for a single error code, e.g. ec=("16")
         if (cmcdReporter) {
             const errorCode = errorData.error?.code || errorData.error?.data?.code;
             if (errorCode) {
-                cmcdReporter.update({ ec: errorCode });
+                cmcdReporter.update({ ec: [String(errorCode)] });
             }
         }
 

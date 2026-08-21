@@ -195,6 +195,44 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('e', 'e');
         });
 
+        it('should send the error code (ec) as an inner list of strings', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            enabledKeys: ['e', 'ec'],
+                            events: ['e'],
+                            interval: 0
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: {
+                    code: 123,
+                    message: 'Test Error Message',
+                    data: {
+                        request: {
+                            type: 'someOtherRequestType'
+                        }
+                    }
+                }
+            });
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+
+            // ec must use list notation with string entries even for a single code: ec=("123")
+            expect(decodeURIComponent(requestSent.body)).to.include('ec=("123")');
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
+            expect(metrics.ec).to.deep.equal(['123']);
+        });
+
         it('should not send a report when the ERROR event is triggered by a CMCD_EVENT', () => {
             settings.update({
                 streaming: {
