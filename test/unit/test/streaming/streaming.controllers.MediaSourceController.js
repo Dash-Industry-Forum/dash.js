@@ -8,6 +8,28 @@ describe('MediaSourceController', function () {
 
     let mediaSourceController;
 
+    // WebKit uses ManagedMediaSource, which never fires 'sourceopen' when attached via a
+    // bare object URL (it requires disableRemotePlayback and a connected element), so
+    // tests waiting for the event would hang until the runner timeout. Probe once with a
+    // source created the same way the tests create it and skip those tests if the event
+    // never fires.
+    let sourceOpenSupported = false;
+
+    before(function (done) {
+        this.timeout(5000);
+        const mediaSource = MediaSourceController(context).getInstance().createMediaSource();
+        const video = document.createElement('video');
+        const timeout = setTimeout(function () {
+            done();
+        }, 2000);
+        mediaSource.addEventListener('sourceopen', function () {
+            sourceOpenSupported = true;
+            clearTimeout(timeout);
+            done();
+        });
+        video.src = window.URL.createObjectURL(mediaSource);
+    });
+
     beforeEach(function () {
         mediaSourceController = MediaSourceController(context).getInstance();
     });
@@ -52,6 +74,10 @@ describe('MediaSourceController', function () {
         });
 
         it('should update source duration', function (done) {
+            if (!sourceOpenSupported) {
+                this.skip();
+            }
+
             function _onSourceOpen() {
                 mediaSourceController.setDuration(8);
                 expect(source.duration).to.equal(8);
@@ -66,26 +92,36 @@ describe('MediaSourceController', function () {
         });
 
         it('should clamp the duration to the highest buffered end time to avoid setting it below buffered coded frames', function (done) {
+            if (!sourceOpenSupported) {
+                this.skip();
+            }
+
             function _onSourceOpen() {
-                Object.defineProperty(source, 'sourceBuffers', {
-                    get: function () {
-                        return [{
-                            updating: false,
-                            buffered: {
-                                length: 1,
-                                start: function () {
-                                    return 0;
-                                },
-                                end: function () {
-                                    return 26.5;
+                // An exception here would otherwise be swallowed by the event dispatch
+                // and the test would hang until the runner timeout instead of failing.
+                try {
+                    Object.defineProperty(source, 'sourceBuffers', {
+                        get: function () {
+                            return [{
+                                updating: false,
+                                buffered: {
+                                    length: 1,
+                                    start: function () {
+                                        return 0;
+                                    },
+                                    end: function () {
+                                        return 26.5;
+                                    }
                                 }
-                            }
-                        }];
-                    }
-                });
-                mediaSourceController.setDuration(26);
-                expect(source.duration).to.equal(26.5);
-                done();
+                            }];
+                        }
+                    });
+                    mediaSourceController.setDuration(26);
+                    expect(source.duration).to.equal(26.5);
+                    done();
+                } catch (e) {
+                    done(e);
+                }
             }
 
             let source = mediaSourceController.createMediaSource();
@@ -116,6 +152,10 @@ describe('MediaSourceController', function () {
         });
 
         it('should update source seekable range', function (done) {
+            if (!sourceOpenSupported) {
+                this.skip();
+            }
+
             let video = document.createElement('video');
             function _onSourceOpen() {
                 mediaSourceController.setSeekable(1, 5);

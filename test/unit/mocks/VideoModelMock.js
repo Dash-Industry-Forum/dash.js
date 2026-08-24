@@ -191,6 +191,10 @@ class VideoModelMock {
         return this.source;
     }
 
+    setDisableRemotePlayback(value) {
+        this.disableRemotePlayback = value;
+    }
+
     isStalled() {
         return false;
     }
