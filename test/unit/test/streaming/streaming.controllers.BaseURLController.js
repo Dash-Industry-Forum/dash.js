@@ -7,8 +7,11 @@ import Events from '../../../../src/core/events/Events.js';
 import ContentSteeringSelectorMock from '../../mocks/ContentSteeringSelectorMock.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import chai from 'chai';
+import spies from 'chai-spies';
 import sinon from 'sinon';
 
+// Each test file runs in an isolated page; chai plugins must be registered per file.
+chai.use(spies);
 const expect = chai.expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();

@@ -9,11 +9,15 @@ import ManifestModelMock from '../../mocks/ManifestModelMock.js';
 import ManifestLoaderMock from '../../mocks/ManifestLoaderMock.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import ContentSteeringControllerMock from '../../mocks/ContentSteeringControllerMock.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 
 import chai from 'chai';
 import spies from 'chai-spies';
 import sinon from 'sinon';
 
+// Each test file runs in an isolated page; MediaPlayerEvents (e.g. DYNAMIC_TO_STATIC)
+// are only added to the Events singleton at runtime by MediaPlayer.js.
+Events.extend(MediaPlayerEvents);
 chai.use(spies);
 const expect = chai.expect;
 

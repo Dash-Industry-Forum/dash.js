@@ -5,8 +5,14 @@ import Settings from '../../../../src/core/Settings.js';
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 
 import {expect} from 'chai';
+
+// Each test file runs in an isolated page; MediaPlayerEvents (e.g.
+// ADAPTATION_SET_REMOVED_NO_CAPABILITIES) are only added to the Events singleton
+// at runtime by MediaPlayer.js.
+Events.extend(MediaPlayerEvents);
 
 let adapterMock;
 let capabilitiesFilter;
