@@ -475,6 +475,15 @@
                     ]
                 },
                 {
+                    "url": "https://livesim2.dashif.org/livesim2/startrel_-20/stoprel_6/testpic_2s/Manifest.mpd",
+                    "name": "Dynamic to static transition with LiveSim2 using an MPD Location element",
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "dashif"
+                    ]
+                },
+                {
                     "url": "https://demo.unified-streaming.com/k8s/live/scte35.isml/.mpd",
                     "name": "Unified Streaming reference stream with scte35 markers",
                     "moreInfo": "http://demo.unified-streaming.com/features.html",
@@ -583,6 +592,17 @@
         {
             "name": "Live Low Latency",
             "submenu": [
+                {
+                    "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/chunkdur_0.5/ssras_2,1/chunkdurssr_2,0.2/testpic_2s_low_delay/Manifest.mpd",
+                    "name": "LiveSim2 L3D-DASH",
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "low-latency",
+                        "l3d",
+                        "dashif"
+                    ]
+                },
                 {
                     "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
                     "name": "Akamai Low Latency Stream (Single Rate)",

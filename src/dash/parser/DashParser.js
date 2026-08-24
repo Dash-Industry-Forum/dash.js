@@ -109,7 +109,7 @@ function DashParser(config) {
 
         manifest = parseXml(data);
 
-        if (!manifest) {
+        if (!manifest || (!manifest.MPD && !manifest.Patch)) {
             throw new Error('failed to parse the manifest');
         }
 

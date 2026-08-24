@@ -4,16 +4,9 @@ import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 
 import {expect} from 'chai';
 import Constants from '../../../../src/streaming/constants/Constants.js';
-//import {UAParser} from 'ua-parser-js';
 
 let settings;
 let capabilities;
-
-//const uaString = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
-//const ua = UAParser(uaString);
-
-// The Media Capabilities API seems to return wrong values on Linux with Firefox. Deactivate some tests for now
-//const isLinuxFirefox = ua.browser.name.toLowerCase() === 'firefox' && ua.os.name.toLowerCase().includes('linux');
 
 const enhancementCodecs = ['lvc1'];
 

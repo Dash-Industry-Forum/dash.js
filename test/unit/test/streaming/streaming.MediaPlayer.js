@@ -1144,6 +1144,17 @@ describe('MediaPlayer', function () {
                 expect(initialSettings.audioChannelConfiguration.value).to.equal('val4');
             });
 
+            it('should pass codec through for initial media settings', function () {
+                player.setInitialMediaSettingsFor('audio', {
+                    lang: 'de',
+                    codec: 'audio/mp4;codecs="ec-3"'
+                });
+                let initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.have.property('codec');
+                expect(initialSettings.codec).to.equal('audio/mp4;codecs="ec-3"');
+            });
+
             it('should set current track', function () {
                 let currentTrack = mediaControllerMock.isCurrentTrack('audio');
                 expect(currentTrack).to.be.false;
@@ -1389,5 +1400,50 @@ describe('MediaPlayer with context injected', () => {
                 expect(stub.calledWith(null, 'Mocked!')).to.be.true;
             });
         })
-    })
+    });
+
+    describe('retrieveManifest', () => {
+        it('retrieveManifest callback should be invoked when INTERNAL_MANIFEST_LOADED is triggered', () => {
+            player.initialize(videoElementMock, null, false);
+
+            const stub = sinon.spy();
+
+            player.retrieveManifest(specHelper.getDummyUrl(), stub);
+
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {});
+
+            expect(stub.calledOnce).to.be.true;
+        });
+
+        it('retrieveManifest handler should be unregistered after reset so a later INTERNAL_MANIFEST_LOADED does not invoke the callback', () => {
+            player.initialize(videoElementMock, null, false);
+
+            const stub = sinon.spy();
+
+            player.retrieveManifest(specHelper.getDummyUrl(), stub);
+
+            player.reset();
+
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {});
+
+            expect(stub.called).to.be.false;
+        });
+
+        it('retrieveManifest -> reset -> retrieveManifest should only invoke the most recent callback', () => {
+            player.initialize(videoElementMock, null, false);
+
+            const firstStub = sinon.spy();
+            player.retrieveManifest(specHelper.getDummyUrl(), firstStub);
+
+            player.reset();
+
+            const secondStub = sinon.spy();
+            player.retrieveManifest(specHelper.getDummyUrl() + '2', secondStub);
+
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {});
+
+            expect(firstStub.called).to.be.false;
+            expect(secondStub.calledOnce).to.be.true;
+        });
+    });
 })

@@ -7,8 +7,15 @@ import DebugMock from '../../mocks/DebugMock.js';
 import ProtectionKeyControllerMock from '../../mocks/ProtectionKeyControllerMock.js';
 import ProtectionModelMock from '../../mocks/ProtectionModelMock.js';
 import CommonEncryption from '../../../../src/streaming/protection/CommonEncryption.js';
+import Settings from '../../../../src/core/Settings.js';
+import CmcdController from '../../../../src/streaming/controllers/CmcdController.js';
+import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
+import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 
 import {expect} from 'chai';
+import sinon from 'sinon';
+import {fakeXhr} from 'nise';
+
 const context = {};
 const eventBus = EventBus(context).getInstance();
 let protectionController;
@@ -100,6 +107,24 @@ describe('ProtectionController', function () {
             eventBus.on(ProtectionEvents.SERVER_CERTIFICATE_UPDATED, onDRMError, this);
 
             protectionController.setServerCertificate();
+        });
+
+        it('should normalize and dedupe string-form certUrls when setProtectionData is called', function () {
+            protectionController.setProtectionData({
+                'com.apple.fps': {
+                    certUrls: [
+                        'https://example.com/cert.cer',
+                        'https://example.com/cert.cer',
+                        { url: 'https://example.com/other.cer', certType: 'primary' }
+                    ]
+                }
+            });
+
+            const protData = protectionController.getProtectionData();
+            expect(protData['com.apple.fps'].certUrls).to.deep.equal([
+                { url: 'https://example.com/cert.cer', certType: null },
+                { url: 'https://example.com/other.cer', certType: 'primary' }
+            ]);
         });
 
         it('onKeyMessage behavior', function (done) {
@@ -195,6 +220,72 @@ describe('ProtectionController', function () {
             protectionController.createKeySession({ initData: new ArrayBuffer(24), keyId: 'session-3', sessionType: 'temporary' });
             expect(protectionModelMock.getSessionTokens().length).to.equal(3);
             expect(protectionModelMock.getSessionTokens().map(s => s.keyId)).to.deep.equal(['session-1', 'session-2', 'session-3']);
+        });
+
+    });
+
+    describe('CMCD integration', function () {
+        let protectionModelMock, settingsMock, cmcdControllerMock, customParametersModelMock, protectionKeyControllerMock;
+        let xhrMock, requests;
+
+        beforeEach(function () {
+            requests = [];
+            xhrMock = fakeXhr.useFakeXMLHttpRequest();
+            xhrMock.onCreate = function (xhr) {
+                requests.push(xhr);
+            };
+
+            protectionKeyControllerMock = new ProtectionKeyControllerMock();
+            settingsMock = Settings(context).getInstance();
+            protectionModelMock = new ProtectionModelMock({ events: ProtectionEvents, eventBus: eventBus });
+            cmcdControllerMock = CmcdController(context).getInstance();
+            customParametersModelMock = CustomParametersModel(context).getInstance();
+
+            protectionKeyControllerMock.getLicenseServerModelInstance = () => ({
+                getHTTPMethod: () => 'POST',
+                getResponseType: () => 'arraybuffer',
+                getLicenseMessage: (data) => data,
+                getServerURLFromMessage: (url) => url
+            });
+
+            protectionKeyControllerMock.isClearKey = () => false;
+            protectionKeyControllerMock.setProtectionData = () => {};
+
+            protectionController = ProtectionController(context).create({
+                protectionKeyController: protectionKeyControllerMock,
+                events: ProtectionEvents,
+                debug: new DebugMock(),
+                protectionModel: protectionModelMock,
+                eventBus: eventBus,
+                constants: Constants,
+                settings: settingsMock,
+                cmcdController: cmcdControllerMock,
+                customParametersModel: customParametersModelMock
+            });
+        });
+
+        afterEach(function () {
+            xhrMock.restore();
+            protectionController.reset();
+            settingsMock.reset();
+            sinon.restore();
+        });
+
+        it('should have applyCmcdToRequest available for license request integration', function () {
+            // ProtectionController calls cmcdController.applyCmcdToRequest in _doLicenseRequest
+            // to apply CMCD data to license requests. Verify the integration contract:
+            // applyCmcdToRequest exists and can be called with a license-type request.
+            expect(cmcdControllerMock.applyCmcdToRequest).to.be.a('function');
+
+            const request = {
+                url: 'http://license-server.com',
+                type: HTTPRequest.LICENSE,
+                method: 'POST',
+                headers: {}
+            };
+
+            // Should not throw when called with a license request
+            expect(() => cmcdControllerMock.applyCmcdToRequest(request)).to.not.throw();
         });
 
     });

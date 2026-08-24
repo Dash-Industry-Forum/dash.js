@@ -104,6 +104,8 @@ function ManifestUpdater() {
     function initialize() {
         resetInitialSettings();
 
+        locationSelector.initialize();
+
         eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, this);
@@ -123,11 +125,12 @@ function ManifestUpdater() {
     }
 
     function reset() {
-
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, this);
         eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, this);
         eventBus.off(Events.INTERNAL_MANIFEST_LOADED, _onManifestLoaded, this);
+
+        locationSelector.reset();
 
         resetInitialSettings();
     }
@@ -244,12 +247,16 @@ function ManifestUpdater() {
         }
 
         // See DASH-IF IOP v4.3 section 4.6.4 "Transition Phase between Live and On-Demand"
-        // Stop manifest update, ignore static manifest and signal end of dynamic stream to detect end of stream
-        if (manifestModel.getValue() && manifestModel.getValue().type === DashConstants.DYNAMIC && manifest.type === DashConstants.STATIC) {
+        // Stop the manifest updates and signal the end of the dynamic stream. If enabled, apply the final static manifest so that duration, seekable range and segment information reflect the static MPD.
+        const currentManifest = manifestModel.getValue();
+        if (currentManifest && currentManifest.type === DashConstants.DYNAMIC && manifest.type === DashConstants.STATIC) {
             eventBus.trigger(Events.DYNAMIC_TO_STATIC);
-            isUpdating = false;
             isStopped = true;
-            return;
+            if (settings.get().streaming.ignoreFinalStaticManifestOnDynamicToStaticTransition) {
+                // Legacy behavior: ignore the final static manifest
+                isUpdating = false;
+                return;
+            }
         }
 
         manifestModel.setValue(manifest);

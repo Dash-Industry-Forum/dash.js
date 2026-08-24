@@ -108,6 +108,7 @@ describe('Reference Player - SettingsController', function () {
         createCheckbox('opt-enhancement-enabled', false);
 
         // Checkboxes consumed by _bindAll() only (not buildConfig), but needed for init()
+        createCheckbox('opt-autoload', false);
         createCheckbox('opt-autoplay', true);
         createCheckbox('opt-loop', true);
         createCheckbox('opt-muted', false);
@@ -115,6 +116,7 @@ describe('Reference Player - SettingsController', function () {
         // --- Selects / dropdowns ---
         createSelect('opt-log-level', ['0', '1', '2', '3', '4', '5'], '3');
         createSelect('opt-catchup-mode', ['liveCatchupModeDefault', 'liveCatchupModeLoLP', 'liveCatchupModeStep'], 'liveCatchupModeDefault');
+        createSelect('opt-cmcd-version', ['1', '2'], '1');
         createSelect('opt-cmcd-mode', ['query', 'header'], 'query');
 
         // --- Number / text inputs ---
@@ -131,6 +133,7 @@ describe('Reference Player - SettingsController', function () {
         createInput('opt-cmcd-rtp', '');
         createInput('opt-cmcd-rtp-safety', '5');
         createInput('opt-cmcd-enabled-keys', '');
+        createInput('opt-cmcd-include-in-requests', '');
         createInput('opt-cmsd-etp-weight', '0.5');
         createInput('opt-catchup-max-drift', '');
         createInput('opt-catchup-live-threshold', '');
@@ -673,22 +676,26 @@ describe('Reference Player - SettingsController', function () {
 
         it('should apply streaming.cmcd settings when opt-cmcd-enabled is checked', function () {
             document.getElementById('opt-cmcd-enabled').checked = true;
+            document.getElementById('opt-cmcd-version').value = '2';
             document.getElementById('opt-cmcd-mode').value = 'header';
             document.getElementById('opt-cmcd-session-id').value = 'test-session';
             document.getElementById('opt-cmcd-content-id').value = 'test-content';
             document.getElementById('opt-cmcd-rtp').value = '5000';
             document.getElementById('opt-cmcd-rtp-safety').value = '3';
             document.getElementById('opt-cmcd-enabled-keys').value = 'br,bl,dl';
+            document.getElementById('opt-cmcd-include-in-requests').value = 'segment,mpd';
 
             let s = applyConfig();
 
             expect(s.streaming.cmcd.enabled).to.be.true;
+            expect(s.streaming.cmcd.version).to.equal(2);
             expect(s.streaming.cmcd.mode).to.equal('header');
             expect(s.streaming.cmcd.sid).to.equal('test-session');
             expect(s.streaming.cmcd.cid).to.equal('test-content');
             expect(s.streaming.cmcd.rtp).to.equal(5000);
             expect(s.streaming.cmcd.rtpSafetyFactor).to.equal(3);
             expect(s.streaming.cmcd.enabledKeys).to.deep.equal(['br', 'bl', 'dl']);
+            expect(s.streaming.cmcd.includeInRequests).to.deep.equal(['segment', 'mpd']);
         });
 
         it('should not override streaming.cmcd when opt-cmcd-enabled is unchecked', function () {
@@ -1090,6 +1097,43 @@ describe('Reference Player - SettingsController', function () {
         it('should return false when autoLoad=true but no stream', function () {
             const result = setUrlAndApply('autoLoad=true');
             expect(result).to.be.false;
+        });
+
+        // ---- Legacy parameter backward compatibility ----
+
+        it('should accept legacy mpd parameter as stream URL', function () {
+            setUrlAndApply('mpd=https%3A%2F%2Fexample.com%2Ftest.mpd');
+            expect(document.getElementById('stream-url').value).to.equal('https://example.com/test.mpd');
+        });
+
+        it('should prefer stream over mpd when both are present', function () {
+            setUrlAndApply('stream=https%3A%2F%2Fexample.com%2Fstream.mpd&mpd=https%3A%2F%2Fexample.com%2Flegacy.mpd');
+            expect(document.getElementById('stream-url').value).to.equal('https://example.com/stream.mpd');
+        });
+
+        it('should return true when autoLoad=true and mpd is set', function () {
+            const result = setUrlAndApply('autoLoad=true&mpd=https%3A%2F%2Fexample.com%2Ftest.mpd');
+            expect(result).to.be.true;
+        });
+
+        it('should accept legacy autoPlay (camelCase) parameter', function () {
+            document.getElementById('opt-autoplay').checked = false;
+            setUrlAndApply('autoPlay=true');
+            expect(document.getElementById('opt-autoplay').checked).to.be.true;
+            expect(settingsController.autoPlay).to.be.true;
+        });
+
+        it('should set opt-autoload checked from URL', function () {
+            document.getElementById('opt-autoload').checked = false;
+            setUrlAndApply('autoLoad=true');
+            expect(document.getElementById('opt-autoload').checked).to.be.true;
+        });
+
+        it('should not pass mpd or autoPlay to player.updateSettings()', function () {
+            const settingsBefore = JSON.stringify(player.getSettings());
+            setUrlAndApply('mpd=https%3A%2F%2Fexample.com%2Ftest.mpd&autoPlay=true');
+            const settingsAfter = JSON.stringify(player.getSettings());
+            expect(settingsBefore).to.equal(settingsAfter);
         });
 
         // ---- Boolean checkbox settings via URL ----

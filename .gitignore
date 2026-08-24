@@ -1,7 +1,5 @@
 /simple.html
 samples/mpds
-samples/network-interceptor/node_modules
-samples/network-interceptor/dist
 #################
 ## Node.js
 #################
@@ -191,9 +189,11 @@ build/typings/
 # Vim
 .vimrc
 
-# Karma Unit Tets
+# Unit test results
 test/unit/results
-# Karma Functional tests
+# Screenshot artifacts created by IDE visual testing tools
+test/unit/test/**/__screenshots__
+# Functional test results
 test/functional/results
 test/functional/config/selenium/jars
 test/functional/standalone/.bundled-tests
@@ -201,6 +201,7 @@ test/functional/standalone/.bundled-tests-legacy
 test/functional/standalone/results
 test/functional/standalone/data
 samples/custom
+samples/test
 samples/mpds/
 samples/modules/webpack/package-lock.json
 samples/modules/webpack/dist
@@ -209,3 +210,17 @@ samples/modules/typescript/package-lock.json
 samples/modules/typescript/dist
 samples/modules/typescript/node_modules
 test/functional/apps/webos/test-app/com.dashjs.app_1.0.0_all.ipk
+
+test-results
+
+.claude/settings.local.json
+
+#################
+## VitePress docs site (docs/site)
+#################
+docs/site/.vitepress/dist
+docs/site/.vitepress/cache
+
+*.tgz
+.playwright-mcp
+.opencode

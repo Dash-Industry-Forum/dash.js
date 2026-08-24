@@ -171,8 +171,14 @@ const SETTINGS_DESCRIPTIONS = {
     'opt-cmcd-rtp-safety':
         'This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor.\n\nIf not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.',
 
+    'opt-cmcd-version':
+        'The version of the CMCD specification to use. Version 1 (CTA-5004) uses request-based reporting only. Version 2 adds event-mode reporting with configurable targets.\n\nDefaults to 1.',
+
     'opt-cmcd-enabled-keys':
         'This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.',
+
+    'opt-cmcd-include-in-requests':
+        'Specifies which HTTP GET requests shall carry CMCD parameters.\n\nIf not specified this value defaults to [\'segment\', \'mpd\'].',
 
     // ---- CMSD ----
 

@@ -28,64 +28,58 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus.js';
-import MediaPlayerEvents from '../MediaPlayerEvents.js';
-import MetricsReportingEvents from '../metrics/MetricsReportingEvents.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Settings from '../../core/Settings.js';
-import Constants from '../../streaming/constants/Constants.js';
+
+import {
+    CmcdObjectType,
+    CmcdStreamType,
+    CmcdStreamingFormat,
+    toCmcdValue,
+} from '@svta/cml-cmcd';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
-import DashManifestModel from '../../dash/models/DashManifestModel.js';
-import Debug from '../../core/Debug.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import Utils from '../../core/Utils.js';
-import { CMCD_PARAM, CmcdObjectType, CmcdStreamType, CmcdStreamingFormat, encodeCmcd, toCmcdHeaders, CmcdHeaderField } from '@svta/cml-cmcd';
-const DEFAULT_CMCD_VERSION = 1;
-const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
+import Constants from '../../streaming/constants/Constants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import DashManifestModel from '../../dash/models/DashManifestModel.js';
+import CmcdConfigAccessor from '../cmcd/config/CmcdConfigAccessor.js';
+
 const RTP_SAFETY_FACTOR = 5;
 
-function CmcdModel() {
+const REQUEST_TYPE_TO_CMCD_FILTER = {
+    [HTTPRequest.INIT_SEGMENT_TYPE]: 'segment',
+    [HTTPRequest.MEDIA_SEGMENT_TYPE]: 'segment',
+    [HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
+    [HTTPRequest.MPD_TYPE]: 'mpd',
+    [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
+    [HTTPRequest.OTHER_TYPE]: 'other',
+};
 
-    let dashManifestModel,
-        instance,
-        logger,
-        internalData,
-        abrController,
+function CmcdModel() {
+    let instance,
         dashMetrics,
-        playbackController,
         serviceDescriptionController,
+        playbackController,
+        abrController,
         throughputController,
-        streamProcessors,
+        cmcdConfigAccessor,
         _lastMediaTypeRequest,
         _isStartup,
         _bufferLevelStarved,
         _initialMediaRequestsDone,
         _playbackStartedTime,
-        _msdSent;
+        _isSeeking,
+        streamProcessors,
+        _rebufferingStartTime = {},
+        _rebufferingDuration = {},
+        _streamType,
+        _streamingFormat,
+        _topBitrateCache;
 
     let context = this.context;
-    let eventBus = EventBus(context).getInstance();
-    let settings = Settings(context).getInstance();
-    let debug = Debug(context).getInstance();
 
     function setup() {
-        dashManifestModel = DashManifestModel(context).getInstance();
-        logger = debug.getLogger(instance);
-        _resetInitialSettings();
-    }
-
-    function initialize(autoPlay) {
-        eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
-        eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
-        eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
-        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
-        if (autoPlay) {
-            eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
-        }
-        else {
-            eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
-        }
-        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+        cmcdConfigAccessor = CmcdConfigAccessor(context).getInstance();
+        resetInitialSettings();
     }
 
     function setConfig(config) {
@@ -101,12 +95,12 @@ function CmcdModel() {
             dashMetrics = config.dashMetrics;
         }
 
-        if (config.throughputController) {
-            throughputController = config.throughputController;
-        }
-
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+
+        if (config.throughputController) {
+            throughputController = config.throughputController;
         }
 
         if (config.serviceDescriptionController) {
@@ -114,292 +108,32 @@ function CmcdModel() {
         }
     }
 
-    function _resetInitialSettings() {
-        internalData = {
-            pr: 1,
-            nor: null,
-            st: null,
-            sf: null,
-            sid: `${Utils.generateUuid()}`,
-            cid: null
-        };
-        _bufferLevelStarved = {};
-        _isStartup = {};
-        _initialMediaRequestsDone = {};
-        _lastMediaTypeRequest = undefined;
-        _playbackStartedTime = undefined;
-        _msdSent = false;
-        _updateStreamProcessors();
+    function _isValidValue(value) {
+        return value !== null && value !== undefined && !isNaN(value) && isFinite(value);
     }
 
-    function _onPeriodSwitchComplete() {
-        _updateStreamProcessors();
-    }
-
-    function _onPlaybackStarted() {
-        if (!_playbackStartedTime) {
-            _playbackStartedTime = Date.now();
+    function _toInnerList(videoValue, audioValue) {
+        const values = [];
+        if (_isValidValue(videoValue)) {
+            values.push(toCmcdValue(videoValue, { v: true }));
         }
-    }
-
-    function _onPlaybackPlaying() {
-        if (!_playbackStartedTime || internalData.msd) {
-            return;
+        if (_isValidValue(audioValue)) {
+            values.push(toCmcdValue(audioValue, { a: true }));
         }
-
-        internalData.msd = Date.now() - _playbackStartedTime;
+        return values.length > 0 ? values : null;
     }
 
-    function _updateStreamProcessors() {
-        if (!playbackController) {
-            return;
-        }
-        const streamController = playbackController.getStreamController();
-        if (!streamController) {
-            return;
-        }
-        if (typeof streamController.getActiveStream !== 'function') {
-            return;
-        }
-        const activeStream = streamController.getActiveStream();
-        if (!activeStream) {
-            return;
-        }
-        streamProcessors = activeStream.getStreamProcessors();
-    }
-
-    function getQueryParameter(request) {
-        try {
-            if (isCmcdEnabled()) {
-                const cmcdData = getCmcdData(request);
-                const filteredCmcdData = _applyWhitelist(cmcdData);
-                const finalPayloadString = encodeCmcd(filteredCmcdData);
-
-                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
-                    url: request.url,
-                    mediaType: request.mediaType,
-                    cmcdData,
-                    cmcdString: finalPayloadString
-                });
-                return {
-                    key: CMCD_PARAM,
-                    value: finalPayloadString
-                };
-            }
-
-            return null;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function _applyWhitelist(cmcdData) {
-        try {
-            const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-            const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-
-            return Object.keys(cmcdData)
-                .filter(key => enabledCMCDKeys.includes(key))
-                .reduce((obj, key) => {
-                    obj[key] = cmcdData[key];
-                    return obj;
-                }, {});
-        } catch (e) {
-            return cmcdData;
-        }
-    }
-
-    function getHeaderParameters(request) {
-        try {
-            if (isCmcdEnabled()) {
-                const cmcdData = getCmcdData(request);
-                const filteredCmcdData = _applyWhitelist(cmcdData);
-                const options = _createCmcdV2HeadersCustomMap();
-                const headers = toCmcdHeaders(filteredCmcdData, options);
-
-                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
-                    url: request.url,
-                    mediaType: request.mediaType,
-                    cmcdData,
-                    headers
-                });
-                return headers;
-            }
-
-            return null;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function isCmcdEnabled() {
-        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-        return _canBeEnabled(cmcdParametersFromManifest) && _checkIncludeInRequests(cmcdParametersFromManifest) && _checkAvailableKeys(cmcdParametersFromManifest);
-    }
-
-    function _canBeEnabled(cmcdParametersFromManifest) {
-        if (Object.keys(cmcdParametersFromManifest).length) {
-            if (parseInt(cmcdParametersFromManifest.version) !== 1) {
-                logger.error(`version parameter must be defined in 1.`);
-                return false;
-            }
-            if (!cmcdParametersFromManifest.keys) {
-                logger.error(`keys parameter must be defined.`);
-                return false;
-            }
-        }
-        const isEnabledFromManifest = cmcdParametersFromManifest.version;
-        const isEnabledFromSettings = settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
-        return isEnabledFromManifest || isEnabledFromSettings;
-    }
-
-    function _checkIncludeInRequests(cmcdParametersFromManifest) {
-        let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
-
-        if (cmcdParametersFromManifest.version) {
-            enabledRequests = cmcdParametersFromManifest.includeInRequests ?? [DEFAULT_INCLUDE_IN_REQUESTS];
-        }
-
-        const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
-        const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
-
-        if (invalidRequests.length === enabledRequests.length) {
-            logger.error(`None of the request types are supported.`);
-            return false;
-        }
-
-        invalidRequests.map((k) => {
-            logger.warn(`request type ${k} is not supported.`);
-        });
-
-        return true;
-    }
-
-    function _checkAvailableKeys(cmcdParametersFromManifest) {
-        const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS;
-        const defaultV2AvailableKeys = Constants.CMCD_V2_AVAILABLE_KEYS;
-        const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-        const cmcdVersion = settings.get().streaming.cmcd.version;
-        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k) && !(cmcdVersion === 2 && defaultV2AvailableKeys.includes(k)));
-
-        if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
-            logger.error(`None of the keys are implemented for CMCD version ${cmcdVersion}.`);
-            return false;
-        }
-        invalidKeys.map((k) => {
-            logger.warn(`key parameter ${k} is not implemented for CMCD version ${cmcdVersion}.`);
-        });
-
-        return true;
-    }
-
-    function getCmcdParametersFromManifest() {
-        let cmcdParametersFromManifest = {};
-        if (serviceDescriptionController) {
-            const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
-            if (
-                settings.get().streaming.cmcd.applyParametersFromMpd &&
-                serviceDescription.clientDataReporting &&
-                serviceDescription.clientDataReporting.cmcdParameters
-            ) {
-                cmcdParametersFromManifest = serviceDescription.clientDataReporting.cmcdParameters;
-            }
-        }
-        return cmcdParametersFromManifest;
-    }
-
-    function _isIncludedInRequestFilter(type) {
-        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-        let includeInRequestsArray = settings.get().streaming.cmcd.includeInRequests;
-
-        if (cmcdParametersFromManifest.version) {
-            includeInRequestsArray = cmcdParametersFromManifest.includeInRequests ? cmcdParametersFromManifest.includeInRequests : [DEFAULT_INCLUDE_IN_REQUESTS];
-        }
-
-        const filtersTypes = {
-            [HTTPRequest.INIT_SEGMENT_TYPE]: 'segment',
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]: 'segment',
-            [HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
-            [HTTPRequest.MPD_TYPE]: 'mpd',
-            [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
-            [HTTPRequest.OTHER_TYPE]: 'other',
-        };
-
-        return includeInRequestsArray.some(t => filtersTypes[type] === t);
-    }
-
-    function getCmcdData(request) {
-        try {
-            let cmcdData = null;
-
-            _updateLastMediaTypeRequest(request.type, request.mediaType);
-
-            if (_isIncludedInRequestFilter(request.type)) {
-                if (request.type === HTTPRequest.MPD_TYPE) {
-                    return _getCmcdDataForMpd(request);
-                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                    _initForMediaType(request.mediaType);
-                    return _getCmcdDataForMediaSegment(request, request.mediaType);
-                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-                    return _getCmcdDataForInitSegment(request);
-                } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
-                    return _getCmcdDataForOther(request);
-                } else if (request.type === HTTPRequest.LICENSE) {
-                    return _getCmcdDataForLicense(request);
-                } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
-                    return _getCmcdDataForSteering(request);
-                }
-            }
-            return cmcdData;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function _updateLastMediaTypeRequest(type, mediatype) {
-        // Video > Audio > None
-        if (mediatype === Constants.VIDEO || mediatype === Constants.AUDIO) {
-            if (!_lastMediaTypeRequest || _lastMediaTypeRequest == Constants.AUDIO) {
-                _lastMediaTypeRequest = mediatype;
-            }
-        }
-    }
-
-    function _getCmcdDataForSteering(request) {
-        const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
-
-        data.ot = CmcdObjectType.OTHER;
-
-        return data;
-    }
-
-    function _getCmcdDataForLicense(request) {
-        const data = _getGenericCmcdData(request);
-
-        data.ot = CmcdObjectType.KEY;
-
-        return data;
-    }
-
-    function _getCmcdDataForMpd() {
-        const data = _getGenericCmcdData();
-
-        data.ot = CmcdObjectType.MANIFEST;
-
-        return data;
-    }
-
-    function _getCmcdDataForMediaSegment(request, mediaType) {
+    function _calculateCmcdDataForRequestForMediaSegment(request, mediaType) {
         _initForMediaType(mediaType);
-        const data = _getGenericCmcdData();
+        const data = getGenericCmcdData(mediaType);
         const encodedBitrate = _getBitrateByRequest(request);
         const d = _getObjectDurationByRequest(request);
         const mtp = _getMeasuredThroughputByType(mediaType);
         const dl = _getDeadlineByType(mediaType);
         const bl = _getBufferLevelByType(mediaType);
         const tb = _getTopBitrateByType(request.representation?.mediaInfo);
-        const pr = internalData.pr;
-
+        const tpb = _getTopPlayableBitrate(mediaType);
+        const pb = _getPlayheadBitrate(mediaType);
         const nextRequest = _probeNextRequest(mediaType);
 
         let ot;
@@ -420,24 +154,25 @@ function CmcdModel() {
             }
         }
 
-        let rtp = settings.get().streaming.cmcd.rtp;
-        if (!rtp) {
-            rtp = _calculateRtp(request);
-        }
+        const rtp = cmcdConfigAccessor.has('rtp')
+            ? cmcdConfigAccessor.get('rtp')
+            : _calculateRtp(request);
         if (!isNaN(rtp)) {
             data.rtp = rtp;
         }
 
         if (nextRequest) {
             if (request.url !== nextRequest.url) {
-                data.nor = encodeURIComponent(Utils.getRelativeUrl(request.url, nextRequest.url));
-            } else if (nextRequest.range) {
-                data.nrr = nextRequest.range;
+                const relativeUrl = Utils.getRelativeUrl(request.url, nextRequest.url);
+                const params = nextRequest.range ? { r: nextRequest.range } : undefined;
+                data.nor = [toCmcdValue(relativeUrl, params)];
             }
         }
 
         if (encodedBitrate) {
-            data.br = encodedBitrate;
+            const videoBr = mediaType === Constants.VIDEO ? encodedBitrate : null;
+            const audioBr = mediaType === Constants.AUDIO ? encodedBitrate : null;
+            data.br = _toInnerList(videoBr, audioBr) || [toCmcdValue(encodedBitrate, {})];
         }
 
         if (ot) {
@@ -449,7 +184,9 @@ function CmcdModel() {
         }
 
         if (!isNaN(mtp)) {
-            data.mtp = mtp;
+            const videoMtp = mediaType === Constants.VIDEO ? mtp : null;
+            const audioMtp = mediaType === Constants.AUDIO ? mtp : null;
+            data.mtp = _toInnerList(videoMtp, audioMtp) || [toCmcdValue(mtp, {})];
         }
 
         if (!isNaN(dl)) {
@@ -457,15 +194,27 @@ function CmcdModel() {
         }
 
         if (!isNaN(bl)) {
-            data.bl = bl;
+            const videoBl = mediaType === Constants.VIDEO ? bl : null;
+            const audioBl = mediaType === Constants.AUDIO ? bl : null;
+            data.bl = _toInnerList(videoBl, audioBl) || [toCmcdValue(bl, {})];
         }
 
-        if (!isNaN(tb)) {
-            data.tb = tb;
+        if (!isNaN(tb) && isFinite(tb)) {
+            const videoTb = mediaType === Constants.VIDEO ? tb : null;
+            const audioTb = mediaType === Constants.AUDIO ? tb : null;
+            data.tb = _toInnerList(videoTb, audioTb) || [toCmcdValue(tb, {})];
         }
 
-        if (!isNaN(pr) && pr !== 1) {
-            data.pr = pr;
+        if (tpb !== null && !isNaN(tpb)) {
+            const videoTpb = mediaType === Constants.VIDEO ? tpb : null;
+            const audioTpb = mediaType === Constants.AUDIO ? tpb : null;
+            data.tpb = _toInnerList(videoTpb, audioTpb) || [toCmcdValue(tpb, {})];
+        }
+
+        if (pb !== null && !isNaN(pb)) {
+            const videoPb = mediaType === Constants.VIDEO ? pb : null;
+            const audioPb = mediaType === Constants.AUDIO ? pb : null;
+            data.pb = _toInnerList(videoPb, audioPb) || [toCmcdValue(pb, {})];
         }
 
         if (_bufferLevelStarved[mediaType]) {
@@ -473,11 +222,20 @@ function CmcdModel() {
             _bufferLevelStarved[mediaType] = false;
         }
 
+        if (_rebufferingDuration[mediaType]) {
+            const videoBsd = mediaType === Constants.VIDEO ? _rebufferingDuration[mediaType] : null;
+            const audioBsd = mediaType === Constants.AUDIO ? _rebufferingDuration[mediaType] : null;
+            data.bsd = _toInnerList(videoBsd, audioBsd) || [toCmcdValue(_rebufferingDuration[mediaType], {})];
+            delete _rebufferingDuration[mediaType];
+        }
+
         if (_isStartup[mediaType] || !_initialMediaRequestsDone[mediaType]) {
             data.su = true;
             _isStartup[mediaType] = false;
             _initialMediaRequestsDone[mediaType] = true;
         }
+
+        Object.assign(data, _getAggregatedBitrateData());
 
         return data;
     }
@@ -497,8 +255,8 @@ function CmcdModel() {
         }
     }
 
-    function _getCmcdDataForInitSegment() {
-        const data = _getGenericCmcdData();
+    function _calculateCmcdDataForRequestForInitSegment() {
+        const data = getGenericCmcdData();
 
         data.ot = CmcdObjectType.INIT;
         data.su = true;
@@ -506,70 +264,31 @@ function CmcdModel() {
         return data;
     }
 
-    function _getCmcdDataForOther() {
-        const data = _getGenericCmcdData();
+    function _calculateCmcdDataForRequestForOther() {
+        const data = getGenericCmcdData();
 
         data.ot = CmcdObjectType.OTHER;
 
         return data;
     }
 
-
-    function _getGenericCmcdData() {
-        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+    function _getEncodedBitrateData() {
         const data = {};
-
-        let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
-        cid = cmcdParametersFromManifest.contentID ? cmcdParametersFromManifest.contentID : cid;
-
-        data.v = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
-
-        data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
-        data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
-
-        data.sid = `${data.sid}`;
-
-        if (cid) {
-            data.cid = `${cid}`;
+        const activeStream = playbackController.getStreamController()?.getActiveStream();
+        if (!activeStream) {
+            return data;
         }
 
-        if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
-            data.pr = internalData.pr;
+        const videoRep = activeStream.getCurrentRepresentationForType(Constants.VIDEO);
+        const audioRep = activeStream.getCurrentRepresentationForType(Constants.AUDIO);
+        const videoBr = videoRep ? Math.round(videoRep.bitrateInKbit) : null;
+        const audioBr = audioRep ? Math.round(audioRep.bitrateInKbit) : null;
+        const brValues = _toInnerList(videoBr, audioBr);
+        if (brValues) {
+            data.br = brValues;
         }
-
-        if (internalData.st) {
-            data.st = internalData.st;
-        }
-
-        if (internalData.sf) {
-            data.sf = internalData.sf;
-        }
-
-        if (data.v === 2) {
-            let ltc = playbackController.getCurrentLiveLatency() * 1000;
-            if (!isNaN(ltc)) {
-                data.ltc = ltc;
-            }
-            const msd = internalData.msd;
-            if (!_msdSent && !isNaN(msd)) {
-                data.msd = msd;
-                _msdSent = true;
-            }
-        }
-
-        
 
         return data;
-    }
-
-    function _createCmcdV2HeadersCustomMap() {
-        const cmcdVersion = settings.get().streaming.cmcd.version;
-        return cmcdVersion === 1 ? {} : { 
-            customHeaderMap: { 
-                [CmcdHeaderField.REQUEST]: ['ltc'],
-                [CmcdHeaderField.SESSION]: ['msd']
-            }
-        };
     }
 
     function _getBitrateByRequest(request) {
@@ -582,10 +301,104 @@ function CmcdModel() {
 
     function _getTopBitrateByType(mediaInfo) {
         try {
+            // Within a single request's data build the same representation list backs both tb and
+            // tpb. Reuse the result so the list is rebuilt once per mediaInfo, not per key.
+            if (_topBitrateCache && _topBitrateCache.has(mediaInfo)) {
+                return _topBitrateCache.get(mediaInfo);
+            }
             const bitrates = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => {
                 return rep.bitrateInKbit
             });
-            return Math.max(...bitrates)
+            const tb = Math.max(...bitrates);
+            if (_topBitrateCache) {
+                _topBitrateCache.set(mediaInfo, tb);
+            }
+            return tb;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getPlayheadBitrate(mediaType) {
+        try {
+            if (!streamProcessors || streamProcessors.length === 0) {
+                return null;
+            }
+
+            const streamProcessor = streamProcessors.find(sp => sp.getType() === mediaType);
+            const bitrate = streamProcessor?.getRepresentationController()?.getCurrentRepresentation()?.bitrateInKbit;
+
+            if (bitrate !== undefined && !isNaN(bitrate)) {
+                return Math.round(bitrate);
+            }
+
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getPlayheadBitrateData() {
+        const data = {};
+        const videoPb = _getPlayheadBitrate(Constants.VIDEO);
+        const audioPb = _getPlayheadBitrate(Constants.AUDIO);
+        const pbValues = _toInnerList(videoPb, audioPb);
+        if (pbValues) {
+            data.pb = pbValues;
+        }
+
+        return data;
+    }
+
+    function _getTopBitrateDataForType(mediaType) {
+        if (!streamProcessors || streamProcessors.length === 0) {
+            return null;
+        }
+        const sp = streamProcessors.find(p => p.getType() === mediaType);
+        if (!sp) {
+            return null;
+        }
+        const mediaInfo = sp.getMediaInfo();
+        const tb = _getTopBitrateByType(mediaInfo);
+        return isFinite(tb) && tb > 0 ? tb : null;
+    }
+
+    function _getTopBitrateData() {
+        const data = {};
+        const videoTb = _getTopBitrateDataForType(Constants.VIDEO);
+        const audioTb = _getTopBitrateDataForType(Constants.AUDIO);
+        const tbValues = _toInnerList(videoTb, audioTb);
+        if (tbValues) {
+            data.tb = tbValues;
+        }
+
+        const videoTpb = _getTopPlayableBitrate(Constants.VIDEO);
+        const audioTpb = _getTopPlayableBitrate(Constants.AUDIO);
+        const tpbValues = _toInnerList(videoTpb, audioTpb);
+        if (tpbValues) {
+            data.tpb = tpbValues;
+        }
+
+        return data;
+    }
+
+    function _getTopPlayableBitrate(mediaType) {
+        try {
+            if (!streamProcessors || streamProcessors.length === 0) {
+                return null;
+            }
+
+            const streamProcessor = streamProcessors.find(p => p.getType() === mediaType);
+
+            if (streamProcessor) {
+                const mediaInfo = streamProcessor.getMediaInfo();
+                const topBitrate = _getTopBitrateByType(mediaInfo);
+
+                // _getTopBitrateByType can return -Infinity for empty arrays, which is not a valid bitrate.
+                return isFinite(topBitrate) && topBitrate > 0 ? topBitrate : null;
+            }
+
+            return null;
         } catch (e) {
             return null;
         }
@@ -607,9 +420,21 @@ function CmcdModel() {
         }
     }
 
+    function _getMeasuredThroughputData() {
+        const data = {};
+        const videoMtp = _getMeasuredThroughputByType(Constants.VIDEO);
+        const audioMtp = _getMeasuredThroughputByType(Constants.AUDIO);
+        const mtpValues = _toInnerList(videoMtp, audioMtp);
+        if (mtpValues) {
+            data.mtp = mtpValues;
+        }
+
+        return data;
+    }
+
     function _getDeadlineByType(mediaType) {
         try {
-            const playbackRate = internalData.pr;
+            const playbackRate = playbackController ? playbackController.getPlaybackRate() : 1;
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
 
             if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
@@ -636,27 +461,19 @@ function CmcdModel() {
         }
     }
 
-    function _onPlaybackRateChanged(data) {
-        try {
-            internalData.pr = data.playbackRate;
-        } catch (e) {
-
+    function _getBufferLevelData() {
+        const data = {};
+        const videoBl = _getBufferLevelByType(Constants.VIDEO);
+        const audioBl = _getBufferLevelByType(Constants.AUDIO);
+        const blValues = _toInnerList(videoBl, audioBl);
+        if (blValues) {
+            data.bl = blValues;
         }
+
+        return data;
     }
 
-    function _onManifestLoaded(data) {
-        try {
-            const isDynamic = dashManifestModel.getIsDynamic(data.data);
-            const st = isDynamic ? CmcdStreamType.LIVE : CmcdStreamType.VOD;
-            const sf = data.protocol && data.protocol === 'MSS' ? CmcdStreamingFormat.SMOOTH : CmcdStreamingFormat.DASH;
-
-            internalData.st = `${st}`;
-            internalData.sf = `${sf}`;
-        } catch (e) {
-        }
-    }
-
-    function _onBufferLevelStateChanged(data) {
+    function onBufferLevelStateChanged(data) {
         try {
             if (data.state && data.mediaType) {
                 if (data.state === MediaPlayerEvents.BUFFER_EMPTY) {
@@ -674,7 +491,13 @@ function CmcdModel() {
         }
     }
 
-    function _onPlaybackSeeked() {
+    function onPlaybackSeeking() {
+        _isSeeking = true;
+    }
+
+    function onPlaybackSeeked() {
+        _isSeeking = false;
+
         for (let key in _bufferLevelStarved) {
             if (_bufferLevelStarved.hasOwnProperty(key)) {
                 _bufferLevelStarved[key] = true;
@@ -688,6 +511,10 @@ function CmcdModel() {
         }
     }
 
+    function wasPlaying() {
+        return !_isSeeking && _playbackStartedTime;
+    }
+
     function _probeNextRequest(mediaType) {
         if (!streamProcessors || streamProcessors.length === 0) {
             return;
@@ -699,9 +526,127 @@ function CmcdModel() {
         }
     }
 
+    function onPeriodSwitchComplete() {
+        _updateStreamProcessors();
+    }
+
+    function onPlaybackStarted() {
+        if (!_playbackStartedTime) {
+            _playbackStartedTime = Date.now();
+        }
+    }
+
+    function onPlaybackPlaying() {
+        for (const mediaType in _rebufferingStartTime) {
+            if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
+                onRebufferingCompleted(mediaType);
+            }
+        }
+    }
+
+    function onRebufferingStarted(mediaType) {
+        if (mediaType && !_rebufferingStartTime[mediaType]) {
+            _rebufferingStartTime[mediaType] = Date.now();
+        }
+    }
+
+    function onRebufferingCompleted(mediaType) {
+        if (_rebufferingStartTime[mediaType] != null) {
+            _rebufferingDuration[mediaType] = Date.now() - _rebufferingStartTime[mediaType];
+            delete _rebufferingStartTime[mediaType];
+        }
+    }
+
+    function _calculateMsd() {
+        if (!_playbackStartedTime) {
+            return null;
+        }
+        return Date.now() - _playbackStartedTime;
+    }
+
+    function getGenericCmcdData(mediaType) {
+        const data = {};
+
+        // Note: ts, st, sf, pr are handled by CmcdReporter:
+        // - ts: auto-generated by recordEvent() / recordResponseReceived()
+        // - st, sf: persisted via cmcdReporter.update() in _onManifestLoaded
+        // - pr: persisted via cmcdReporter.update() in _onPlaybackRateChanged
+
+        let ltc = playbackController.getCurrentLiveLatency() * 1000;
+        if (!isNaN(ltc)) {
+            data.ltc = ltc;
+        }
+
+        if (typeof document !== 'undefined' && document.hidden) {
+            data.bg = true;
+        }
+
+        if (mediaType && _shouldIncludeDroppedFrames(mediaType)) {
+            const droppedFrames = dashMetrics.getCurrentDroppedFrames()?.droppedFrames;
+            if (droppedFrames > 0) {
+                data.df = droppedFrames;
+            }
+        }
+
+        return data;
+    }
+
+    function _shouldIncludeDroppedFrames(mediaType) {
+        return mediaType === Constants.VIDEO ||
+               mediaType === Constants.AUDIO ||
+               mediaType === Constants.OTHER;
+    }
+
+    function getEventModeData(){
+        const cmcdData = {
+            ...getGenericCmcdData(),
+            ..._getAggregatedBitrateData(),
+            ..._getEncodedBitrateData(),
+            ..._getBufferLevelData(),
+            ..._getMeasuredThroughputData(),
+            ..._getPlayheadBitrateData(),
+            ..._getTopBitrateData(),
+        };
+
+        return cmcdData;
+    }
+
+
+    function resetInitialSettings() {
+        _bufferLevelStarved = {};
+        _isStartup = {};
+        _initialMediaRequestsDone = {};
+        _isSeeking = false;
+        _lastMediaTypeRequest = undefined;
+        _playbackStartedTime = undefined;
+        _rebufferingStartTime = {};
+        _rebufferingDuration = {};
+        _streamType = undefined;
+        _streamingFormat = undefined;
+
+        _updateStreamProcessors();
+    }
+
+    function _updateStreamProcessors() {
+        if (!playbackController) {
+            return;
+        }
+        const streamController = playbackController.getStreamController();
+        if (!streamController) {
+            return;
+        }
+        if (typeof streamController.getActiveStream !== 'function') {
+            return;
+        }
+        const activeStream = streamController.getActiveStream();
+        if (!activeStream) {
+            return;
+        }
+        streamProcessors = activeStream.getStreamProcessors();
+    }
+
     function _calculateRtp(request) {
         try {
-            // Get the values we need
             let playbackRate = playbackController.getPlaybackRate();
             if (!playbackRate) {
                 playbackRate = 1;
@@ -721,7 +666,7 @@ function CmcdModel() {
             let segmentSize = (bandwidth * duration) / 1000; // Calculate file size in kilobits
             let timeToLoad = (currentBufferLevel / playbackRate) / 1000; // Calculate time available to load file in seconds
             let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
-            let rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
+            const rtpSafetyFactor = cmcdConfigAccessor.get('rtpSafetyFactor', { defaultValue: RTP_SAFETY_FACTOR });
             let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
 
 
@@ -732,26 +677,224 @@ function CmcdModel() {
         }
     }
 
-    function reset() {
-        eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
-        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-        eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+    function calculateMsd() {
+        const data = {};
+        const msd = _calculateMsd();
 
-        _resetInitialSettings();
+        if (msd !== null && !isNaN(msd)) {
+            data.msd = msd;
+        }
+
+        return data;
+    }
+
+    function onPlaybackRateChanged(data) {
+        if (data.playbackRate !== undefined) {
+            return { pr: data.playbackRate };
+        }
+        return null;
+    }
+
+    function onManifestLoaded(data) {
+        try {
+            const dashManifestModel = DashManifestModel(context).getInstance();
+            const isDynamic = dashManifestModel.getIsDynamic(data.data);
+            _streamType = isDynamic ? `${CmcdStreamType.LIVE}` : `${CmcdStreamType.VOD}`;
+            _streamingFormat = data.protocol && data.protocol === 'MSS' ? `${CmcdStreamingFormat.SMOOTH}` : `${CmcdStreamingFormat.DASH}`;
+            return { st: _streamType, sf: _streamingFormat };
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function getCmcdParametersFromManifest() {
+        let cmcdParametersFromManifest = {};
+        if (serviceDescriptionController) {
+            const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
+            if (
+                serviceDescription.clientDataReporting &&
+                serviceDescription.clientDataReporting.cmcdParameters
+            ) {
+                cmcdParametersFromManifest = serviceDescription.clientDataReporting.cmcdParameters;
+            }
+        }
+
+
+        return cmcdParametersFromManifest;
+    }
+
+    function updateCmcdManifestParamsInCmcdConfigAccessor() {
+        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+
+        // Update CmcdConfigAccessor with manifest parameters if available
+        // Note: Always update accessor when params exist, regardless of applyParametersFromMpd
+        // The accessor uses priority-based resolution, so manifest params will only be used
+        // when they have higher priority in the PropertyMap configuration
+        if (cmcdConfigAccessor && Object.keys(cmcdParametersFromManifest).length > 0) {
+            cmcdConfigAccessor.setManifestParams(cmcdParametersFromManifest);
+        } else if (cmcdConfigAccessor) {
+            // Clear manifest params if none are available
+            cmcdConfigAccessor.setManifestParams(null);
+        }
+
+    }
+
+    function deriveCmcdDataForRequest(request) {
+        // Share one top-bitrate computation across this request's data build (tb and tpb both
+        // resolve it from the representation list). Scoped to the call, so a later request still
+        // recomputes and runtime setting changes remain reflected.
+        _topBitrateCache = new Map();
+        try {
+            _updateLastMediaTypeRequest(request.type, request.mediaType);
+            let cmcdData = {};
+
+            if (isIncludedInRequestFilter(request.type)) {
+                if (request.type === HTTPRequest.MPD_TYPE) {
+                    return _calculateCmcdDataForRequestForMpd(request);
+                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                    _initForMediaType(request.mediaType);
+                    return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
+                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                    return _calculateCmcdDataForRequestForInitSegment(request);
+                } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
+                    return _calculateCmcdDataForRequestForOther(request);
+                } else if (request.type === HTTPRequest.LICENSE) {
+                    return _calculateCmcdDataForRequestForLicense(request);
+                } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
+                    return _calculateCmcdDataForRequestForSteering(request);
+                }
+            }
+            return cmcdData;
+        } catch (e) {
+            return null;
+        } finally {
+            _topBitrateCache = null;
+        }
+    }
+
+    function isIncludedInRequestFilter(type, includeInRequests) {
+        const includeInRequestsArray = includeInRequests ?? cmcdConfigAccessor.get('includeInRequests');
+        const filterType = REQUEST_TYPE_TO_CMCD_FILTER[type];
+
+        return filterType !== undefined && includeInRequestsArray.includes(filterType);
+    }
+
+    function reset() {
+        resetInitialSettings();
+    }
+
+    function _updateLastMediaTypeRequest(type, mediatype) {
+        // Video > Audio > None
+        if (mediatype === Constants.VIDEO || mediatype === Constants.AUDIO) {
+            if (!_lastMediaTypeRequest || _lastMediaTypeRequest === Constants.AUDIO) {
+                _lastMediaTypeRequest = mediatype;
+            }
+        }
+    }
+
+    function _calculateCmcdDataForRequestForSteering(request) {
+        const data = !_lastMediaTypeRequest ? getGenericCmcdData() : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
+
+        data.ot = CmcdObjectType.OTHER;
+
+        return data;
+    }
+
+    function _calculateCmcdDataForRequestForLicense() {
+        const data = getGenericCmcdData();
+
+        data.ot = CmcdObjectType.KEY;
+
+        return data;
+    }
+
+    function _calculateCmcdDataForRequestForMpd() {
+        const data = getGenericCmcdData();
+
+        data.ot = CmcdObjectType.MANIFEST;
+
+        return data;
+    }
+
+    function _getAggregatedBitrateData() {
+        // defining data to return
+        const data = {};
+        // accessing active stream
+        const activeStream = playbackController.getStreamController()?.getActiveStream();
+        if (!activeStream) {
+            return data;
+        }
+
+        // Get current representations
+        const videoRep = activeStream.getCurrentRepresentationForType(Constants.VIDEO);
+        const audioRep = activeStream.getCurrentRepresentationForType(Constants.AUDIO);
+
+        const currentVideoBitrate = videoRep ? videoRep.bitrateInKbit : 0;
+        const currentAudioBitrate = audioRep ? audioRep.bitrateInKbit : 0;
+
+        // Calculate aggregated bitrate
+        const abValues = _toInnerList(
+            currentVideoBitrate > 0 ? Math.round(currentVideoBitrate) : null,
+            currentAudioBitrate > 0 ? Math.round(currentAudioBitrate) : null
+        );
+        if (abValues) {
+            data.ab = abValues;
+        }
+
+        // Calculate top aggregated bitrate
+        const allVideoReps = activeStream.getRepresentationsByType(Constants.VIDEO) || [];
+        const allAudioReps = activeStream.getRepresentationsByType(Constants.AUDIO) || [];
+        const topVideoBitrate = allVideoReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+        const topAudioBitrate = allAudioReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+        const tabValues = _toInnerList(
+            topVideoBitrate > 0 ? Math.round(topVideoBitrate) : null,
+            topAudioBitrate > 0 ? Math.round(topAudioBitrate) : null
+        );
+        if (tabValues) {
+            data.tab = tabValues;
+        }
+
+        // Calculate lowest aggregated bitrate
+        const lowestVideoBitrate = allVideoReps.length > 0 ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit)) : 0;
+        const lowestAudioBitrate = allAudioReps.length > 0 ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit)) : 0;
+        const labValues = _toInnerList(
+            lowestVideoBitrate > 0 ? Math.round(lowestVideoBitrate) : null,
+            lowestAudioBitrate > 0 ? Math.round(lowestAudioBitrate) : null
+        );
+        if (labValues) {
+            data.lab = labValues;
+        }
+
+        return data;
+    }
+
+    function getLastMediaTypeRequest() {
+        return _lastMediaTypeRequest;
     }
 
     instance = {
-        getCmcdData,
-        getQueryParameter,
-        getHeaderParameters,
+        calculateMsd,
+        deriveCmcdDataForRequest,
         getCmcdParametersFromManifest,
-        setConfig,
+        getEventModeData,
+        getLastMediaTypeRequest,
+        isIncludedInRequestFilter,
+        onBufferLevelStateChanged,
+        onManifestLoaded,
+        onPeriodSwitchComplete,
+        onPlaybackPlaying,
+        onPlaybackRateChanged,
+        onPlaybackSeeked,
+        onPlaybackSeeking,
+        onPlaybackStarted,
+        onRebufferingCompleted,
+        onRebufferingStarted,
         reset,
-        initialize,
-        isCmcdEnabled,
+        resetInitialSettings,
+        setConfig,
+        setup,
+        updateCmcdManifestParamsInCmcdConfigAccessor,
+        wasPlaying,
     };
 
     setup();

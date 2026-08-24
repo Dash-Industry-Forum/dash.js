@@ -42,6 +42,7 @@ import {normalizeBcp47} from '../streaming/utils/BCP47Utils.js';
 import {getId3Frames} from '@svta/cml-id3';
 import Constants from '../streaming/constants/Constants.js';
 import Settings from '../core/Settings.js';
+import Debug from '../core/Debug.js';
 
 /**
  * @module DashAdapter
@@ -50,6 +51,7 @@ import Settings from '../core/Settings.js';
 
 function DashAdapter() {
     let instance,
+        logger,
         dashManifestModel,
         patchManifestModel,
         settings,
@@ -62,6 +64,7 @@ function DashAdapter() {
     const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         dashManifestModel = DashManifestModel(context).getInstance();
         patchManifestModel = PatchManifestModel(context).getInstance();
         settings = Settings(context).getInstance();
@@ -461,6 +464,49 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the fragment duration to be used for the live delay calculation for the period given by streamInfo.
+     * For SSR/L3D content using partial segments (k > 1) the request unit at the live edge is the partial segment,
+     * so the effective duration is segmentDuration / k. Without partial segments streamInfo.manifestInfo.maxFragmentDuration is used.
+     * @param {object} streamInfo
+     * @returns {number} fragment duration in seconds, or NaN
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getFragmentDurationForLiveDelayCalculation(streamInfo) {
+        const manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
+        const fallbackFragmentDuration = manifestInfo && Number.isFinite(manifestInfo.maxFragmentDuration) ? manifestInfo.maxFragmentDuration : NaN;
+
+        try {
+            let hasPartialSegments = false;
+            let maxEffectiveSegmentDuration = NaN;
+
+            const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
+            dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod).forEach((voAdaptation) => {
+                if (voAdaptation.type !== Constants.VIDEO && voAdaptation.type !== Constants.AUDIO && voAdaptation.type !== Constants.TEXT) {
+                    return;
+                }
+                dashManifestModel.getRepresentationsForAdaptation(voAdaptation).forEach((voRepresentation) => {
+                    if (voRepresentation && !isNaN(voRepresentation.segmentDuration) && voRepresentation.segmentDuration > 0) {
+                        if (voRepresentation.usesPartialSegments()) {
+                            hasPartialSegments = true;
+                        }
+                        const effectiveSegmentDuration = voRepresentation.getEffectiveSegmentDuration();
+                        maxEffectiveSegmentDuration = isNaN(maxEffectiveSegmentDuration) ? effectiveSegmentDuration : Math.max(maxEffectiveSegmentDuration, effectiveSegmentDuration);
+                    }
+                });
+            });
+
+            if (hasPartialSegments) {
+                return maxEffectiveSegmentDuration;
+            }
+            return fallbackFragmentDuration;
+        } catch (e) {
+            logger.warn('Could not derive effective segment duration for live delay calculation, falling back to maxFragmentDuration: ' + e);
+            return fallbackFragmentDuration;
+        }
+    }
+
+    /**
      * Returns the event for the given parameters.
      * @param {object} eventBox
      * @param {object} eventStreams
@@ -500,7 +546,8 @@ function DashAdapter() {
                 calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
             }
 
-            const duration = eventBox.event_duration / timescale;
+            // An event_duration of 0xFFFFFFFF indicates an unknown duration (e.g. ID3 events, see https://aomediacodec.github.io/id3-emsg/)
+            const duration = eventBox.event_duration === 0xFFFFFFFF ? NaN : eventBox.event_duration / timescale;
             const id = eventBox.id;
             const messageData = eventBox.message_data;
 
@@ -859,6 +906,10 @@ function DashAdapter() {
 
     function reset() {
         voPeriods = [];
+    }
+
+    function destroy() {
+        cea608parser = null;
     }
 
     /**
@@ -1315,6 +1366,7 @@ function DashAdapter() {
         applyPatchToManifest,
         areMediaInfosEqual,
         convertAdaptationToMediaInfo,
+        destroy,
         getAllMediaInfoForType,
         getAvailabilityStartTime,
         getBandwidthForRepresentation,
@@ -1326,6 +1378,7 @@ function DashAdapter() {
         getEssentialProperties,
         getEvent,
         getEventsFor,
+        getFragmentDurationForLiveDelayCalculation,
         getFramerate,
         getIndexForRepresentation,
         getIsDVB,

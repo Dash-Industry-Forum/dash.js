@@ -399,10 +399,10 @@ function ServiceDescriptionController() {
     }
 
     instance = {
-        getServiceDescriptionSettings,
-        getProducerReferenceTimeOffsets,
-        calculateProducerReferenceTimeOffsets,
         applyServiceDescription,
+        calculateProducerReferenceTimeOffsets,
+        getProducerReferenceTimeOffsets,
+        getServiceDescriptionSettings,
         reset,
         setConfig
     };

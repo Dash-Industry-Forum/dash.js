@@ -42,10 +42,16 @@ function DashMetricsMock() {
     this.addDroppedFrames = function () {
     };
 
+    this.getCurrentDroppedFrames = function () {
+    };
+
     this.addPlayList = function () {
     };
 
     this.createPlaylistTraceMetrics = function () {
+    };
+
+    this.createPlaylistMetrics = function () {
     };
 
     this.addRepresentationSwitch = function () {

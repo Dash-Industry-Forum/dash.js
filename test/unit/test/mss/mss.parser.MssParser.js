@@ -59,7 +59,7 @@ describe('MssParser', function () {
     });
 
     it('should throw an error when parse is called with invalid smooth data', function () {
-        expect(mssParser.parse.bind('<SmoothStreamingMedia')).to.be.throw('parsing the manifest failed');
+        expect(() => mssParser.parse('<SmoothStreamingMedia')).to.throw('parsing the manifest failed');
     });
 
     it('should map mss subtype to dash role', async () => {

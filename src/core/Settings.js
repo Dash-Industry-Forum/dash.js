@@ -61,6 +61,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *        },
  *        streaming: {
  *            abandonLoadTimeout: 10000,
+ *            seekDurationBackoff: 0.5,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
@@ -69,6 +70,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
+ *            ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
  *            enableManifestDurationMismatchFix: true,
  *            parseInbandPrft: false,
  *            enableManifestTimescaleMismatchFix: false,
@@ -205,6 +207,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            prioritizeRoleMain: true,
  *            assumeDefaultRoleAsMain: true,
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+ *            blacklistExpiryTime: -1,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
@@ -237,6 +240,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *             abr: {
  *                 limitBitrateByPortal: false,
  *                 usePixelRatioInLimitBitrateByPortal: false,
+ *                 hybridSwitchBufferTime: 12,
  *                rules: {
  *                     throughputRule: {
  *                         active: true
@@ -325,6 +329,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                 }
  *             },
  *            cmcd: {
+ *                applyParametersFromMpd: true,
  *                enabled: false,
  *                sid: null,
  *                cid: null,
@@ -333,7 +338,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *                includeInRequests: ['segment', 'mpd'],
- *                version: 1
+ *                version: 1,
+ *                eventTargets: []
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -390,6 +396,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Changing this value will lower or increase live stream latency.
  *
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
+ *
+ * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the maximum effective segment duration across all audio, video and fragmented text adaptation sets is used instead.
+ * The effective segment duration is the partial segment duration (segment duration / k) for adaptation sets using partial segments, and the full segment duration otherwise.
+ * Consequently, the partial segment duration is only applied if all these adaptation sets use partial segments.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
  * @property {number} [liveDelay=NaN]
@@ -661,15 +671,15 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [step={start:{min: NaN, max: NaN},stop:{min: NaN, max: NaN}}]
  * This object is used for setting the window parameters for "step" mode.
- * 
+ *
  * It is only applicable if the Catchup mechanism used is of mode "step".
- * 
+ *
  * The parameters are all percentages of the target latency. Where 1 is on target.
- * 
+ *
  * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
- * 
+ *
  * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
- * 
+ *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate={min: NaN, max: NaN}]
  * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
@@ -777,6 +787,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
+ * @property {number} [hybridSwitchBufferTime=12]
+ * When the throughput rule and the Bola rule are both active, this value defines the buffer level in seconds when the player will switch from throughput to Bola.
+ *
  * @property {module:Settings~AbrRules} [rules]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time we switch to a dynamic mode.
  * In the dynamic mode either ThroughputRule or BolaRule are active but not both at the same time.
@@ -969,6 +982,26 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
+ * @property {Array.<CmcdEventTarget>} [eventTargets]
+ * List of CMCD reporting targets.
+ */
+
+/**
+ * @typedef {Object} CmcdEventTarget
+ * @property {boolean} [enabled]
+ * Whether the CMCD reporting is enabled for this target.
+ * @property {string} [url]
+ * The reporting endpoint URL.
+ * @property {string} [events]
+ * The events that should trigger the CMCD reporting.
+ * @property {number} [interval]
+ * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
+ * @property {Array.<string>} [enabledKeys]
+ * CMCD keys to include in the report.
+ * @property {Array.<string>} [includeInRequests]
+ * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {number} [batchSize]
+ * The batch size for the CMCD reporting.
  */
 
 /**
@@ -1015,6 +1048,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
+ * @property {number} [seekDurationBackoff=0.5]
+ * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of last period - seekDurationBackoff).
+ *
+ * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
+ * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and seek to the exact end of the content.
  * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
@@ -1031,6 +1069,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
+ * @property {boolean} [ignoreFinalStaticManifestOnDynamicToStaticTransition=false]
+ * Set to true if dash.js should ignore the final static manifest when a stream transitions from dynamic to static (legacy behavior up to v5.2.0). When set to false the duration, the seekable range and the segment information are derived from the final static manifest.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
@@ -1106,6 +1146,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * - Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
  * This mode makes the player select the track with a widest range of bitrates.
  *
+ * @property {number} [blacklistExpiryTime=-1]
+ * The time in seconds that a Service Location remains on the blacklist.
+ * After this period expires, the Service Location becomes eligible for selection again during a subsequent failover. However, the system will not proactively switch back to it on its own.
+ * When Content Steering is enabled, this setting is ignored: the blacklist duration is automatically set to the steering response’s TTL, and the steering algorithm may actively switch back to that Service Location as needed.
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
@@ -1180,6 +1224,7 @@ function Settings() {
         },
         streaming: {
             abandonLoadTimeout: 10000,
+            seekDurationBackoff: 0.5,
             wallclockTimeUpdateInterval: 100,
             manifestUpdateRetryInterval: 100,
             liveUpdateTimeThresholdInMilliseconds: 0,
@@ -1188,6 +1233,7 @@ function Settings() {
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             applyContentSteering: true,
+            ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
             enableManifestDurationMismatchFix: true,
             parseInbandPrft: false,
             enableManifestTimescaleMismatchFix: false,
@@ -1340,6 +1386,7 @@ function Settings() {
             prioritizeRoleMain: true,
             assumeDefaultRoleAsMain: true,
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+            blacklistExpiryTime: -1,
             fragmentRequestTimeout: 20000,
             fragmentRequestProgressTimeout: -1,
             manifestRequestTimeout: 10000,
@@ -1374,6 +1421,7 @@ function Settings() {
                 usePixelRatioInLimitBitrateByPortal: false,
                 limitBitrateByPortalMinimum: 0,
                 enableSupplementalPropertyAdaptationSetSwitching: true,
+                hybridSwitchBufferTime: 12,
                 rules: {
                     throughputRule: {
                         active: true,
@@ -1477,9 +1525,10 @@ function Settings() {
                 rtp: null,
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
-                enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
+                enabledKeys: Constants.CMCD_KEYS,
                 includeInRequests: ['segment', 'mpd'],
-                version: 1
+                version: 1,
+                eventTargets: []
             },
             cmsd: {
                 enabled: false,

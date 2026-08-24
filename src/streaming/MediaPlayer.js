@@ -34,9 +34,9 @@ import BaseURLController from './controllers/BaseURLController.js';
 import BoxParser from './utils/BoxParser.js';
 import Capabilities from './utils/Capabilities.js';
 import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
+import CmcdController from './controllers/CmcdController.js';
 import CatchupController from './controllers/CatchupController.js';
 import ClientDataReportingController from './controllers/ClientDataReportingController.js';
-import CmcdModel from './models/CmcdModel.js';
 import CmsdModel from './models/CmsdModel.js';
 import Constants from './constants/Constants.js';
 import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
@@ -74,7 +74,6 @@ import ThroughputController from './controllers/ThroughputController.js';
 import TimelineConverter from '../dash/utils/TimelineConverter.js';
 import URIFragmentModel from './models/URIFragmentModel.js';
 import URLUtils from '../streaming/utils/URLUtils.js';
-import CertUrlUtils from './utils/CertUrlUtils.js';
 import VideoModel from './models/VideoModel.js';
 import { HTTPRequest } from './vo/metrics/HTTPRequest.js';
 import { checkParameterType } from './utils/SupervisorTools.js';
@@ -163,13 +162,14 @@ function MediaPlayer() {
         catchupController,
         dashMetrics,
         manifestModel,
-        cmcdModel,
+        cmcdController,
         cmsdModel,
         videoModel,
         uriFragmentModel,
         domStorage,
         segmentBaseController,
-        clientDataReportingController;
+        clientDataReportingController,
+        retrieveManifestRequest;
 
     /*
     ---------------------------------------------------------------------------
@@ -355,7 +355,7 @@ function MediaPlayer() {
 
             manifestModel = ManifestModel(context).getInstance();
 
-            cmcdModel = CmcdModel(context).getInstance();
+            cmcdController = CmcdController(context).getInstance();
 
             cmsdModel = CmsdModel(context).getInstance();
 
@@ -478,6 +478,11 @@ function MediaPlayer() {
             offlineController.reset();
             offlineController = null;
         }
+
+        if (retrieveManifestRequest) {
+            retrieveManifestRequest.resetLoader();
+            retrieveManifestRequest = null;
+        }
     }
 
     /**
@@ -488,6 +493,16 @@ function MediaPlayer() {
      */
     function destroy() {
         reset();
+
+        if (videoModel) {
+            videoModel.destroy();
+            videoModel = null;
+        }
+
+        if (adapter) {
+            adapter.destroy();
+        }
+
         FactoryMaker.deleteSingletonInstances(context);
     }
 
@@ -1774,16 +1789,23 @@ function MediaPlayer() {
     }
 
     /**
-     * This method allows to set media settings that will be used to pick the initial track. Format of the settings
-     * is following: <br />
-     * {lang: langValue (can be either a string primitive, a string object, or a RegExp object to match),
-     *  index: indexValue,
-     *  viewpoint: viewpointValue (object:{schemeIdUri,value} or value-primitive),
-     *  audioChannelConfiguration: audioChannelConfigurationValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')),
-     *  accessibility: accessibilityValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')),
-     *  role: roleValue (object:{schemeIdUri,value} or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011'))
-     * }
+     * This method allows to set media settings that will be used to pick the initial track. The settings object supports the following properties:
+     * <ul>
+     * <li><code>lang</code>: a string primitive, a string object, or a RegExp object to match</li>
+     * <li><code>index</code>: the index of the track</li>
+     * <li><code>viewpoint</code>: object <code>{schemeIdUri, value}</code> or value-primitive</li>
+     * <li><code>audioChannelConfiguration</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')</li>
+     * <li><code>accessibility</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+     * <li><code>role</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+     * <li><code>codec</code>: full codec string as exposed in MediaInfo.codec, e.g. <code>'audio/mp4;codecs="ec-3"'</code>, compared with strict equality</li>
+     * </ul>
      *
+     * @example
+     * player.setInitialMediaSettingsFor('audio', {
+     *     lang: 'de',
+     *     role: 'main',
+     *     codec: 'audio/mp4;codecs="ec-3"'
+     * });
      * @param {MediaType} type
      * @param {Object} value
      * @memberof module:MediaPlayer
@@ -1799,14 +1821,19 @@ function MediaPlayer() {
     }
 
     /**
-     * This method returns media settings that is used to pick the initial track. Format of the settings
-     * is following:
-     * {lang: langValue,
-     *  index: indexValue,
-     *  viewpoint: viewpointValue,
-     *  audioChannelConfiguration: audioChannelConfigurationValue,
-     *  accessibility: accessibilityValue,
-     *  role: roleValue}
+     * This method returns the media settings that are used to pick the initial track.
+     *
+     * @example
+     * // Returned object has the following format:
+     * {
+     *     lang: langValue,
+     *     index: indexValue,
+     *     viewpoint: viewpointValue,
+     *     audioChannelConfiguration: audioChannelConfigurationValue,
+     *     accessibility: accessibilityValue,
+     *     role: roleValue,
+     *     codec: codecValue
+     * }
      * @param {MediaType} type
      * @returns {Object}
      * @memberof module:MediaPlayer
@@ -2099,8 +2126,7 @@ function MediaPlayer() {
      * @instance
      */
     function setProtectionData(value) {
-        const sanitizedValue = CertUrlUtils.sanitizeProtectionDataCertUrls(value);
-        protectionData = sanitizedValue;
+        protectionData = value;
 
         // Propagate changes in case StreamController is already created
         if (streamController) {
@@ -2115,9 +2141,9 @@ function MediaPlayer() {
 
     /*
     ---------------------------------------------------------------------------
- 
+
         THUMBNAILS MANAGEMENT
- 
+
     ---------------------------------------------------------------------------
     */
 
@@ -2155,9 +2181,9 @@ function MediaPlayer() {
 
     /*
     ---------------------------------------------------------------------------
- 
+
         TOOLS AND OTHERS FUNCTIONS
- 
+
     ---------------------------------------------------------------------------
     */
     /**
@@ -2169,20 +2195,32 @@ function MediaPlayer() {
      * @instance
      */
     function retrieveManifest(url, callback) {
-        let manifestLoader = _createManifestLoader();
-        let self = this;
+        if (retrieveManifestRequest) {
+            retrieveManifestRequest.resetLoader();
+        }
 
-        const handler = function (e) {
-            if (!e.error) {
-                callback(e.manifest);
-            } else {
-                callback(null, e.error);
-            }
-            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        const manifestLoader = _createManifestLoader();
+        const resetLoader = () => {
+            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, this);
             manifestLoader.reset();
+            retrieveManifestRequest = null;
         };
 
-        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        retrieveManifestRequest = { manifestLoader, resetLoader };
+
+        const handler = (e) => {
+            if (typeof callback == 'function') {
+                if (!e.error) {
+                    callback(e.manifest);
+                } else {
+                    callback(null, e.error);
+                }
+            }
+
+            resetLoader();
+        };
+
+        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, this);
 
         uriFragmentModel.initialize(url);
         manifestLoader.load(url);
@@ -2520,7 +2558,7 @@ function MediaPlayer() {
             }
         }
         textController.reset();
-        cmcdModel.reset();
+        cmcdController.reset();
         cmsdModel.reset();
     }
 
@@ -2538,77 +2576,77 @@ function MediaPlayer() {
 
         if (!textController) {
             textController = TextController(context).create({
+                adapter,
+                baseURLController,
                 errHandler,
                 manifestModel,
-                adapter,
                 mediaController,
-                baseURLController,
+                settings,
                 videoModel,
-                settings
             });
         }
 
         capabilitiesFilter.setConfig({
+            adapter,
             capabilities,
             customParametersModel,
-            adapter,
-            settings,
-            protectionController,
+            errHandler,
             manifestModel,
-            errHandler
+            protectionController,
+            settings,
         });
 
         streamController.setConfig({
+            abrController,
+            adapter,
+            baseURLController,
             capabilities,
             capabilitiesFilter,
-            manifestLoader,
-            manifestModel,
-            mediaPlayerModel,
+            contentSteeringController,
             customParametersModel,
-            protectionController,
-            textController,
-            adapter,
             dashMetrics,
             errHandler,
-            timelineConverter,
-            videoModel,
-            playbackController,
-            serviceDescriptionController,
-            contentSteeringController,
-            abrController,
-            throughputController,
+            manifestLoader,
+            manifestModel,
             mediaController,
+            mediaPlayerModel,
+            playbackController,
+            protectionController,
+            segmentBaseController,
+            serviceDescriptionController,
             settings,
-            baseURLController,
+            textController,
+            throughputController,
+            timelineConverter,
             uriFragmentModel,
-            segmentBaseController
+            videoModel,
         });
 
         gapController.setConfig({
-            settings,
+            adapter,
             playbackController,
+            settings,
             streamController,
-            videoModel,
             timelineConverter,
-            adapter
+            videoModel,
         });
 
         playbackController.setConfig({
-            streamController,
-            serviceDescriptionController,
-            dashMetrics,
             adapter,
-            videoModel,
+            dashMetrics,
+            serviceDescriptionController,
+            settings,
+            streamController,
             timelineConverter,
-            settings
+            videoModel,
         });
 
         catchupController.setConfig({
-            streamController,
-            playbackController,
             mediaPlayerModel,
+            playbackController,
+            settings,
+            streamController,
             videoModel,
-            settings
         })
 
         throughputController.setConfig({
@@ -2617,22 +2655,24 @@ function MediaPlayer() {
         })
 
         abrController.setConfig({
-            streamController,
+            adapter,
             capabilities,
+            cmsdModel,
+            customParametersModel,
+            dashMetrics,
             domStorage,
             mediaPlayerModel,
-            customParametersModel,
+            settings,
+            streamController,
             throughputController,
-            cmsdModel,
-            dashMetrics,
-            adapter,
             videoModel,
-            settings
         });
 
-        cmcdModel.setConfig({
+        cmcdController.setConfig({
             abrController,
             dashMetrics,
+            errHandler,
+            mediaPlayerModel,
             playbackController,
             serviceDescriptionController,
             throughputController,
@@ -2652,7 +2692,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         catchupController.initialize();
-        cmcdModel.initialize(autoPlay);
+        cmcdController.initialize(autoPlay);
         cmsdModel.initialize();
         contentSteeringController.initialize();
         segmentBaseController.initialize();
@@ -2697,7 +2737,7 @@ function MediaPlayer() {
                 events: Events,
                 BASE64,
                 constants: Constants,
-                cmcdModel,
+                cmcdController,
                 settings
             });
 
@@ -2877,6 +2917,9 @@ function MediaPlayer() {
         }
         if (value.accessibility !== undefined) {
             output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+        }
+        if (value.codec !== undefined) {
+            output.codec = value.codec;
         }
 
         return output;

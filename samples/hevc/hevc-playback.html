@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play HEVC streams in any browser</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+</head>
+<body>
+
+<script class="code">
+    /* The @hevcjs/dashjs-plugin package transparently adds HEVC playback to
+       dash.js by intercepting MSE: HEVC samples are transcoded to H.264 inside
+       a Web Worker (WASM H.265 decoder + WebCodecs H.264 encoder), so the
+       existing video element plays a standard H.264 stream.
+
+       attachHevcSupport() is a no-op when the browser already plays HEVC
+       natively (Safari, Edge with HEVC extension, etc.) — the plugin only
+       installs the transcoding pipeline when needed.
+
+       The plugin is published as ESM on npm; esm.sh serves it without a build
+       step. The WASM decoder and the transcoder Worker are pulled from unpkg:
+       classic Workers refuse cross-origin scripts, so the plugin fetches the
+       worker and wraps it in a same-origin blob URL; wasmBinaryUrl points
+       Emscripten's locateFile at an absolute .wasm URL. */
+    async function init(video, wrapper) {
+        let player,
+            url = 'https://www.hevcjs.dev/demo/streams/dash_720p/manifest.mpd';
+
+        const { attachHevcSupport } = await import('https://esm.sh/@hevcjs/dashjs-plugin@1');
+
+        player = dashjs.MediaPlayer().create();
+
+        /* Install the HEVC transcoding pipeline before player.initialize() */
+        await attachHevcSupport(player, {
+            wasmUrl: 'https://unpkg.com/@hevcjs/core@1/dist/wasm/hevc-decode.js',
+            wasmBinaryUrl: 'https://unpkg.com/@hevcjs/core@1/dist/wasm/hevc-decode.wasm',
+            workerUrl: 'https://unpkg.com/@hevcjs/core@1/dist/transcode-worker.js'
+        });
+
+        player.initialize(video, url, true);
+        await createControlBar(player, video, wrapper);
+    }
+</script>
+
+<script type="module">
+    import {initSamplePage, createControlBar} from '../lib/sample-template.js';
+
+    initSamplePage({
+        title: 'Play HEVC streams in any browser',
+        description: 'This example shows how to play HEVC (H.265) DASH streams with dash.js on browsers without a native HEVC decoder — for example Firefox, Chrome on Linux, or Windows configurations without a HEVC-capable GPU or the Microsoft HEVC Video Extension. The <code>@hevcjs/dashjs-plugin</code> package transcodes HEVC samples to H.264 in a Web Worker (WASM decoder + WebCodecs encoder), transparently to dash.js. On platforms with native HEVC support (e.g. macOS and iOS) the plugin is a no-op. The stream below is HEVC 720p (~2 Mbps, 10s loop). Note that the plugin and its WASM/Worker assets are loaded from third-party CDNs (esm.sh, unpkg).',
+        category: 'Codecs',
+        codeExpanded: true,
+        videoAttributes: { poster: 'preview.jpg', muted: '' },
+        onInit: (video, container, wrapper) => init(video, wrapper)
+    });
+</script>
+</body>
+</html>

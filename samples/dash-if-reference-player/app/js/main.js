@@ -131,7 +131,7 @@ async function init() {
 
     // 9. Handle stream URL from query param
     const params = new URLSearchParams(window.location.search);
-    const streamParam = params.get('stream');
+    const streamParam = params.get('stream') || params.get('mpd');
     if (streamParam) {
         streamCatalog.setUrl(streamParam);
     }
@@ -230,8 +230,8 @@ function doStop() {
 }
 
 // ---- Playback ended (loop) ----
-function onPlaybackEnded() {
-    if (settingsController.loop && !playerController.isDynamic) {
+function onPlaybackEnded(e) {
+    if (settingsController.loop && !playerController.isDynamic && e.isLast) {
         playerController.player.seek(0);
         playerController.player.play();
     }

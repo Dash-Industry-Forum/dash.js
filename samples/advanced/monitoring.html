@@ -1,141 +1,123 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
-    <title>Monitoring stream example</title>
-    <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring the stream</title>
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
-
-    <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="../lib/main.css" rel="stylesheet">
-
-    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
 
     <style>
-        video {
-            width: 100%;
-        }
-
         .dash-video-player {
             position: relative; /* This position relative is needed to position the menus */
             margin: 0 auto;
             line-height: 1.0;
         }
     </style>
-
-    <script class="code">
-        function init() {
-            var video,
-                player,
-                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
-
-            video = document.querySelector("video");
-            player = dashjs.MediaPlayer().create();
-            player.initialize(video, url, true);
-            player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function () {
-                clearInterval(eventPoller);
-                clearInterval(bitrateCalculator);
-            });
-
-            var eventPoller = setInterval(function () {
-                var streamInfo = player.getActiveStream().getStreamInfo();
-                var dashMetrics = player.getDashMetrics();
-                var dashAdapter = player.getDashAdapter();
-
-                if (dashMetrics && streamInfo) {
-                    const periodIdx = streamInfo.index;
-                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video');
-                    var bufferLevel = dashMetrics.getCurrentBufferLevel('video');
-                    var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
-                    var currentRep = player.getCurrentRepresentationForType('video');
-                    var frameRate = currentRep.frameRate;
-                    var resolution = currentRep.width + 'x' + currentRep.height;
-                    document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
-                    document.getElementById('framerate').innerText = frameRate + " fps";
-                    document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";
-                    document.getElementById('resolution').innerText = resolution;
-                }
-            }, 1000);
-
-            if (video.webkitVideoDecodedByteCount !== undefined) {
-                var lastDecodedByteCount = 0;
-                const bitrateInterval = 5;
-                var bitrateCalculator = setInterval(function () {
-                    var calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
-                    document.getElementById('calculatedBitrate').innerText = Math.round(calculatedBitrate) + " Kbps";
-                    lastDecodedByteCount = video.webkitVideoDecodedByteCount;
-                }, bitrateInterval * 1000);
-            } else {
-                document.getElementById('chrome-only').style.display = "none";
-            }
-
-
-        }
-    </script>
 </head>
 <body>
 
-<main>
-    <div class="container py-4">
-        <header class="pb-3 mb-4 border-bottom">
-            <img class=""
-                 src="../lib/img/dashjs-logo.png"
-                 width="200">
-        </header>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Monitoring stream example</h3>
-                    <p>This example shows how to monitor metrics of the streams played by dash.js.</p>
+<div class="sample-content-custom">
+    <div class="row mt-2">
+        <div class="col-md-6">
+            <div class="dash-video-player code">
+                <div class="videoContainer" id="videoContainer">
+                    <video preload="auto"></video>
                 </div>
             </div>
         </div>
-        <div class="row mt-2">
-            <div class="col-md-6">
-                <div class="dash-video-player code">
-                    <div class="videoContainer" id="videoContainer">
-                        <video preload="auto" controls="true"></video>
+        <div class="col-md-6">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Metrics</div>
+                <div class="sample-metrics-body">
+                    <div class="metric-row">
+                        <span class="metric-label">Reported bitrate</span>
+                        <span class="metric-value" id="reportedBitrate">-</span>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="p-5 border rounded-3">
-                    <h4>Metrics</h4>
-                    <div>
-                        <strong>Reported bitrate:</strong>
-                        <span id="reportedBitrate"></span>
-                        <br/>
-                        <strong>Buffer level:</strong>
-                        <span id="bufferLevel"></span>
-                        <div id="chrome-only">
-                            <strong>Calculated bitrate:</strong>
-                            <span id="calculatedBitrate"></span>
-                        </div>
-                        <strong>Framerate:</strong>
-                        <span id="framerate"></span>
-                        </br>
-                        <strong>Resolution:</strong>
-                        <span id="resolution"></span>
+                    <div class="metric-row">
+                        <span class="metric-label">Buffer level</span>
+                        <span class="metric-value" id="bufferLevel">-</span>
+                    </div>
+                    <div class="metric-row" id="chrome-only">
+                        <span class="metric-label">Calculated bitrate</span>
+                        <span class="metric-value" id="calculatedBitrate">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Framerate</span>
+                        <span class="metric-value" id="framerate">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Resolution</span>
+                        <span class="metric-value" id="resolution">-</span>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="code-output"></div>
-            </div>
-        </div>
-        <footer class="pt-3 mt-4 text-muted border-top">
-            &copy; DASH-IF
-        </footer>
     </div>
-</main>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        init();
+</div>
+
+<script class="code">
+    async function init() {
+        var video,
+            player,
+            url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+
+        video = document.querySelector("video");
+        player = dashjs.MediaPlayer().create();
+        player.initialize(video, url, true);
+        await createControlBar(player, video, document.querySelector('.videoContainer'));
+        player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function () {
+            clearInterval(eventPoller);
+            clearInterval(bitrateCalculator);
+        });
+
+        var eventPoller = setInterval(function () {
+            var streamInfo = player.getActiveStream().getStreamInfo();
+            var dashMetrics = player.getDashMetrics();
+            var dashAdapter = player.getDashAdapter();
+
+            if (dashMetrics && streamInfo) {
+                const periodIdx = streamInfo.index;
+                var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video');
+                var bufferLevel = dashMetrics.getCurrentBufferLevel('video');
+                var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
+                var currentRep = player.getCurrentRepresentationForType('video');
+                var frameRate = currentRep.frameRate;
+                var resolution = currentRep.width + 'x' + currentRep.height;
+                document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
+                document.getElementById('framerate').innerText = frameRate + " fps";
+                document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";
+                document.getElementById('resolution').innerText = resolution;
+            }
+        }, 1000);
+
+        if (video.webkitVideoDecodedByteCount !== undefined) {
+            var lastDecodedByteCount = 0;
+            const bitrateInterval = 5;
+            var bitrateCalculator = setInterval(function () {
+                var calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
+                document.getElementById('calculatedBitrate').innerText = Math.round(calculatedBitrate) + " Kbps";
+                lastDecodedByteCount = video.webkitVideoDecodedByteCount;
+            }, bitrateInterval * 1000);
+        } else {
+            document.getElementById('chrome-only').style.display = "none";
+        }
+
+
+    }
+</script>
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    initSamplePage({
+        title: 'Monitoring the stream',
+        description: 'This example shows how to monitor metrics of the streams played by dash.js.',
+        category: 'Events and Monitoring',
+        layout: 'custom',
+        onInit: () => init()
     });
 </script>
-<script src="../highlighter.js"></script>
 </body>
 </html>

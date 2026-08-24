@@ -60,5 +60,6 @@ export default [{
         'space-infix-ops': ['error', {
             int32Hint: true,
         }],
+        'no-unreachable': 'error',
     },
 }];

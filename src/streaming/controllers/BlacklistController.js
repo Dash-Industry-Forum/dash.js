@@ -31,6 +31,8 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 import EventBus from '../../core/EventBus.js';
+import Settings from '../../core/Settings.js';
+import ContentSteeringController from '../../dash/controllers/ContentSteeringController.js';
 
 function BlackListController(config) {
 
@@ -39,6 +41,8 @@ function BlackListController(config) {
     let blacklist = [];
 
     const eventBus = EventBus(this.context).getInstance();
+    const settings = Settings(this.context).getInstance();
+    const contentSteeringController = ContentSteeringController(this.context).getInstance();
     const updateEventName = config.updateEventName;
     const addBlacklistEventName = config.addBlacklistEventName;
 
@@ -47,21 +51,29 @@ function BlackListController(config) {
             return false;
         }
 
-        return (blacklist.indexOf(query) !== -1);
+        return (blacklist.findIndex(item => item.entry === query) !== -1);
     }
 
     function add(entry) {
-        if (blacklist.indexOf(entry) !== -1) {
+        if (blacklist.findIndex(item => item.entry === entry) !== -1) {
             return;
         }
 
-        blacklist.push(entry);
+        const expiry = config.enableExpiry ? getBlacklistExpiry() : NaN;
+        if (config.enableExpiry && expiry && expiry > 0) {
+            const timeoutId = setTimeout(() => {
+                remove(entry);
+            }, expiry * 1000);
+            blacklist.push({ entry: entry, timeoutId: timeoutId });
+        } else {
+            blacklist.push({ entry: entry });
+        }
 
         eventBus.trigger(updateEventName, { entry: entry });
     }
 
     function remove(entry) {
-        const index = blacklist.indexOf(entry);
+        const index = blacklist.findIndex(item => item.entry === entry);
         if (index !== -1) {
             blacklist.splice(index, 1)
         }
@@ -71,7 +83,17 @@ function BlackListController(config) {
         add(e.entry);
     }
 
-    function setup() {
+    function getBlacklistExpiry() {
+        const currentSteeringResponseData = contentSteeringController ? contentSteeringController.getCurrentSteeringResponseData() : null;
+
+        if (currentSteeringResponseData && Number.isFinite(currentSteeringResponseData.ttl)) {
+            return currentSteeringResponseData.ttl;
+        }
+
+        return settings.get().streaming.blacklistExpiryTime;
+    }
+
+    function initialize() {
         if (addBlacklistEventName) {
             eventBus.on(addBlacklistEventName, onAddBlackList, instance);
         }
@@ -81,6 +103,11 @@ function BlackListController(config) {
         if (addBlacklistEventName) {
             eventBus.off(addBlacklistEventName, onAddBlackList, instance);
         }
+        for (const item of blacklist) {
+            if (item.timeoutId) {
+                clearTimeout(item.timeoutId);
+            }
+        }
         blacklist = [];
     }
 
@@ -88,10 +115,10 @@ function BlackListController(config) {
         add: add,
         remove: remove,
         contains: contains,
+        initialize: initialize,
         reset: reset
     };
 
-    setup();
     return instance;
 }
 

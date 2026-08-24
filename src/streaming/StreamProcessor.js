@@ -478,6 +478,14 @@ function StreamProcessor(config) {
     function _noMediaRequestGenerated(rescheduleIfNoRequest) {
         const representation = representationController.getCurrentRepresentation();
 
+        // A missing media request can also mean that the last segment has already
+        // been requested. Handle completion before applying gap seek fixes;
+        // otherwise a static VOD tail can be misclassified as a manifest gap.
+        const hasHandledBufferingComplete = checkAndHandleCompletedBuffering();
+        if (hasHandledBufferingComplete) {
+            return
+        }
+
         // If  this statement is true we might be stuck. A static manifest does not change and we did not find a valid request for the target time
         // There is no point in trying again. We need to adjust the time in order to find a valid request. This can happen if the user/app seeked into a gap.
         // For dynamic manifests this can also happen especially if we jump over the gap in the previous period and are using SegmentTimeline and in case there is a positive eptDelta at the beginning of the period we are stuck.
@@ -498,12 +506,6 @@ function StreamProcessor(config) {
             logger.error(e);
         }
 
-        // Check if the media is finished. If so, no need to schedule another request
-        const hasHandledBufferingComplete = checkAndHandleCompletedBuffering();
-        if (hasHandledBufferingComplete) {
-            return
-        }
-
         if (rescheduleIfNoRequest) {
             _noValidRequest();
         }
@@ -512,9 +514,15 @@ function StreamProcessor(config) {
     function _getAdjustedTimeForStaticManifest(representation) {
         let adjustedTime = dashHandler.getValidTimeAheadOfTargetTime(bufferingTime, currentMediaInfo, representation, settings.get().streaming.gaps.threshold);
         if (isNaN(adjustedTime)) {
-            // If there is no valid target time ahead and the buffering time is within the duration of one segment we slightly adjust it
-            if (bufferingTime >= representation.adaptation.period.mpd.mediaPresentationDuration - representation.segmentDuration) {
-                adjustedTime = bufferingTime - 0.1;
+            const period = representation.adaptation.period;
+            const periodEnd = period.start + period.duration;
+
+            // If there is no valid target time ahead and the buffering time is within the duration of one segment we slightly adjust it.
+            // Restrict the tail-time fallback to the final period — for any earlier period, an inter-period gap jump should advance into the
+            // next period rather than seeking backward inside the current one.
+            // <= : a seek to the exact stream end lands precisely on periodEnd and must be adjusted as well, otherwise the seek never completes.
+            if (streamInfo.isLast && isFinite(periodEnd) && bufferingTime <= periodEnd && bufferingTime >= periodEnd - representation.segmentDuration) {
+                adjustedTime = Math.max(period.start, bufferingTime - 0.1);
             }
         }
 
@@ -611,7 +619,12 @@ function StreamProcessor(config) {
     }
 
     function _onDataUpdateCompleted() {
+        if (!bufferController || !representationController) {
+            return;
+        }
+
         const currentRepresentation = representationController.getCurrentCompositeRepresentation();
+
         if (!bufferController.getIsBufferingCompleted()) {
             bufferController.updateBufferTimestampOffset(currentRepresentation);
         }
@@ -950,7 +963,7 @@ function StreamProcessor(config) {
             // base layer stream processor (type VIDEO), `request.bandwidth` refers only
             // to the base layer. Therefore, the comparison should use the base layer
             // bandwidth (`dependentRepresentation`) only.
-            const newBandwidth = (type === Constants.VIDEO) && newRepresentation.dependentRepresentation ? 
+            const newBandwidth = (type === Constants.VIDEO) && newRepresentation.dependentRepresentation ?
                 newRepresentation.dependentRepresentation.bandwidth : newRepresentation.bandwidth;
 
             // The new quality is higher than the one we originally requested
@@ -1187,6 +1200,11 @@ function StreamProcessor(config) {
 
     function updateStreamInfo(newStreamInfo) {
         streamInfo = newStreamInfo;
+        if (streamInfo.manifestInfo.isDynamic !== isDynamic) {
+            isDynamic = streamInfo.manifestInfo.isDynamic;
+            dashHandler.initialize(isDynamic);
+            representationController.setIsDynamic(isDynamic);
+        }
         if (!isBufferingCompleted()) {
             return bufferController.updateAppendWindow();
         }

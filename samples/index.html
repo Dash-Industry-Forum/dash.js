@@ -1,225 +1,463 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="Daniel Silhavy">
-    <title>Samples players for dash.js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sample pages for dash.js - the DASH Industry Forum reference client">
+    <meta name="author" content="DASH Industry Forum">
+    <title>dash.js Samples</title>
 
-    <!-- Bootstrap core CSS -->
     <link href="lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="lib/sample.css" rel="stylesheet">
 
     <style>
-        .bd-placeholder-img {
-            font-size: 1.125rem;
-            text-anchor: middle;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            user-select: none;
+        .reference-banner {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            background: var(--rp-accent-subtle);
+            border: 1px solid var(--rp-accent);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
         }
-
-        @media (min-width: 768px) {
-            .bd-placeholder-img-lg {
-                font-size: 3.5rem;
-            }
+        .reference-banner .banner-icon {
+            font-size: 1.5rem;
+            color: var(--rp-accent);
+            line-height: 1;
         }
-
-        #tab-list {
-            margin-bottom: 10px;
+        .reference-banner .banner-text {
+            flex: 1;
+            min-width: 200px;
+            font-size: 0.9rem;
+            color: var(--rp-text);
         }
-
-        .card-footer {
+        .reference-banner .banner-text strong {
+            color: var(--rp-accent);
+        }
+        .reference-banner .banner-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--rp-accent);
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.45rem 0.9rem;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .reference-banner .banner-btn:hover {
+            opacity: 0.9;
+        }
+        .samples-intro {
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+        .samples-intro a {
+            color: var(--rp-accent);
+        }
+        .samples-search {
+            background: var(--rp-bg-secondary);
+            border: 1px solid var(--rp-border);
+            color: var(--rp-text);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 1rem;
+        }
+        .samples-search:focus {
+            border-color: var(--rp-accent);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+        }
+        .samples-tabs {
+            border-bottom: 1px solid var(--rp-border);
+            margin-bottom: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+        }
+        .samples-tabs .nav-link {
             border: none;
-            background: #FFFFFF;
+            color: var(--rp-text-muted);
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            background: none;
+            white-space: nowrap;
         }
-
-        .card-title > a {
+        .samples-tabs .nav-link:hover {
+            color: var(--rp-text);
+        }
+        .samples-tabs .nav-link.active {
+            color: var(--rp-accent);
+            border-bottom-color: var(--rp-accent);
+            background: transparent;
+        }
+        .sample-card {
+            position: relative;
+            background: var(--rp-bg-card);
+            border: 1px solid var(--rp-border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: box-shadow 0.2s, border-color 0.2s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+        }
+        .sample-card:hover {
+            box-shadow: var(--rp-shadow);
+            border-color: var(--rp-accent);
+        }
+        .sample-card img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            background: var(--rp-bg-card-header);
+        }
+        .sample-card-body {
+            padding: 0.75rem;
+            flex: 1;
+        }
+        .sample-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+        .sample-card-title a {
+            color: var(--rp-text);
             text-decoration: none;
         }
+        .sample-card-title a::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+        .sample-card:hover .sample-card-title a {
+            color: var(--rp-accent);
+        }
+        .sample-card-desc {
+            font-size: 0.78rem;
+            color: var(--rp-text-muted);
+            line-height: 1.4;
+            margin-bottom: 0.5rem;
+        }
+        .sample-card-labels {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .sample-card-label {
+            font-size: 0.65rem;
+            padding: 1px 6px;
+            border-radius: 3px;
+            background: var(--rp-accent-subtle);
+            color: var(--rp-accent);
+            font-weight: 600;
+        }
+        .samples-empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--rp-text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Search-active mode: show all tab panes at once */
+        .search-active .samples-tabs {
+            display: none;
+        }
+        .search-active .tab-pane {
+            display: block;
+            opacity: 1;
+        }
+        .search-section-heading {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--rp-accent);
+            padding: 0.5rem 0 0.35rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--rp-border);
+        }
+        .search-no-results {
+            text-align: center;
+            padding: 2rem;
+            color: var(--rp-text-muted);
+            font-size: 0.9rem;
+            display: none;
+        }
+        .search-active .search-no-results.visible {
+            display: block;
+        }
     </style>
-
-
 </head>
 <body>
 
-
-<main>
-    <div class="album py-5 bg-white">
-        <div class="container">
-            <header class="pb-3 mb-4 border-bottom">
-                <img class=""
-                     src="./lib/img/dashjs-logo.png"
-                     width="200">
-            </header>
-
-            <h2>Samples</h2>
-
-            <p class="lead"><a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank"> dash.js </a> is a
-                reference client implementation by the <a href="http://dashif.org" target="_blank">DASH Industry
-                    Forum</a> (DASH-IF) for the playback of MPEG-DASH via JavaScript
-                and compliant
-                MSE/EME platforms. This page provides a starting point with multiple samples to explore the various
-                dash.js features and settings.</p>
-
-            <p class="lead">A reference UI encapsulating the main functionality of dash.js is available <a
-                target="_blank" href="dash-if-reference-player/index.html"> here </a>.
-            </p>
-
-            <p>
-            <figcaption class="blockquote-footer"> The DASH Industry Forum is
-                a non-profit industry forum formed to catalyze the adoption of MPEG-DASH. They define common versions of
-                DASH
-                which other standards bodies (such as DVB and HbbTV) then formalize.
-                This player is intended to provide a reference implementation. Note the player is just a UI on top of
-                the same
-                framework used in all these samples. In using dash.js you are inheriting
-                much of the latest thinking of the DASH ecosystem.
-            </figcaption>
-            </p>
-
-
-            <div class="row">
-                <div class="col">
-                    <ul class="nav nav-tabs" id="tab-list" role="tablist">
-                    </ul>
-                    <div class="tab-content" id="tab-content">
-                    </div>
-                </div>
-            </div>
+<div class="sample-container">
+    <!-- Header -->
+    <div class="sample-header">
+        <div class="sample-header-left">
+            <img src="lib/img/dashjs-logo.png" alt="dash.js" height="40">
+            <h1 class="sample-header-title">Samples</h1>
+        </div>
+        <div class="sample-header-right">
+            <select class="sample-theme-select" id="theme-select">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
         </div>
     </div>
 
-</main>
-<hr>
-<footer class="text-muted py-5">
-    <div class="container">
-        Copyright DASH Industry Forum 2012-2021
-    </div>
-</footer>
-
-<script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
-<script src="./lib/bootstrap/bootstrap.bundle.min.js"></script>
-
-
-<div style="display: none">
-    <div class="col" id="card-sample">
-        <div class="card h-100 shadow-sm">
-            <img class="card-img-top" src="">
-            <div class="card-body">
-                <h5 class="card-title"></h5>
-                <p class="card-text"></p>
-            </div>
-            <div class="card-footer">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span> </span>
-                </div>
-            </div>
+    <!-- Reference Player banner -->
+    <div class="reference-banner">
+        <i class="bi bi-play-circle-fill banner-icon"></i>
+        <div class="banner-text">
+            <strong>dash.js Reference Player</strong> &mdash; the full-featured demo UI to explore playback, ABR, DRM and more.
         </div>
+        <a href="dash-if-reference-player/index.html" class="banner-btn">
+            Launch Reference Player <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+
+    <!-- Intro -->
+    <div class="samples-intro">
+        <p style="font-size:0.9rem; color:var(--rp-text);">
+            <a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank">dash.js</a> is a
+            reference client implementation by the <a href="https://www.svta.org/working-group/dash-if/" target="_blank">SVTA DASH Industry Forum Working Group</a>
+            for the playback of MPEG-DASH via JavaScript and compliant MSE/EME platforms.
+            Explore the samples below to learn about the various dash.js features and settings.
+        </p>
+    </div>
+
+    <!-- Search -->
+    <input type="text" class="samples-search" id="search-input" placeholder="Search samples...">
+
+    <!-- Tabs -->
+    <ul class="nav samples-tabs" id="tab-list" role="tablist"></ul>
+
+    <!-- Tab content -->
+    <div class="tab-content" id="tab-content"></div>
+    <div class="search-no-results" id="search-no-results">No samples found.</div>
+
+    <!-- Footer -->
+    <div class="sample-footer">
+        <img src="lib/img/svta-logo.png" alt="SVTA" height="28" style="background:var(--rp-logo-bg); border-radius:4px; padding:2px 4px; margin-bottom:0.4rem;">
+        <br>
+        &copy; <a href="https://www.svta.org/working-group/dash-if-dash-js/" target="_blank" rel="noopener">Streaming Video Technology Alliance (SVTA)</a>
     </div>
 </div>
 
+<script src="lib/bootstrap/bootstrap.bundle.min.js"></script>
 <script>
-    var sampleData = [];
-    $(document).ready(function () {
-        $.getJSON('samples.json', function (json) {
-            sampleData = json;
-            drawSampleData();
-            selectSection();
-            registerCallbacks();
+    (function () {
+        'use strict';
+
+        // Theme
+        var themeSelect = document.getElementById('theme-select');
+        var savedTheme = 'light';
+        try { savedTheme = localStorage.getItem('rp-theme') || 'light'; } catch (e) {}
+        if (savedTheme !== 'dark') savedTheme = 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        themeSelect.value = savedTheme;
+        themeSelect.addEventListener('change', function () {
+            document.documentElement.setAttribute('data-bs-theme', themeSelect.value);
+            try { localStorage.setItem('rp-theme', themeSelect.value); } catch (e) {}
         });
-    });
 
-    function drawSampleData() {
-        sampleData.forEach(function (section) {
-            drawSection(section);
-            drawSectionSamples(section);
-        });
-    }
+        // Data
+        var sampleData = [];
+        var searchInput = document.getElementById('search-input');
 
-    function selectSection() {
-        try {
-            var hash = decodeURI(window.location.hash);
-            var element = document.querySelector(hash + '-tab')
-            var tab = new bootstrap.Tab(element)
-            tab.show();
-        } catch (e) {
-            
+        // Load samples.json
+        fetch('samples.json')
+            .then(function (r) { return r.json(); })
+            .then(function (json) {
+                sampleData = json;
+                drawSampleData();
+                selectSection();
+                registerCallbacks();
+                searchInput.addEventListener('input', filterSamples);
+            });
+
+        function nameToId(name) {
+            return name.replace(/[^a-z0-9]/gi, '');
         }
-    }
-    
-    function registerCallbacks() {
-        var tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]')
-        tabEls.forEach(function (tabEl) {
-            tabEl.addEventListener('shown.bs.tab', function (event) {
-                location.hash = event.target.attributes.href.nodeValue;
-            })    
-        })
-    }
 
-    function drawSection(section) {
-        var idFromName = nameToId(section.section)
-        var $tab = $('<li class="nav-item" role="presentation">\n' +
-            '        <button class="nav-link" id="" data-bs-toggle="tab" data-bs-target="#home"\n' +
-            '                type="button" role="tab" aria-controls="home" aria-selected="true">Home\n' +
-            '        </button>\n' +
-            '    </li>');
-        var $link = $tab.find('button');
-        $link.attr('id', idFromName + '-tab');
-        $link.attr('data-bs-target', '#' + idFromName);
-        $link.attr('aria-controls', idFromName);
-        $link.attr('href', '#' + idFromName);
-        $link.html(section.section);
-        if (section.active) {
-            $link.addClass('active');
+        function drawSampleData() {
+            var tabList = document.getElementById('tab-list');
+            var tabContent = document.getElementById('tab-content');
+
+            sampleData.forEach(function (section) {
+                var id = nameToId(section.section);
+
+                // Tab button
+                var li = document.createElement('li');
+                li.className = 'nav-item';
+                li.setAttribute('role', 'presentation');
+                var btn = document.createElement('button');
+                btn.className = 'nav-link' + (section.active ? ' active' : '');
+                btn.id = id + '-tab';
+                btn.setAttribute('data-bs-toggle', 'tab');
+                btn.setAttribute('data-bs-target', '#' + id);
+                btn.setAttribute('type', 'button');
+                btn.setAttribute('role', 'tab');
+                btn.setAttribute('href', '#' + id);
+                btn.textContent = section.section;
+                li.appendChild(btn);
+                tabList.appendChild(li);
+
+                // Tab pane
+                var pane = document.createElement('div');
+                pane.className = 'tab-pane fade' + (section.active ? ' show active' : '');
+                pane.id = id;
+                pane.setAttribute('role', 'tabpanel');
+
+                var row = document.createElement('div');
+                row.className = 'row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3';
+                row.id = id + '-row';
+
+                section.samples.forEach(function (sample) {
+                    var col = document.createElement('div');
+                    col.className = 'col sample-card-col';
+                    col.setAttribute('data-title', (sample.title || '').toLowerCase());
+                    col.setAttribute('data-desc', (sample.description || '').toLowerCase());
+
+                    var image = sample.image ? sample.image : 'lib/img/dashjs-logo-border.png';
+                    var labels = '';
+                    if (sample.labels && sample.labels.length > 0) {
+                        labels = sample.labels.map(function (l) {
+                            return '<span class="sample-card-label">' + l + '</span>';
+                        }).join('');
+                    }
+
+                    col.innerHTML =
+                        '<div class="sample-card">' +
+                        '  <img src="' + image + '" alt="" loading="lazy">' +
+                        '  <div class="sample-card-body">' +
+                        '    <div class="sample-card-title"><a href="' + sample.href + '" target="_blank">' + sample.title + '</a></div>' +
+                        '    <div class="sample-card-desc">' + (sample.description || '') + '</div>' +
+                        '    <div class="sample-card-labels">' + labels + '</div>' +
+                        '  </div>' +
+                        '</div>';
+
+                    row.appendChild(col);
+                });
+
+                var heading = document.createElement('div');
+                heading.className = 'search-section-heading';
+                heading.style.display = 'none';
+                heading.textContent = section.section;
+                pane.appendChild(heading);
+                pane.appendChild(row);
+                tabContent.appendChild(pane);
+            });
         }
-        $('#tab-list').append($tab);
 
-        var $tabContainer = $('    <div class="tab-pane fade show" id="home" role="tabpanel" aria-labelledby="home-tab"></div>');
-        var $tabContainerRow = $('<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-2"></div>');
+        function selectSection() {
+            try {
+                var hash = decodeURI(window.location.hash);
+                if (hash) {
+                    var el = document.querySelector(hash + '-tab');
+                    if (el) {
+                        var tab = new bootstrap.Tab(el);
+                        tab.show();
+                    }
+                }
+            } catch (e) {}
+        }
 
-        $tabContainer.attr('id', idFromName);
-        $tabContainer.attr('aria-labelledby', idFromName + '-tab');
-        $tabContainerRow.attr('id', idFromName + '-tab-container-row');
+        function registerCallbacks() {
+            var tabEls = document.querySelectorAll('button[data-bs-toggle="tab"]');
+            tabEls.forEach(function (tabEl) {
+                tabEl.addEventListener('shown.bs.tab', function (event) {
+                    var href = event.target.getAttribute('href');
+                    if (href) location.hash = href;
+                });
+            });
+        }
 
-        $($tabContainer).append($tabContainerRow);
-        $('#tab-content').append($tabContainer);
-    }
+        var activeTabBeforeSearch = null;
 
-    function drawSectionSamples(section) {
-        var $tabContainer = $('#' + nameToId(section.section));
-        var $tabContainerRow = $('#' + nameToId(section.section) + '-tab-container-row');
-        section.samples.forEach(function (sample) {
-            var $card = $('#card-sample').clone(true);
-            $card.attr('id', '');
-            var image = sample.image ? sample.image : './lib/img/dashjs-logo-border.png';
-            $card.find('img').attr('src', image);
-            $card.find('h5').html('<a href="' + sample.href + '" target="_blank">' + sample.title + '</a>');
-            $card.find('p').html(sample.description);
-            $card.find('a').attr('href', sample.href);
-            $card.find('small').text(section.section);
+        function filterSamples() {
+            var query = searchInput.value.toLowerCase().trim();
+            var container = document.querySelector('.sample-container');
+            var panes = document.querySelectorAll('.tab-pane');
+            var noResults = document.getElementById('search-no-results');
+            var totalVisible = 0;
 
-            var labels = '';
+            if (query) {
+                /* Enter search mode */
+                if (!container.classList.contains('search-active')) {
+                    /* Remember which tab was active before searching */
+                    var activeBtn = document.querySelector('.samples-tabs .nav-link.active');
+                    activeTabBeforeSearch = activeBtn ? activeBtn.id : null;
+                }
+                container.classList.add('search-active');
 
-            if (sample.labels && sample.labels.length > 0) {
-                sample.labels.forEach(function (label) {
-                    labels += '<span class="badge bg-secondary me-1">' + label + '</span>';
-                })
+                panes.forEach(function (pane) {
+                    var cards = pane.querySelectorAll('.sample-card-col');
+                    var heading = pane.querySelector('.search-section-heading');
+                    var visibleInSection = 0;
+
+                    cards.forEach(function (card) {
+                        var title = card.getAttribute('data-title') || '';
+                        var desc = card.getAttribute('data-desc') || '';
+                        var match = title.indexOf(query) !== -1 || desc.indexOf(query) !== -1;
+                        card.style.display = match ? '' : 'none';
+                        if (match) visibleInSection++;
+                    });
+
+                    /* Show section heading + pane only if it has matches */
+                    if (heading) {
+                        heading.style.display = visibleInSection > 0 ? '' : 'none';
+                    }
+                    pane.style.display = visibleInSection > 0 ? 'block' : 'none';
+                    totalVisible += visibleInSection;
+                });
+
+                /* Show/hide no-results message */
+                noResults.classList.toggle('visible', totalVisible === 0);
+
+            } else {
+                /* Exit search mode: restore tabbed view */
+                container.classList.remove('search-active');
+                noResults.classList.remove('visible');
+
+                /* Show all cards again */
+                var allCards = document.querySelectorAll('.sample-card-col');
+                allCards.forEach(function (card) {
+                    card.style.display = '';
+                });
+
+                /* Reset pane inline display styles */
+                panes.forEach(function (pane) {
+                    pane.style.display = '';
+                    var heading = pane.querySelector('.search-section-heading');
+                    if (heading) heading.style.display = 'none';
+                });
+
+                /* Re-activate the tab that was active before search */
+                if (activeTabBeforeSearch) {
+                    var tabEl = document.getElementById(activeTabBeforeSearch);
+                    if (tabEl) {
+                        var tab = new bootstrap.Tab(tabEl);
+                        tab.show();
+                    }
+                    activeTabBeforeSearch = null;
+                }
             }
-
-            $card.find('span').append(labels);
-
-            $tabContainerRow.append($card);
-        });
-
-        if (section.active) {
-            $tabContainer.addClass('active show');
         }
-    }
-
-    function nameToId(name) {
-        return name.replace(/[^a-z0-9]/gmi, '');
-    }
+    })();
 </script>
 </body>
 </html>

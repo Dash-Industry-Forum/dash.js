@@ -72,7 +72,6 @@ function ManifestLoader(config) {
             constants: Constants,
             dashConstants: DashConstants,
             errors: Errors,
-            requestTimeout: config.settings.get().streaming.manifestRequestTimeout
         });
 
         xlinkController = XlinkController(context).create({
@@ -214,7 +213,7 @@ function ManifestLoader(config) {
                     if (settings &&
                         settings.get().streaming.enableManifestDurationMismatchFix &&
                         manifest.mediaPresentationDuration &&
-                        manifest.Period.length > 1) {
+                        manifest.Period?.length > 1) {
                         const sumPeriodDurations = manifest.Period.reduce((totalDuration, period) => totalDuration + period.duration, 0);
                         if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
                             logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');

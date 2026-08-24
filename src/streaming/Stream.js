@@ -108,7 +108,8 @@ function Stream(config) {
 
             segmentBlacklistController = BlacklistController(context).create({
                 updateEventName: Events.SEGMENT_LOCATION_BLACKLIST_CHANGED,
-                addBlacklistEventName: Events.SEGMENT_LOCATION_BLACKLIST_ADD
+                addBlacklistEventName: Events.SEGMENT_LOCATION_BLACKLIST_ADD,
+                enableExpiry: false
             });
 
             fragmentController = FragmentController(context).create({
@@ -131,6 +132,7 @@ function Stream(config) {
      * Initialize the events
      */
     function initialize() {
+        segmentBlacklistController.initialize();
         registerEvents();
         registerProtectionEvents();
         textController.initializeForStream(streamInfo);

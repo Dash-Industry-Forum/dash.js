@@ -1098,6 +1098,8 @@ export interface DashAdapter {
 
     getEventsFor(info: object, voRepresentation: object): Array<Event>;
 
+    getFragmentDurationForLiveDelayCalculation(streamInfo: object): number;
+
     getFramerate(representation: object): number;
 
     getIndexForRepresentation(representationId: string, periodIdx: number): number;
@@ -1672,6 +1674,7 @@ export class MediaPlayerSettingClass {
     };
     streaming?: {
         abandonLoadTimeout?: number,
+        seekDurationBackoff?: number,
         wallclockTimeUpdateInterval?: number,
         manifestUpdateRetryInterval?: number,
         liveUpdateTimeThresholdInMilliseconds?: number,
@@ -1680,6 +1683,7 @@ export class MediaPlayerSettingClass {
         applyServiceDescription?: boolean,
         applyProducerReferenceTime?: boolean,
         applyContentSteering?: boolean,
+        ignoreFinalStaticManifestOnDynamicToStaticTransition?: boolean,
         enableManifestDurationMismatchFix?: boolean,
         parseInbandPrft?: boolean,
         enableManifestTimescaleMismatchFix?: boolean,
@@ -1828,6 +1832,7 @@ export class MediaPlayerSettingClass {
         prioritizeRoleMain?: boolean;
         assumeDefaultRoleAsMain?: boolean;
         selectionModeForInitialTrack?: TrackSelectionMode;
+        blacklistExpiryTime?: number;
         fragmentRequestTimeout?: number;
         fragmentRequestProgressTimeout?: number;
         manifestRequestTimeout?: number;
@@ -1862,6 +1867,7 @@ export class MediaPlayerSettingClass {
             usePixelRatioInLimitBitrateByPortal?: boolean;
             limitBitrateByPortalMinimum?: number,
             enableSupplementalPropertyAdaptationSetSwitching?: boolean,
+            hybridSwitchBufferTime?: number,
             rules?: {
                 throughputRule?: {
                     active?: boolean
@@ -1959,7 +1965,16 @@ export class MediaPlayerSettingClass {
             mode?: 'query' | 'header',
             enabledKeys?: Array<string>,
             includeInRequests?: Array<string>,
-            version?: number
+            version?: number,
+            eventTargets?: Array<{
+                enabled?: boolean,
+                url?: string,
+                events?: Array<string>,
+                interval?: number,
+                enabledKeys?: Array<string>,
+                includeInRequests?: Array<string>,
+                batchSize?: number
+            }>
         },
         cmsd?: {
             enabled?: boolean,
@@ -2006,6 +2021,8 @@ export interface MediaPlayerClass {
     initialize(view?: HTMLMediaElement, source?: string, AutoPlay?: boolean, startTime?: number | string): void;
 
     on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
+
+    on(type: BaseUrlsUpdatedEvent['type'], listener: (e: BaseUrlsUpdatedEvent) => void, scope?: object): void;
 
     on(type: BufferEvent['type'], listener: (e: BufferEvent) => void, scope?: object): void;
 
@@ -2483,6 +2500,11 @@ export interface AstInFutureEvent extends MediaPlayerEvent {
     type: MediaPlayerEvents['AST_IN_FUTURE'];
 }
 
+export interface BaseUrlsUpdatedEvent extends MediaPlayerEvent {
+    baseUrls: BaseURL[];
+    type: MediaPlayerEvents['BASE_URLS_UPDATED'];
+}
+
 export interface BufferEvent extends MediaPlayerEvent {
     mediaType: MediaType;
     type: MediaPlayerEvents['BUFFER_EMPTY' | 'BUFFER_LOADED'];
@@ -2858,15 +2880,19 @@ export interface CueExitEvent extends MediaPlayerEvent {
 
 export interface AdaptationSetRemovedNoCapabilitiesEvent extends MediaPlayerEvent {
     adaptationSet: object;
+    remainingAdaptationSets: object[];
     type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
 }
 
 export interface MediaSettings {
-    accessibility?: any;
-    audioChannelConfiguration?: any[];
-    lang?: string;
-    role?: string;
-    viewpoint?: any;
+    accessibility?: { schemeIdUri?: string, value?: string } | string;
+    audioChannelConfiguration?: { schemeIdUri?: string, value?: string } | string;
+    codec?: string;
+    id?: string | number,
+    index?: number;
+    lang?: string | RegExp;
+    role?: { schemeIdUri?: string, value?: string } | string;
+    viewpoint?: { schemeIdUri?: string, value?: string } | string;
 }
 
 export class serviceDescriptions {
@@ -2941,7 +2967,7 @@ export interface Constants {
     TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency',
     TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
     CMCD_MODE_QUERY: 'query',
-    CMCD_MODE_HEADER: 'header',
+    CMCD_MODE_HEADERS: 'headers',
     CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
     CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
     CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
@@ -3803,21 +3829,55 @@ export interface BaseURLTreeModel {
 }
 
 export interface CmcdModel {
-    getCmcdData(request: HTTPRequest): object;
-
-    getCmcdParametersFromManifest(): CMCDParameters;
-
-    getHeaderParameters(request: HTTPRequest): object | null;
-
-    getQueryParameter(request: HTTPRequest): { key: string, finalPayloadString: string } | null;
-
-    initialize(): void;
-
-    isCmcdEnabled(): boolean;
+    setup(): void;
 
     reset(): void;
 
     setConfig(config: object): void;
+
+    getCmcdData(request: HTTPRequest): object;
+
+    onStateChange(state: any): void;
+
+    onPeriodSwitchComplete(): void;
+
+    onPlaybackStarted(): void;
+
+    onPlaybackPlaying(): void;
+
+    onRebufferingStarted(mediaType: string): void;
+
+    onRebufferingCompleted(mediaType: string): void;
+
+    onPlayerError(errorData: any): void;
+
+    onPlaybackSeeking(): void;
+
+    onPlaybackSeeked(): void;
+
+    onPlaybackRateChanged(data: any): void;
+
+    wasPlaying(): boolean;
+
+    onManifestLoaded(data: any): void;
+
+    onBufferLevelStateChanged(data: any): void;
+
+    updateMsdData(mode: string): object;
+
+    resetInitialSettings(): void;
+
+    getCmcdParametersFromManifest(): CMCDParameters;
+
+    triggerCmcdEventMode(event: string): object;
+
+    getGenericCmcdData(mediaType?: string): object;
+
+    isIncludedInRequestFilter(type: string, includeInRequests?: any): boolean;
+
+    getLastMediaTypeRequest(): string;
+
+    onEventChange(state: any): void;
 }
 
 export interface CmsdModel {
@@ -4726,6 +4786,9 @@ export interface ProtectionData {
     /** Distinctive identifier (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-distinctiveidentifier) */
     distinctiveIdentifier?: string;
 
+    /** Persistent state requirement (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate) */
+    persistentState?: string;
+
     /** The session type (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysessiontype) */
     sessionType?: string;
 
@@ -4749,6 +4812,21 @@ export interface ProtectionData {
         certType?: string;
         url?: string
     }>;
+
+    /** CDM-specific data passed during key system access request */
+    cdmData?: string;
+
+    /** Legacy/alternative license acquisition URL */
+    laURL?: string;
+
+    /** Flag indicating DRMToday vendor-specific handling */
+    drmtoday?: boolean;
+
+    /** Preferred key system string ordering */
+    systemStringPriority?: string[];
+
+    /** Initialization data types (e.g. "cenc", "sinf") */
+    initDataTypes?: string[];
 }
 
 export interface SessionToken {
@@ -6108,4 +6186,3 @@ export type RequestFilter = (request: LicenseRequest) => Promise<any>;
 export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
 export type CertificateRequestFilter = (request: CertificateRequest) => Promise<any>;
 export type CertificateResponseFilter = (response: CertificateResponse) => Promise<any>;
-

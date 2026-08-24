@@ -48,9 +48,14 @@ function LocationSelector() {
     function setup() {
         blacklistController = BlacklistController(context).create({
             updateEventName: Events.SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED,
-            addBlacklistEventName: Events.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD
+            addBlacklistEventName: Events.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD,
+            enableExpiry: false
         });
         contentSteeringController = ContentSteeringController(context).getInstance();
+    }
+
+    function initialize() {
+        blacklistController.initialize();
     }
 
     function setConfig(config) {
@@ -120,6 +125,7 @@ function LocationSelector() {
     }
 
     instance = {
+        initialize,
         select,
         setConfig,
         reset

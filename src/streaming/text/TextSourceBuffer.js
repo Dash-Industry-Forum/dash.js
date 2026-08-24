@@ -343,9 +343,9 @@ function TextSourceBuffer(config) {
         let i, j, k;
 
         const captionArray = [];
+        const timestampOffset = _getTimestampOffset();
         for (i = 0; i < sampleList.length; i++) {
             const sample = sampleList[i];
-            const timestampOffset = _getTimestampOffset();
             const start = timestampOffset + sample.cts / timescale;
             const end = start + sample.duration / timescale;
             instance.buffered.add(start, end);
@@ -393,7 +393,9 @@ function TextSourceBuffer(config) {
             }
         }
         if (captionArray.length > 0) {
-            textTracks.addCaptions(currFragmentedTrackIdx, 0, captionArray);
+            // Cue times are period-local media times; the MSE timestamp offset (Period@start - presentationTimeOffset)
+            // maps them to presentation time. Required for multiperiod content, see #5087.
+            textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, captionArray);
         }
     }
 
