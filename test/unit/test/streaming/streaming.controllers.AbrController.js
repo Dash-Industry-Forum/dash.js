@@ -22,6 +22,7 @@ import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import sinon from 'sinon';
 import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
 import SegmentSequenceProperties from '../../../../src/dash/vo/SegmentSequenceProperties.js';
+import Representation from '../../../../src/dash/vo/Representation.js';
 
 describe('AbrController', function () {
     const context = {};
@@ -693,7 +694,8 @@ describe('AbrController', function () {
             })).to.be.false;
         });
 
-        it('should return false if segmentSequenceProperties are defined but no segmentSequenceProperties with SAP type 0 or 1 are available', function() {
+        it('should return true if the current Representation declares a cadence aligned access point, regardless of its SAP type', function() {
+            // The SAP type describes where we may switch into a Representation, so it is only evaluated against the target Representation
             const ssp = new SegmentSequenceProperties();
             ssp.sapType = 2
             expect(abrCtrl.canPerformQualitySwitch({
@@ -702,7 +704,7 @@ describe('AbrController', function () {
                 replacementSubNumber: 1
             }, {
                 segmentSequenceProperties: [ssp]
-            })).to.be.false;
+            })).to.be.true;
         });
 
         it('should return false if next partial segment number does not have the right SAP type', function() {
@@ -767,6 +769,72 @@ describe('AbrController', function () {
                 segmentSequenceProperties: [ssp]
             })).to.be.true;
         });
+
+
+        describe('with a target Representation', function () {
+
+            const lastSegment = {
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 16,
+                replacementSubNumber: 0
+            };
+
+            function _representation(sapType, mediaInfo, cadence = 1) {
+                const ssp = new SegmentSequenceProperties();
+                ssp.sapType = sapType;
+                ssp.cadence = cadence;
+                return { segmentSequenceProperties: [ssp], mediaInfo };
+            }
+
+            beforeEach(function () {
+                // The AdapterMock unconditionally reports all MediaInfos as equal, which would defeat the switching set check
+                adapterMock.areMediaInfosEqual = (a, b) => a === b;
+            });
+
+            it('should return true for an S-Frame target in the same AdaptationSet', function () {
+                const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(7, mediaInfo), _representation(7, mediaInfo))).to.be.true;
+            });
+
+            it('should return true for an S-Frame target in an AdaptationSet of the same switching set', function () {
+                const bootstrapMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: ['0'] };
+                const ssrMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: ['1'] };
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, bootstrapMediaInfo), _representation(7, ssrMediaInfo))).to.be.true;
+            });
+
+            it('should return false for an S-Frame target that is not part of the same switching set', function () {
+                const bootstrapMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: [] };
+                const ssrMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, bootstrapMediaInfo), _representation(7, ssrMediaInfo))).to.be.false;
+            });
+
+            it('should return true for a closed GOP target that is not part of the same switching set', function () {
+                const currentMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: [] };
+                const targetMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, currentMediaInfo), _representation(1, targetMediaInfo))).to.be.true;
+            });
+
+            it('should return false for a target with a SAP type we can not switch into', function () {
+                const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, mediaInfo), _representation(4, mediaInfo))).to.be.false;
+            });
+
+            it('should return false for an open GOP target in the same switching set, as only SAP type 7 signals a switching frame', function () {
+                const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(7, mediaInfo), _representation(3, mediaInfo))).to.be.false;
+            });
+
+            it('should return false for an S-Frame target in the same switching set whose cadence does not line up', function () {
+                const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(7, mediaInfo), _representation(7, mediaInfo, 4))).to.be.false;
+            });
+
+            it('should return false if the target does not declare any segmentSequenceProperties', function () {
+                const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, mediaInfo), { segmentSequenceProperties: [], mediaInfo })).to.be.false;
+            });
+
+        })
 
     })
 
@@ -873,6 +941,297 @@ describe('AbrController', function () {
             // Trigger handling of queued switch
             const handled = abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO);
             expect(handled).to.be.true;
+        });
+    })
+
+    describe('noInitSegmentRequired in QUALITY_CHANGE_REQUESTED', function () {
+
+        const streamInfo = dummyMediaInfo.streamInfo;
+        let rep0, rep1;
+        let originalMediaInfos;
+        let capturedEvent;
+
+        function _onQualityChange(e) {
+            capturedEvent = e;
+        }
+
+        function _ssp(sapType, cadence = 1) {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = sapType;
+            ssp.cadence = cadence;
+            return ssp;
+        }
+
+        beforeEach(function () {
+            rep0 = dummyRepresentations[0];
+            rep1 = dummyRepresentations[1];
+            originalMediaInfos = [rep0.mediaInfo, rep1.mediaInfo];
+            rep0.segmentSequenceProperties = [_ssp(7)];
+            rep1.segmentSequenceProperties = [_ssp(7)];
+            capturedEvent = null;
+
+            streamProcessor.getRepresentationController = () => {
+                return {
+                    getCurrentCompositeRepresentation: () => rep0
+                }
+            }
+            // Mid-sequence partial segment, next sub-number is 4
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 16,
+                replacementSubNumber: 3
+            });
+
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChange, this);
+        });
+
+        afterEach(function () {
+            eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChange, this);
+            rep0.segmentSequenceProperties = [];
+            rep1.segmentSequenceProperties = [];
+            rep0.mediaInfo = originalMediaInfos[0];
+            rep1.mediaInfo = originalMediaInfos[1];
+        });
+
+        it('should be true when entering an S-Frame partial segment of the same switching set', function () {
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep1);
+            expect(capturedEvent.noInitSegmentRequired).to.be.true;
+        });
+
+        it('should be false when the switch happens at a segment boundary', function () {
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 16,
+                replacementSubNumber: 15
+            });
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep1);
+            expect(capturedEvent.noInitSegmentRequired).to.be.false;
+        });
+
+        it('should be false when the target enters at an IDR', function () {
+            rep1.segmentSequenceProperties = [_ssp(1)];
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep1);
+            expect(capturedEvent.noInitSegmentRequired).to.be.false;
+        });
+
+        it('should be false when the target also signals an aligned IDR next to the S-Frame', function () {
+            rep1.segmentSequenceProperties = [_ssp(1, 4), _ssp(7)];
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep1);
+            expect(capturedEvent.noInitSegmentRequired).to.be.false;
+        });
+
+        it('should be false when the target is not part of the same switching set', function () {
+            adapterMock.areMediaInfosEqual = (a, b) => a === b;
+            rep0.mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [], streamInfo };
+            rep1.mediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: [], streamInfo };
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep1);
+            expect(capturedEvent.noInitSegmentRequired).to.be.false;
+        });
+
+        it('should be false when the switch replaces or abandons instead of continuing at the next partial segment', function () {
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep1, { forceReplace: true });
+            expect(capturedEvent.noInitSegmentRequired).to.be.false;
+
+            capturedEvent = null;
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep1, { forceAbandon: true });
+            expect(capturedEvent.noInitSegmentRequired).to.be.false;
+        });
+
+        it('should be false when the last segment is not a partial segment', function () {
+            streamProcessor.getLastSegment = () => undefined;
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep1);
+            expect(capturedEvent.noInitSegmentRequired).to.be.false;
+        });
+
+    })
+
+    describe('bootstrap Representation exit', function () {
+
+        const streamInfo = dummyMediaInfo.streamInfo;
+        let bootstrapMediaInfo, mainMediaInfo, bootstrapRepresentation, capturedEvent;
+
+        function _onQualityChange(e) {
+            capturedEvent = e;
+        }
+
+        function _ssp(sapType, cadence = 1) {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = sapType;
+            ssp.cadence = cadence;
+            return ssp;
+        }
+
+        function _mediaInfo(id, compatibleIds) {
+            return { id, type: Constants.VIDEO, adaptationSetSwitchingCompatibleIds: compatibleIds, streamInfo };
+        }
+
+        function _representation(id, bandwidth, segmentSequenceProperties, mediaInfo, codecs = 'av01.0.05M.08') {
+            const representation = new Representation();
+            representation.id = id;
+            representation.bandwidth = bandwidth;
+            representation.bitrateInKbit = bandwidth / 1000;
+            representation.pixelsPerSecond = 100;
+            representation.codecs = codecs;
+            representation.segmentSequenceProperties = segmentSequenceProperties;
+            representation.mediaInfo = mediaInfo;
+            return representation;
+        }
+
+        function _setAvailableRepresentations(representations) {
+            adapterMock.getVoRepresentations = (mediaInfo) => {
+                return representations.filter((representation) => representation.mediaInfo === mediaInfo);
+            }
+        }
+
+        function _setLastSegment(replacementSubNumber) {
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 16,
+                replacementSubNumber
+            });
+        }
+
+        beforeEach(function () {
+            capturedEvent = null;
+            bootstrapMediaInfo = _mediaInfo('bootstrapAs', ['mainAs']);
+            mainMediaInfo = _mediaInfo('mainAs', ['bootstrapAs']);
+            // Only Representations of the current MediaInfo are resolved directly, the compatible ones come from the StreamProcessor
+            streamProcessor.getAllMediaInfos = () => [bootstrapMediaInfo, mainMediaInfo];
+            adapterMock.areMediaInfosEqual = (a, b) => a === b;
+
+            bootstrapRepresentation = _representation('bootstrap', 1048302, [_ssp(1)], bootstrapMediaInfo);
+            streamProcessor.getRepresentationController = () => {
+                return {
+                    getCurrentCompositeRepresentation: () => bootstrapRepresentation
+                }
+            }
+            _setLastSegment(0);
+
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChange, this);
+        });
+
+        afterEach(function () {
+            eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChange, this);
+        });
+
+        it('should switch to the S-Frame Representation after the first partial segment', function () {
+            const main = _representation('main', 1048302, [_ssp(7)], mainMediaInfo);
+            _setAvailableRepresentations([bootstrapRepresentation, main]);
+
+            expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+            expect(capturedEvent.newRepresentation.id).to.equal('main');
+            expect(capturedEvent.oldRepresentation.id).to.equal('bootstrap');
+            expect(capturedEvent.noInitSegmentRequired).to.be.true;
+        });
+
+        it('should switch even when resolution and bitrate are identical', function () {
+            const main = _representation('main', 1048302, [_ssp(7)], mainMediaInfo);
+            main.width = bootstrapRepresentation.width;
+            main.height = bootstrapRepresentation.height;
+            _setAvailableRepresentations([bootstrapRepresentation, main]);
+
+            expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+            expect(capturedEvent.newRepresentation.id).to.equal('main');
+        });
+
+        it('should switch even when ABR is disabled', function () {
+            settings.update({ streaming: { abr: { autoSwitchBitrate: { video: false } } } });
+            const main = _representation('main', 1048302, [_ssp(7)], mainMediaInfo);
+            _setAvailableRepresentations([bootstrapRepresentation, main]);
+
+            expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+            expect(capturedEvent.newRepresentation.id).to.equal('main');
+        });
+
+        it('should not switch before the first partial segment has been requested', function () {
+            const main = _representation('main', 1048302, [_ssp(7)], mainMediaInfo);
+            _setAvailableRepresentations([bootstrapRepresentation, main]);
+            streamProcessor.getLastSegment = () => null;
+
+            abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id);
+            expect(capturedEvent).to.be.null;
+        });
+
+        it('should pick the non-bootstrap Representation closest in bitrate', function () {
+            const low = _representation('low', 300000, [_ssp(7)], mainMediaInfo);
+            const closest = _representation('closest', 1000000, [_ssp(7)], mainMediaInfo);
+            const high = _representation('high', 2470736, [_ssp(7)], mainMediaInfo);
+            _setAvailableRepresentations([bootstrapRepresentation, low, closest, high]);
+
+            expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+            expect(capturedEvent.newRepresentation.id).to.equal('closest');
+        });
+
+        it('should allow a target with a different codecs string of the same switching set', function () {
+            const main = _representation('main', 1048302, [_ssp(7)], mainMediaInfo, 'av01.0.31M.08');
+            bootstrapRepresentation.codecs = 'av01.0.01M.08';
+            _setAvailableRepresentations([bootstrapRepresentation, main]);
+
+            expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+            expect(capturedEvent.newRepresentation.id).to.equal('main');
+            expect(capturedEvent.noInitSegmentRequired).to.be.true;
+        });
+
+        it('should not switch into a target that declares an access point we can not splice into', function () {
+            // SAP type 3 is neither a closed GOP nor a switching frame
+            const main = _representation('main', 1048302, [_ssp(3)], mainMediaInfo);
+            _setAvailableRepresentations([bootstrapRepresentation, main]);
+
+            abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id);
+            expect(capturedEvent).to.be.null;
+        });
+
+        it('should keep the init segment when the target is entered at an IDR', function () {
+            // An IDR every fourth partial segment, so the target is not a bootstrap configuration itself
+            const main = _representation('main', 1048302, [_ssp(1, 4)], mainMediaInfo);
+            _setAvailableRepresentations([bootstrapRepresentation, main]);
+            _setLastSegment(3);
+
+            expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+            expect(capturedEvent.newRepresentation.id).to.equal('main');
+            expect(capturedEvent.noInitSegmentRequired).to.be.false;
+        });
+
+        it('should wait for a partial segment the target declares an access point at', function () {
+            const main = _representation('main', 1048302, [_ssp(7, 4)], mainMediaInfo);
+            _setAvailableRepresentations([bootstrapRepresentation, main]);
+
+            // Next sub-number is 1, the target only offers an entry point every 4th partial segment
+            _setLastSegment(0);
+            abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id);
+            expect(capturedEvent).to.be.null;
+
+            // Next sub-number is 4
+            _setLastSegment(3);
+            expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+            expect(capturedEvent.newRepresentation.id).to.equal('main');
+        });
+
+        it('should not switch when every Representation is a bootstrap configuration', function () {
+            const otherBootstrap = _representation('otherBootstrap', 2470736, [_ssp(1)], mainMediaInfo);
+            _setAvailableRepresentations([bootstrapRepresentation, otherBootstrap]);
+
+            abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id);
+            expect(capturedEvent).to.be.null;
+        });
+
+        it('should not interfere when the current Representation is not a bootstrap Representation', function () {
+            const main = _representation('main', 1048302, [_ssp(7)], mainMediaInfo);
+            bootstrapRepresentation = main;
+            _setAvailableRepresentations([main]);
+
+            abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id);
+            expect(capturedEvent).to.be.null;
+        });
+
+        it('should not switch for content without segmentSequenceProperties', function () {
+            bootstrapRepresentation.segmentSequenceProperties = [];
+            const main = _representation('main', 2470736, [], mainMediaInfo);
+            _setAvailableRepresentations([bootstrapRepresentation, main]);
+            streamProcessor.getLastSegment = () => null;
+
+            abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id);
+            expect(capturedEvent).to.be.null;
         });
     })
 

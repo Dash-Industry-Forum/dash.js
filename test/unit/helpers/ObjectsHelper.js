@@ -26,6 +26,9 @@ class ObjectsHelper {
             getRepresentation: () => {
                 return null
             },
+            getLastSegment: () => {
+                return null
+            },
             getRepresentationController: () => {
                 return {
                     getCurrentCompositeRepresentation: () => null

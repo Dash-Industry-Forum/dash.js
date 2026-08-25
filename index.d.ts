@@ -2841,6 +2841,7 @@ export interface QualityChangeRenderedEvent extends MediaPlayerEvent {
 export interface QualityChangeRequestedEvent extends MediaPlayerEvent {
     mediaType: MediaType;
     newRepresentation: Representation;
+    noInitSegmentRequired: boolean;
     oldRepresentation: Representation;
     reason: {
         name?: string;

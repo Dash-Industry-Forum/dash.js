@@ -45,6 +45,9 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_BITRATE = 100;
+// SAP types 1 to 6 are random access points, a client can start decoding there. SAP type 7 signals a switching frame, for instance an AV1 S-Frame,
+// which is only decodable when switching from another Representation of the same switching set.
+const S_FRAME_SAP_TYPE = 7;
 
 function AbrController() {
 
@@ -835,6 +838,16 @@ function AbrController() {
             const currentRepresentation =
                 streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
 
+            // Leaving a bootstrap Representation is a startup transition and not a quality decision, it is applied
+            // independently of the ABR rules and independently of whether ABR is enabled at all.
+            const bootstrapExitRepresentation = _getBootstrapExitRepresentation(lastSegment, currentRepresentation);
+            if (bootstrapExitRepresentation) {
+                logger.debug(`Leaving bootstrap Representation ${currentRepresentation.id} for Representation ${bootstrapExitRepresentation.id} for ${type} at partial segment ${lastSegment.replacementSubNumber}`);
+                _addSwitchHistoryEntry(currentRepresentation, bootstrapExitRepresentation);
+                _changeQuality(type, currentRepresentation, bootstrapExitRepresentation, { message: '[AbrController]: Leaving the bootstrap Representation at the first possible switch point' });
+                return true;
+            }
+
             const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
 
             if (!settings.get().streaming.abr.autoSwitchBitrate[type] || !canSwitchQuality) {
@@ -850,9 +863,12 @@ function AbrController() {
 
             let newRepresentation = switchRequest.representation;
             _addSwitchHistoryEntry(currentRepresentation, newRepresentation);
-            if (newRepresentation.id !== currentRepresentation.id &&
-                (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD ||
-                    newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
+            if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
+                // Now that we know the target we can verify that we are allowed to switch into it at this partial segment boundary
+                if (!canPerformQualitySwitch(lastSegment, currentRepresentation, newRepresentation)) {
+                    logger.debug(`Can not switch to Representation ${newRepresentation.id} for ${type} at partial segment ${lastSegment.replacementSubNumber}. Waiting for the next possible switch point.`);
+                    return false;
+                }
                 _changeQuality(type, currentRepresentation, newRepresentation, switchRequest.reason);
                 return true;
             }
@@ -865,13 +881,15 @@ function AbrController() {
     }
 
     /**
-     * When playing Segment Sequence Representations we can not simply switch from one partial segment to another
-     * partial segment or another full segment.
-     * @private
+     * When playing Segment Sequence Representations we can not simply switch from one partial segment to another partial segment or another full segment.
+     * A switch is only possible if the upcoming partial segment starts with a Stream Access Point that we are allowed to switch into.
+     * @param {object} lastSegment
+     * @param {Representation} currentRepresentation
+     * @param {Representation} [targetRepresentation] - The Representation we want to switch to. If it has not been selected yet only the target agnostic checks are applied.
+     * @returns {boolean}
      */
-    function canPerformQualitySwitch(lastSegment, currentRepresentation) {
-        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) ||
-            isNaN(lastSegment.replacementSubNumber)) {
+    function canPerformQualitySwitch(lastSegment, currentRepresentation, targetRepresentation = null) {
+        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
             return true
         }
 
@@ -880,39 +898,170 @@ function AbrController() {
             return true;
         }
 
-        return _segmentSequencePropertiesAllowsSwitching(lastSegment, currentRepresentation);
+        if (!_hasAccessPointAtNextPartialSegment(lastSegment, currentRepresentation)) {
+            return false;
+        }
+
+        // The ABR rules have not selected a target Representation yet. The target is validated separately once it is known.
+        if (!targetRepresentation) {
+            return true;
+        }
+
+        return _targetAllowsSwitchInAtNextPartialSegment(lastSegment, currentRepresentation, targetRepresentation);
     }
 
-    function _segmentSequencePropertiesAllowsSwitching(lastSegment, currentRepresentation) {
-        if (!currentRepresentation || !currentRepresentation.segmentSequenceProperties ||
-            currentRepresentation.segmentSequenceProperties.length <= 0) {
+    function _getNextPartialSubNumber(lastSegment) {
+        return (lastSegment.replacementSubNumber + 1) % lastSegment.totalNumberOfPartialSegments;
+    }
+
+    /**
+     * Checks whether a Representation signals a partial segment boundary that lines up with the next partial segment.
+     * The cadence applies to the whole switching set, consequently the current Representation is a valid proxy for this check.
+     * @private
+     */
+    function _hasAccessPointAtNextPartialSegment(lastSegment, representation) {
+        if (!representation || !representation.segmentSequenceProperties || representation.segmentSequenceProperties.length <= 0) {
             return false;
         }
 
-        // We do not allow quality switches at non segment boundaries in case Adaptation Set Switching is available in
-        // the MPD.
-        // This is because we can not control the switching process at this point, and the ABR rules might select a
-        // Representation that has a different SAPType + Cadence than the current Representation.
-        if (currentRepresentation && currentRepresentation.mediaInfo &&
-            currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds &&
-            currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds.length > 0) {
-            return false;
-        }
+        const nextPartialSubNumber = _getNextPartialSubNumber(lastSegment);
 
-        const segmentSequencePropertiesWithTargetSapType =
-            currentRepresentation.segmentSequenceProperties.filter((ssp) => {
-                return !isNaN(ssp.sapType) && ssp.sapType <= 1;
-            })
-
-        if (segmentSequencePropertiesWithTargetSapType.length === 0) {
-            return false;
-        }
-
-        let nextPartialSubNumber = (lastSegment.replacementSubNumber + 1) % lastSegment.totalNumberOfPartialSegments;
-
-        return segmentSequencePropertiesWithTargetSapType.some((ssp) => {
+        return representation.segmentSequenceProperties.some((ssp) => {
             return nextPartialSubNumber % ssp.cadence === 0
         })
+    }
+
+    /**
+     * The SAP type describes where a Representation can be switched into, consequently it has to be evaluated against the target Representation.
+     * SAP type 0 and 1 are closed GOPs, we can splice them in coming from any Representation.
+     * SAP type 7 is a switching frame such as an AV1 S-Frame. It is not a random access point: it only decodes correctly when the preceding
+     * reference frames come from a Representation of the same switching set.
+     * @private
+     */
+    function _targetAllowsSwitchInAtNextPartialSegment(lastSegment, currentRepresentation, targetRepresentation) {
+        if (!targetRepresentation || !targetRepresentation.segmentSequenceProperties || targetRepresentation.segmentSequenceProperties.length <= 0) {
+            return false;
+        }
+
+        const nextPartialSubNumber = _getNextPartialSubNumber(lastSegment);
+
+        return targetRepresentation.segmentSequenceProperties.some((ssp) => {
+            if (isNaN(ssp.sapType) || nextPartialSubNumber % ssp.cadence !== 0) {
+                return false;
+            }
+            if (ssp.sapType <= 1) {
+                return true;
+            }
+            return ssp.sapType === S_FRAME_SAP_TYPE && _isInSameSwitchingSet(currentRepresentation, targetRepresentation);
+        })
+    }
+
+    /**
+     * Two Representations belong to the same switching set if they are part of the same AdaptationSet, or if their AdaptationSets are linked via the adaptation set switching supplemental property.
+     * This is the condition for splicing into an S-Frame: the frame is not a random access point, it only decodes correctly when the preceding reference frames
+     * come from a Representation of the same switching set. The codecs string is deliberately not compared, Representations of one bitstream switching set
+     * legitimately differ in profile and level.
+     * @private
+     */
+    function _isInSameSwitchingSet(currentRepresentation, targetRepresentation) {
+        const currentMediaInfo = currentRepresentation ? currentRepresentation.mediaInfo : null;
+        const targetMediaInfo = targetRepresentation ? targetRepresentation.mediaInfo : null;
+
+        if (!currentMediaInfo || !targetMediaInfo) {
+            return false;
+        }
+
+        if (adapter.areMediaInfosEqual(currentMediaInfo, targetMediaInfo)) {
+            return true;
+        }
+
+        return (currentMediaInfo.adaptationSetSwitchingCompatibleIds || []).includes(targetMediaInfo.id)
+            || (targetMediaInfo.adaptationSetSwitchingCompatibleIds || []).includes(currentMediaInfo.id);
+    }
+
+    /**
+     * Checks whether a quality switch enters the target Representation at an S-Frame.
+     * In that case no init segment must be downloaded and appended, as re-initializing the decode pipeline would break the decoding of the S-Frame,
+     * which references frames of the Representation we are switching away from.
+     * @private
+     */
+    function _entersTargetAtSFrame(lastSegment, currentRepresentation, targetRepresentation) {
+        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
+            return false;
+        }
+        if (!targetRepresentation || !targetRepresentation.segmentSequenceProperties || targetRepresentation.segmentSequenceProperties.length <= 0) {
+            return false;
+        }
+
+        const nextPartialSubNumber = _getNextPartialSubNumber(lastSegment);
+
+        // At the start of a segment sequence the target starts with a regular SAP (startWithSAP), the init segment can be appended
+        if (nextPartialSubNumber === 0) {
+            return false;
+        }
+
+        const alignedSegmentSequenceProperties = targetRepresentation.segmentSequenceProperties.filter((ssp) => {
+            return !isNaN(ssp.sapType) && nextPartialSubNumber % ssp.cadence === 0
+        });
+
+        // If the target signals a regular SAP at this partial segment the entry point is an IDR, the init segment can be appended
+        if (alignedSegmentSequenceProperties.some((ssp) => ssp.sapType <= 1)) {
+            return false;
+        }
+
+        return alignedSegmentSequenceProperties.some((ssp) => ssp.sapType === S_FRAME_SAP_TYPE)
+            && _isInSameSwitchingSet(currentRepresentation, targetRepresentation);
+    }
+
+    /**
+     * A bootstrap Representation only exists to start playback quickly: every one of its partial segments starts with an IDR, at the cost of bitrate efficiency.
+     * Leaving it is therefore not a quality decision, it has to happen at the first partial segment we are allowed to splice into, no matter what the ABR rules
+     * propose. Relying on the ABR rules is not enough, the bootstrap and the target Representation may have the exact same resolution and bitrate.
+     * Returns the non-bootstrap Representation closest in quality, so the transition is quality neutral and the ABR rules adapt from there.
+     * @param {object} lastSegment
+     * @param {Representation} currentRepresentation
+     * @returns {Representation|null}
+     * @private
+     */
+    function _getBootstrapExitRepresentation(lastSegment, currentRepresentation) {
+        // As long as no media segment has been requested there is nothing to splice into, the partial segment with the IDR has to be downloaded first
+        if (!lastSegment || !currentRepresentation || !currentRepresentation.isBootstrapRepresentation || !currentRepresentation.isBootstrapRepresentation()) {
+            return null;
+        }
+
+        const candidates = getPossibleVoRepresentationsFilteredBySettings(currentRepresentation.mediaInfo, true)
+            .filter((representation) => {
+                return representation.id !== currentRepresentation.id
+                    && !representation.isBootstrapRepresentation()
+                    && canPerformQualitySwitch(lastSegment, currentRepresentation, representation)
+            });
+
+        if (candidates.length === 0) {
+            return null;
+        }
+
+        return candidates.reduce((closest, candidate) => {
+            return _isCloserInQuality(candidate, closest, currentRepresentation) ? candidate : closest;
+        });
+    }
+
+    /**
+     * @private
+     */
+    function _isCloserInQuality(candidate, currentClosest, referenceRepresentation) {
+        const candidateBandwidthDelta = Math.abs(candidate.bandwidth - referenceRepresentation.bandwidth);
+        const closestBandwidthDelta = Math.abs(currentClosest.bandwidth - referenceRepresentation.bandwidth);
+        if (candidateBandwidthDelta !== closestBandwidthDelta) {
+            return candidateBandwidthDelta < closestBandwidthDelta;
+        }
+
+        const candidatePixelsDelta = Math.abs(candidate.pixelsPerSecond - referenceRepresentation.pixelsPerSecond);
+        const closestPixelsDelta = Math.abs(currentClosest.pixelsPerSecond - referenceRepresentation.pixelsPerSecond);
+        if (!isNaN(candidatePixelsDelta) && !isNaN(closestPixelsDelta) && candidatePixelsDelta !== closestPixelsDelta) {
+            return candidatePixelsDelta < closestPixelsDelta;
+        }
+
+        return candidate.absoluteIndex > currentClosest.absoluteIndex;
     }
 
     function _addDroppedFramesHistoryEntry(streamId) {
@@ -961,7 +1110,7 @@ function AbrController() {
         const streamProcessor = streamProcessorDict[streamInfo.id][type];
         const lastSegment = streamProcessor.getLastSegment();
         const currentRepresentation = streamProcessor.getRepresentation();
-        const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
+        const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation, representation);
 
         if (!canSwitchQuality) {
             _queueManualQualitySwitch(type, streamInfo, representation, reason);
@@ -993,16 +1142,16 @@ function AbrController() {
                 return false
             }
 
+            const { type, streamInfo, representation, reason } = switchRequest;
+
             const streamProcessor = streamProcessorDict[streamId][mediaType];
             const lastSegment = streamProcessor.getLastSegment();
             const currentRepresentation = streamProcessor.getRepresentation();
-            const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
+            const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation, representation);
 
             if (!canSwitchQuality) {
                 return false
             }
-
-            const { type, streamInfo, representation, reason } = switchRequest;
 
             queuedManualQualitySwitches.delete(manualQualitySwitchKey);
             setPlaybackQuality(type, streamInfo, representation, reason);
@@ -1046,11 +1195,16 @@ function AbrController() {
             return false
         }
 
-        const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
+        const streamProcessor = streamProcessorDict[streamId][type];
+        const streamInfo = streamProcessor.getStreamInfo();
         const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
         const isAdaptationSetSwitch = oldRepresentation !== null &&
             !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
         const oldBitrate = oldRepresentation ? oldRepresentation.bitrateInKbit : 0;
+
+        // When entering the target Representation at an S-Frame no init segment must be appended. Not applicable when abandoning or replacing, as the switch does not continue at the next partial segment.
+        const noInitSegmentRequired = !(reason && (reason.forceReplace || reason.forceAbandon))
+            && _entersTargetAtSFrame(streamProcessor.getLastSegment(), oldRepresentation, newRepresentation);
 
         logger.info(`[AbrController]: Switching quality in period ${streamId} for media type ${type}. Switch from bitrate ${oldBitrate} to bitrate ${newRepresentation.bitrateInKbit}. Current buffer level: ${bufferLevel}. Reason:` + (reason ? JSON.stringify(reason) : '/'));
         eventBus.trigger(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED,
@@ -1058,6 +1212,7 @@ function AbrController() {
                 isAdaptationSetSwitch,
                 mediaType: type,
                 newRepresentation: newRepresentation,
+                noInitSegmentRequired,
                 oldRepresentation: oldRepresentation,
                 reason,
                 streamInfo,

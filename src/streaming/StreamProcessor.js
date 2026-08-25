@@ -783,17 +783,14 @@ function StreamProcessor(config) {
         }
 
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
-            _prepareForDefaultQualitySwitch(
-                pendingSwitchToVoRepresentation.newRepresentation,
-                pendingSwitchToVoRepresentation.oldRepresentation
-            );
+            _prepareForDefaultQualitySwitch(pendingSwitchToVoRepresentation.newRepresentation, pendingSwitchToVoRepresentation.oldRepresentation, pendingSwitchToVoRepresentation.noInitSegmentRequired);
         } else if (!trackSwitchInProgress) {
             scheduleController.startScheduleTimer(0);
         }
     }
 
     function _resetPendingSwitchToRepresentation() {
-        pendingSwitchToVoRepresentation = { newRepresentation: null, oldRepresentation: null, enabled: false };
+        pendingSwitchToVoRepresentation = { newRepresentation: null, oldRepresentation: null, noInitSegmentRequired: false, enabled: false };
     }
 
     /**
@@ -960,8 +957,10 @@ function StreamProcessor(config) {
         // Stop scheduling until we are done with preparing the quality switch
         clearScheduleTimer();
 
-        // Informing ScheduleController about AS switch
-        scheduleController.setSwitchTrack(true);
+        // Informing ScheduleController about AS switch. If the switch enters the target Representation at an S-Frame no init segment is needed.
+        if (!e.noInitSegmentRequired) {
+            scheduleController.setSwitchTrack(true);
+        }
 
         const newMediaInfo = newRepresentation.mediaInfo;
         _setCurrentMediaInfo(newMediaInfo);
@@ -981,6 +980,13 @@ function StreamProcessor(config) {
             logger.warn(`_handleDifferentSwitchTypes() is missing the target representations`);
         }
 
+        // The switch enters the target Representation at an S-Frame: skip the init segment by marking the target as initialized,
+        // so the next request is the target's partial media segment.
+        if (e.noInitSegmentRequired && newRepresentation) {
+            logger.debug(`Switching to representation ${newRepresentation.id} without appending an init segment as the switch enters at an S-Frame`);
+            scheduleController.setLastInitializedRepresentationId(newRepresentation.id);
+        }
+
         // If the switch should occur immediately we need to replace existing stuff in the buffer
         if (e.reason && e.reason.forceReplace) {
             _prepareForForceReplacementQualitySwitch(newRepresentation, oldRepresentation);
@@ -998,7 +1004,7 @@ function StreamProcessor(config) {
 
         // Default quality switch. We append the new quality to the already buffered stuff
         else {
-            _prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation);
+            _prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation, e.noInitSegmentRequired);
         }
 
         dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
@@ -1129,19 +1135,19 @@ function StreamProcessor(config) {
         qualityChangeInProgress = false;
     }
 
-    function _prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation) {
-        // We are not canceling the current request. Check if there is still an ongoing request. If so we wait for the
-        // request to be finished and the media to be appended
+    function _prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation, noInitSegmentRequired = false) {
+        // We are not canceling the current request. Check if there is still an ongoing request. If so we wait for the request to be finished and the media to be appended
         const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
         if (ongoingRequests && ongoingRequests.length > 0) {
             logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')
             pendingSwitchToVoRepresentation.newRepresentation = newRepresentation;
             pendingSwitchToVoRepresentation.oldRepresentation = oldRepresentation;
+            pendingSwitchToVoRepresentation.noInitSegmentRequired = noInitSegmentRequired;
             pendingSwitchToVoRepresentation.enabled = true;
             return;
         }
 
-        bufferController.prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation)
+        bufferController.prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation, noInitSegmentRequired)
             .then(() => {
                 _defaultQualitySwitchPreparationDone();
             })
