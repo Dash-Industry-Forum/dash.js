@@ -434,7 +434,7 @@
     {
       "name": "Multiperiod encrypted to unencrypted",
       "type": "vod",
-      "url": "/base/test/functional/content/multi-period/enc-unenc.mpd",
+      "url": "/test/functional/content/multi-period/enc-unenc.mpd",
       "testdata": {
         "periods": {
           "waitingTimeForPeriodSwitches": 16000,
@@ -454,7 +454,7 @@
     {
       "name": "Multiperiod unencrypted to encrypted",
       "type": "vod",
-      "url": "/base/test/functional/content/multi-period/unenc-enc.mpd",
+      "url": "/test/functional/content/multi-period/unenc-enc.mpd",
       "testdata": {
         "periods": {
           "waitingTimeForPeriodSwitches": 10000,
@@ -484,7 +484,7 @@
     {
       "name": "Preload single period then play multiperiod",
       "type": "vod",
-      "url": "/base/test/functional/content/preload/preload-singleperiod-play-multiperiod.mpd",
+      "url": "/test/functional/content/preload/preload-singleperiod-play-multiperiod.mpd",
       "testdata": {
         "preloadSingleperiodPlayMultiperiod": {
           "waitingTimeForPeriodSwitch": 15000
