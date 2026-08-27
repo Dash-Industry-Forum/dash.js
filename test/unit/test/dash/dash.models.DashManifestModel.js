@@ -191,17 +191,22 @@ describe('DashManifestModel', function () {
             });
     
             it('should return DescriptorTypes with sanitized value for Role-value set to Main only for MPEG-Role scheme', () => {
-                const rolesArray = dashManifestModel.getRolesForAdaptation({
+                const adaptation = {
                     Role: [
-                        { schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'Main' },
+                        Object.freeze({ schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'Main' }),
                         { schemeIdUri: 'my.own.scheme', value: 'Main' }]
-                });
+                };
+                const rolesArray = dashManifestModel.getRolesForAdaptation(adaptation);
+                const rolesArrayFromSecondCall = dashManifestModel.getRolesForAdaptation(adaptation);
     
                 expect(rolesArray).to.be.instanceOf(Array);
                 expect(rolesArray.length).to.equal(2);
                 expect(rolesArray[0]).to.be.instanceOf(DescriptorType);
                 expect(rolesArray[0].value).equals(DashConstants.MAIN);
                 expect(rolesArray[1].value).equals('Main');
+                expect(adaptation.Role[0].value).equals('Main');
+                expect(rolesArrayFromSecondCall[0]).to.be.instanceOf(DescriptorType);
+                expect(rolesArrayFromSecondCall[0].value).equals(DashConstants.MAIN);
             });
         });
 
