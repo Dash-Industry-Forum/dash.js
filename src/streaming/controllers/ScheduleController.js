@@ -42,6 +42,7 @@ function ScheduleController(config) {
     config = config || {};
     const abrController = config.abrController;
     const bufferController = config.bufferController;
+    let bufferTargetLink = null;
     const context = this.context;
     const dashMetrics = config.dashMetrics;
     const eventBus = EventBus(context).getInstance();
@@ -305,15 +306,45 @@ function ScheduleController(config) {
         try {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
             const currentRepresentation = representationController.getCurrentRepresentation();
+
+            // If there's a gap in the video buffer, the audio will not stream over it. Check video buffer ranges
+            // past a gap and use that as a buffer target if bigger.
+            const gappedBufferTarget = _getGappedBufferTargetFromLink();
             // For multiperiod we need to consider that audio and video segments might have different durations.
             // This can lead to scenarios in which we completely buffered the video segments and the video buffer level for the current period is not changing anymore. However we might still need a small audio segment to finish buffering audio as well.
             // If we set the buffer time of audio equal to the video buffer time scheduling for the remaining audio segment will only be triggered when audio fragmentDuration > videoBufferLevel. That will delay preloading of the upcoming period.
             // Should find a better solution than just adding 1
             if (isNaN(currentRepresentation.fragmentDuration)) {
-                return videoBufferLevel + 1;
+                return Math.max(videoBufferLevel + 1, gappedBufferTarget);
             } else {
-                return Math.max(videoBufferLevel + 1, currentRepresentation.fragmentDuration);
+                return Math.max(videoBufferLevel + 1, currentRepresentation.fragmentDuration, gappedBufferTarget);
             }
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    function _getGappedBufferTargetFromLink() {
+        try {
+            const gaps = settings.get().streaming.gaps;
+            if (!bufferTargetLink || !gaps.jumpGaps || !gaps.jumpLargeGaps) {
+                return 0;
+            }
+
+            const ranges = bufferTargetLink.getBuffer().getAllBufferRanges();
+            const currentTime = playbackController.getTime();
+            const bufferTarget = _getGenericBufferTarget();
+            if (!ranges || ranges.length === 0 || isNaN(currentTime) || isNaN(bufferTarget)) {
+                return 0;
+            }
+
+            for (let index = 0; index < ranges.length; index++) {
+                if (ranges.start(index) > currentTime && ranges.start(index) - currentTime <= bufferTarget) {
+                    return Math.min(Math.max(ranges.end(index) - currentTime, 0), bufferTarget);
+                }
+            }
+
+            return 0;
         } catch (e) {
             return 0;
         }
@@ -420,6 +451,10 @@ function ScheduleController(config) {
         shouldCheckPlaybackQuality = value;
     }
 
+    function setBufferTargetLink(value) {
+        bufferTargetLink = value;
+    }
+
     function setInitSegmentRequired(value) {
         initSegmentRequired = value;
     }
@@ -468,6 +503,7 @@ function ScheduleController(config) {
         getType,
         initialize,
         reset,
+        setBufferTargetLink,
         setShouldCheckPlaybackQuality,
         setInitSegmentRequired,
         setLastInitializedRepresentationId,

@@ -1,4 +1,5 @@
 import Stream from '../../../../src/streaming/Stream.js';
+import FactoryMaker from '../../../../src/core/FactoryMaker.js';
 import Events from '../../../../src/core/events/Events.js';
 import ProtectionEvents from '../../../../src/streaming/protection/ProtectionEvents.js';
 import EventBus from '../../../../src/core/EventBus.js';
@@ -20,6 +21,7 @@ import VideoModelMock from '../../mocks/VideoModelMock.js';
 import ProtectionControllerMock from '../../mocks/ProtectionControllerMock.js';
 import ObjectsHelper from '../../helpers/ObjectsHelper.js';
 
+import sinon from 'sinon';
 import {expect} from 'chai';
 
 const context = {};
@@ -186,5 +188,57 @@ describe('Stream', function () {
 
             expect(thumbnailController).to.be.undefined; // jshint ignore:line
         });
+
+        it('should link the audio processor to the video processor after media initialization', (done) => {
+            const audioProcessor = createStreamProcessorMock('audio');
+            const videoProcessor = createStreamProcessorMock('video');
+            const originalGetAllMediaInfoForType = adapterMock.getAllMediaInfoForType;
+            const originalSetInitialMediaSettingsForType = mediaControllerMock.setInitialMediaSettingsForType;
+            const createProcessor = sinon.spy((config) => {
+                return config.type === 'audio' ? audioProcessor : videoProcessor;
+            });
+            FactoryMaker.extend('StreamProcessor', createProcessor, false, context);
+
+            adapterMock.getAllMediaInfoForType = (streamInfo, type) => {
+                return type === 'audio' || type === 'video' ? [{type, isEmbedded: false}] : [];
+            };
+            mediaControllerMock.setInitialMediaSettingsForType = () => {};
+            const cleanup = () => {
+                delete context.StreamProcessor;
+                adapterMock.getAllMediaInfoForType = originalGetAllMediaInfoForType;
+                mediaControllerMock.setInitialMediaSettingsForType = originalSetInitialMediaSettingsForType;
+            };
+
+            stream.initialize();
+            stream.startPreloading()
+                .then(() => {
+                    expect(createProcessor.callCount).to.equal(2);
+                    expect(stream.getStreamProcessors()).to.deep.equal([videoProcessor, audioProcessor]);
+                    expect(audioProcessor.setBufferTargetLink.calledOnceWithExactly(videoProcessor)).to.be.true; // jshint ignore:line
+                    cleanup();
+                    done();
+                })
+                .catch((error) => {
+                    cleanup();
+                    done(error);
+                });
+        });
     });
 });
+
+function createStreamProcessorMock(type) {
+    return {
+        createBufferSinks: () => Promise.resolve(null),
+        getFragmentModel: () => ({
+            abortRequests: () => {},
+            resetInitialSettings: () => {}
+        }),
+        getRepresentation: () => ({mediaInfo: {type}}),
+        getType: () => type,
+        initialize: () => {},
+        reset: () => {},
+        selectMediaInfo: () => Promise.resolve(),
+        setBufferTargetLink: sinon.spy(),
+        setMediaInfoArray: () => {}
+    };
+}
