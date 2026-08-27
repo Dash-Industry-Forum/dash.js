@@ -60,6 +60,14 @@ function FetchLoader() {
      * @param {CommonMediaResponse} commonMediaResponse
      */
     function load(commonMediaRequest, commonMediaResponse) {
+        // Reject protocol downgrades (e.g. a manifest/segment URL rewritten to plain HTTP by a
+        // man-in-the-middle or DNS hijacker) so that requests originating from a secure page can
+        // never be silently redirected to an unauthenticated, tamperable transport.
+        if (_isInsecureRequestUrl(commonMediaRequest.url)) {
+            _handleFetchError(commonMediaRequest);
+            return;
+        }
+
         const headers = _getHeaders(commonMediaRequest);
         const abortController = _setupAbortMechanism(commonMediaRequest);
         const fetchResourceRequestObject = _getFetchResourceRequestObject(commonMediaRequest, headers, abortController);
@@ -71,6 +79,15 @@ function FetchLoader() {
             .catch(() => {
                 _handleFetchError(commonMediaRequest);
             })
+    }
+
+    function _isInsecureRequestUrl(url) {
+        try {
+            return typeof window !== 'undefined' && window.isSecureContext &&
+                new URL(url, window.location.href).protocol === 'http:';
+        } catch (e) {
+            return false;
+        }
     }
 
     function _handleFetchResponse(fetchResponse, commonMediaRequest, commonMediaResponse) {
