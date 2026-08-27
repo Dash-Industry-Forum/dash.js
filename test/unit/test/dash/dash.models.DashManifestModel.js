@@ -244,6 +244,56 @@ describe('DashManifestModel', function () {
                 expect(essPropArray[2].schemeIdUri).equals('test.scheme.B');
                 expect(essPropArray[2].value).equals(null);
             });
+
+            [
+                {
+                    propertyName: DashConstants.ESSENTIAL_PROPERTY,
+                    getterName: 'getCombinedEssentialPropertiesForAdaptationSet'
+                },
+                {
+                    propertyName: DashConstants.SUPPLEMENTAL_PROPERTY,
+                    getterName: 'getCombinedSupplementalPropertiesForAdaptationSet'
+                }
+            ].forEach(({propertyName, getterName}) => {
+                it(`should combine ${propertyName} consistently without mutating Representations`, () => {
+                    const representationProperty = Object.freeze({
+                        schemeIdUri: 'test.scheme.representation',
+                        value: 'representation'
+                    });
+                    const representationProperties = Object.freeze([representationProperty]);
+                    const adaptationProperty = Object.freeze({
+                        schemeIdUri: Constants.EXT_URL_QUERY_INFO_SCHEME,
+                        value: 'adaptation'
+                    });
+                    const adaptationProperties = Object.freeze([
+                        {schemeIdUri: representationProperty.schemeIdUri, value: representationProperty.value},
+                        adaptationProperty
+                    ]);
+                    const singleRepresentationAdaptation = {
+                        [propertyName]: adaptationProperties,
+                        Representation: [{[propertyName]: representationProperties}]
+                    };
+                    const multipleRepresentationAdaptation = {
+                        [propertyName]: adaptationProperties,
+                        Representation: [
+                            {[propertyName]: [representationProperty]},
+                            {[propertyName]: [representationProperty]}
+                        ]
+                    };
+
+                    const singleRepresentationResult = dashManifestModel[getterName](singleRepresentationAdaptation);
+                    const multipleRepresentationResult = dashManifestModel[getterName](multipleRepresentationAdaptation);
+                    const expectedValues = [
+                        [representationProperty.schemeIdUri, representationProperty.value],
+                        [adaptationProperty.schemeIdUri, adaptationProperty.value]
+                    ];
+
+                    expect(singleRepresentationResult.every(property => property instanceof DescriptorType)).to.be.true;
+                    expect(singleRepresentationResult.map(property => [property.schemeIdUri, property.value])).to.deep.equal(expectedValues);
+                    expect(multipleRepresentationResult.map(property => [property.schemeIdUri, property.value])).to.deep.equal(expectedValues);
+                    expect(singleRepresentationAdaptation.Representation[0][propertyName]).to.equal(representationProperties);
+                });
+            });
         });
             
         it('should return null when getAdaptationForId is called and id, manifest and periodIndex are undefined', () => {

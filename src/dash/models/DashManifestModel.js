@@ -644,7 +644,7 @@ function DashManifestModel() {
         }
 
         if (repr.length === 1) {
-            return propertiesOfFirstRepresentation;
+            return propertiesOfFirstRepresentation.slice();
         }
 
         // now, only return properties present on all Representations
