@@ -165,6 +165,12 @@ describe('ScheduleController', function () {
                 representationController.getCurrentRepresentation = () => ({fragmentDuration: 6});
 
                 expect(scheduleController.getBufferTarget()).to.equal(12);
+
+                scheduleController.reset();
+                scheduleController.setup();
+                scheduleController.initialize(true);
+
+                expect(scheduleController.getBufferTarget()).to.equal(6);
             });
 
             it('should ignore a linked video range that starts beyond the generic buffer target', () => {

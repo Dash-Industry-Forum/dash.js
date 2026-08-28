@@ -464,6 +464,7 @@ function ScheduleController(config) {
     }
 
     function resetInitialSettings() {
+        bufferTargetLink = null;
         shouldCheckPlaybackQuality = true;
         timeToLoadDelay = 0;
         lastInitializedRepresentationId = null;
