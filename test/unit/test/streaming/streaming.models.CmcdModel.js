@@ -47,7 +47,7 @@ describe('CmcdModel', function () {
                     version: 1,
                     sid: 'test-session-id',
                     cid: 'test-content-id',
-                    includeInRequests: ['segment', 'mpd']
+                    includeRequestTypes: ['segment', 'mpd']
                 }
             }
         });
@@ -202,7 +202,7 @@ describe('CmcdModel', function () {
                 streaming: {
                     cmcd: {
                         enabled: true,
-                        includeInRequests: ['mpd'] // only MPD requests
+                        includeRequestTypes: ['mpd'] // only MPD requests
                     }
                 }
             });
@@ -272,7 +272,7 @@ describe('CmcdModel', function () {
                         applyParametersFromMpd: true,
                         sid: 'test-session-id',
                         cid: 'test-content-id',
-                        includeInRequests: ['segment', 'mpd']
+                        includeRequestTypes: ['segment', 'mpd']
                     }
                 }
             });

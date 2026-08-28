@@ -18,7 +18,7 @@ export class SettingsController {
     static get _ARRAY_SETTING_PATHS() {
         return new Set([
             'streaming.cmcd.enabledKeys',
-            'streaming.cmcd.includeInRequests'
+            'streaming.cmcd.includeRequestTypes'
         ]);
     }
 
@@ -216,9 +216,9 @@ export class SettingsController {
             if (keys) {
                 config.streaming.cmcd.enabledKeys = this._parseCommaSeparatedInput(keys);
             }
-            const includeInRequests = $('#opt-cmcd-include-in-requests').value.trim();
-            if (includeInRequests) {
-                config.streaming.cmcd.includeInRequests = this._parseCommaSeparatedInput(includeInRequests);
+            const includeRequestTypes = $('#opt-cmcd-include-in-requests').value.trim();
+            if (includeRequestTypes) {
+                config.streaming.cmcd.includeRequestTypes = this._parseCommaSeparatedInput(includeRequestTypes);
             }
         }
 
@@ -762,7 +762,7 @@ export class SettingsController {
         }
         const cmcdIncludeInRequests = $('#opt-cmcd-include-in-requests');
         if (cmcdIncludeInRequests) {
-            const v = s?.streaming?.cmcd?.includeInRequests;
+            const v = s?.streaming?.cmcd?.includeRequestTypes;
             cmcdIncludeInRequests.value = Array.isArray(v) ? v.join(', ') : '';
         }
     }

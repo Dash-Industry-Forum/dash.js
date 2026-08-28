@@ -141,7 +141,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Transmission mode (query, header, body)
+     * Transmission mode (query, headers)
      * Priority: manifest > settings > default (query)
      *
      * V1: Single global mode
@@ -231,7 +231,7 @@ const CmcdPropertyMap = {
      * Request types to include CMCD data in
      * Priority: manifest > settings > default (['segment', 'mpd'])
      */
-    includeInRequests: {
+    includeRequestTypes: {
         version: [1, 2],
         sources: [
             {
@@ -247,7 +247,7 @@ const CmcdPropertyMap = {
                 }
             },
             {
-                path: 'settings.streaming.cmcd.includeInRequests',
+                path: 'settings.streaming.cmcd.includeRequestTypes',
                 priority: 2,
                 type: 'array',
                 default: ['segment', 'mpd']
@@ -283,22 +283,6 @@ const CmcdPropertyMap = {
                 priority: 1,
                 type: 'array',
                 default: []
-            }
-        ]
-    },
-
-    /**
-     * V2: Target enabled flag
-     * Note: This is target-specific, requires context
-     */
-    targetEnabled: {
-        version: [2],
-        sources: [
-            {
-                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].enabled',
-                priority: 1,
-                type: 'boolean',
-                default: true
             }
         ]
     },
@@ -384,22 +368,18 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target includeInRequests filter
-     * Note: This is target-specific, requires context
+     * V2: Target sendResponseReceivedForRequestTypes filter
+     * Note: This only applies to the rr event, and is target-specific, requires context.
+     * No default: an absent list must stay undefined so it falls back to the
+     * top-level includeRequestTypes, while an explicit empty list disables rr.
      */
-    targetIncludeInRequests: {
+    targetSendResponseReceivedForRequestType: {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeInRequests',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].sendResponseReceivedForRequestTypes',
                 priority: 1,
                 type: 'array'
-            },
-            {
-                path: 'settings.streaming.cmcd.includeInRequests',
-                priority: 2,
-                type: 'array',
-                default: ['segment', 'mpd']
             }
         ]
     }

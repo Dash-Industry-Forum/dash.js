@@ -1962,17 +1962,18 @@ export class MediaPlayerSettingClass {
             cid?: string | null,
             rtp?: number | null,
             rtpSafetyFactor?: number,
-            mode?: 'query' | 'header',
+            mode?: 'query' | 'headers' | 'header', // 'header' is deprecated; use 'headers'.
             enabledKeys?: Array<string>,
-            includeInRequests?: Array<string>,
+            includeRequestTypes?: Array<string>,
             version?: number,
             eventTargets?: Array<{
+                /** @deprecated This property is ignored. Remove the target from eventTargets to disable reporting. */
                 enabled?: boolean,
                 url?: string,
                 events?: Array<string>,
                 interval?: number,
                 enabledKeys?: Array<string>,
-                includeInRequests?: Array<string>,
+                sendResponseReceivedForRequestTypes?: Array<string>,
                 batchSize?: number
             }>
         },
@@ -3873,7 +3874,7 @@ export interface CmcdModel {
 
     getGenericCmcdData(mediaType?: string): object;
 
-    isIncludedInRequestFilter(type: string, includeInRequests?: any): boolean;
+    isIncludedInRequestFilter(type: string, requestTypes?: any): boolean;
 
     getLastMediaTypeRequest(): string;
 

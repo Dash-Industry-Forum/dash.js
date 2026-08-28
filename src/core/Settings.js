@@ -337,7 +337,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                rtpSafetyFactor: 5,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
- *                includeInRequests: ['segment', 'mpd'],
+ *                includeRequestTypes: ['segment', 'mpd'],
  *                version: 1,
  *                eventTargets: []
  *            },
@@ -968,14 +968,15 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
- * @property {number} [mode="query"]
- * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
+ * @property {string} [mode="query"]
+ * The method to use to attach CMCD metrics to requests. Use 'query' for query parameters or 'headers' for HTTP headers.
+ * The legacy 'header' value is supported but deprecated.
  *
  * If not specified this value defaults to 'query'.
  * @property {Array.<string>} [enabledKeys]
  * This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.
- * @property {Array.<string>} [includeInRequests]
- * Specifies which HTTP GET requests shall carry parameters.
+ * @property {Array.<string>} [includeRequestTypes]
+ * Specifies which request types shall carry CMCD parameters.
  *
  * If not specified this value defaults to ['segment', 'mpd].
  * @property {number} [version=1]
@@ -989,7 +990,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 /**
  * @typedef {Object} CmcdEventTarget
  * @property {boolean} [enabled]
- * Whether the CMCD reporting is enabled for this target.
+ * @deprecated This property is ignored. Remove the target from `eventTargets` to disable reporting.
  * @property {string} [url]
  * The reporting endpoint URL.
  * @property {string} [events]
@@ -998,8 +999,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {Array.<string>} [includeInRequests]
- * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {Array.<string>} [sendResponseReceivedForRequestTypes]
+ * Types of responses for which response-received reports should be sent (e.g., 'mpd', 'segment').
  * @property {number} [batchSize]
  * The batch size for the CMCD reporting.
  */
@@ -1526,7 +1527,7 @@ function Settings() {
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_KEYS,
-                includeInRequests: ['segment', 'mpd'],
+                includeRequestTypes: ['segment', 'mpd'],
                 version: 1,
                 eventTargets: []
             },

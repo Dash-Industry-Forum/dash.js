@@ -257,7 +257,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                                     enabled: true,
                                     url: targetUrl,
                                     enabledKeys: ['url', 'rc', 'msd', 'e', 'ts', 'sn'],
-                                    includeInRequests: ['mpd', 'segment'],
+                                    sendResponseReceivedForRequestTypes: ['segment'],
                                     events: ['rr'],
                                 },
                             ],
@@ -288,6 +288,83 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 const allEvents = events.flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || []);
                 const rrEvents = allEvents.filter((d) => d.e === 'rr');
                 expect(rrEvents.length).to.be.at.least(1);
+                expect(rrEvents.every((d) => !d.url.includes('.mpd'))).to.be.true;
+            });
+        });
+
+        describe('rr filter (sendResponseReceivedForRequestTypes) applied per target', () => {
+            let playerAdapter;
+            let collector;
+            const segmentTargetUrl = `${EVENT_TARGET_BASE}/rr-segment-only`;
+            const mpdTargetUrl = `${EVENT_TARGET_BASE}/rr-mpd-only`;
+
+            function getRrEventsForTarget(targetUrl) {
+                return collector.getRequests('event')
+                    .filter((r) => r.httpRequest.url.startsWith(targetUrl))
+                    .flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || [])
+                    .filter((d) => d.e === 'rr');
+            }
+
+            before(function () {
+                this.timeout(60000);
+                collector = new CmcdRequestCollector();
+                collector.attach({ eventTargetUrls: [segmentTargetUrl, mpdTargetUrl] });
+                const settings = {
+                    streaming: {
+                        cmcd: {
+                            ...DEFAULT_CMCD_V2_CONFIG,
+                            mode: 'query',
+                            eventTargets: [
+                                {
+                                    url: segmentTargetUrl,
+                                    enabledKeys: ['url', 'rc', 'e', 'ts', 'sn'],
+                                    sendResponseReceivedForRequestTypes: ['segment'],
+                                    events: ['rr'],
+                                },
+                                {
+                                    url: mpdTargetUrl,
+                                    enabledKeys: ['url', 'rc', 'e', 'ts', 'sn'],
+                                    sendResponseReceivedForRequestTypes: ['mpd'],
+                                    events: ['rr'],
+                                },
+                            ],
+                        },
+                    },
+                };
+                playerAdapter = initializeDashJsAdapter(item, mpd, settings);
+            });
+
+            after(() => {
+                collector.detach();
+                if (playerAdapter) {
+                    playerAdapter.destroy();
+                }
+            });
+
+            it('Checking playing state', async () => {
+                await checkIsPlaying(playerAdapter, true);
+            });
+
+            it('Segment-only target receives rr reports for segment responses only', async function () {
+                this.timeout(30000);
+                await collector.waitForRequests('event', 3, TIMEOUTS.REQUEST_COLLECTION);
+
+                const rrEvents = getRrEventsForTarget(segmentTargetUrl);
+                expect(rrEvents.length).to.be.at.least(1);
+                for (const d of rrEvents) {
+                    expect(d.url, `Segment-only target received rr report for ${d.url}`).to.not.include('.mpd');
+                }
+            });
+
+            it('Mpd-only target receives rr reports for manifest responses only', async function () {
+                this.timeout(30000);
+                await collector.waitForRequests('event', 3, TIMEOUTS.REQUEST_COLLECTION);
+
+                const rrEvents = getRrEventsForTarget(mpdTargetUrl);
+                expect(rrEvents.length).to.be.at.least(1);
+                for (const d of rrEvents) {
+                    expect(d.url, `Mpd-only target received rr report for ${d.url}`).to.include('.mpd');
+                }
             });
         });
 
@@ -425,7 +502,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                                     url: targetUrl,
                                     enabledKeys: ['e', 'ts', 'sn', 'sta', 'url', 'rc'],
                                     events: ['ps', 'rr'],
-                                    includeInRequests: ['mpd', 'segment'],
+                                    sendResponseReceivedForRequestTypes: ['mpd', 'segment'],
                                 },
                             ],
                         },

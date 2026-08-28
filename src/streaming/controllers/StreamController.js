@@ -390,6 +390,7 @@ function StreamController() {
             if (settings.get().streaming.applyServiceDescription) {
                 serviceDescriptionController.applyServiceDescription(manifestInfo);
             }
+            eventBus.trigger(Events.SERVICE_DESCRIPTION_APPLIED);
 
             // Compute and set the live delay. The live edge is in the last period of the MPD.
             if (adapter.getIsDynamic()) {

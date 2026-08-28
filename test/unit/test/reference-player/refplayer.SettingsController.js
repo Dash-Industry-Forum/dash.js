@@ -695,7 +695,7 @@ describe('Reference Player - SettingsController', function () {
             expect(s.streaming.cmcd.rtp).to.equal(5000);
             expect(s.streaming.cmcd.rtpSafetyFactor).to.equal(3);
             expect(s.streaming.cmcd.enabledKeys).to.deep.equal(['br', 'bl', 'dl']);
-            expect(s.streaming.cmcd.includeInRequests).to.deep.equal(['segment', 'mpd']);
+            expect(s.streaming.cmcd.includeRequestTypes).to.deep.equal(['segment', 'mpd']);
         });
 
         it('should not override streaming.cmcd when opt-cmcd-enabled is unchecked', function () {
