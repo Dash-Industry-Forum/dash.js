@@ -2,6 +2,7 @@ module.exports = function (config) {
     // Coverage instrumentation slows down compilation and execution considerably,
     // so it is only enabled when the COVERAGE environment variable is set.
     const useCoverage = !!process.env.COVERAGE;
+    const unitTestPattern = config.testFile || 'test/unit/test/**/*.js';
 
     config.set({
 
@@ -23,7 +24,7 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         // https://github.com/webpack-contrib/karma-webpack#alternative-usage
         files: [
-            { pattern: 'test/unit/test/**/*.js', watched: false },
+            { pattern: unitTestPattern, watched: false },
             { pattern: 'src/**/*.js', watched: false, included: false, nocache: true },
             { pattern: 'test/unit/data/**/*', watched: false, included: false, served: true }
         ],
