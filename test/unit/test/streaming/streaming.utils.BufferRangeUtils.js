@@ -39,20 +39,19 @@ describe('BufferRangeUtils', function () {
             expect(getPruningRanges(ranges)).to.deep.equal(expected);
             expect(getPruningRanges(ranges, NaN)).to.deep.equal(expected);
             expect(getPruningRanges(ranges, 'invalid')).to.deep.equal(expected);
-            expect(getPruningRanges(ranges, '50')).to.deep.equal(expected);
         });
 
-        it('should reject a valid seek time without pruning options', function () {
+        it('should return no ranges for a valid seek time without pruning options', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
 
-            expect(() => getPruningRanges(ranges, 50)).to.throw('getPruningRanges requires numeric bufferToKeepBehind and bufferToKeepAhead');
+            expect(getPruningRanges(ranges, 50)).to.deep.equal([]);
         });
 
-        it('should reject partial pruning options', function () {
+        it('should return no ranges for partial pruning options', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
 
-            expect(() => getPruningRanges(ranges, 50, { bufferToKeepBehind: 20 })).to.throw('getPruningRanges requires numeric bufferToKeepBehind and bufferToKeepAhead');
-            expect(() => getPruningRanges(ranges, 50, { bufferToKeepAhead: 30 })).to.throw('getPruningRanges requires numeric bufferToKeepBehind and bufferToKeepAhead');
+            expect(getPruningRanges(ranges, 50, { bufferToKeepBehind: 20 })).to.deep.equal([]);
+            expect(getPruningRanges(ranges, 50, { bufferToKeepAhead: 30 })).to.deep.equal([]);
         });
 
         it('should treat seek time zero as a valid pruning target', function () {
@@ -67,6 +66,15 @@ describe('BufferRangeUtils', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
 
             expect(getPruningRanges(ranges, 50, pruningOptions)).to.deep.equal([
+                { start: 0, end: 30 },
+                { start: 80, end: 100.5 }
+            ]);
+        });
+
+        it('should cast a numeric seek time to a number', function () {
+            const ranges = createTimeRanges([{ start: 0, end: 100 }]);
+
+            expect(getPruningRanges(ranges, '50', pruningOptions)).to.deep.equal([
                 { start: 0, end: 30 },
                 { start: 80, end: 100.5 }
             ]);

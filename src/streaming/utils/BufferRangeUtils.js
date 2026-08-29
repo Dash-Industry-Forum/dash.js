@@ -33,7 +33,7 @@ const BUFFER_END_THRESHOLD = 0.5;
 const DEFAULT_RANGE_TOLERANCE = 0.15;
 
 function isValidTargetTime(time) {
-    return typeof time === 'number' && !isNaN(time);
+    return Boolean(time || time === 0) && !isNaN(Number(time));
 }
 
 function getRangeBehindForPruning(ranges, targetTime, bufferToKeepBehind, currentTimeRequest) {
@@ -119,16 +119,17 @@ function getPruningRanges(ranges, seekTime, options) {
 
     const pruningOptions = options || {};
     if (!Number.isFinite(pruningOptions.bufferToKeepBehind) || !Number.isFinite(pruningOptions.bufferToKeepAhead)) {
-        throw new Error('getPruningRanges requires numeric bufferToKeepBehind and bufferToKeepAhead options when a valid seek time is provided');
+        return clearRanges;
     }
 
+    const targetTime = Number(seekTime);
     const behindPruningRange = getRangeBehindForPruning(
         ranges,
-        seekTime,
+        targetTime,
         pruningOptions.bufferToKeepBehind,
         pruningOptions.currentTimeRequest
     );
-    const aheadPruningRange = getRangeAheadForPruning(ranges, seekTime, pruningOptions);
+    const aheadPruningRange = getRangeAheadForPruning(ranges, targetTime, pruningOptions);
 
     if (behindPruningRange) {
         clearRanges.push(behindPruningRange);
