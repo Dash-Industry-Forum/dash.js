@@ -19,6 +19,14 @@ describe('BCP47Utils', function () {
             expect(normalizeBcp47('zh-hans')).to.equal('zh-Hans');
             expect(normalizeBcp47('en-us')).to.equal('en-US');
             expect(normalizeBcp47('ZH-hANS-cn')).to.equal('zh-Hans-CN');
+            expect(normalizeBcp47('de-DE-1996-A-EXTENSION-X-PRIVATE')).to.equal('de-DE-1996-a-extension-x-private');
+        });
+
+        it('should preserve the language normalization used before dash.js 5.2.0', () => {
+            expect(normalizeBcp47('zh-cmn')).to.equal('zh');
+            expect(normalizeBcp47('ZH-CMN')).to.equal('zh');
+            expect(normalizeBcp47('nl-NL')).to.equal('nl');
+            expect(normalizeBcp47('NLD-nl')).to.equal('nl');
         });
 
         // Numeric regions (UN M.49) and variant subtags must not be altered

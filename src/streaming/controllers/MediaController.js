@@ -443,10 +443,16 @@ function MediaController() {
             return !settings.lang ||
             (settings.lang instanceof RegExp) ?
                 (track.lang.match(settings.lang)) : track.lang !== '' ?
-                    (extendedFilter(track.lang, normalizeBcp47(settings.lang)).length > 0) : false;
+                    _matchesLanguage(track.lang, settings.lang) : false;
         } catch (e) {
             return false
         }
+    }
+
+    function _matchesLanguage(trackLang, requestedLang) {
+        const normalizedRequestedLang = normalizeBcp47(requestedLang);
+        return extendedFilter(trackLang, normalizedRequestedLang).length > 0 ||
+            extendedFilter(normalizedRequestedLang, trackLang).length > 0;
     }
 
     function matchSettingsIndex(settings, track) {
@@ -517,10 +523,7 @@ function MediaController() {
 
             // If the track has a language and we can normalize the target language check if we got a match
             else if (track.lang !== '') {
-                const normalizedSettingsLang = normalizeBcp47(settings.lang);
-                if (normalizedSettingsLang) {
-                    matchLang = extendedFilter(track.lang, normalizedSettingsLang).length > 0
-                }
+                matchLang = _matchesLanguage(track.lang, settings.lang)
             }
 
             const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);

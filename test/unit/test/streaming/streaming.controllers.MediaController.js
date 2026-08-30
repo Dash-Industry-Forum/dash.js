@@ -70,6 +70,17 @@ describe('MediaController', function () {
         });
     });
 
+    describe('Language Matching', function () {
+        it('should match generic track languages against more specific preferences', function () {
+            expect(mediaController.matchSettingsLang({ lang: 'en-US' }, { lang: 'en' })).to.be.true;
+            expect(mediaController.matchSettingsLang({ lang: 'zh-Hans-CN' }, { lang: 'zh' })).to.be.true;
+        });
+
+        it('should not match different regional variants', function () {
+            expect(mediaController.matchSettingsLang({ lang: 'en-US' }, { lang: 'en-GB' })).to.be.false;
+        });
+    });
+
     describe('Track Equality', function () {
         it('should return false if track are not equals', function () {
 
