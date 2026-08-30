@@ -701,11 +701,11 @@ function StreamProcessor(config) {
      * @param {MediaInfoSelectionInput} mediaInfoSelectionInput
      */
     function selectMediaInfo(mediaInfoSelectionInput) {
-        return new Promise((resolve) => {
-            if (!representationController) {
-                return Promise.resolve();
-            }
+        if (!representationController) {
+            return Promise.resolve();
+        }
 
+        return new Promise((resolve) => {
             let selectedValues = null;
 
             // Switching to a new AdaptationSet as part of a quality switch
