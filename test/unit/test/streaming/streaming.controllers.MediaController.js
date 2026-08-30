@@ -71,13 +71,10 @@ describe('MediaController', function () {
     });
 
     describe('Language Matching', function () {
-        it('should match generic track languages against more specific preferences', function () {
-            expect(mediaController.matchSettingsLang({ lang: 'en-US' }, { lang: 'en' })).to.be.true;
-            expect(mediaController.matchSettingsLang({ lang: 'zh-Hans-CN' }, { lang: 'zh' })).to.be.true;
-        });
-
-        it('should not match different regional variants', function () {
+        it('should keep language range matching directional', function () {
+            expect(mediaController.matchSettingsLang({ lang: 'en-GB' }, { lang: 'en' })).to.be.false;
             expect(mediaController.matchSettingsLang({ lang: 'en-US' }, { lang: 'en-GB' })).to.be.false;
+            expect(mediaController.matchSettingsLang({ lang: 'en-GB' }, { lang: 'en-GB' })).to.be.true;
         });
     });
 

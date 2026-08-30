@@ -90,7 +90,7 @@ export const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescripto
  */
 const COMPATIBILITY_TAG_MAPPINGS = Object.create(null, Object.getOwnPropertyDescriptors({
     'zh-cmn': 'zh',
-    'nl-NL': 'nl'
+    'nl-nl': 'nl'
 }));
 
 export function normalizeBcp47(tag) {
@@ -110,12 +110,9 @@ export function normalizeBcp47(tag) {
         } else if (parts[i].length === 2 && /^[a-zA-Z]+$/.test(parts[i])) {
             // Region (2 alpha): uppercase (e.g. us -> US)
             parts[i] = parts[i].toUpperCase();
-        } else {
-            // Extlang, variant, extension, and private-use subtags are lowercase
-            parts[i] = parts[i].toLowerCase();
         }
     }
 
     const normalizedTag = parts.join('-');
-    return COMPATIBILITY_TAG_MAPPINGS[normalizedTag] || normalizedTag;
+    return COMPATIBILITY_TAG_MAPPINGS[normalizedTag.toLowerCase()] || normalizedTag;
 }
