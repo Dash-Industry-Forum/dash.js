@@ -34,6 +34,10 @@ describe('StreamProcessor', function () {
             expect(streamProcessor.setEnhancementStreamProcessor.bind(streamProcessor, {})).to.not.throw();
         });
 
+        it('setBufferTargetLink should exist', function () {
+            expect(streamProcessor.setBufferTargetLink).to.be.a('function');
+        });
+
     });
 
 });
