@@ -1974,6 +1974,10 @@ export class MediaPlayerSettingClass {
                 enabledKeys?: Array<string>,
                 includeInRequests?: Array<string>,
                 batchSize?: number
+            }>,
+            customKeys?: Array<{
+                key: string,
+                value: string | number | boolean
             }>
         },
         cmsd?: {
