@@ -146,12 +146,8 @@ function CapabilitiesFilter() {
         period.Preselection = period.Preselection.filter((prsl) => {
             if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
                 const prslCodec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
-                let isPrslCodecSupported = true;
-                if (prslCodec) {
-                    let commonRepresentation = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
-
-                    isPrslCodecSupported = _isCodecSupported(type, prsl, prslCodec, commonRepresentation);
-                }
+                const isPrslCodecSupported = !prslCodec || _getRepresentationsForPreselection(prsl, period.AdaptationSet)
+                    .every((representation) => _isCodecSupported(type, prsl, prslCodec, representation));
 
                 if (!isPrslCodecSupported) {
                     logger.warn(`[CapabilitiesFilter] Preselection@codecs ${prslCodec} not supported. Removing Preselection with ID ${prsl.id}`);
@@ -162,6 +158,11 @@ function CapabilitiesFilter() {
                 return true;
             }
         })
+    }
+
+    function _getRepresentationsForPreselection(preselection, adaptations) {
+        const mainAdaptationSet = adapter.getMainAdaptationSetForPreselection(preselection, adaptations);
+        return mainAdaptationSet && mainAdaptationSet.Representation ? mainAdaptationSet.Representation : [];
     }
 
     function _filterUnsupportedRepresentationsOfAdaptation(as, type) {
@@ -234,9 +235,11 @@ function CapabilitiesFilter() {
                 period.Preselection.forEach((prsl) => {
                     if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
                         const prslCodec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
-                        const prslCommonRepresentation = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+                        const representations = _getRepresentationsForPreselection(prsl, period.AdaptationSet);
 
-                        _processCodecToCheck(type, prsl, prslCodec, configurationsSet, configurations, prslCommonRepresentation);
+                        representations.forEach((representation) => {
+                            _processCodecToCheck(type, prsl, prslCodec, configurationsSet, configurations, representation);
+                        });
                     }
                 });
             }

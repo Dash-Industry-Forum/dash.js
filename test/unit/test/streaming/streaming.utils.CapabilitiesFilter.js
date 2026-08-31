@@ -436,6 +436,67 @@ describe('CapabilitiesFilter', function () {
 
             });
 
+            it('should check all Representations of the main AdaptationSet for a Preselection codec override', function (done) {
+                const preselectionCodec = 'audio/mp4;codecs="iamf.000.000.mp4a.40.2"';
+                const checkedPreselectionBitrates = [];
+                const manifest = {
+                    Period: [{
+                        Preselection: [{
+                            id: '10',
+                            codecs: 'iamf.000.000.mp4a.40.2',
+                            preselectionComponents: '1',
+                            tagName: 'Preselection'
+                        }],
+                        AdaptationSet: [{
+                            id: '1',
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    id: '1-low',
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000',
+                                    bandwidth: 64000
+                                },
+                                {
+                                    id: '1-high',
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000',
+                                    bandwidth: 128000
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                prepareCapabilitiesMock({
+                    name: 'runCodecSupportCheck', definition: function (config) {
+                        if (config.codec === preselectionCodec) {
+                            checkedPreselectionBitrates.push(config.bitrate);
+                        }
+                        return Promise.resolve();
+                    }
+                });
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        return config.codec !== preselectionCodec || config.bitrate === 64000;
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(checkedPreselectionBitrates).to.have.members([64000, 128000]);
+                        expect(manifest.Period[0].Preselection).to.be.empty;
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(2);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            });
+
         });
 
         describe('filter codecs using codec properties', function () {
