@@ -37,6 +37,7 @@ import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
 import CmcdController from './controllers/CmcdController.js';
 import CatchupController from './controllers/CatchupController.js';
 import ClientDataReportingController from './controllers/ClientDataReportingController.js';
+import C2paController from './c2pa/C2paController.js';
 import CmsdModel from './models/CmsdModel.js';
 import Constants from './constants/Constants.js';
 import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
@@ -169,6 +170,7 @@ function MediaPlayer() {
         domStorage,
         segmentBaseController,
         clientDataReportingController,
+        c2paController,
         retrieveManifestRequest;
 
     /*
@@ -237,6 +239,9 @@ function MediaPlayer() {
         }
         if (config.clientDataReportingController) {
             clientDataReportingController = config.clientDataReportingController;
+        }
+        if (config.c2paController) {
+            c2paController = config.c2paController;
         }
         if (config.catchupController) {
             catchupController = config.catchupController;
@@ -361,6 +366,10 @@ function MediaPlayer() {
 
             clientDataReportingController = ClientDataReportingController(context).getInstance();
 
+            if (!c2paController) {
+                c2paController = C2paController(context).getInstance();
+            }
+
             dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
             });
@@ -428,6 +437,13 @@ function MediaPlayer() {
                 eventBus
             })
 
+            c2paController.setConfig({
+                settings,
+                eventBus,
+                customParametersModel
+            });
+            c2paController.initialize();
+
             restoreDefaultUTCTimingSources();
             setAutoPlay(autoPlay !== undefined ? autoPlay : true);
 
@@ -467,6 +483,10 @@ function MediaPlayer() {
         if (metricsReportingController) {
             metricsReportingController.reset();
             metricsReportingController = null;
+        }
+        if (c2paController) {
+            c2paController.reset();
+            c2paController = null;
         }
         if (customParametersModel) {
             customParametersModel.reset();
@@ -2560,6 +2580,9 @@ function MediaPlayer() {
         textController.reset();
         cmcdController.reset();
         cmsdModel.reset();
+        if (c2paController) {
+            c2paController.resetForNewSource();
+        }
     }
 
     function _resetPlaybackSessionSpecificSettings() {
