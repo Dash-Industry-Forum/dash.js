@@ -2583,6 +2583,7 @@ function MediaPlayer() {
                 mediaController,
                 settings,
                 videoModel,
+                timelineConverter
             });
         }
 
