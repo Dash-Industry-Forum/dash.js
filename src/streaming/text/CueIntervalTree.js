@@ -160,30 +160,33 @@ class CueIntervalTree {
         }
 
         // Compare by text content
-        let textComparison = 0;
-        if (typeof VTTCue !== 'undefined' && cue1 instanceof VTTCue && cue2 instanceof VTTCue) {
-            textComparison = cue1.text.localeCompare(cue2.text);
-        } else if (cue1.text && cue2.text) {
-            // For non-VTTCue objects, compare by text property if available
-            textComparison = cue1.text.localeCompare(cue2.text);
-        }
+        const textComparison = (cue1.text || '').localeCompare(cue2.text || '');
         if (textComparison !== 0) {
             return textComparison;
         }
 
-        // CEA-608 (and other) HTML cues carry their rendered content in a DOM
-        // node (cueHTMLElement) and have an empty VTTCue text. Cues that differ
-        // only in that node would otherwise compare as equal here and be dropped
-        // as duplicates — e.g. the two rows of a single 608 screen share the same
-        // timing and empty text, so one row would disappear. Disambiguate such
-        // cues by their unique cueID. Cues without a cueHTMLElement (e.g. WebVTT)
-        // keep the previous behaviour of deduplicating on timing and text.
-        if (cue1.cueHTMLElement || cue2.cueHTMLElement) {
-            return (cue1.cueID || '').localeCompare(cue2.cueID || '');
+        // IMSC/TTML cues carry their content in isd with an empty text;
+        // distinct captions at identical timing must not be treated as
+        // duplicates. Stringify only runs when timing and text already match.
+        if (cue1.isd || cue2.isd) {
+            const isdComparison = JSON.stringify(cue1.isd || null).localeCompare(JSON.stringify(cue2.isd || null));
+            if (isdComparison !== 0) {
+                return isdComparison;
+            }
         }
 
-        // If no distinguishing content, consider them equal if timing matches
-        return 0;
+        // CEA-608 (and other) HTML cues carry their rendered content in a DOM
+        // node (cueHTMLElement) and have an empty VTTCue text. Compare position
+        // (the element's own cssText holds the region placement) plus visible
+        // text, so the two rows of one 608 screen stay distinct while a
+        // re-parsed duplicate of the same caption still deduplicates. The
+        // element id / cueID is deliberately NOT compared: it embeds a
+        // monotonically increasing counter that differs on every re-parse of
+        // the same segment. The inner wrapper's style is also excluded because
+        // _scaleCue mutates it on activation.
+        const key1 = cue1.cueHTMLElement ? cue1.cueHTMLElement.style.cssText + '|' + cue1.cueHTMLElement.textContent : '';
+        const key2 = cue2.cueHTMLElement ? cue2.cueHTMLElement.style.cssText + '|' + cue2.cueHTMLElement.textContent : '';
+        return key1.localeCompare(key2);
     }
 
     /**
