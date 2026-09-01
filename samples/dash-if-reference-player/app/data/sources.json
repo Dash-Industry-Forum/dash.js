@@ -759,7 +759,7 @@
                     ]
                 },
                 {
-                    "name": "Embedded CEA-608 CC1 captions (Live with LiveSim2)",
+                    "name": "Embedded CEA-608 CC1 wall-clock paint-on captions (Live with LiveSim2)",
                     "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/timecc608_CC1-eng/testpic_2s/Manifest.mpd",
                     "provider": "dashif",
                     "tags": [
