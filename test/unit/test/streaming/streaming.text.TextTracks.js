@@ -299,6 +299,24 @@ describe('TextTracks', function () {
             expect(track.cues.length).to.equal(2);
         });
 
+        it('should deduplicate a re-appended CEA-608 caption with identical timing and content but a fresh cueID', function () {
+            const track = addCea608Track();
+
+            // Seeking back past the buffer re-downloads the text segment; the
+            // 608 parser re-emits the same caption with a new cueID. Only one
+            // copy may live in the track or it renders stacked.
+            textTracks.addCaptions(0, 0, [
+                makeCea608Item('<span>Same caption</span>', 'sub_cea608_0', 0, 2)
+            ]);
+            textTracks.addCaptions(0, 0, [
+                makeCea608Item('<span>Same caption</span>', 'sub_cea608_5', 0, 2)
+            ]);
+
+            textTracks.updateTextTrackWindow(0, true);
+
+            expect(track.cues.length).to.equal(1);
+        });
+
         it('should not extend adjacent cues when streaming.text.extendSegmentedCues is disabled', function () {
             // Ensure cue extension is disabled
             settings.update({ streaming: { text: { extendSegmentedCues: false } } });
