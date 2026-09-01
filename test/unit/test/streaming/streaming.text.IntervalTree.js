@@ -115,6 +115,62 @@ describe('IntervalTree', function () {
 
             expect(intervalTree.getSize()).to.equal(1);
         });
+
+        function makeHtmlCueElement(text, cssText) {
+            const element = document.createElement('div');
+            element.style.cssText = cssText;
+            element.textContent = text;
+            return element;
+        }
+
+        it('should keep HTML cues with identical timing and empty text but different content', function () {
+            // The two rows of a single CEA-608 screen share the same timing and
+            // have an empty VTTCue text; their content lives in cueHTMLElement.
+            // Both must be kept.
+            const row1 = { startTime: 0, endTime: 1, text: '', cueID: 'sub_cea608_0', cueHTMLElement: makeHtmlCueElement('12:00:00.000', 'top: 80%;') };
+            const row2 = { startTime: 0, endTime: 1, text: '', cueID: 'sub_cea608_1', cueHTMLElement: makeHtmlCueElement('SEG 0', 'top: 86%;') };
+
+            intervalTree.addCue(row1);
+            intervalTree.addCue(row2);
+
+            expect(intervalTree.getSize()).to.equal(2);
+            const ids = intervalTree.getAllCues().map(c => c.cueID);
+            expect(ids).to.include('sub_cea608_0');
+            expect(ids).to.include('sub_cea608_1');
+        });
+
+        it('should keep HTML cues with identical timing and text but different position', function () {
+            const row1 = { startTime: 0, endTime: 1, text: '', cueID: 'sub_cea608_0', cueHTMLElement: makeHtmlCueElement('SAME TEXT', 'top: 80%;') };
+            const row2 = { startTime: 0, endTime: 1, text: '', cueID: 'sub_cea608_1', cueHTMLElement: makeHtmlCueElement('SAME TEXT', 'top: 86%;') };
+
+            intervalTree.addCue(row1);
+            intervalTree.addCue(row2);
+
+            expect(intervalTree.getSize()).to.equal(2);
+        });
+
+        it('should skip duplicate HTML cues with identical timing and content even when cueIDs differ', function () {
+            // A re-buffered/re-parsed 608 segment produces the same caption
+            // again with a fresh cueID; it must still deduplicate.
+            const cue1 = { startTime: 0, endTime: 1, text: '', cueID: 'sub_cea608_0', cueHTMLElement: makeHtmlCueElement('x', 'top: 80%;') };
+            const cue2 = { startTime: 0, endTime: 1, text: '', cueID: 'sub_cea608_7', cueHTMLElement: makeHtmlCueElement('x', 'top: 80%;') };
+
+            intervalTree.addCue(cue1);
+            intervalTree.addCue(cue2);
+
+            expect(intervalTree.getSize()).to.equal(1);
+        });
+
+        it('should keep isd cues with identical timing but different content', function () {
+            // IMSC/TTML cues carry their content in isd with an empty text.
+            const cue1 = { startTime: 0, endTime: 1, text: '', isd: { contents: ['a'] } };
+            const cue2 = { startTime: 0, endTime: 1, text: '', isd: { contents: ['b'] } };
+
+            intervalTree.addCue(cue1);
+            intervalTree.addCue(cue2);
+
+            expect(intervalTree.getSize()).to.equal(2);
+        });
     });
 
     describe('Method findCuesInRange', function () {

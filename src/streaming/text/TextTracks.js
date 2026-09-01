@@ -455,6 +455,44 @@ function TextTracks(config) {
                     }
                 }
             }
+
+            // CEA-608 uses a fixed 32-column monospace grid, but the caption
+            // font is only sized by height (videoHeight/15), so its glyphs are
+            // narrower than a grid cell (videoWidth/32). Left-aligned at their
+            // start column, rows then drift left of where the 608 columns place
+            // them (e.g. a centered caption looks left-shifted). Stretch the
+            // wrapper so its widest row fills exactly the number of grid
+            // columns it occupies, anchored at its start column — offsetWidth
+            // is that widest row's natural width (and, unlike a client rect, is
+            // not affected by a transform left over from a previous
+            // activation), so the columns count must be the widest row's
+            // character count, not the concatenation of all <br>-separated
+            // rows. Scaling the wrapper (not letter-spacing) keeps every
+            // character's solid background rectangle contiguous with no gaps.
+            if (activeCue.isFromCEA608 && activeCue.cueHTMLElement) {
+                const wrappers = activeCue.cueHTMLElement.getElementsByClassName('cueUniWrapper');
+                for (let w = 0; w < wrappers.length; w++) {
+                    const wrapper = wrappers[w];
+                    let columns = 0;
+                    let rowLength = 0;
+                    for (let n = 0; n < wrapper.childNodes.length; n++) {
+                        const node = wrapper.childNodes[n];
+                        if (node.nodeName === 'BR') {
+                            columns = Math.max(columns, rowLength);
+                            rowLength = 0;
+                        } else {
+                            rowLength += node.textContent.length;
+                        }
+                    }
+                    columns = Math.max(columns, rowLength);
+                    const naturalWidth = wrapper.offsetWidth;
+                    if (columns > 0 && naturalWidth > 0) {
+                        const targetWidth = columns * cellUnit[0];
+                        wrapper.style.transformOrigin = 'left';
+                        wrapper.style.transform = 'scaleX(' + (targetWidth / naturalWidth) + ')';
+                    }
+                }
+            }
         }
 
         if (activeCue.isd) {
@@ -593,6 +631,7 @@ function TextTracks(config) {
         const track = getTrackByIdx(trackIdx);
         const cueData = tracksCueData.get(track);
         const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
+        const extendSegmentedCues = settings.get().streaming.text.extendSegmentedCues;
 
         if (!track || !cueData) {
             return;
@@ -607,7 +646,22 @@ function TextTracks(config) {
             const currentItem = captionData[item];
 
             track.cellResolution = currentItem.cellResolution;
-            track.isFromCEA608 = currentItem.isFromCEA608;
+            if (track.isFromCEA608 !== currentItem.isFromCEA608) {
+                // The 608 flag changes the caption box geometry in
+                // checkVideoSize (forced 3.5/3 aspect ratio, 80% box). It is
+                // only known once the first caption arrives — and can be stale
+                // from a previous stream, because native TextTrack objects are
+                // reused across streams — so the box must be recomputed
+                // whenever it flips, or the caption size depends on which
+                // stream was played before. 608 data is parsed from the
+                // video segments and appended for every embedded track, no
+                // matter which one is selected, so only recompute the box for
+                // the track that is actually being rendered.
+                track.isFromCEA608 = currentItem.isFromCEA608;
+                if (trackIdx === currentTrackIdx) {
+                    checkVideoSize.call(this, track, true);
+                }
+            }
 
             if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                 if (dispatchForManualRendering) {
@@ -620,7 +674,15 @@ function TextTracks(config) {
             }
 
             if (cue) {
-                if (settings.get().streaming.text.extendSegmentedCues) {
+                // CEA-608 captions use a paint-on model: each screen is a
+                // self-contained caption with its own explicit timing and is
+                // never split across segments. The extendSegmentedCues logic is
+                // meant to stitch segmented TTML/WebVTT cues back together, so it
+                // must not run for 608 or it would merge distinct captions
+                // (their rendered content lives in cueHTMLElement, which the cue
+                // equality check does not inspect) and only the first caption of
+                // each segment would ever be shown.
+                if (extendSegmentedCues && !currentItem.isFromCEA608) {
                     const cueToExtend = _findCueToExtend(cue, cueData.allCues);
                     if (cueToExtend) {
                         cueData.allCues.removeCue(cueToExtend);
@@ -778,6 +840,7 @@ function TextTracks(config) {
         cue.cueID = currentItem.cueID;
         cue.scaleCue = _scaleCue.bind(self);
         //useful parameters for cea608 subtitles, not for TTML one.
+        cue.isFromCEA608 = currentItem.isFromCEA608;
         cue.cellResolution = currentItem.cellResolution;
         cue.lineHeight = currentItem.lineHeight;
         cue.linePadding = currentItem.linePadding;
