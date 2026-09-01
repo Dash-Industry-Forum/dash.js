@@ -653,9 +653,14 @@ function TextTracks(config) {
                 // from a previous stream, because native TextTrack objects are
                 // reused across streams — so the box must be recomputed
                 // whenever it flips, or the caption size depends on which
-                // stream was played before.
+                // stream was played before. 608 data is parsed from the
+                // video segments and appended for every embedded track, no
+                // matter which one is selected, so only recompute the box for
+                // the track that is actually being rendered.
                 track.isFromCEA608 = currentItem.isFromCEA608;
-                checkVideoSize.call(this, track, true);
+                if (trackIdx === currentTrackIdx) {
+                    checkVideoSize.call(this, track, true);
+                }
             }
 
             if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
