@@ -646,7 +646,17 @@ function TextTracks(config) {
             const currentItem = captionData[item];
 
             track.cellResolution = currentItem.cellResolution;
-            track.isFromCEA608 = currentItem.isFromCEA608;
+            if (track.isFromCEA608 !== currentItem.isFromCEA608) {
+                // The 608 flag changes the caption box geometry in
+                // checkVideoSize (forced 3.5/3 aspect ratio, 80% box). It is
+                // only known once the first caption arrives — and can be stale
+                // from a previous stream, because native TextTrack objects are
+                // reused across streams — so the box must be recomputed
+                // whenever it flips, or the caption size depends on which
+                // stream was played before.
+                track.isFromCEA608 = currentItem.isFromCEA608;
+                checkVideoSize.call(this, track, true);
+            }
 
             if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                 if (dispatchForManualRendering) {
