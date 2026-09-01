@@ -38,6 +38,10 @@ function TimelineSegmentsGetter(config, isDynamic) {
     config = config || {};
     const timelineConverter = config.timelineConverter;
     const dashMetrics = config.dashMetrics;
+    // Per-representation index of the SegmentTimeline. Keyed on the representation so it is dropped
+    // automatically when the representation is. Invalidated in _getCachedLookup when the parsed S
+    // array or its timing boundaries change; never stored for open-ended (negative-@r) timelines, see _computeLookup.
+    const segmentLookupCache = new WeakMap();
 
     let instance;
 
@@ -68,212 +72,269 @@ function TimelineSegmentsGetter(config, isDynamic) {
             requestedPresentationTime = null;
         }
 
-        let segment = null;
         const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedPresentationTime, representation);
+        const fTimescale = representation.timescale;
+        const requiredMediaTimeInTimescaleUnits = _precisionRound(requiredMediaTime * fTimescale);
+        const segmentLookup = _getSegmentLookup(representation);
+        const blockIndex = _findBlockIndexByMediaTime(segmentLookup, requiredMediaTimeInTimescaleUnits);
 
-        _iterateSegments(representation, function (data) {
-            // In some cases when requiredMediaTime = actual end time of the last segment
-            // it is possible that this time a bit exceeds the declared end time of the last segment.
-            // in this case we still need to include the last segment in the segment list.
-            const fTimescale = representation.timescale;
-            const requiredMediaTimeInTimescaleUnits = _precisionRound(requiredMediaTime * fTimescale);
+        if (blockIndex === -1) {
+            return null;
+        }
 
-            return _handleIteration(requiredMediaTimeInTimescaleUnits, data)
+        const block = segmentLookup.blocks[blockIndex];
+        const durationInTimescale = block.currentSElement.d;
+        // The block spans repeat+1 segments of equal duration; pick the one whose half-open
+        // [start, start + d) interval contains the requested time (matches the per-segment check of
+        // the previous linear scan). Clamp to block.repeat to absorb floating point at the end edge.
+        const repeatOffset = Math.min(
+            Math.floor((requiredMediaTimeInTimescaleUnits - block.mediaTime) / durationInTimescale),
+            block.repeat
+        );
+        const mediaTime = block.mediaTime + repeatOffset * durationInTimescale;
+        const sElementCounterIncludingRepeats = block.sElementCounterIncludingRepeatsStart + repeatOffset;
+        const totalNumberOfPartialSegments = getTotalNumberOfPartialSegments(block.currentSElement);
+        const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequestByTime({
+            durationInTimescale,
+            requiredMediaTimeInTimescaleUnits,
+            mediaTime,
+            totalNumberOfPartialSegments
         });
 
-        return segment;
+        representation.segmentDuration = durationInTimescale / fTimescale;
 
-        function _handleIteration(requiredMediaTimeInTimescaleUnits, data) {
-            const {
-                mediaTime,
-                segmentBase,
-                segmentURL,
-                currentSElement,
-                sElementCounterIncludingRepeats,
-                sElementCounter
-            } = data
-            const targetDurationInTimescale = currentSElement.d;
-            const fTimescale = representation.timescale;
-            const mediaStartTime = mediaTime;
-            const mediaEndTime = mediaTime + targetDurationInTimescale;
-
-            if (requiredMediaTimeInTimescaleUnits < mediaEndTime && requiredMediaTimeInTimescaleUnits >= mediaStartTime) {
-                _onSegmentFound({
-                    segmentBase,
-                    segmentURL,
-                    sElementCounter,
-                    currentSElement,
-                    mediaTime: mediaStartTime,
-                    durationInTimescale: targetDurationInTimescale,
-                    fTimescale,
-                    requiredMediaTimeInTimescaleUnits,
-                    sElementCounterIncludingRepeats,
-                });
-                return true;
-            }
-
-            return false;
-        }
-
-        function _onSegmentFound(data) {
-            const {
-                segmentBase,
-                segmentURL,
-                sElementCounter,
-                currentSElement,
-                mediaTime,
-                durationInTimescale,
-                fTimescale,
-                requiredMediaTimeInTimescaleUnits,
-                sElementCounterIncludingRepeats
-            } = data
-            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, sElementCounter);
-            let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
-            const totalNumberOfPartialSegments = getTotalNumberOfPartialSegments(currentSElement);
-            const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequestByTime({
-                durationInTimescale,
-                requiredMediaTimeInTimescaleUnits,
-                mediaTime,
-                totalNumberOfPartialSegments
-            })
-
-            segment = getTimeBasedSegment({
-                timelineConverter,
-                isDynamic,
-                representation,
-                mediaTime,
-                durationInTimescale,
-                fTimescale,
-                mediaUrl,
-                mediaRange,
-                index: sElementCounterIncludingRepeats,
-                tManifest: currentSElement.tManifest,
-                totalNumberOfPartialSegments,
-                subNumberOfPartialSegmentToRequest
-            });
-        }
+        return getTimeBasedSegment({
+            timelineConverter,
+            isDynamic,
+            representation,
+            mediaTime,
+            durationInTimescale,
+            fTimescale,
+            // blockIndex equals the source <S> position (one block per <S>), so it indexes SegmentURL.
+            mediaUrl: _getMediaUrl(segmentLookup.segmentBase, segmentLookup.segmentURL, blockIndex),
+            mediaRange: _getMediaRange(block.currentSElement, segmentLookup.segmentURL, blockIndex),
+            index: sElementCounterIncludingRepeats,
+            tManifest: block.currentSElement.tManifest,
+            totalNumberOfPartialSegments,
+            subNumberOfPartialSegmentToRequest
+        });
     }
 
     function getMediaFinishedInformation(representation) {
         if (!representation) {
             return 0;
         }
+        // Only the counts are needed here. Reuse the cached index when present, otherwise count in a
+        // light pass without materializing the per-block array. This avoids allocating the full block
+        // list on every MPD update for representations that are never actively buffered.
+        const lookup = _getCachedLookup(representation) || _computeLookup(representation, false);
 
-        const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
-            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
-        const timeline = base.SegmentTimeline;
-
-        let mediaTime = 0;
-        let mediaTimeInSeconds = 0;
-        let availableSegments = 0;
-
-        let fragments,
-            frag,
-            i,
-            j,
-            repeat,
-            fTimescale;
-
-        fTimescale = representation.timescale;
-        fragments = timeline.S;
-
-        const length = fragments.length;
-
-        for (i = 0; i < length; i++) {
-            frag = fragments[i];
-            repeat = 0;
-            if (frag.hasOwnProperty('r')) {
-                repeat = frag.r;
-            }
-
-            // For a repeated S element, t belongs only to the first segment
-            if (frag.hasOwnProperty('t')) {
-                mediaTime = frag.t;
-                mediaTimeInSeconds = mediaTime / fTimescale;
-            }
-
-            // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
-            // next MPD update."
-            if (repeat < 0) {
-                const nextFrag = fragments[i + 1];
-                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, mediaTimeInSeconds);
-            }
-
-            for (j = 0; j <= repeat; j++) {
-                availableSegments++;
-
-                mediaTime += frag.d;
-                mediaTimeInSeconds = mediaTime / fTimescale;
-            }
-        }
-
-        // We need to account for the index of the segments starting at 0. We subtract 1
-        return { numberOfSegments: availableSegments, mediaTimeOfLastSignaledSegment: mediaTimeInSeconds };
-    }
-
-    function _iterateSegments(representation, iterFunc) {
-        const segmentBase = _getSegmentBase(representation);
-        const segmentTimeline = segmentBase.SegmentTimeline;
-        const segmentURL = segmentBase.SegmentURL;
-
-        let mediaTime = 0;
-        let sElementCounterIncludingRepeats = -1;
-        let parsedSElements,
-            currentSElement,
-            sElementCounter,
-            j,
-            repeat,
-            fTimescale;
-
-        fTimescale = representation.timescale;
-        parsedSElements = segmentTimeline.S;
-
-        let breakIterator = false;
-        const numberOfSElements = parsedSElements.length;
-
-        for (sElementCounter = 0; sElementCounter < numberOfSElements && !breakIterator; sElementCounter++) {
-            currentSElement = parsedSElements[sElementCounter];
-            repeat = 0;
-            if (currentSElement.hasOwnProperty('r')) {
-                repeat = currentSElement.r;
-            }
-
-            // For a repeated S element, t belongs only to the first segment
-            if (currentSElement.hasOwnProperty('t')) {
-                mediaTime = currentSElement.t;
-            }
-
-            // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
-            // next MPD update."
-            if (repeat < 0) {
-                const nextFrag = parsedSElements[sElementCounter + 1];
-                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, currentSElement, fTimescale, mediaTime / fTimescale);
-            }
-
-            for (j = 0; j <= repeat && !breakIterator; j++) {
-                sElementCounterIncludingRepeats++;
-
-                breakIterator = iterFunc({
-                    mediaTime,
-                    segmentBase,
-                    segmentURL,
-                    currentSElement,
-                    sElementCounterIncludingRepeats,
-                    sElementCounter
-                });
-
-                if (breakIterator) {
-                    representation.segmentDuration = currentSElement.d / fTimescale;
-                }
-
-                mediaTime += currentSElement.d;
-            }
-        }
+        return {
+            numberOfSegments: lookup.numberOfSegments,
+            mediaTimeOfLastSignaledSegment: lookup.mediaTimeOfLastSignaledSegment
+        };
     }
 
     function _getSegmentBase(representation) {
         return representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
             representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+    }
+
+    function _getCachedLookup(representation) {
+        const segmentBase = _getSegmentBase(representation);
+        const parsedSElements = segmentBase.SegmentTimeline.S;
+        const cached = segmentLookupCache.get(representation);
+        const length = parsedSElements.length;
+        const firstSElement = parsedSElements[0];
+        const lastSElement = parsedSElements[length - 1];
+
+        // Validate the cache against the parsed timeline. The identity of the S array does not change
+        // on in-place updates (MSS appends/splices the same array), so we also compare its length and
+        // first/last element identity/timing to catch a sliding window that keeps the same length.
+        if (
+            cached &&
+            cached.segmentBase === segmentBase &&
+            cached.segmentURL === segmentBase.SegmentURL &&
+            cached.parsedSElements === parsedSElements &&
+            cached.numberOfSElements === length &&
+            cached.firstSElement === firstSElement &&
+            cached.lastSElement === lastSElement &&
+            cached.firstSElementSignature === _getSElementSignature(firstSElement) &&
+            cached.lastSElementSignature === _getSElementSignature(lastSElement) &&
+            cached.fTimescale === representation.timescale
+        ) {
+            return cached;
+        }
+
+        return null;
+    }
+
+    function _getSegmentLookup(representation) {
+        const cached = _getCachedLookup(representation);
+        if (cached) {
+            return cached;
+        }
+
+        const lookup = _computeLookup(representation, true);
+
+        // An open-ended negative-@r timeline depends on the live DVR window / period end, which
+        // advances over time. Caching it would freeze the segment count and hide newly available
+        // live-edge segments between MPD updates, so recompute it on every call instead.
+        if (!lookup.timeDependent) {
+            segmentLookupCache.set(representation, lookup);
+        }
+
+        return lookup;
+    }
+
+    /**
+     * Walk the SegmentTimeline once. Always returns the total segment count and the media time of the
+     * last signaled segment; only materializes the per-block index when withBlocks is true.
+     */
+    function _computeLookup(representation, withBlocks) {
+        const segmentBase = _getSegmentBase(representation);
+        const segmentURL = segmentBase.SegmentURL;
+        const parsedSElements = segmentBase.SegmentTimeline.S;
+        const fTimescale = representation.timescale;
+        const numberOfSElements = parsedSElements.length;
+        const blocks = withBlocks ? [] : null;
+
+        let mediaTime = 0;
+        let sElementCounterIncludingRepeats = -1;
+        let mediaTimeOfLastSignaledSegment = 0;
+        let numberOfSegments = 0;
+        let timeDependent = false;
+        let monotonic = true;
+        let previousEndTime = -Infinity;
+
+        for (let sElementCounter = 0; sElementCounter < numberOfSElements; sElementCounter++) {
+            const currentSElement = parsedSElements[sElementCounter];
+            let repeat = currentSElement.hasOwnProperty('r') ? currentSElement.r : 0;
+
+            // For a repeated S element, @t belongs only to the first segment.
+            if (currentSElement.hasOwnProperty('t')) {
+                mediaTime = currentSElement.t;
+            }
+
+            // A negative @r repeats the duration until the start of the next S element, the end of the
+            // Period, or the next MPD update. When there is no following @t the count is derived from
+            // the (advancing) Period end / DVR window, so the result must not be cached.
+            if (repeat < 0) {
+                const nextFrag = parsedSElements[sElementCounter + 1];
+                if (!(nextFrag && nextFrag.hasOwnProperty('t'))) {
+                    timeDependent = true;
+                }
+                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, currentSElement, fTimescale, mediaTime / fTimescale);
+            }
+
+            const segmentCount = repeat + 1;
+            const startTime = mediaTime;
+            const endTime = mediaTime + segmentCount * currentSElement.d;
+
+            // Ascending, non-overlapping blocks let getSegmentByTime use a binary search. A
+            // non-conformant timeline whose @t goes backwards falls back to a linear scan.
+            if (startTime < previousEndTime) {
+                monotonic = false;
+            }
+            previousEndTime = endTime;
+
+            if (withBlocks) {
+                blocks.push({
+                    currentSElement,
+                    mediaTime: startTime,
+                    endTime,
+                    repeat,
+                    sElementCounterIncludingRepeatsStart: sElementCounterIncludingRepeats + 1
+                });
+            }
+
+            sElementCounterIncludingRepeats += segmentCount;
+            numberOfSegments += segmentCount;
+            mediaTime = endTime;
+            mediaTimeOfLastSignaledSegment = mediaTime / fTimescale;
+        }
+
+        return {
+            blocks,
+            fTimescale,
+            firstSElement: parsedSElements[0],
+            firstSElementSignature: _getSElementSignature(parsedSElements[0]),
+            lastSElement: parsedSElements[numberOfSElements - 1],
+            lastSElementSignature: _getSElementSignature(parsedSElements[numberOfSElements - 1]),
+            mediaTimeOfLastSignaledSegment,
+            monotonic,
+            numberOfSElements,
+            numberOfSegments,
+            parsedSElements,
+            segmentBase,
+            segmentURL,
+            timeDependent
+        };
+    }
+
+    function _getSElementSignature(sElement) {
+        if (!sElement) {
+            return '';
+        }
+
+        const t = sElement.hasOwnProperty('t') ? sElement.t : '';
+        const r = sElement.hasOwnProperty('r') ? sElement.r : '';
+        return `${t}|${sElement.d}|${r}`;
+    }
+
+    function _blockContainsMediaTime(block, requiredMediaTimeInTimescaleUnits) {
+        return !!block && requiredMediaTimeInTimescaleUnits >= block.mediaTime && requiredMediaTimeInTimescaleUnits < block.endTime;
+    }
+
+    /**
+     * Returns the index of the block whose [mediaTime, endTime) interval contains the requested time,
+     * or -1. Sequential playback advances one block at a time, so the last matched block (and its
+     * successor) are checked first; otherwise a binary search is used, falling back to a linear scan
+     * for non-monotonic timelines.
+     */
+    function _findBlockIndexByMediaTime(segmentLookup, requiredMediaTimeInTimescaleUnits) {
+        // A NaN time (e.g. an unknown last-segment duration) matches no segment, as before.
+        if (isNaN(requiredMediaTimeInTimescaleUnits)) {
+            return -1;
+        }
+
+        const blocks = segmentLookup.blocks;
+
+        if (segmentLookup.monotonic) {
+            const hint = segmentLookup.lastBlockIndex;
+            if (hint !== undefined) {
+                if (_blockContainsMediaTime(blocks[hint], requiredMediaTimeInTimescaleUnits)) {
+                    return hint;
+                }
+                if (_blockContainsMediaTime(blocks[hint + 1], requiredMediaTimeInTimescaleUnits)) {
+                    segmentLookup.lastBlockIndex = hint + 1;
+                    return hint + 1;
+                }
+            }
+
+            let low = 0;
+            let high = blocks.length - 1;
+            while (low <= high) {
+                const mid = (low + high) >> 1;
+                const block = blocks[mid];
+                if (requiredMediaTimeInTimescaleUnits < block.mediaTime) {
+                    high = mid - 1;
+                } else if (requiredMediaTimeInTimescaleUnits >= block.endTime) {
+                    low = mid + 1;
+                } else {
+                    segmentLookup.lastBlockIndex = mid;
+                    return mid;
+                }
+            }
+            return -1;
+        }
+
+        for (let i = 0; i < blocks.length; i++) {
+            if (_blockContainsMediaTime(blocks[i], requiredMediaTimeInTimescaleUnits)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     function _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime) {
