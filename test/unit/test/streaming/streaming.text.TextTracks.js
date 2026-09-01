@@ -110,6 +110,26 @@ describe('TextTracks', function () {
             expect(videoModelMock.getCurrentCue(track).text).to.equal(SUBTITLE_DATA);
         });
 
+        it('should add the timeOffset to non-html cue times', function () {
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+
+            textTracks.createTracks();
+            let track = videoModelMock.getTextTrack('subtitles', 'eng');
+
+            // Period-local cue times plus the MSE timestamp offset of a later period
+            textTracks.addCaptions(0, 100, [{type: 'noHtml', data: SUBTITLE_DATA, start: 5, end: 7}]);
+            textTracks.updateTextTrackWindow(105);
+
+            const cue = videoModelMock.getCurrentCue(track);
+            expect(cue.startTime).to.equal(105);
+            expect(cue.endTime).to.equal(107);
+        });
+
         it('should eliminate duplicates', function () {
             textTracks.addTextTrackInfo({
                 index: 0,

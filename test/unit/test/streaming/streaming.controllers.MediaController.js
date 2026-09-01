@@ -166,13 +166,13 @@ describe('MediaController', function () {
             let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.true;
         });
-        
+
         it('should return true if tracks contain the same properties', function () {
 
             let track1 = {
                 id: 'id',
                 supplementalProperties: [
-                    { schemeIdUri: 'urn:test:scheme:1', value: '2' }, 
+                    { schemeIdUri: 'urn:test:scheme:1', value: '2' },
                     { schemeIdUri: 'urn:test:scheme:2', value: 'ABC' }
                 ]
             };
@@ -187,7 +187,7 @@ describe('MediaController', function () {
             let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.true;
         });
-        
+
         it('should return false if tracks differ in properties', function () {
 
             let track1 = {
@@ -536,6 +536,66 @@ describe('MediaController', function () {
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
             expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
+        });
+
+        it('should check initial media settings to choose initial track via codec', function () {
+            const aacTrack = {
+                id: 'aac',
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'de',
+                viewpoint: null,
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '2' }],
+                codec: 'audio/mp4;codecs="mp4a.40.2"'
+            };
+            const ec3Track = {
+                id: 'ec3',
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'de',
+                viewpoint: null,
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: 'F801' }],
+                codec: 'audio/mp4;codecs="ec-3"'
+            };
+
+            mediaController.addTrack(aacTrack);
+            mediaController.addTrack(ec3Track);
+
+            mediaController.setInitialSettings(trackType, {
+                codec: 'audio/mp4;codecs="ec-3"'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, ec3Track)).to.be.true;
+        });
+
+        it('should ignore codec in initial media settings if no track matches', function () {
+            const aacTrack = {
+                id: 'aac',
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'de',
+                viewpoint: null,
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '2' }],
+                codec: 'audio/mp4;codecs="mp4a.40.2"'
+            };
+
+            mediaController.addTrack(aacTrack);
+
+            mediaController.setInitialSettings(trackType, {
+                codec: 'audio/mp4;codecs="ec-3"'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, aacTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial track with 639-2 3-letter code', function () {

@@ -204,7 +204,7 @@ class CueIntervalTree {
      *
      * @param {IntervalTreeNode} newNode - Node to insert
      * @param {IntervalTreeNode|null} subTree - Current subtree root
-     * @returns {[IntervalTreeNode, boolean]} Tuple containing [newRoot, inserted]
+     * @returns {Array} Tuple containing [newRoot, inserted]
      * @private
      */
     _insert(newNode, subTree) {
@@ -430,7 +430,7 @@ class CueIntervalTree {
      *
      * @param {TextTrackCue} cue - The cue to remove
      * @param {IntervalTreeNode|null} node - Current subtree root
-     * @returns {[IntervalTreeNode|null, boolean]} Tuple containing [newRoot, removed]
+     * @returns {Array} Tuple containing [newRoot, removed]
      * @private
      */
     _remove(cue, node) {
