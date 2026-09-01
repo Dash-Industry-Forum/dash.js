@@ -37,11 +37,17 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
+import {
+    getBufferLength,
+    getPruningRanges,
+    getRangeAt as findRangeAt,
+    hasBufferAtTime as containsTime,
+    isValidTargetTime
+} from '../utils/BufferRangeUtils.js';
 import InitCache from '../utils/InitCache.js';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 
-const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
@@ -632,125 +638,28 @@ function BufferController(config) {
     }
 
     function getAllRangesWithSafetyFactor(seekTime) {
-        const clearRanges = [];
         const ranges = sourceBufferSink.getAllBufferRanges();
 
-        // no valid ranges
-        if (!ranges || ranges.length === 0) {
-            return clearRanges;
+        if (!ranges || ranges.length === 0 || !isValidTargetTime(seekTime)) {
+            return getPruningRanges(ranges, seekTime);
         }
 
-        // if no target time is provided we clear everything
-        if ((!seekTime && seekTime !== 0) || isNaN(seekTime)) {
-            clearRanges.push({
-                start: ranges.start(0),
-                end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD
-            });
-        }
-
-        // otherwise we need to calculate the correct pruning range
-        else {
-            const behindPruningRange = _getRangeBehindForPruning(seekTime, ranges);
-            const aheadPruningRange = _getRangeAheadForPruning(seekTime, ranges);
-
-            if (behindPruningRange) {
-                clearRanges.push(behindPruningRange);
-            }
-
-            if (aheadPruningRange) {
-                clearRanges.push(aheadPruningRange);
-            }
-        }
-
-        return clearRanges;
-    }
-
-    function _getRangeBehindForPruning(targetTime, ranges) {
-        const bufferToKeepBehind = settings.get().streaming.buffer.bufferToKeep;
-        const startOfBuffer = ranges.start(0);
-
-        // if we do a seek ahead of the current play position we do need to prune behind the new play position
-        const behindDiff = targetTime - startOfBuffer;
-        if (behindDiff > bufferToKeepBehind) {
-
-            let rangeEnd = Math.max(0, targetTime - bufferToKeepBehind);
-            // Ensure we keep full range of current fragment
-            const currentTimeRequest = fragmentModel.getRequests({
-                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-                time: targetTime,
-                threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
-            })[0];
-
-            if (currentTimeRequest) {
-                rangeEnd = Math.min(currentTimeRequest.startTime, rangeEnd);
-            }
-            if (rangeEnd > 0) {
-                return {
-                    start: startOfBuffer,
-                    end: rangeEnd
-                };
-            }
-        }
-
-        return null;
-    }
-
-    function _getRangeAheadForPruning(targetTime, ranges) {
-        // if we do a seek behind the current play position we do need to prune ahead of the new play position
-        // we keep everything that is within bufferToKeepAhead but only if the buffer is continuous.
-        // Otherwise we have gaps once the seek is done which might trigger an unintentional gap jump
-        const endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
-        const continuousBufferTime = getContinuousBufferTimeForTargetTime(targetTime);
-
-        // This is the maximum range we keep ahead
-        const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
-        const bufferToKeepAhead = isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
-
-        // Define the start time from which we will prune. If there is no continuous range from the targettime we start immediately at the target time
-        // Otherwise we set the start point to the end of the continuous range taking the maximum buffer to keep ahead into account
-        let rangeStart = !isNaN(continuousBufferTime) ? Math.min(continuousBufferTime, targetTime + bufferToKeepAhead) : targetTime;
-
-        // Check if we are done buffering, no need to prune then
-        if (rangeStart >= ranges.end(ranges.length - 1)) {
-            return null
-        }
-
-        // Ensure we keep full range of current fragment
-        const currentTimeRequest = fragmentModel.getRequests({
+        const bufferSettings = settings.get().streaming.buffer;
+        const isLongFormContent = streamInfo.manifestInfo.duration >= bufferSettings.longFormContentDurationThreshold;
+        const currentTimeRequest = fragmentModel ? fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-            time: targetTime,
+            time: seekTime,
             threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
-        })[0];
+        })[0] : null;
 
-        if (currentTimeRequest) {
-            rangeStart = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeStart);
-        }
-
-        // Never remove the contiguous range of targetTime in order to avoid flushes & reenqueues when the user doesn't want it
-        const avoidCurrentTimeRangePruning = settings.get().streaming.buffer.avoidCurrentTimeRangePruning;
-        if (avoidCurrentTimeRangePruning) {
-            for (let i = 0; i < ranges.length; i++) {
-                if (ranges.start(i) <= targetTime && targetTime <= ranges.end(i)
-                    && ranges.start(i) <= rangeStart && rangeStart <= ranges.end(i)) {
-                    let oldRangeStart = rangeStart;
-                    if (i + 1 < ranges.length) {
-                        rangeStart = ranges.start(i + 1);
-                    } else {
-                        rangeStart = ranges.end(i) + 1;
-                    }
-                    logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer + '] instead' + ((rangeStart < endOfBuffer) ? '' : ' (no actual pruning)'));
-                    break;
-                }
-            }
-        }
-
-        if (rangeStart < ranges.end(ranges.length - 1)) {
-            return {
-                start: rangeStart,
-                end: endOfBuffer
-            };
-        }
-        return null;
+        return getPruningRanges(ranges, seekTime, {
+            bufferToKeepBehind: bufferSettings.bufferToKeep,
+            bufferToKeepAhead: isLongFormContent ? bufferSettings.bufferTimeAtTopQualityLongForm : bufferSettings.bufferTimeAtTopQuality,
+            continuousBufferTime: getContinuousBufferTimeForTargetTime(seekTime),
+            currentTimeRequest,
+            avoidCurrentTimeRangePruning: bufferSettings.avoidCurrentTimeRangePruning,
+            logger
+        });
     }
 
     function _onPlaybackProgression() {
@@ -771,26 +680,7 @@ function BufferController(config) {
     function hasBufferAtTime(time) {
         try {
             const ranges = sourceBufferSink.getAllBufferRanges();
-
-            if (!ranges || ranges.length === 0) {
-                return false;
-            }
-
-            let i = 0;
-
-            while (i < ranges.length) {
-                const start = ranges.start(i);
-                const end = ranges.end(i);
-
-                if (time >= start && time <= end) {
-                    return true;
-                }
-
-                i += 1;
-            }
-
-            return false
-
+            return containsTime(ranges, time);
         } catch (e) {
             logger.error(e);
             return false;
@@ -802,71 +692,17 @@ function BufferController(config) {
             return null;
         }
         const ranges = sourceBufferSink.getAllBufferRanges();
-        let start = 0;
-        let end = 0;
-        let firstStart = null;
-        let lastEnd = null;
-        let gap = 0;
-        let len,
-            i;
-
-        const toler = !isNaN(tolerance) ? tolerance : 0.15;
-
-        if (ranges !== null && ranges !== undefined) {
-            for (i = 0, len = ranges.length; i < len; i++) {
-                start = ranges.start(i);
-                end = ranges.end(i);
-                if (firstStart === null) {
-                    gap = Math.abs(start - time);
-                    if (time >= start && time < end) {
-                        // start the range
-                        firstStart = start;
-                        lastEnd = end;
-                    } else if (gap <= toler) {
-                        // start the range even though the buffer does not contain time 0
-                        firstStart = start;
-                        lastEnd = end;
-                    }
-                } else {
-                    gap = start - lastEnd;
-                    if (gap <= toler) {
-                        // the discontinuity is smaller than the tolerance, combine the ranges
-                        lastEnd = end;
-                    } else {
-                        break;
-                    }
-                }
-            }
-
-            if (firstStart !== null) {
-                return {
-                    start: firstStart,
-                    end: lastEnd
-                };
-            }
-        }
-
-        return null;
+        return findRangeAt(ranges, time, tolerance);
     }
 
     function _getBufferLength(time, tolerance) {
-        let range,
-            length;
-
         // Consider gap/discontinuity limit as tolerance
         if (settings.get().streaming.gaps.jumpGaps) {
             tolerance = settings.get().streaming.gaps.smallGapLimit;
         }
 
-        range = getRangeAt(time, tolerance);
-
-        if (range === null) {
-            length = 0;
-        } else {
-            length = range.end - time;
-        }
-
-        return length;
+        const ranges = sourceBufferSink ? sourceBufferSink.getAllBufferRanges() : null;
+        return getBufferLength(ranges, time, tolerance);
     }
 
     function _updateBufferLevel() {

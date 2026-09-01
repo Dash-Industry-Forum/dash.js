@@ -23,7 +23,10 @@ const expect = chai.expect;
 const context = {};
 const testType = 'video';
 const streamInfo = {
-    id: 'DUMMY_STREAM-01'
+    id: 'DUMMY_STREAM-01',
+    manifestInfo: {
+        duration: 300
+    }
 };
 const eventBus = EventBus(context).getInstance();
 // const objectUtils = ObjectUtils(context).getInstance();
@@ -45,9 +48,17 @@ describe('BufferController', function () {
     const representationControllerMock = new RepresentationControllerMock();
     let bufferController;
     let mediaSourceMock;
+    let currentTimeRequest;
+    const fragmentModelMock = {
+        getRequests: () => {
+            return currentTimeRequest ? [currentTimeRequest] : [];
+        }
+    };
     const mediaInfo = { codec: 'video/webm; codecs="vp8, vorbis"' };
 
     beforeEach(function () {
+        currentTimeRequest = null;
+        streamInfo.manifestInfo.duration = 300;
         mediaSourceMock = new MediaSourceMock();
         bufferController = BufferController(context).create({
             streamInfo: streamInfo,
@@ -60,6 +71,7 @@ describe('BufferController', function () {
             textController: textControllerMock,
             abrController: abrControllerMock,
             representationController: representationControllerMock,
+            fragmentModel: fragmentModelMock,
             playbackController: playbackControllerMock,
             mediaPlayerModel: mediaPlayerModelMock,
             settings: settings
@@ -349,6 +361,67 @@ describe('BufferController', function () {
                     done(e);
                 });
 
+        });
+    });
+
+    describe('Method getAllRangesWithSafetyFactor', function () {
+        let buffer;
+
+        beforeEach(function (done) {
+            settings.update({
+                streaming: {
+                    buffer: {
+                        bufferToKeep: 20,
+                        bufferTimeAtTopQuality: 30,
+                        bufferTimeAtTopQualityLongForm: 60,
+                        longFormContentDurationThreshold: 600
+                    }
+                }
+            });
+            bufferController.initialize(mediaSourceMock);
+            bufferController.createBufferSink(mediaInfo)
+                .then(() => {
+                    buffer = bufferController.getBuffer().getBuffer();
+                    done();
+                })
+                .catch(done);
+        });
+
+        it('should preserve the current fragment while pruning around the seek target', function () {
+            currentTimeRequest = { startTime: 25, duration: 60 };
+            buffer.addRange({ start: 0, end: 100 });
+
+            expect(bufferController.getAllRangesWithSafetyFactor(50)).to.deep.equal([
+                { start: 0, end: 25 },
+                { start: 85, end: 100.5 }
+            ]);
+        });
+
+        it('should preserve the buffered range containing the seek target when configured', function () {
+            settings.update({ streaming: { buffer: { avoidCurrentTimeRangePruning: true } } });
+            buffer.addRange({ start: 0, end: 60 });
+            buffer.addRange({ start: 70, end: 120 });
+
+            expect(bufferController.getAllRangesWithSafetyFactor(50)).to.deep.equal([
+                { start: 0, end: 30 },
+                { start: 70, end: 120.5 }
+            ]);
+        });
+
+        it('should select the ahead retention from the content duration', function () {
+            buffer.addRange({ start: 0, end: 150 });
+
+            streamInfo.manifestInfo.duration = 599;
+            expect(bufferController.getAllRangesWithSafetyFactor(50)).to.deep.equal([
+                { start: 0, end: 30 },
+                { start: 80, end: 150.5 }
+            ]);
+
+            streamInfo.manifestInfo.duration = 600;
+            expect(bufferController.getAllRangesWithSafetyFactor(50)).to.deep.equal([
+                { start: 0, end: 30 },
+                { start: 110, end: 150.5 }
+            ]);
         });
     });
 
