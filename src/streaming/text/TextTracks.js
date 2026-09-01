@@ -460,17 +460,31 @@ function TextTracks(config) {
             // font is only sized by height (videoHeight/15), so its glyphs are
             // narrower than a grid cell (videoWidth/32). Left-aligned at their
             // start column, rows then drift left of where the 608 columns place
-            // them (e.g. a centered caption looks left-shifted). Stretch each
-            // row as a whole so it fills exactly the number of grid columns it
-            // occupies, anchored at its start column. Scaling the whole row (not
-            // letter-spacing) keeps every character's solid background rectangle
-            // contiguous with no gaps. offsetWidth is used so the measurement is
-            // not affected by a transform left over from a previous activation.
+            // them (e.g. a centered caption looks left-shifted). Stretch the
+            // wrapper so its widest row fills exactly the number of grid
+            // columns it occupies, anchored at its start column — offsetWidth
+            // is that widest row's natural width (and, unlike a client rect, is
+            // not affected by a transform left over from a previous
+            // activation), so the columns count must be the widest row's
+            // character count, not the concatenation of all <br>-separated
+            // rows. Scaling the wrapper (not letter-spacing) keeps every
+            // character's solid background rectangle contiguous with no gaps.
             if (activeCue.isFromCEA608 && activeCue.cueHTMLElement) {
                 const wrappers = activeCue.cueHTMLElement.getElementsByClassName('cueUniWrapper');
                 for (let w = 0; w < wrappers.length; w++) {
                     const wrapper = wrappers[w];
-                    const columns = wrapper.textContent.length;
+                    let columns = 0;
+                    let rowLength = 0;
+                    for (let n = 0; n < wrapper.childNodes.length; n++) {
+                        const node = wrapper.childNodes[n];
+                        if (node.nodeName === 'BR') {
+                            columns = Math.max(columns, rowLength);
+                            rowLength = 0;
+                        } else {
+                            rowLength += node.textContent.length;
+                        }
+                    }
+                    columns = Math.max(columns, rowLength);
                     const naturalWidth = wrapper.offsetWidth;
                     if (columns > 0 && naturalWidth > 0) {
                         const targetWidth = columns * cellUnit[0];
@@ -617,6 +631,7 @@ function TextTracks(config) {
         const track = getTrackByIdx(trackIdx);
         const cueData = tracksCueData.get(track);
         const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
+        const extendSegmentedCues = settings.get().streaming.text.extendSegmentedCues;
 
         if (!track || !cueData) {
             return;
@@ -652,7 +667,7 @@ function TextTracks(config) {
                 // (their rendered content lives in cueHTMLElement, which the cue
                 // equality check does not inspect) and only the first caption of
                 // each segment would ever be shown.
-                if (settings.get().streaming.text.extendSegmentedCues && !currentItem.isFromCEA608) {
+                if (extendSegmentedCues && !currentItem.isFromCEA608) {
                     const cueToExtend = _findCueToExtend(cue, cueData.allCues);
                     if (cueToExtend) {
                         cueData.allCues.removeCue(cueToExtend);
