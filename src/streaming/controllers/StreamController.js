@@ -66,7 +66,7 @@ function StreamController() {
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
-        pendingDynamicToStaticUpdate;
+        pendingDynamicToStaticUpdate, expectedSourceDetach, lastKnownPlaybackTime;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -119,6 +119,8 @@ function StreamController() {
                 protectionController.setProtectionData(protectionData);
             }
         }
+
+        videoModel.addEventListener('emptied', _onVideoElementEmptied);
 
         registerEvents();
     }
@@ -577,6 +579,7 @@ function StreamController() {
             if (inputParameters.keepBuffers) {
                 _activateStream(inputParameters);
             } else {
+                expectedSourceDetach = true;
                 mediaSourceController.detachMediaSource(videoModel);
                 _open();
             }
@@ -947,6 +950,13 @@ function StreamController() {
      * @private
      */
     function _onPlaybackTimeUpdated(/*e*/) {
+        // Remember where playback was: when the element is reset from outside,
+        // its currentTime is already back at 0 by the time 'emptied' fires, so
+        // this is the only usable resume position for _onVideoElementEmptied().
+        const time = playbackController.getTime();
+        if (time !== null && !isNaN(time) && time > 0) {
+            lastKnownPlaybackTime = time;
+        }
         if (hasVideoTrack()) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
@@ -1612,6 +1622,49 @@ function StreamController() {
         _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
     }
 
+    /**
+     * Fired by the media element whenever the resource selection algorithm empties it.
+     * When that was not caused by dash.js itself, the MediaSource has been detached
+     * from outside (an external element.load(), a src write, or a UA-driven reload).
+     * A detached ManagedMediaSource is permanently closed and emits a final
+     * endstreaming, so without intervention the player silently never requests
+     * another byte. Recover the same way _handleMediaErrorDecode() does.
+     * @private
+     */
+    function _onVideoElementEmptied() {
+        if (expectedSourceDetach) {
+            expectedSourceDetach = false;
+            return;
+        }
+        if (!activeStream || !mediaSource) {
+            return;
+        }
+        if (mediaSource.readyState === 'open') {
+            return;
+        }
+        // Deliberately no isStreamSwitchingInProgress bail-out: a switch that is
+        // waiting on sourceopen of a source that just got detached never
+        // completes (_onMediaSourceOpen returns early on a non-open source), so
+        // the flag would stay true forever and block the only way out.
+        logger.error('The media element was emptied outside of dash.js and the MediaSource is detached: Resetting the MediaSource');
+        // The element's currentTime is already 0 here, so getTime() is useless;
+        // resume from the last position a timeupdate reported. If playback never
+        // established one, fall back to the live edge for dynamic streams, the
+        // way seekToCurrentLive() computes it, and to the start for static ones.
+        let seekTime = lastKnownPlaybackTime;
+        if (isNaN(seekTime)) {
+            if (playbackController.getIsDynamic()) {
+                const dvrInfo = dashMetrics.getCurrentDVRInfo(hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO);
+                seekTime = dvrInfo && dvrInfo.range ? dvrInfo.range.end - playbackController.getLiveDelay() : NaN;
+            } else {
+                seekTime = 0;
+            }
+        }
+        activeStream.deactivate(false);
+        logger.info(`MediaSource has been resetted. Resuming playback from time ${seekTime}`);
+        _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
+    }
+
     function getActiveStreamInfo() {
         return activeStream ? activeStream.getStreamInfo() : null;
     }
@@ -1743,6 +1796,8 @@ function StreamController() {
         autoPlay = true;
         playbackEndedTimerInterval = null;
         pendingDynamicToStaticUpdate = false;
+        expectedSourceDetach = false;
+        lastKnownPlaybackTime = NaN;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
@@ -1777,8 +1832,12 @@ function StreamController() {
         initCache.reset();
 
         if (mediaSource) {
+            expectedSourceDetach = true;
             mediaSourceController.detachMediaSource(videoModel);
             mediaSource = null;
+        }
+        if (videoModel) {
+            videoModel.removeEventListener('emptied', _onVideoElementEmptied);
         }
         videoModel = null;
         if (protectionController) {
