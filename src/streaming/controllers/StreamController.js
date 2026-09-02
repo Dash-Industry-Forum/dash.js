@@ -1721,6 +1721,18 @@ function StreamController() {
         // established one, fall back to the live edge for dynamic streams, the
         // way seekToCurrentLive() computes it, and to the start for static ones.
         let seekTime = lastKnownPlaybackTime;
+        if (!isNaN(seekTime)) {
+            // A detach during a non-seamless period transition: _switchStream()
+            // makes the target period active before its MediaSource opens, so
+            // the cache can still hold a position from the previous period.
+            // Discard a position outside the active stream and let the
+            // fallbacks resume at the target period instead.
+            const activeStreamInfo = activeStream.getStreamInfo();
+            const activeStreamEnd = activeStreamInfo.start + activeStreamInfo.duration;
+            if (seekTime < activeStreamInfo.start || (!isNaN(activeStreamEnd) && seekTime > activeStreamEnd)) {
+                seekTime = NaN;
+            }
+        }
         const isDynamic = playbackController.getIsDynamic();
         const dvrInfo = isDynamic ? dashMetrics.getCurrentDVRInfo(hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO) : null;
         if (isDynamic && !isNaN(seekTime) && (!dvrInfo || !dvrInfo.range || seekTime < dvrInfo.range.start || seekTime > dvrInfo.range.end)) {
