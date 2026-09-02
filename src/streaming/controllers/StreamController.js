@@ -544,7 +544,8 @@ function StreamController() {
             }
 
             logger.debug('MediaSource is open!');
-            window.URL.revokeObjectURL(sourceUrl);
+            // _removePendingSourceOpenHandler() also revokes this attachment's
+            // object URL, the single revocation site for both outcomes.
             _removePendingSourceOpenHandler();
 
             _setMediaDuration();
@@ -576,6 +577,7 @@ function StreamController() {
             mediaSource.addEventListener('sourceopen', _onMediaSourceOpen, false);
             mediaSource.addEventListener('webkitsourceopen', _onMediaSourceOpen, false);
             sourceUrl = mediaSourceController.attachMediaSource(videoModel);
+            pendingSourceOpenHandler.url = sourceUrl;
             logger.debug('MediaSource attached to element.  Waiting on open...');
         }
 
@@ -1643,14 +1645,24 @@ function StreamController() {
     }
 
     /**
-     * Fired by the media element whenever the resource selection algorithm empties it.
-     * When that was not caused by dash.js itself, the MediaSource has been detached
-     * from outside (an external element.load(), a src write, or a UA-driven reload).
-     * A detached ManagedMediaSource is permanently closed and emits a final
-     * endstreaming, so without intervention the player silently never requests
-     * another byte. Recover the same way _handleMediaErrorDecode() does.
+     * Cancels the source-open callback of an attachment that has not opened,
+     * and revokes that attachment's object URL, so a cancelled attachment
+     * neither initializes the stream a second time nor leaks its URL. Also
+     * the revocation site for the successful-open path.
      * @private
      */
+    function _removePendingSourceOpenHandler() {
+        if (!pendingSourceOpenHandler) {
+            return;
+        }
+        pendingSourceOpenHandler.source.removeEventListener('sourceopen', pendingSourceOpenHandler.callback);
+        pendingSourceOpenHandler.source.removeEventListener('webkitsourceopen', pendingSourceOpenHandler.callback);
+        if (pendingSourceOpenHandler.url) {
+            window.URL.revokeObjectURL(pendingSourceOpenHandler.url);
+        }
+        pendingSourceOpenHandler = null;
+    }
+
     /**
      * (Re)binds the emptied listener to the current view. VideoModel's
      * add/removeEventListener are no-ops without an element, so a view
@@ -1662,15 +1674,6 @@ function StreamController() {
      * initialize() rebinds later in that flow.
      * @private
      */
-    function _removePendingSourceOpenHandler() {
-        if (!pendingSourceOpenHandler) {
-            return;
-        }
-        pendingSourceOpenHandler.source.removeEventListener('sourceopen', pendingSourceOpenHandler.callback);
-        pendingSourceOpenHandler.source.removeEventListener('webkitsourceopen', pendingSourceOpenHandler.callback);
-        pendingSourceOpenHandler = null;
-    }
-
     function _bindVideoElementEmptied() {
         if (!videoModel) {
             return;
@@ -1688,6 +1691,15 @@ function StreamController() {
         boundVideoElement = element || null;
     }
 
+    /**
+     * Fired by the media element whenever the resource selection algorithm empties it.
+     * When that was not caused by dash.js itself, the MediaSource has been detached
+     * from outside (an external element.load(), a src write, or a UA-driven reload).
+     * A detached ManagedMediaSource is permanently closed and emits a final
+     * endstreaming, so without intervention the player silently never requests
+     * another byte. Recover the same way _handleMediaErrorDecode() does.
+     * @private
+     */
     function _onVideoElementEmptied() {
         if (expectedSourceDetach) {
             expectedSourceDetach = false;
