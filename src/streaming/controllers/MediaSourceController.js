@@ -89,17 +89,19 @@ function MediaSourceController() {
 
             managedMediaSourceEventHandlers = {
                 // A ManagedMediaSource that is being detached emits streaming events
-                // while it closes. Forwarding those latches ScheduleController on
-                // behalf of a source that no longer exists, so only pass events from
-                // the source that is still current and still open.
-                start: (e) => {
-                    if (e.target !== attachedMediaSource || attachedMediaSource.readyState !== 'open') {
+                // while it closes, and a replaced source's listeners survive its
+                // replacement. Forwarding those latches ScheduleController on
+                // behalf of a source that no longer exists, so only pass events
+                // when the source these handlers were attached for is still the
+                // controller's current one and still open.
+                start: () => {
+                    if (attachedMediaSource !== mediaSource || attachedMediaSource.readyState !== 'open') {
                         return;
                     }
                     eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING)
                 },
-                end: (e) => {
-                    if (e.target !== attachedMediaSource || attachedMediaSource.readyState !== 'open') {
+                end: () => {
+                    if (attachedMediaSource !== mediaSource || attachedMediaSource.readyState !== 'open') {
                         return;
                     }
                     eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING)
