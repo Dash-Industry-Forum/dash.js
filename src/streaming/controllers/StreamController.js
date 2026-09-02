@@ -67,7 +67,7 @@ function StreamController() {
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
         pendingDynamicToStaticUpdate, expectedSourceDetach, lastKnownPlaybackTime,
-        boundVideoElement;
+        boundVideoElement, pendingSourceOpenHandler;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -545,8 +545,7 @@ function StreamController() {
 
             logger.debug('MediaSource is open!');
             window.URL.revokeObjectURL(sourceUrl);
-            mediaSource.removeEventListener('sourceopen', _onMediaSourceOpen);
-            mediaSource.removeEventListener('webkitsourceopen', _onMediaSourceOpen);
+            _removePendingSourceOpenHandler();
 
             _setMediaDuration();
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
@@ -567,6 +566,13 @@ function StreamController() {
         }
 
         function _open() {
+            // A cold attachment that never reached sourceopen leaves its own
+            // callback registered: the early return above does not remove it,
+            // and the recovery path re-attaches the SAME MediaSource object, so
+            // without this the next sourceopen would run both callbacks and
+            // initialize the stream twice.
+            _removePendingSourceOpenHandler();
+            pendingSourceOpenHandler = { callback: _onMediaSourceOpen, source: mediaSource };
             mediaSource.addEventListener('sourceopen', _onMediaSourceOpen, false);
             mediaSource.addEventListener('webkitsourceopen', _onMediaSourceOpen, false);
             sourceUrl = mediaSourceController.attachMediaSource(videoModel);
@@ -641,18 +647,20 @@ function StreamController() {
      * @private
      */
     function _onPlaybackSeeking(e) {
-        const newTime = e.seekTime;
-        if (!isNaN(newTime)) {
-            // An explicit seek target is a valid resume position for
-            // _onVideoElementEmptied(), zero included; only the load
-            // algorithm's reset-to-zero must not overwrite the cache, and
-            // that never arrives through a seeking event.
-            lastKnownPlaybackTime = newTime;
-        }
-        let seekToStream = getStreamForTime(newTime);
+        let seekToStream = getStreamForTime(e.seekTime);
 
         if (!seekToStream) {
             seekToStream = _handleSeekBeyondEndOfContent(e);
+        }
+
+        // An explicit seek target is a valid resume position for
+        // _onVideoElementEmptied(), zero included; only the load algorithm's
+        // reset-to-zero must not overwrite the cache, and that never arrives
+        // through a seeking event. Read AFTER _handleSeekBeyondEndOfContent(),
+        // which adjusts e.seekTime in place, so an overshooting static seek
+        // caches the clamped target rather than a position past the end.
+        if (!isNaN(e.seekTime)) {
+            lastKnownPlaybackTime = e.seekTime;
         }
 
         if (!seekToStream || seekToStream === activeStream) {
@@ -1654,6 +1662,15 @@ function StreamController() {
      * initialize() rebinds later in that flow.
      * @private
      */
+    function _removePendingSourceOpenHandler() {
+        if (!pendingSourceOpenHandler) {
+            return;
+        }
+        pendingSourceOpenHandler.source.removeEventListener('sourceopen', pendingSourceOpenHandler.callback);
+        pendingSourceOpenHandler.source.removeEventListener('webkitsourceopen', pendingSourceOpenHandler.callback);
+        pendingSourceOpenHandler = null;
+    }
+
     function _bindVideoElementEmptied() {
         if (!videoModel) {
             return;
@@ -1711,6 +1728,14 @@ function StreamController() {
                 const streamInfo = activeStream.getStreamInfo();
                 seekTime = streamInfo && !isNaN(streamInfo.start) ? streamInfo.start : 0;
             }
+        }
+        if (isNaN(seekTime)) {
+            // A detach before playback established leaves no cached position
+            // and no DVR metrics either. Fall back to the same computation a
+            // cold start uses; a non-NaN seekTime here also makes
+            // _activateStream() start the schedule controllers, which nothing
+            // else does on this path.
+            seekTime = _getInitialStartTime();
         }
         activeStream.deactivate(false);
         logger.info(`MediaSource has been reset. Resuming playback from time ${seekTime}`);
@@ -1851,6 +1876,7 @@ function StreamController() {
         expectedSourceDetach = false;
         lastKnownPlaybackTime = NaN;
         boundVideoElement = null;
+        pendingSourceOpenHandler = null;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
@@ -1886,6 +1912,7 @@ function StreamController() {
 
         if (mediaSource) {
             expectedSourceDetach = true;
+            _removePendingSourceOpenHandler();
             mediaSourceController.detachMediaSource(videoModel);
             mediaSource = null;
         }
