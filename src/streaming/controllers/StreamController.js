@@ -67,7 +67,7 @@ function StreamController() {
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
         pendingDynamicToStaticUpdate, expectedSourceDetach, lastKnownPlaybackTime,
-        boundVideoElement, pendingSourceOpenHandler;
+        boundVideoElement, pendingSourceOpenHandler, pendingPreloadStream;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -612,7 +612,10 @@ function StreamController() {
     function _activateStream(inputParameters) {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
         activeStream.activate(mediaSource, inputParameters.sourceBufferSinksFromPreviousPeriod, representationsFromPreviousPeriod)
-            .then(() => {
+            .then((result) => {
+                if (result && result.cancelled) {
+                    return;
+                }
 
                 // Set the initial time for this stream in the StreamProcessor
                 if (!isNaN(inputParameters.seekTime)) {
@@ -748,6 +751,13 @@ function StreamController() {
      * @private
      */
     function _deactivateAllPreloadingStreams() {
+        // A preload still in flight is not in preloadingStreams yet (it is
+        // pushed on resolve); deactivating it bumps its activation epoch, so
+        // its initialization cancels itself and never reports preloaded.
+        if (pendingPreloadStream) {
+            pendingPreloadStream.deactivate(true);
+            pendingPreloadStream = null;
+        }
         if (preloadingStreams && preloadingStreams.length > 0) {
             preloadingStreams.forEach((s) => {
                 s.deactivate(true);
@@ -861,8 +871,15 @@ function StreamController() {
 
         const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
         const previousSourceBufferSinks = _getSourceBufferSinksFromPreviousPeriod(previousStream);
+        pendingPreloadStream = nextStream;
         nextStream.startPreloading(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod)
-            .then(() => {
+            .then((result) => {
+                if (pendingPreloadStream === nextStream) {
+                    pendingPreloadStream = null;
+                }
+                if (result && result.cancelled) {
+                    return;
+                }
                 preloadingStreams.push(nextStream);
             });
     }
@@ -1917,6 +1934,7 @@ function StreamController() {
         lastKnownPlaybackTime = NaN;
         boundVideoElement = null;
         pendingSourceOpenHandler = null;
+        pendingPreloadStream = null;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;

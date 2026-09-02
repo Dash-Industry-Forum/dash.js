@@ -98,7 +98,8 @@ describe('Stream', function () {
                 // a stream with no processors behind it.
                 const pendingActivation = stream.activate(null, new Map(), []);
                 stream.deactivate(false);
-                await pendingActivation;
+                const result = await pendingActivation;
+                expect(result).to.have.property('cancelled', true);
                 expect(stream.getIsActive()).to.be.false; // jshint ignore:line
             } finally {
                 adapterMock.getAllMediaInfoForType = originalGetAllMediaInfoForType;
