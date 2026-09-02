@@ -66,7 +66,8 @@ function StreamController() {
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
-        pendingDynamicToStaticUpdate, expectedSourceDetach, lastKnownPlaybackTime;
+        pendingDynamicToStaticUpdate, expectedSourceDetach, lastKnownPlaybackTime,
+        boundVideoElement;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -1657,8 +1658,17 @@ function StreamController() {
         if (!videoModel) {
             return;
         }
+        // MediaPlayer.attachView() has already pointed videoModel at the NEW
+        // element by the time switchToVideoElement() runs, so going through
+        // videoModel alone can never unhook the previous element; track what
+        // was actually bound and remove from it directly.
+        const element = videoModel.getElement();
+        if (boundVideoElement && boundVideoElement !== element) {
+            boundVideoElement.removeEventListener('emptied', _onVideoElementEmptied);
+        }
         videoModel.removeEventListener('emptied', _onVideoElementEmptied);
         videoModel.addEventListener('emptied', _onVideoElementEmptied);
+        boundVideoElement = element || null;
     }
 
     function _onVideoElementEmptied() {
@@ -1682,12 +1692,24 @@ function StreamController() {
         // established one, fall back to the live edge for dynamic streams, the
         // way seekToCurrentLive() computes it, and to the start for static ones.
         let seekTime = lastKnownPlaybackTime;
+        const isDynamic = playbackController.getIsDynamic();
+        const dvrInfo = isDynamic ? dashMetrics.getCurrentDVRInfo(hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO) : null;
+        if (isDynamic && !isNaN(seekTime) && (!dvrInfo || !dvrInfo.range || seekTime < dvrInfo.range.start || seekTime > dvrInfo.range.end)) {
+            // The cached position can slide out of the DVR window while the
+            // element sits emptied (a long pause on live); an expired position
+            // would seek outside the seekable range, so resume from the live
+            // edge instead.
+            seekTime = NaN;
+        }
         if (isNaN(seekTime)) {
-            if (playbackController.getIsDynamic()) {
-                const dvrInfo = dashMetrics.getCurrentDVRInfo(hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO);
+            if (isDynamic) {
                 seekTime = dvrInfo && dvrInfo.range ? dvrInfo.range.end - playbackController.getLiveDelay() : NaN;
             } else {
-                seekTime = 0;
+                // Match _getInitialStartTimeForStaticStream(): the first period
+                // can start above zero and playback never starts earlier than
+                // that, so neither should the recovery.
+                const streamInfo = activeStream.getStreamInfo();
+                seekTime = streamInfo && !isNaN(streamInfo.start) ? streamInfo.start : 0;
             }
         }
         activeStream.deactivate(false);
@@ -1828,6 +1850,7 @@ function StreamController() {
         pendingDynamicToStaticUpdate = false;
         expectedSourceDetach = false;
         lastKnownPlaybackTime = NaN;
+        boundVideoElement = null;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
@@ -1865,6 +1888,10 @@ function StreamController() {
             expectedSourceDetach = true;
             mediaSourceController.detachMediaSource(videoModel);
             mediaSource = null;
+        }
+        if (boundVideoElement) {
+            boundVideoElement.removeEventListener('emptied', _onVideoElementEmptied);
+            boundVideoElement = null;
         }
         if (videoModel) {
             videoModel.removeEventListener('emptied', _onVideoElementEmptied);
