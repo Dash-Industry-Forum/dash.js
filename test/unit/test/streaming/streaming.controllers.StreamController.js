@@ -578,4 +578,66 @@ describe('StreamController', function () {
             expect(manifestUpdaterMock.refreshManifest.notCalled).to.be.true;
         })
     });
+
+    describe('external detach recovery', function () {
+        let setSourceSpy;
+
+        beforeEach(function (done) {
+            playbackControllerMock.setTime(0);
+            playbackControllerMock.setIsDynamic(false);
+            const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
+            streamController.setConfig({
+                adapter: adapterMock,
+                manifestLoader: manifestLoaderMock,
+                timelineConverter: timelineConverterMock,
+                manifestModel: manifestModelMock,
+                errHandler: errHandlerMock,
+                dashMetrics: dashMetricsMock,
+                protectionController: protectionControllerMock,
+                videoModel: videoModelMock,
+                playbackController: playbackControllerMock,
+                baseURLController: baseUrlControllerMock,
+                settings: settings,
+                uriFragmentModel: uriFragmentModelMock,
+                serviceDescriptionController
+            });
+            streamController.initialize(false);
+            const getStreamsInfoStub = sinon.stub(adapterMock, 'getStreamsInfo');
+            getStreamsInfoStub.returns([{
+                id: 'detachStream', index: 0, start: 0, duration: 100,
+                manifestInfo: { isDynamic: false }
+            }]);
+            const onSwitch = function () {
+                eventBus.off(Events.INITIAL_STREAM_SWITCH, onSwitch);
+                getStreamsInfoStub.restore();
+                setTimeout(function () {
+                    setSourceSpy = sinon.spy(videoModelMock, 'setSource');
+                    done();
+                }, 0);
+            };
+            eventBus.on(Events.INITIAL_STREAM_SWITCH, onSwitch, this);
+            eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+        });
+
+        afterEach(function () {
+            if (setSourceSpy) { setSourceSpy.restore(); }
+            streamController.reset();
+        });
+
+        it('recovers by detaching and re-attaching the source when the element is emptied from outside', function (done) {
+            // The media element's own load algorithm ran outside dash.js (the
+            // detach this PR handles), so the source is closed, not open.
+            videoModelMock.fireEvent('emptied', []);
+            setTimeout(function () {
+                try {
+                    const args = setSourceSpy.getCalls().map(function (c) { return c.args[0]; });
+                    // recovery re-opens the MediaSource: a detach (setSource(null))
+                    // followed by a fresh object-URL attach
+                    expect(args).to.include(null);
+                    expect(args.some(function (v) { return typeof v === 'string'; })).to.be.true; // jshint ignore:line
+                    done();
+                } catch (e) { done(e); }
+            }, 0);
+        });
+    });
 });

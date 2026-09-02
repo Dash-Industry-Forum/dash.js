@@ -1618,7 +1618,7 @@ function StreamController() {
         activeStream.deactivate(false);
 
         // Reset MSE
-        logger.info(`MediaSource has been resetted. Resuming playback from time ${seekTime}`);
+        logger.info(`MediaSource has been reset. Resuming playback from time ${seekTime}`);
         _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
     }
 
@@ -1661,7 +1661,7 @@ function StreamController() {
             }
         }
         activeStream.deactivate(false);
-        logger.info(`MediaSource has been resetted. Resuming playback from time ${seekTime}`);
+        logger.info(`MediaSource has been reset. Resuming playback from time ${seekTime}`);
         _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
     }
 
