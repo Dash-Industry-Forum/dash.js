@@ -77,7 +77,8 @@ function Stream(config) {
     const settings = config.settings;
 
 
-    let boxParser,
+    let activationEpoch,
+        boxParser,
         debug,
         fragmentController,
         hasAudioTrack,
@@ -99,6 +100,7 @@ function Stream(config) {
      * Setup the stream
      */
     function setup() {
+        activationEpoch = 0;
         try {
             debug = Debug(context).getInstance();
             logger = debug.getLogger(instance);
@@ -217,8 +219,17 @@ function Stream(config) {
             }
 
 
+            // deactivate() bumps the epoch: an activation that was started
+            // before a deactivation must not mark the stream active when its
+            // initialization settles late, or the next activate() would
+            // short-circuit on isActive with no processors behind it.
+            const epoch = activationEpoch;
             _initializeMedia(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod)
                 .then(() => {
+                    if (epoch !== activationEpoch) {
+                        resolve();
+                        return;
+                    }
                     isActive = true;
                     if (representationsFromPreviousPeriod && representationsFromPreviousPeriod.length > 0) {
                         startScheduleControllers();
@@ -589,6 +600,7 @@ function Stream(config) {
         }
         streamProcessors = [];
         isActive = false;
+        activationEpoch++;
         hasFinishedBuffering = false;
         _setPreloaded(false);
         setIsEndedEventSignaled(false);

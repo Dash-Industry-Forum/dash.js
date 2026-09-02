@@ -83,6 +83,28 @@ describe('Stream', function () {
             expect(isActive).to.be.false; // jshint ignore:line
         });
 
+        it('does not mark the stream active when an activation settles after deactivate()', async () => {
+            // No media types, so initialization resolves without touching the
+            // media pipeline and the activation completes on mocks alone.
+            const originalGetAllMediaInfoForType = adapterMock.getAllMediaInfoForType;
+            adapterMock.getAllMediaInfoForType = function () {
+                return [];
+            };
+            try {
+                stream.initialize();
+                // Start an activation, deactivate before its asynchronous
+                // initialization settles: the stale activation must not set
+                // isActive afterwards, or the next activate() short-circuits on
+                // a stream with no processors behind it.
+                const pendingActivation = stream.activate(null, new Map(), []);
+                stream.deactivate(false);
+                await pendingActivation;
+                expect(stream.getIsActive()).to.be.false; // jshint ignore:line
+            } finally {
+                adapterMock.getAllMediaInfoForType = originalGetAllMediaInfoForType;
+            }
+        });
+
         it('should return an empty array when getStreamProcessors is called but streamProcessors attribute is an empty array', () => {
             const processors = stream.getStreamProcessors();
 
