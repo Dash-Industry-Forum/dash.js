@@ -576,6 +576,16 @@ function StreamController() {
             pendingSourceOpenHandler = { callback: _onMediaSourceOpen, source: mediaSource };
             mediaSource.addEventListener('sourceopen', _onMediaSourceOpen, false);
             mediaSource.addEventListener('webkitsourceopen', _onMediaSourceOpen, false);
+            // Attaching over an element that already holds a resource makes
+            // the load algorithm fire abort/emptied for dash.js's OWN source
+            // assignment; arm the suppression so that is not misread as an
+            // external detach. A fresh NETWORK_EMPTY element fires no emptied
+            // for this assignment, so do not arm there, where it would
+            // swallow the next real external detach instead.
+            const element = videoModel.getElement();
+            if (element && element.networkState !== 0) {
+                expectedSourceDetach = true;
+            }
             sourceUrl = mediaSourceController.attachMediaSource(videoModel);
             pendingSourceOpenHandler.url = sourceUrl;
             logger.debug('MediaSource attached to element.  Waiting on open...');
@@ -1716,6 +1726,12 @@ function StreamController() {
         // completes (_onMediaSourceOpen returns early on a non-open source), so
         // the flag would stay true forever and block the only way out.
         logger.error('The media element was emptied outside of dash.js and the MediaSource is detached: Resetting the MediaSource');
+        // Preloaded periods were initialized against the detached source, and
+        // Stream.activate() would reuse their processors and buffer sinks
+        // through the preloaded short-circuit; drop them (an in-flight preload
+        // aborts its requests through the same call) so the next period
+        // initializes against the recovered source.
+        _deactivateAllPreloadingStreams();
         // The element's currentTime is already 0 here, so getTime() is useless;
         // resume from the last position a timeupdate reported. If playback never
         // established one, fall back to the live edge for dynamic streams, the

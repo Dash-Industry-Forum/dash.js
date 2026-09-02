@@ -678,4 +678,104 @@ describe('StreamController', function () {
             }, 0);
         });
     });
+    describe('initial attach over an element with an existing source', function () {
+        let setSourceSpy;
+        let createObjectURLStub;
+        let revokeObjectURLStub;
+        let realMediaSource;
+        let realManagedMediaSource;
+        let lastCreatedMediaSource;
+
+        class ControllableMediaSource extends MediaSourceMock {
+            constructor() {
+                super();
+                lastCreatedMediaSource = this;
+            }
+            addEventListener() {}
+            removeEventListener() {}
+        }
+
+        beforeEach(function (done) {
+            realMediaSource = window.MediaSource;
+            realManagedMediaSource = window.ManagedMediaSource;
+            window.MediaSource = ControllableMediaSource;
+            delete window.ManagedMediaSource;
+            createObjectURLStub = sinon.stub(window.URL, 'createObjectURL').returns('blob:controllable');
+            revokeObjectURLStub = sinon.stub(window.URL, 'revokeObjectURL');
+            // The element the app hands over already carries a resource, so
+            // dash.js's own source assignment will run the load algorithm.
+            Object.defineProperty(videoModelMock.getElement(), 'networkState', { value: 2, configurable: true });
+            playbackControllerMock.setTime(0);
+            playbackControllerMock.setIsDynamic(false);
+            const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
+            streamController.setConfig({
+                adapter: adapterMock,
+                manifestLoader: manifestLoaderMock,
+                timelineConverter: timelineConverterMock,
+                manifestModel: manifestModelMock,
+                errHandler: errHandlerMock,
+                dashMetrics: dashMetricsMock,
+                protectionController: protectionControllerMock,
+                videoModel: videoModelMock,
+                playbackController: playbackControllerMock,
+                baseURLController: baseUrlControllerMock,
+                settings: settings,
+                uriFragmentModel: uriFragmentModelMock,
+                serviceDescriptionController
+            });
+            streamController.initialize(false);
+            const getStreamsInfoStub = sinon.stub(adapterMock, 'getStreamsInfo');
+            getStreamsInfoStub.returns([{
+                id: 'dirtyElementStream', index: 0, start: 0, duration: 100,
+                manifestInfo: { isDynamic: false }
+            }]);
+            const onSwitch = function () {
+                eventBus.off(Events.INITIAL_STREAM_SWITCH, onSwitch);
+                getStreamsInfoStub.restore();
+                setTimeout(function () {
+                    setSourceSpy = sinon.spy(videoModelMock, 'setSource');
+                    done();
+                }, 0);
+            };
+            eventBus.on(Events.INITIAL_STREAM_SWITCH, onSwitch, this);
+            eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+        });
+
+        afterEach(function () {
+            if (setSourceSpy) { setSourceSpy.restore(); }
+            streamController.reset();
+            createObjectURLStub.restore();
+            revokeObjectURLStub.restore();
+            delete videoModelMock.getElement().networkState;
+            window.MediaSource = realMediaSource;
+            if (realManagedMediaSource !== undefined) { window.ManagedMediaSource = realManagedMediaSource; }
+        });
+
+        it('does not treat the emptied fired by its own initial attachment as an external detach', function (done) {
+            lastCreatedMediaSource.readyState = 'closed';
+            // the emptied the load algorithm queues for dash.js's own assignment
+            videoModelMock.fireEvent('emptied', []);
+            setTimeout(function () {
+                try {
+                    expect(setSourceSpy.called).to.be.false; // jshint ignore:line
+                    done();
+                } catch (e) { done(e); }
+            }, 0);
+        });
+
+        it('still recovers from a real external detach once the suppression is consumed', function (done) {
+            lastCreatedMediaSource.readyState = 'closed';
+            videoModelMock.fireEvent('emptied', []); // own assignment, consumed
+            videoModelMock.fireEvent('emptied', []); // the real external detach
+            setTimeout(function () {
+                try {
+                    const args = setSourceSpy.getCalls().map(function (c) { return c.args[0]; });
+                    expect(args).to.include(null);
+                    expect(args.some(function (v) { return typeof v === 'string'; })).to.be.true; // jshint ignore:line
+                    done();
+                } catch (e) { done(e); }
+            }, 0);
+        });
+    });
+
 });
