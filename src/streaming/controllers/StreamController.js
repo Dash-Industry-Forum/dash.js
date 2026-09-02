@@ -120,7 +120,7 @@ function StreamController() {
             }
         }
 
-        videoModel.addEventListener('emptied', _onVideoElementEmptied);
+        _bindVideoElementEmptied();
 
         registerEvents();
     }
@@ -641,6 +641,13 @@ function StreamController() {
      */
     function _onPlaybackSeeking(e) {
         const newTime = e.seekTime;
+        if (!isNaN(newTime)) {
+            // An explicit seek target is a valid resume position for
+            // _onVideoElementEmptied(), zero included; only the load
+            // algorithm's reset-to-zero must not overwrite the cache, and
+            // that never arrives through a seeking event.
+            lastKnownPlaybackTime = newTime;
+        }
         let seekToStream = getStreamForTime(newTime);
 
         if (!seekToStream) {
@@ -951,8 +958,11 @@ function StreamController() {
      */
     function _onPlaybackTimeUpdated(/*e*/) {
         // Remember where playback was: when the element is reset from outside,
-        // its currentTime is already back at 0 by the time 'emptied' fires, so
-        // this is the only usable resume position for _onVideoElementEmptied().
+        // its currentTime is already back at 0 by the time 'emptied' fires.
+        // Together with explicit seek targets recorded in _onPlaybackSeeking()
+        // this is the resume position for _onVideoElementEmptied(); zero is
+        // excluded HERE because the load algorithm fires a timeupdate while
+        // zeroing the clock, which is not playback progress.
         const time = playbackController.getTime();
         if (time !== null && !isNaN(time) && time > 0) {
             lastKnownPlaybackTime = time;
@@ -1460,6 +1470,7 @@ function StreamController() {
 
 
     function switchToVideoElement(seekTime) {
+        _bindVideoElementEmptied();
         if (activeStream) {
             playbackController.initialize(getActiveStreamInfo());
             _openMediaSource({ seekTime, keepBuffers: false, streamActivated: true });
@@ -1631,6 +1642,25 @@ function StreamController() {
      * another byte. Recover the same way _handleMediaErrorDecode() does.
      * @private
      */
+    /**
+     * (Re)binds the emptied listener to the current view. VideoModel's
+     * add/removeEventListener are no-ops without an element, so a view
+     * attached after initialize(), or replacing an earlier one, would
+     * otherwise never get the listener; called from initialize() and from
+     * switchToVideoElement(), and remove-before-add keeps it idempotent.
+     * MediaPlayer.initialize() reaches switchToVideoElement() via attachView()
+     * before setConfig() has run, so bail out until videoModel is wired;
+     * initialize() rebinds later in that flow.
+     * @private
+     */
+    function _bindVideoElementEmptied() {
+        if (!videoModel) {
+            return;
+        }
+        videoModel.removeEventListener('emptied', _onVideoElementEmptied);
+        videoModel.addEventListener('emptied', _onVideoElementEmptied);
+    }
+
     function _onVideoElementEmptied() {
         if (expectedSourceDetach) {
             expectedSourceDetach = false;

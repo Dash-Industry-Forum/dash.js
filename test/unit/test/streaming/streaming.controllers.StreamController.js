@@ -19,6 +19,7 @@ import CapabilitiesFilterMock from '../../mocks/CapabilitiesFilterMock.js';
 import ContentSteeringControllerMock from '../../mocks/ContentSteeringControllerMock.js';
 import TextControllerMock from '../../mocks/TextControllerMock.js';
 import ManifestUpdaterMock from '../../mocks/ManifestUpdaterMock.js';
+import MediaSourceMock from '../../mocks/MediaSourceMock.js';
 import ServiceDescriptionController from '../../../../src/dash/controllers/ServiceDescriptionController.js';
 
 import chai from 'chai';
@@ -581,8 +582,30 @@ describe('StreamController', function () {
 
     describe('external detach recovery', function () {
         let setSourceSpy;
+        let createObjectURLStub;
+        let revokeObjectURLStub;
+        let realMediaSource;
+        let realManagedMediaSource;
+        let lastCreatedMediaSource;
+
+        // A controllable stand-in so the test transitions the source to
+        // 'closed' explicitly instead of racing the browser's sourceopen.
+        class ControllableMediaSource extends MediaSourceMock {
+            constructor() {
+                super();
+                lastCreatedMediaSource = this;
+            }
+            addEventListener() {}
+            removeEventListener() {}
+        }
 
         beforeEach(function (done) {
+            realMediaSource = window.MediaSource;
+            realManagedMediaSource = window.ManagedMediaSource;
+            window.MediaSource = ControllableMediaSource;
+            delete window.ManagedMediaSource;
+            createObjectURLStub = sinon.stub(window.URL, 'createObjectURL').returns('blob:controllable');
+            revokeObjectURLStub = sinon.stub(window.URL, 'revokeObjectURL');
             playbackControllerMock.setTime(0);
             playbackControllerMock.setIsDynamic(false);
             const serviceDescriptionController = ServiceDescriptionController(context).getInstance();
@@ -622,11 +645,15 @@ describe('StreamController', function () {
         afterEach(function () {
             if (setSourceSpy) { setSourceSpy.restore(); }
             streamController.reset();
+            createObjectURLStub.restore();
+            revokeObjectURLStub.restore();
+            window.MediaSource = realMediaSource;
+            if (realManagedMediaSource !== undefined) { window.ManagedMediaSource = realManagedMediaSource; }
         });
 
         it('recovers by detaching and re-attaching the source when the element is emptied from outside', function (done) {
-            // The media element's own load algorithm ran outside dash.js (the
-            // detach this PR handles), so the source is closed, not open.
+            // the external load algorithm has run: the source is detached and closed
+            lastCreatedMediaSource.readyState = 'closed';
             videoModelMock.fireEvent('emptied', []);
             setTimeout(function () {
                 try {
@@ -635,6 +662,17 @@ describe('StreamController', function () {
                     // followed by a fresh object-URL attach
                     expect(args).to.include(null);
                     expect(args.some(function (v) { return typeof v === 'string'; })).to.be.true; // jshint ignore:line
+                    done();
+                } catch (e) { done(e); }
+            }, 0);
+        });
+
+        it('does not recover while the source is still open', function (done) {
+            lastCreatedMediaSource.readyState = 'open';
+            videoModelMock.fireEvent('emptied', []);
+            setTimeout(function () {
+                try {
+                    expect(setSourceSpy.called).to.be.false; // jshint ignore:line
                     done();
                 } catch (e) { done(e); }
             }, 0);
