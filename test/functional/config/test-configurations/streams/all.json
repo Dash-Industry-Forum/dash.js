@@ -363,7 +363,7 @@
       "url": "/base/test/functional/content/gap/video_negative_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "payback-advanced/attach-at-non-zero"
+        "playback-advanced/attach-at-non-zero"
       ]
     },
     {
@@ -372,25 +372,25 @@
       "url": "/base/test/functional/content/gap/audio_negative_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "payback-advanced/attach-at-non-zero"
+        "playback-advanced/attach-at-non-zero"
       ]
     },
     {
       "name": "Segment Timeline with positive video EPT Delta",
       "type": "vod",
-      "url": "/base/test/functional/content/gap/video_negative_ept_delta.mpd",
+      "url": "/base/test/functional/content/gap/video_positive_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "payback-advanced/attach-at-non-zero"
+        "playback-advanced/attach-at-non-zero"
       ]
     },
     {
       "name": "Segment Timeline with positive audio EPT Delta",
       "type": "vod",
-      "url": "/base/test/functional/content/gap/audio_negative_ept_delta.mpd",
+      "url": "/base/test/functional/content/gap/audio_positive_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "payback-advanced/attach-at-non-zero"
+        "playback-advanced/attach-at-non-zero"
       ]
     },
     {

@@ -10,6 +10,9 @@ class Utils {
         }
 
         const targetTestvectors = [];
+        const lastIndex = testcase.lastIndexOf('/')
+        const category = lastIndex >= 0 ? testcase.substring(0, lastIndex) + '/*' : ''
+
         testvectors.forEach((rawTestvector) => {
 
             if (Utils._shouldPlatformBeExcluded(rawTestvector.excludedPlatforms)) {
@@ -17,37 +20,16 @@ class Utils {
             }
 
             const testvector = Utils._applyPlatformOverrides(rawTestvector)
+            const includedTestfiles = testvector.includedTestfiles || []
+            const excludedTestfiles = testvector.excludedTestfiles || []
 
-            // Nothing to be filtered
-            if ((!testvector.includedTestfiles || testvector.includedTestfiles.length === 0) && (!testvector.excludedTestfiles || testvector.excludedTestfiles.length === 0)) {
-                targetTestvectors.push(testvector)
-            }
+            const isIncluded = includedTestfiles.length === 0 ||
+                includedTestfiles.indexOf('all') >= 0 ||
+                includedTestfiles.indexOf(testcase) >= 0 ||
+                includedTestfiles.indexOf(category) >= 0
+            const isExcluded = excludedTestfiles.indexOf(testcase) >= 0
 
-            // Testvector explicitly included either concretely or per category
-            else if (testvector.includedTestfiles && testvector.includedTestfiles.length > 0) {
-                if (testvector.includedTestfiles.indexOf(testcase) >= 0) {
-                    targetTestvectors.push(testvector);
-                } else {
-                    const lastIndex = testcase.lastIndexOf('/');
-                    const category = testcase.substring(0, lastIndex) + '/*';
-                    if (testvector.includedTestfiles.indexOf(category) >= 0) {
-                        targetTestvectors.push(testvector);
-                    }
-                }
-            }
-
-            // All testfiles included and the current testcase not explicitly excluded
-            else if (
-                (testvector.includedTestfiles
-                    && testvector.includedTestfiles.length > 0
-                    && testvector.includedTestfiles.indexOf('all') >= 0
-                )
-                &&
-                (!testvector.excludedTestfiles
-                    || testvector.excludedTestfiles.length === 0
-                    || testvector.excludedTestfiles.indexOf(testcase) === -1
-                )
-            ) {
+            if (isIncluded && !isExcluded) {
                 targetTestvectors.push(testvector)
             }
         })
