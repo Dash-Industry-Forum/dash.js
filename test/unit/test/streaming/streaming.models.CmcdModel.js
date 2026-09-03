@@ -213,12 +213,42 @@ describe('CmcdModel', function () {
     });
 
     describe('calculateMsd', function () {
-        it('should return MSD data when playback has started', function () {
+        let clock;
+
+        beforeEach(function () {
+            clock = sinon.useFakeTimers();
+        });
+
+        afterEach(function () {
+            clock.restore();
+        });
+
+        it('should return the time between playback start and the playing state', function () {
             cmcdModel.onPlaybackStarted();
+            clock.tick(500);
             cmcdModel.onPlaybackPlaying();
 
             const msdData = cmcdModel.calculateMsd();
-            expect(msdData).to.have.property('msd').that.is.a('number');
+            expect(msdData.msd).to.equal(500);
+        });
+
+        it('should freeze MSD at the first playing transition', function () {
+            cmcdModel.onPlaybackStarted();
+            clock.tick(500);
+            cmcdModel.onPlaybackPlaying();
+
+            // Later reports and playing transitions must not change the value
+            clock.tick(1000);
+            cmcdModel.onPlaybackPlaying();
+            const msdData = cmcdModel.calculateMsd();
+            expect(msdData.msd).to.equal(500);
+        });
+
+        it('should return empty object before the playing state is reached', function () {
+            cmcdModel.onPlaybackStarted();
+
+            const msdData = cmcdModel.calculateMsd();
+            expect(Object.keys(msdData)).to.have.length(0);
         });
 
         it('should return empty object when playback has not started', function () {
