@@ -789,12 +789,46 @@ describe('MediaController', function () {
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
-                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp1' }]
+                viewpoint: { schemeIdUri: 'test:scheme:2023', value: 'vp2' }
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true;
+        });
+
+        it('should reapply the last selected viewpoint when switching periods', function () {
+            const frontTrack = {
+                id: 0,
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'fr',
+                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'front' }],
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
+            };
+            const rearTrack = {
+                id: 1,
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'fr',
+                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'rear' }],
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
+            };
+
+            mediaController.addTrack(frontTrack);
+            mediaController.addTrack(rearTrack);
+
+            mediaController.setTrack(rearTrack);
+
+            // pretend we're switching period, which will call setInitialMediaSettingsForType again
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            const currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, rearTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial track based on role', function () {
