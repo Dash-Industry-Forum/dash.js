@@ -1235,6 +1235,213 @@ describe('AbrController', function () {
         });
     })
 
+    describe('S-Frame switching during playback', function () {
+
+        const streamInfo = dummyMediaInfo.streamInfo;
+        let mainMediaInfo, bootstrap360MediaInfo, bootstrap540MediaInfo;
+        let main360, main540, main720, main1080, bootstrap360, bootstrap540;
+        let currentRepresentation, capturedEvents;
+
+        function _onQualityChange(e) {
+            capturedEvents.push(e);
+        }
+
+        function _ssp(sapType, cadence = 1) {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = sapType;
+            ssp.cadence = cadence;
+            return ssp;
+        }
+
+        function _mediaInfo(id, compatibleIds) {
+            return { id, type: Constants.VIDEO, adaptationSetSwitchingCompatibleIds: compatibleIds, streamInfo };
+        }
+
+        function _representation(id, bandwidth, width, height, segmentSequenceProperties, mediaInfo) {
+            const representation = new Representation();
+            representation.id = id;
+            representation.bandwidth = bandwidth;
+            representation.bitrateInKbit = bandwidth / 1000;
+            representation.width = width;
+            representation.height = height;
+            representation.pixelsPerSecond = width * height * 60;
+            representation.codecs = 'av01.0.09M.08';
+            representation.segmentSequenceProperties = segmentSequenceProperties;
+            representation.mediaInfo = mediaInfo;
+            return representation;
+        }
+
+        // Partial segment 3 of 8 has been requested, the next partial segment starts with an S-Frame
+        function _setLastSegment(replacementSubNumber, totalNumberOfPartialSegments = 8) {
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments,
+                replacementSubNumber
+            });
+        }
+
+        function _setCurrentRepresentation(representation) {
+            currentRepresentation = representation;
+        }
+
+        function _stubRuleTarget(target) {
+            FactoryMaker.extend('ABRRulesCollection', function () {
+                return {
+                    getBestPossibleSwitchRequest: () => ({ representation: target, reason: { message: 'test rule' } })
+                };
+            }, true, context);
+            abrCtrl.reset();
+            abrCtrl.initialize();
+            abrCtrl.registerStreamType(Constants.VIDEO, streamProcessor);
+        }
+
+        beforeEach(function () {
+            capturedEvents = [];
+            mainMediaInfo = _mediaInfo('mainAs', ['bootstrap360As', 'bootstrap540As']);
+            bootstrap360MediaInfo = _mediaInfo('bootstrap360As', ['mainAs']);
+            bootstrap540MediaInfo = _mediaInfo('bootstrap540As', ['mainAs']);
+            streamProcessor.getAllMediaInfos = () => [mainMediaInfo, bootstrap360MediaInfo, bootstrap540MediaInfo];
+            adapterMock.areMediaInfosEqual = (a, b) => a === b;
+
+            // IDR at the first partial segment of each segment, S-Frame at every other partial segment
+            const mainSsps = () => [_ssp(1, 8), _ssp(7, 1)];
+            main360 = _representation('main360p', 356513, 640, 360, mainSsps(), mainMediaInfo);
+            main540 = _representation('main540p', 560449, 960, 540, mainSsps(), mainMediaInfo);
+            main720 = _representation('main720p', 885997, 1280, 720, mainSsps(), mainMediaInfo);
+            main1080 = _representation('main1080p', 1203835, 1920, 1080, mainSsps(), mainMediaInfo);
+            bootstrap360 = _representation('bootstrap360p', 972253, 640, 360, [_ssp(1)], bootstrap360MediaInfo);
+            bootstrap540 = _representation('bootstrap540p', 1544145, 960, 540, [_ssp(1)], bootstrap540MediaInfo);
+            const all = [main360, main540, main720, main1080, bootstrap360, bootstrap540];
+            adapterMock.getVoRepresentations = (mediaInfo) => all.filter((representation) => representation.mediaInfo === mediaInfo);
+
+            _setCurrentRepresentation(main1080);
+            // Required by the RulesContext the ABR rules are evaluated with
+            streamProcessor.getScheduleController = () => ({});
+            streamProcessor.getRepresentation = () => currentRepresentation;
+            streamProcessor.getRepresentationController = () => {
+                return {
+                    getCurrentCompositeRepresentation: () => currentRepresentation
+                }
+            }
+            _setLastSegment(3);
+
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChange, this);
+        });
+
+        afterEach(function () {
+            eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChange, this);
+            delete context.ABRRulesCollection;
+        });
+
+        describe('scaled reference limits', function () {
+
+            it('should not allow an S-Frame down-switch below half the resolution', function () {
+                expect(abrCtrl.canPerformQualitySwitch(streamProcessor.getLastSegment(), main1080, main360)).to.be.false;
+            });
+
+            it('should allow an S-Frame down-switch to exactly half the resolution', function () {
+                expect(abrCtrl.canPerformQualitySwitch(streamProcessor.getLastSegment(), main1080, main540)).to.be.true;
+            });
+
+            it('should allow a large S-Frame up-switch', function () {
+                expect(abrCtrl.canPerformQualitySwitch(streamProcessor.getLastSegment(), main360, main1080)).to.be.true;
+            });
+
+            it('should allow any switch at the end of a segment sequence as the target enters at an IDR', function () {
+                _setLastSegment(7);
+                expect(abrCtrl.canPerformQualitySwitch(streamProcessor.getLastSegment(), main1080, main360)).to.be.true;
+            });
+
+            it('should skip the check if a Representation does not signal its dimensions', function () {
+                main360.width = NaN;
+                main360.height = NaN;
+                expect(abrCtrl.canPerformQualitySwitch(streamProcessor.getLastSegment(), main1080, main360)).to.be.true;
+            });
+
+            it('should not skip the init segment when the S-Frame target violates the downscale limit', function () {
+                abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, main360);
+                expect(capturedEvents[0].newRepresentation.id).to.equal('main360p');
+                expect(capturedEvents[0].noInitSegmentRequired).to.be.false;
+            });
+
+            it('should skip the init segment when the S-Frame target is within the downscale limit', function () {
+                abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, main540);
+                expect(capturedEvents[0].noInitSegmentRequired).to.be.true;
+            });
+        });
+
+        describe('bootstrap Representations as ABR candidates', function () {
+
+            it('should not offer bootstrap Representations to the ABR rules', function () {
+                const ids = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mainMediaInfo, true).map((representation) => representation.id);
+                expect(ids).to.have.members(['main360p', 'main540p', 'main720p', 'main1080p']);
+            });
+
+            it('should keep bootstrap Representations if nothing else is available, as during startup', function () {
+                const ids = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(bootstrap360MediaInfo, false).map((representation) => representation.id);
+                expect(ids).to.deep.equal(['bootstrap360p']);
+            });
+
+            it('should not select a bootstrap Representation for a high bitrate', function () {
+                expect(abrCtrl.getOptimalRepresentationForBitrate(mainMediaInfo, 5000, true).id).to.equal('main1080p');
+            });
+        });
+
+        describe('hopping towards an unreachable target', function () {
+
+            it('should hop to the closest reachable Representation when the ABR rules request a switch below the downscale limit', function () {
+                _stubRuleTarget(main360);
+
+                expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+                expect(capturedEvents).to.have.lengthOf(1);
+                expect(capturedEvents[0].oldRepresentation.id).to.equal('main1080p');
+                expect(capturedEvents[0].newRepresentation.id).to.equal('main540p');
+                expect(capturedEvents[0].noInitSegmentRequired).to.be.true;
+            });
+
+            it('should switch straight to the target requested by the ABR rules when it enters at an IDR', function () {
+                _stubRuleTarget(main360);
+                _setLastSegment(7);
+
+                expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+                expect(capturedEvents[0].newRepresentation.id).to.equal('main360p');
+                expect(capturedEvents[0].noInitSegmentRequired).to.be.false;
+            });
+
+            it('should switch straight to a reachable target requested by the ABR rules', function () {
+                _stubRuleTarget(main720);
+
+                expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+                expect(capturedEvents[0].newRepresentation.id).to.equal('main720p');
+                expect(capturedEvents[0].noInitSegmentRequired).to.be.true;
+            });
+
+            it('should complete a manual switch in two hops and keep it queued in between', function () {
+                abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, main360, { message: 'manual' });
+                expect(capturedEvents).to.have.lengthOf(0);
+
+                expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.true;
+                expect(capturedEvents).to.have.lengthOf(1);
+                expect(capturedEvents[0].newRepresentation.id).to.equal('main540p');
+                expect(capturedEvents[0].noInitSegmentRequired).to.be.true;
+
+                // The hop has been applied, the next partial segment is requested for the intermediate Representation
+                _setCurrentRepresentation(main540);
+                _setLastSegment(4);
+
+                expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.true;
+                expect(capturedEvents).to.have.lengthOf(2);
+                expect(capturedEvents[1].oldRepresentation.id).to.equal('main540p');
+                expect(capturedEvents[1].newRepresentation.id).to.equal('main360p');
+                expect(capturedEvents[1].noInitSegmentRequired).to.be.true;
+
+                // Nothing left in the queue
+                _setCurrentRepresentation(main360);
+                expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.false;
+            });
+        });
+    })
+
     describe('Additional Tests', function () {
         it('should apply hybridSwitchBufferTime thresholds when toggling dynamic ABR strategy', function () {
             let capturedAbrRulesCollection = null;

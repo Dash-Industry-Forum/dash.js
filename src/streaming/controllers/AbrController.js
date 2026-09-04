@@ -48,6 +48,10 @@ const DEFAULT_BITRATE = 100;
 // SAP types 1 to 6 are random access points, a client can start decoding there. SAP type 7 signals a switching frame, for instance an AV1 S-Frame,
 // which is only decodable when switching from another Representation of the same switching set.
 const S_FRAME_SAP_TYPE = 7;
+// AV1 scaled reference limits (AV1 spec 7.9, motion vector scaling): a reference frame may be at most 2x larger and at most 16x smaller
+// than the frame that references it, per dimension. An S-Frame references frames of the Representation we are switching away from.
+const S_FRAME_MAX_DOWNSCALE_FACTOR = 2;
+const S_FRAME_MAX_UPSCALE_FACTOR = 16;
 
 function AbrController() {
 
@@ -387,6 +391,7 @@ function AbrController() {
             voRepresentations = _filterByPossibleBitrate(voRepresentations);
             voRepresentations = _filterByPortalSize(voRepresentations);
             voRepresentations = _filterByCmsdMaxBitrate(voRepresentations);
+            voRepresentations = _filterOutBootstrapRepresentations(voRepresentations);
 
             return voRepresentations;
         } catch (e) {
@@ -455,6 +460,22 @@ function AbrController() {
             logger.error(e);
             return voRepresentations
         }
+    }
+
+    /**
+     * Bootstrap Representations only exist for tune-in, they are not a quality option during playback. Their bitrate is inflated by the
+     * IDR at every partial segment, so without this filter the ABR rules would happily switch into them.
+     * If every candidate is a bootstrap Representation (startup inside the bootstrap AdaptationSet) the list is returned unchanged.
+     * @param {Representation[]} voRepresentations
+     * @return {Representation[]}
+     * @private
+     */
+    function _filterOutBootstrapRepresentations(voRepresentations) {
+        const filteredArray = voRepresentations.filter((voRepresentation) => {
+            return !voRepresentation.isBootstrapRepresentation || !voRepresentation.isBootstrapRepresentation();
+        });
+
+        return filteredArray.length > 0 ? filteredArray : voRepresentations;
     }
 
     /**
@@ -864,12 +885,16 @@ function AbrController() {
             let newRepresentation = switchRequest.representation;
             _addSwitchHistoryEntry(currentRepresentation, newRepresentation);
             if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
-                // Now that we know the target we can verify that we are allowed to switch into it at this partial segment boundary
-                if (!canPerformQualitySwitch(lastSegment, currentRepresentation, newRepresentation)) {
+                // Now that we know the target we can verify that we are allowed to switch into it at this partial segment boundary. If not, hop towards it.
+                const reachableRepresentation = _getReachableRepresentationTowards(lastSegment, currentRepresentation, newRepresentation);
+                if (!reachableRepresentation) {
                     logger.debug(`Can not switch to Representation ${newRepresentation.id} for ${type} at partial segment ${lastSegment.replacementSubNumber}. Waiting for the next possible switch point.`);
                     return false;
                 }
-                _changeQuality(type, currentRepresentation, newRepresentation, switchRequest.reason);
+                if (reachableRepresentation.id !== newRepresentation.id) {
+                    logger.debug(`Can not switch to Representation ${newRepresentation.id} for ${type} at partial segment ${lastSegment.replacementSubNumber}. Hopping via Representation ${reachableRepresentation.id}.`);
+                }
+                _changeQuality(type, currentRepresentation, reachableRepresentation, switchRequest.reason);
                 return true;
             }
 
@@ -952,8 +977,36 @@ function AbrController() {
             if (ssp.sapType <= 1) {
                 return true;
             }
-            return ssp.sapType === S_FRAME_SAP_TYPE && _isInSameSwitchingSet(currentRepresentation, targetRepresentation);
+            return ssp.sapType === S_FRAME_SAP_TYPE && _canSpliceIntoSFrame(currentRepresentation, targetRepresentation);
         })
+    }
+
+    /**
+     * An S-Frame of the target only decodes correctly if the reference frames of the current Representation are usable:
+     * both have to be part of the same switching set and the resolution change has to stay within the codec's scaled reference limits.
+     * @private
+     */
+    function _canSpliceIntoSFrame(currentRepresentation, targetRepresentation) {
+        return _isInSameSwitchingSet(currentRepresentation, targetRepresentation)
+            && _isWithinScaledReferenceLimits(currentRepresentation, targetRepresentation);
+    }
+
+    /**
+     * The check is skipped if either Representation does not signal its dimensions (audio, or an MPD without width/height).
+     * @private
+     */
+    function _isWithinScaledReferenceLimits(currentRepresentation, targetRepresentation) {
+        const dimensions = [
+            [currentRepresentation.width, targetRepresentation.width],
+            [currentRepresentation.height, targetRepresentation.height]
+        ];
+
+        return dimensions.every(([current, target]) => {
+            if (isNaN(current) || isNaN(target) || !current || !target) {
+                return true;
+            }
+            return target * S_FRAME_MAX_DOWNSCALE_FACTOR >= current && target <= current * S_FRAME_MAX_UPSCALE_FACTOR;
+        });
     }
 
     /**
@@ -1010,7 +1063,42 @@ function AbrController() {
         }
 
         return alignedSegmentSequenceProperties.some((ssp) => ssp.sapType === S_FRAME_SAP_TYPE)
-            && _isInSameSwitchingSet(currentRepresentation, targetRepresentation);
+            && _canSpliceIntoSFrame(currentRepresentation, targetRepresentation);
+    }
+
+    /**
+     * Returns the Representation to switch to on the way to the target. If the target itself can be entered at the next partial segment it is returned as is.
+     * Otherwise, for instance because an S-Frame down-switch exceeds the scaled reference limits, the reachable Representation closest to the target
+     * that lies between the current Representation and the target is returned, so a large switch hops through the rungs in between instead of
+     * waiting for the next IDR. Returns null if nothing is reachable.
+     * @param {object} lastSegment
+     * @param {Representation} currentRepresentation
+     * @param {Representation} targetRepresentation
+     * @returns {Representation|null}
+     * @private
+     */
+    function _getReachableRepresentationTowards(lastSegment, currentRepresentation, targetRepresentation) {
+        if (canPerformQualitySwitch(lastSegment, currentRepresentation, targetRepresentation)) {
+            return targetRepresentation;
+        }
+
+        const lowerBandwidth = Math.min(currentRepresentation.bandwidth, targetRepresentation.bandwidth);
+        const upperBandwidth = Math.max(currentRepresentation.bandwidth, targetRepresentation.bandwidth);
+        const candidates = getPossibleVoRepresentationsFilteredBySettings(currentRepresentation.mediaInfo, true)
+            .filter((representation) => {
+                return representation.id !== currentRepresentation.id
+                    && representation.bandwidth >= lowerBandwidth
+                    && representation.bandwidth <= upperBandwidth
+                    && canPerformQualitySwitch(lastSegment, currentRepresentation, representation);
+            });
+
+        if (candidates.length === 0) {
+            return null;
+        }
+
+        return candidates.reduce((closest, candidate) => {
+            return _isCloserInQuality(candidate, closest, targetRepresentation) ? candidate : closest;
+        });
     }
 
     /**
@@ -1147,10 +1235,16 @@ function AbrController() {
             const streamProcessor = streamProcessorDict[streamId][mediaType];
             const lastSegment = streamProcessor.getLastSegment();
             const currentRepresentation = streamProcessor.getRepresentation();
-            const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation, representation);
+            const reachableRepresentation = currentRepresentation ? _getReachableRepresentationTowards(lastSegment, currentRepresentation, representation) : representation;
 
-            if (!canSwitchQuality) {
+            if (!reachableRepresentation) {
                 return false
+            }
+
+            // The target is not reachable yet, hop towards it and keep the request queued for the next partial segment
+            if (reachableRepresentation.id !== representation.id) {
+                logger.debug(`[AbrController] Hopping via Representation ${reachableRepresentation.id} on the way to the manually selected Representation ${representation.id}`);
+                return setPlaybackQuality(type, streamInfo, reachableRepresentation, reason);
             }
 
             queuedManualQualitySwitches.delete(manualQualitySwitchKey);
