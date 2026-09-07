@@ -68,6 +68,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
  *            cacheInitSegmentsLimit: 50,
+ *            skipInitSegments: { video: false, audio: false, text: false },
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
@@ -1191,6 +1192,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [cacheInitSegmentsLimit=50]
  * Maximum number of entries to keep in the init segment cache. When the cache exceeds this limit, the least recently
  * used entries are evicted.
+ * @property {object} [skipInitSegments={video: false, audio: false, text: false}]
+ * Skips requesting initialization segments for the given media type. Only enable this for content whose media segments are self-initializing, i.e. each media segment carries its own moov box.
+ * With this flag enabled the first media segment of a Representation is requested directly, also after a quality or track switch. The SourceBuffer preparation for quality switches is not changed by this setting.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  * @property {boolean} [applyProducerReferenceTime=true]
@@ -1375,6 +1379,7 @@ function Settings() {
             liveUpdateTimeThresholdInMilliseconds: 0,
             cacheInitSegments: false,
             cacheInitSegmentsLimit: 50,
+            skipInitSegments: { video: false, audio: false, text: false },
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             applyContentSteering: true,

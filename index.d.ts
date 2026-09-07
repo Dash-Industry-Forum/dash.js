@@ -1684,6 +1684,11 @@ export class MediaPlayerSettingClass {
         liveUpdateTimeThresholdInMilliseconds?: number,
         cacheInitSegments?: boolean,
         cacheInitSegmentsLimit?: number,
+        skipInitSegments?: {
+            video?: boolean,
+            audio?: boolean,
+            text?: boolean
+        },
         applyServiceDescription?: boolean,
         applyProducerReferenceTime?: boolean,
         applyContentSteering?: boolean,

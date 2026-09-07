@@ -1,4 +1,7 @@
 import Settings from '../../../../src/core/Settings.js';
+import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
+import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ScheduleController from '../../../../src/streaming/controllers/ScheduleController.js';
 import VoHelper from '../../helpers/VOHelper.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
@@ -8,14 +11,13 @@ import AbrControllerMock from '../../mocks/AbrControllerMock.js';
 import MediaPlayerModelMock from '../../mocks/MediaPlayerModelMock.js';
 import TextControllerMock from '../../mocks/TextControllerMock.js';
 import RepresentationControllerMock from '../../mocks/RepresentationControllerMock.js';
-import EventBus from '../../../../src/core/EventBus.js';
-import Events from '../../../../src/core/events/Events.js';
 import sinon from 'sinon';
 
 const voHelper = new VoHelper();
 import {expect} from 'chai';
 const context = {};
 const settings = Settings(context).getInstance();
+const eventBus = EventBus(context).getInstance();
 
 let scheduleController;
 let streamInfo, adapter, dashMetrics, abrController, mediaPlayerModel, textController, representationController;
@@ -399,6 +401,71 @@ describe('ScheduleController', function () {
             playbackControllerStub.getTime = () => null;
 
             expect(scheduleController.getBufferTarget()).to.equal(8);
+        });
+    });
+
+    describe('skipInitSegments', () => {
+        let triggered;
+
+        function onInit() { triggered.init++; }
+        function onMedia() { triggered.media++; }
+
+        function waitForEvent() {
+            return new Promise((resolve) => {
+                const onEvent = () => {
+                    eventBus.off(Events.INIT_FRAGMENT_NEEDED, onEvent, this);
+                    eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, onEvent, this);
+                    resolve();
+                };
+                eventBus.on(Events.INIT_FRAGMENT_NEEDED, onEvent, this);
+                eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, onEvent, this);
+            });
+        }
+
+        beforeEach(() => {
+            triggered = { init: 0, media: 0 };
+            streamInfo = voHelper.getDummyStreamInfo();
+            abrController = new AbrControllerMock();
+            abrController.handlePendingManualQualitySwitch = () => false;
+            abrController.checkPlaybackQuality = () => false;
+            mediaPlayerModel = new MediaPlayerModelMock();
+            mediaPlayerModel.getScheduleTimeout = () => 500;
+            representationController = new RepresentationControllerMock();
+            representationController.getCurrentRepresentation = () => ({ id: 'rep_1' });
+            eventBus.on(Events.INIT_FRAGMENT_NEEDED, onInit, this);
+            eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, onMedia, this);
+            scheduleController = ScheduleController(context).create({
+                streamInfo,
+                type: Constants.VIDEO,
+                abrController,
+                mediaPlayerModel,
+                representationController,
+                playbackController: new PlaybackControllerMock(),
+                bufferController: { getIsBufferingCompleted: () => false },
+                settings
+            });
+        });
+
+        afterEach(() => {
+            eventBus.off(Events.INIT_FRAGMENT_NEEDED, onInit, this);
+            eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, onMedia, this);
+        });
+
+        it('should request an init segment first when the flag is off', async () => {
+            const done = waitForEvent();
+            scheduleController.startScheduleTimer(0);
+            await done;
+            expect(triggered.init).to.equal(1);
+            expect(triggered.media).to.equal(0);
+        });
+
+        it('should request a media segment directly when the flag is on for the type', async () => {
+            settings.update({ streaming: { skipInitSegments: { video: true } } });
+            const done = waitForEvent();
+            scheduleController.startScheduleTimer(0);
+            await done;
+            expect(triggered.init).to.equal(0);
+            expect(triggered.media).to.equal(1);
         });
     });
 });
