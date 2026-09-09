@@ -69,8 +69,13 @@ function FetchLoader() {
             .then((fetchResponse) => {
                 _handleFetchResponse(fetchResponse, commonMediaRequest, commonMediaResponse);
             })
-            .catch(() => {
-                _handleFetchError(commonMediaRequest);
+            .catch((e) => {
+                // A deliberate abort() rejects fetch() with an AbortError; that is not a load failure
+                if (e.name === 'AbortError') {
+                    logger.warn('fetch() caught AbortError: Request ' + commonMediaRequest.url + ' aborted', e);
+                } else {
+                    _handleFetchError(commonMediaRequest);
+                }
             })
     }
 
@@ -274,8 +279,13 @@ function FetchLoader() {
     function _readResponseBody(commonMediaRequest, commonMediaResponse, processResult) {
         commonMediaRequest.customData.reader.read()
             .then(processResult)
-            .catch(function () {
-                _handleFetchError(commonMediaRequest);
+            .catch(function (e) {
+                // A deliberate abort() rejects reader.read() with an AbortError; that is not a load failure
+                if (e.name === 'AbortError') {
+                    logger.warn('Reader caught AbortError: Request ' + commonMediaRequest.url + ' aborted', e);
+                } else {
+                    _handleFetchError(commonMediaRequest);
+                }
             });
     }
 
@@ -378,7 +388,7 @@ function FetchLoader() {
             // For Chrome
             try {
                 this.customData.reader.cancel();
-                this.onabort();
+                this.customData.onabort();
             } catch (e) {
                 // throw exceptions (TypeError) when reader was previously closed,
                 // for example, because a network issue
