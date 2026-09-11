@@ -498,7 +498,7 @@ function MediaController() {
     }
 
     function matchSettingsCodec(settings, track) {
-        return !settings.codec || (settings.codec === track.codec);
+        return !settings.codec || (track.codec.match(settings.codec));
     }
 
     function matchSettings(settings, track, isTrackActive = false) {
