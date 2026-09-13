@@ -81,6 +81,32 @@ describe('DashParser', function () {
         expect(dashManifestModel.getViewpointForAdaptation(adaptationSet)[0].value).to.equal('01');
     });
 
+    [
+        'Accessibility', 'AssetIdentifier', 'AudioChannelConfiguration', 'ClientDataReporting',
+        'ContentProtection', 'EssentialProperty', 'FramePacking', 'OutputProtection',
+        'Rating', 'Reporting', 'Role', 'Scope', 'SupplementalProperty', 'UTCTiming', 'Viewpoint'
+    ].forEach((tag) => {
+        it(`should preserve numeric-looking ${tag} descriptor values`, () => {
+            ['01', '000003', '1e3', '9007199254740993', '0'].forEach((value) => {
+                const raw = dashParser.parseXml(`<${tag} schemeIdUri="test:scheme" value="${value}"/>`)[tag];
+                const descriptor = new DescriptorType();
+                descriptor.init(raw);
+
+                expect(raw.value).to.equal(value);
+                expect(descriptor.value).to.equal(value);
+            });
+        });
+    });
+
+    it('should still parse numeric Representation attributes', () => {
+        const representation = dashParser.parseXml('<Representation id="01" bandwidth="1000000" width="1920" height="1080"/>').Representation;
+
+        expect(representation.id).to.equal('01');
+        expect(representation.bandwidth).to.equal(1000000);
+        expect(representation.width).to.equal(1920);
+        expect(representation.height).to.equal(1080);
+    });
+
     it('should return a parsed Patch object when parse is called with valid patch data', () => {
         const patchManifest = `<?xml version="1.0" encoding="UTF-8"?>
 <Patch mpdId="foobar"

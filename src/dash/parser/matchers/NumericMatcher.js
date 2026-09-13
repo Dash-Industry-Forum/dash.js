@@ -39,14 +39,30 @@ const numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
 const StringAttributeList = [ DashConstants.ID ]
 
 // DescriptorType@value is xs:string; converting numeric-looking values would alter them (e.g. "01" -> 1)
-const StringValueTagList = [ DashConstants.VIEWPOINT ]
+const StringValueTagList = [
+    DashConstants.ACCESSIBILITY,
+    DashConstants.ASSET_IDENTIFIER,
+    DashConstants.AUDIO_CHANNEL_CONFIGURATION,
+    DashConstants.CLIENT_DATA_REPORTING,
+    DashConstants.CONTENT_PROTECTION,
+    DashConstants.ESSENTIAL_PROPERTY,
+    DashConstants.FRAME_PACKING,
+    DashConstants.OUTPUT_PROTECTION,
+    DashConstants.RATING,
+    DashConstants.REPORTING,
+    DashConstants.ROLE,
+    DashConstants.SERVICE_DESCRIPTION_SCOPE,
+    DashConstants.SUPPLEMENTAL_PROPERTY,
+    DashConstants.UTC_TIMING,
+    DashConstants.VIEWPOINT
+]
 
 class NumericMatcher extends BaseMatcher {
     constructor() {
         super(
             (tagName, attrName, value) => numericRegex.test(value) &&
                 StringAttributeList.indexOf(attrName) === -1 &&
-                !(attrName === 'value' && StringValueTagList.indexOf(tagName) !== -1),
+                !(attrName === DashConstants.VALUE && StringValueTagList.indexOf(tagName) !== -1),
             str => parseFloat(str)
         );
     }
