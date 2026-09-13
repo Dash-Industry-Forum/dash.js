@@ -410,6 +410,10 @@ function TimeSyncController() {
      * @param {function} onFailureCB
      */
     function _directHandler(xsdatetimeStr, onSuccessCB, onFailureCB) {
+        // Preserve the manifest parser's UTC interpretation when no timezone is specified.
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(xsdatetimeStr)) {
+            xsdatetimeStr += 'Z';
+        }
         let time = _xsdatetimeDecoder(xsdatetimeStr);
 
         if (!isNaN(time)) {
