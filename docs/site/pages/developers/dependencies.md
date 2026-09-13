@@ -40,7 +40,6 @@ development. The dependencies are listed in `package.json` and are installed whe
 | `@eslint/js`                                 | ESLint JavaScript language implementation                                                               |
 | `babel-loader`                               | Used for transpiling JavaScript by Webpack                                                              |
 | `babel-plugin-istanbul`                      | Instruments the source code for unit test coverage reports                                              |
-| `buffer`                                     | Node `Buffer` polyfill for the browser bundles                                                          |
 | `chai`                                       | Assertion library used by the Karma testing framework                                                   |
 | `chai-spies`                                 | Addon plugin for the chai assertion library. It provides the most basic function spy ability and tests  |
 | `clean-jsdoc-theme`                          | Clean and fully responsive theme to generate the JSDoc                                                  |
@@ -68,7 +67,6 @@ development. The dependencies are listed in `package.json` and are installed whe
 | `publint`                                    | Lints `package.json` and the published package for packaging errors                                     |
 | `rimraf`                                     | Dependency to remove `dist` folder before building dash.js                                              |
 | `sinon`                                      | Standalone and test framework agnostic JavaScript test spies, stubs and mocks                           |
-| `stream-browserify`                          | The stream module from node core, for browsers                                                          |
 | `string-replace-loader`                      | Used to perform text replacements when building with webpack                                            |
 | `timers-browserify`                          | Adds support for the timers module to browserify                                                        |
 | `typescript`                                 | TypeScript adds optional types to JavaScript; used to verify `index.d.ts`                               |
