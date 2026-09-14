@@ -961,6 +961,25 @@ so a request that never carried one is unaffected by the collapse.
 | `dodge.RequestPadding.js` | Retried requests | duplicates do not push a request under paddingLengthBase past the oversize branch |
 | `dodge.RequestPadding.js` | Retried requests | the cache-busting value survives the collapse as the prefix |
 
+### R8.8 - A `blob:` or `data:` source is never padded
+
+An application that builds the extended manifest in the page hands it to `initialize()` as an
+object URL. That request is a local read: there is no HTTP wire size to normalize, so padding it
+adds nothing to the defense. It also cannot be padded. Browsers resolve a `blob:` URL by exact
+lookup and refuse one that carries a query string, so extending the `padding` parameter turns
+the manifest load into a network error (dash.js error 25, `MANIFEST_LOADER_LOADING_FAILURE`)
+and playback never starts. A `data:` URL is treated the same way: its query would be parsed
+as part of the payload.
+
+`applyRequestPadding()` returns before measuring when the resolved URL's scheme is `blob:` or
+`data:`, without warning: this is the expected shape of an in-page manifest, not a
+misconfiguration. Every network scheme is still padded as before (R8.2, R8.3).
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.RequestPadding.js` | Non-network sources | a blob: URL is not padded: it never reaches the wire and cannot carry a query string |
+| `dodge.RequestPadding.js` | Non-network sources | a data: URL is not padded |
+
 ---
 
 ## 9. Extended Manifest Validation and Registry
@@ -2188,6 +2207,7 @@ manifests that are correct, so the gate stays silent instead.
 | R8.5 XHRLoader applies padding | 4 |
 | R8.6 Unset paddingLengthBase is reported | 10 |
 | R8.7 Retried requests measured after collapsing duplicates | 4 |
+| R8.8 A blob: or data: source is never padded | 2 |
 | R9.1 Structural validation rejects malformed manifests | 70 |
 | R9.2 Init cycle validation | 30 |
 | R9.3 Init cycle quality validation and explicit buffer requirement | 17 |
@@ -2238,9 +2258,9 @@ manifests that are correct, so the gate stays silent instead.
 | R12.7 Every Dodge module reads the player's Settings | 5 |
 | R12.8 A stalled stream is never scheduled again | 11 |
 | R12.9 A cycle naming a segment the presentation lacks stalls the stream | 2 |
-| **Total** | **848** |
+| **Total** | **850** |
 
-The column above sums to 851 rather than 848 because three tests each pin two requirements and
+The column above sums to 853 rather than 850 because three tests each pin two requirements and
 are listed under both: `an index past the end of the timeline stalls without advancing` under R3.10
 and R12.9, `rejects an override group fetched after its index was flushed` under R9.4 and R9.16, and
 `a complete manifest is held to the same rule as a progressive batch` under R9.11 and R9.16. The

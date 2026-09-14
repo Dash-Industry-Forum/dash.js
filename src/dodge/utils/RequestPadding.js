@@ -96,6 +96,13 @@ export function applyRequestPadding(commonMediaRequest, settings, logger) {
         return;
     }
 
+    // A blob: or data: source never leaves the browser, so there is no wire
+    // size to normalize - and browsers refuse a blob: URL that carries a query
+    // string, so padding it would turn the manifest load into a network error.
+    if (resolved.protocol === 'blob:' || resolved.protocol === 'data:') {
+        return;
+    }
+
     // HTTPLoader._addPathwayCloningParameters() re-appends request.queryParams
     // on every attempt, so a retried request arrives carrying one copy of the
     // cache-busting parameter per attempt. Collapse them before measuring.

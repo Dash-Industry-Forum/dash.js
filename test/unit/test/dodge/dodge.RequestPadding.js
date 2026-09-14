@@ -150,6 +150,25 @@ describe('applyRequestPadding', function () {
         expect(named.length).to.equal(1);
     });
 
+    // Non-network sources
+
+    it('a blob: URL is not padded: it never reaches the wire and cannot carry a query string', function () {
+        const url = 'blob:https://example.com/2d6e1a3c-0b8f-4a6e-9c1d-1234567890ab';
+        const req = makeRequest(url, {});
+        const logger = makeLogger();
+        applyRequestPadding(req, makeSettings(500), logger);
+        expect(req.url).to.equal(url);
+        expect(logger.warn.called).to.be.false;
+        expect(logger.error.called).to.be.false;
+    });
+
+    it('a data: URL is not padded', function () {
+        const url = 'data:application/json,{"start":{}}';
+        const req = makeRequest(url, {});
+        applyRequestPadding(req, makeSettings(500), makeLogger());
+        expect(req.url).to.equal(url);
+    });
+
     // Padding applied
 
     it('request with pad > 0: URL is extended by exactly pad bytes', function () {
