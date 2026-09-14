@@ -37,6 +37,10 @@ function isValidTargetTime(time) {
 }
 
 function getRangeBehindForPruning(ranges, targetTime, bufferToKeepBehind, currentTimeRequest) {
+    if (!Number.isFinite(bufferToKeepBehind)) {
+        return null;
+    }
+
     const startOfBuffer = ranges.start(0);
 
     if (targetTime - startOfBuffer > bufferToKeepBehind) {
@@ -66,6 +70,10 @@ function getRangeAheadForPruning(ranges, targetTime, options) {
         avoidCurrentTimeRangePruning,
         logger
     } = options;
+
+    if (!Number.isFinite(bufferToKeepAhead)) {
+        return null;
+    }
 
     let rangeStart = !isNaN(continuousBufferTime) ? Math.min(continuousBufferTime, targetTime + bufferToKeepAhead) : targetTime;
 
@@ -118,10 +126,6 @@ function getPruningRanges(ranges, seekTime, options) {
     }
 
     const pruningOptions = options || {};
-    if (!Number.isFinite(pruningOptions.bufferToKeepBehind) || !Number.isFinite(pruningOptions.bufferToKeepAhead)) {
-        return clearRanges;
-    }
-
     const targetTime = Number(seekTime);
     const behindPruningRange = getRangeBehindForPruning(
         ranges,

@@ -47,11 +47,32 @@ describe('BufferRangeUtils', function () {
             expect(getPruningRanges(ranges, 50)).to.deep.equal([]);
         });
 
-        it('should return no ranges for partial pruning options', function () {
+        it('should prune the configured side for partial pruning options', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
 
-            expect(getPruningRanges(ranges, 50, { bufferToKeepBehind: 20 })).to.deep.equal([]);
-            expect(getPruningRanges(ranges, 50, { bufferToKeepAhead: 30 })).to.deep.equal([]);
+            expect(getPruningRanges(ranges, 50, { bufferToKeepBehind: 20 })).to.deep.equal([
+                { start: 0, end: 30 }
+            ]);
+            expect(getPruningRanges(ranges, 50, { bufferToKeepAhead: 30 })).to.deep.equal([
+                { start: 50, end: 100.5 }
+            ]);
+        });
+
+        it('should skip only the side whose retained duration is invalid', function () {
+            const ranges = createTimeRanges([{ start: 0, end: 100 }]);
+
+            [Infinity, -Infinity, NaN, undefined, null, '20'].forEach((invalidDuration) => {
+                expect(getPruningRanges(ranges, 50, { ...pruningOptions, bufferToKeepBehind: invalidDuration })).to.deep.equal([
+                    { start: 80, end: 100.5 }
+                ]);
+                expect(getPruningRanges(ranges, 50, { ...pruningOptions, bufferToKeepAhead: invalidDuration })).to.deep.equal([
+                    { start: 0, end: 30 }
+                ]);
+                expect(getPruningRanges(ranges, 50, { ...pruningOptions, bufferToKeepAhead: invalidDuration, continuousBufferTime: NaN })).to.deep.equal([
+                    { start: 0, end: 30 }
+                ]);
+                expect(getPruningRanges(ranges, 50, { bufferToKeepBehind: invalidDuration, bufferToKeepAhead: invalidDuration })).to.deep.equal([]);
+            });
         });
 
         it('should treat seek time zero as a valid pruning target', function () {

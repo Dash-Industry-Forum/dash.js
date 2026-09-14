@@ -408,6 +408,20 @@ describe('BufferController', function () {
             ]);
         });
 
+        it('should prune each side independently when the other retention is infinite', function () {
+            buffer.addRange({ start: 0, end: 100 });
+
+            settings.update({ streaming: { buffer: { bufferToKeep: Infinity } } });
+            expect(bufferController.getAllRangesWithSafetyFactor(50)).to.deep.equal([
+                { start: 80, end: 100.5 }
+            ]);
+
+            settings.update({ streaming: { buffer: { bufferToKeep: 20, bufferTimeAtTopQuality: Infinity } } });
+            expect(bufferController.getAllRangesWithSafetyFactor(50)).to.deep.equal([
+                { start: 0, end: 30 }
+            ]);
+        });
+
         it('should select the ahead retention from the content duration', function () {
             buffer.addRange({ start: 0, end: 150 });
 
