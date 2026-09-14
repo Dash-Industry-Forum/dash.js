@@ -1,6 +1,7 @@
 import DashParser from '../../../../src/dash/parser/DashParser.js';
 import DebugMock from '../../mocks/DebugMock.js';
 import DashManifestModel from '../../../../src/dash/models/DashManifestModel.js';
+import DashAdapter from '../../../../src/dash/DashAdapter.js';
 import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 import FileLoader from '../../helpers/FileLoader.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
@@ -136,6 +137,65 @@ describe('DashParser', function () {
             });
         });
 
+        describe('date attributes', () => {
+            const timestamp = '2026-09-13T14:34:56.789+02:00';
+
+            [
+                ['MPD', 'availabilityStartTime'],
+                ['MPD', 'availabilityEndTime'],
+                ['MPD', 'publishTime'],
+                ['Patch', 'publishTime'],
+                ['Patch', 'originalPublishTime'],
+                ['LeapSecondInformation', 'nextLeapChangeTime'],
+                ['ProducerReferenceTime', 'wallClockTime']
+            ].forEach(([tag, attribute]) => {
+                it(`should convert ${tag}@${attribute} to a Date, using UTC when no timezone is present`, () => {
+                    [timestamp, '2026-09-13T12:34:56.789'].forEach(value => {
+                        const parsed = dashParser.parseXml(`<${tag} ${attribute}="${value}"/>`)[tag];
+
+                        expect(parsed[attribute]).to.be.instanceOf(Date);
+                        expect(parsed[attribute].toISOString()).to.equal('2026-09-13T12:34:56.789Z');
+                    });
+                });
+            });
+
+            [
+                ['MPD', 'id'],
+                ['Patch', 'mpdId'],
+                ['Viewpoint', 'value'],
+                ['EssentialProperty', 'value'],
+                ['SupplementalProperty', 'value'],
+                ['EventStream', 'value']
+            ].forEach(([tag, attribute]) => {
+                it(`should preserve date-like strings in ${tag}@${attribute}`, () => {
+                    [timestamp, `${timestamp}-camera-B`].forEach(value => {
+                        const parsed = dashParser.parseXml(`<${tag} ${attribute}="${value}"/>`)[tag];
+
+                        expect(parsed[attribute]).to.equal(value);
+                    });
+                });
+            });
+
+            it('should preserve milliseconds in direct UTC timing sources', () => {
+                const parsed = dashParser.parse(`<MPD type="dynamic">
+                    <UTCTiming schemeIdUri="urn:mpeg:dash:utc:direct:2014" value="${timestamp}"/>
+                </MPD>`);
+                const timingSource = dashManifestModel.getUTCTimingSources(parsed)[0];
+
+                expect(timingSource.value).to.equal(timestamp);
+                expect(Date.parse(timingSource.value)).to.equal(Date.parse(timestamp));
+            });
+
+            it('should accept patches with matching date-like manifest IDs', () => {
+                const id = `${timestamp}-manifest`;
+                const parsed = dashParser.parse(`<MPD id="${id}" publishTime="2026-09-13T12:00:00Z"/>`);
+                const patch = dashParser.parse(`<Patch mpdId="${id}"
+                    originalPublishTime="2026-09-13T12:00:00Z" publishTime="2026-09-13T12:01:00Z"/>`);
+
+                expect(DashAdapter(context).getInstance().isPatchValid(parsed, patch)).to.equal(true);
+            });
+        });
+
         it('should return normalized language tag', async () => {
             let parsedMpd = dashParser.parse(manifest);
             let audioAdaptationsArray = dashManifestModel.getAdaptationsForType(parsedMpd, 0, 'audio');
@@ -188,7 +248,7 @@ describe('DashParser', function () {
             expect(rawAdaptationSet.SupplementalProperty.length).to.equal(3);
 
             let rawRepresentation = rawAdaptationSet.Representation[0];
-            
+
             expect(rawRepresentation.SupplementalProperty).to.be.instanceOf(Array);
             expect(rawRepresentation.SupplementalProperty.length).to.equal(4);
         });
