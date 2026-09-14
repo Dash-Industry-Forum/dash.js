@@ -120,6 +120,7 @@ describe('TimeSyncController', function () {
         ['without seconds or a timezone', '2026-09-13T12:34', '2014', -56000],
         ['with UTC', '2026-09-13T12:34:56.789Z', '2014', 789],
         ['with a timezone offset', '2026-09-13T14:34:56.789+02:00', '2014', 789],
+        ['with an empty fraction and a timezone offset', '2026-09-13T14:34:56.+02:00', '2014', 0],
         ['with the legacy scheme', '2026-09-13T12:34:56.789', '2012', 789],
         ['with an RFC date', 'Sun, 13 Sep 2026 12:34:56 GMT', '2014', 0]
     ].forEach(([description, value, version, expectedOffset]) => {

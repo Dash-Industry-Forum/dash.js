@@ -330,12 +330,16 @@ function TimeSyncController() {
         const SECONDS_IN_MIN = 60;
         const MINUTES_IN_HOUR = 60;
         const MILLISECONDS_IN_SECONDS = 1000;
-        let datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2})([0-9]{2}))?/;
+        let datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2}):?([0-9]{2}))?/;
 
         let utcDate,
             timezoneOffset;
 
         let match = datetimeRegex.exec(xsdatetimeStr);
+
+        if (!match) {
+            return NaN;
+        }
 
         // If the string does not contain a timezone offset different browsers can interpret it either
         // as UTC or as a local time so we have to parse the string manually to normalize the given date value for
@@ -346,7 +350,7 @@ function TimeSyncController() {
             parseInt(match[3], 10),
             parseInt(match[4], 10),
             parseInt(match[5], 10),
-            (match[6] && (parseInt(match[6], 10) || 0)),
+            (match[6] && parseInt(match[6], 10) || 0),
             (match[7] && parseFloat(match[7]) * MILLISECONDS_IN_SECONDS) || 0
         );
         // If the date has timezone offset take it into account as well
@@ -360,15 +364,16 @@ function TimeSyncController() {
 
 
     /**
-     * Try to use the built in parser, since xsdate is a constrained ISO8601 which is supported natively by Date.parse. if that fails, try a regex-based version used elsewhere in this application.
+     * Decode xs:dateTime manually first so a missing timezone is treated as UTC (matching DateTimeMatcher),
+     * since Date.parse treats it as local time. Fall back to Date.parse for other formats (e.g. RFC 1123).
      * @param {string} xsdatetimeStr
      * @return {number}
      */
     function _xsdatetimeDecoder(xsdatetimeStr) {
-        let parsedDate = Date.parse(xsdatetimeStr);
+        let parsedDate = _alternateXsdatetimeDecoder(xsdatetimeStr);
 
         if (isNaN(parsedDate)) {
-            parsedDate = _alternateXsdatetimeDecoder(xsdatetimeStr);
+            parsedDate = Date.parse(xsdatetimeStr);
         }
 
         return parsedDate;
@@ -410,10 +415,6 @@ function TimeSyncController() {
      * @param {function} onFailureCB
      */
     function _directHandler(xsdatetimeStr, onSuccessCB, onFailureCB) {
-        // Preserve the manifest parser's UTC interpretation when no timezone is specified.
-        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(xsdatetimeStr)) {
-            xsdatetimeStr += 'Z';
-        }
         let time = _xsdatetimeDecoder(xsdatetimeStr);
 
         if (!isNaN(time)) {
