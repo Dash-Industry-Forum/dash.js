@@ -228,6 +228,23 @@ const CmcdPropertyMap = {
     },
 
     /**
+     * Custom CMCD keys as a list of { key, value } entries
+     * (hyphenated key prefix required, e.g. 'org.svta-p-n').
+     * Settings only; not configurable via manifest.
+     */
+    customKeys: {
+        version: [1, 2],
+        sources: [
+            {
+                path: 'settings.streaming.cmcd.customKeys',
+                priority: 1,
+                type: 'array',
+                default: []
+            }
+        ]
+    },
+
+    /**
      * Request types to include CMCD data in
      * Priority: manifest > settings > default (['segment', 'mpd'])
      */

@@ -39,6 +39,7 @@ import {
     CmcdReporter,
     CMCD_QUERY,
     CMCD_HEADERS,
+    isCmcdCustomKey,
 } from '@svta/cml-cmcd';
 import Debug from '../../core/Debug.js';
 
@@ -174,10 +175,12 @@ function CmcdController() {
     }
 
     function _createCmcdReporter() {
+        const customKeys = _getValidatedCustomKeys();
         const cmcdConfig = {
             version: cmcdConfigAccessor.getVersion(),
             transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS ? CMCD_HEADERS : CMCD_QUERY,
-            enabledKeys: cmcdConfigAccessor.get('keys'),
+            // Configured custom keys are enabled implicitly, otherwise the reporter's key filter would drop them
+            enabledKeys: [...cmcdConfigAccessor.get('keys'), ...Object.keys(customKeys)],
             eventTargets: _buildReporterTargets(),
         };
 
@@ -192,7 +195,33 @@ function CmcdController() {
             cmcdConfig.cid = cid;
         }
 
-        return new CmcdReporter(cmcdConfig, _customRequester);
+        const reporter = new CmcdReporter(cmcdConfig, _customRequester);
+
+        // Custom keys are persistent session data and included in all reports
+        if (Object.keys(customKeys).length > 0) {
+            reporter.update(customKeys);
+        }
+
+        return reporter;
+    }
+
+    /**
+     * Returns the configured custom CMCD keys as a data object, dropping entries whose key
+     * lacks the hyphenated prefix required by the CMCD specification (e.g. 'com.example-mykey').
+     * @returns {object}
+     * @private
+     */
+    function _getValidatedCustomKeys() {
+        const customKeys = cmcdConfigAccessor.get('customKeys') || [];
+
+        return customKeys.reduce((result, entry) => {
+            if (entry && typeof entry.key === 'string' && isCmcdCustomKey(entry.key) && entry.value !== undefined) {
+                result[entry.key] = entry.value;
+            } else {
+                logger.warn(`Ignoring CMCD custom key entry "${entry ? entry.key : entry}": entries require a value and a key with a hyphenated prefix, e.g. "com.example-mykey"`);
+            }
+            return result;
+        }, {});
     }
 
     function _buildReporterTargets() {

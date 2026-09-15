@@ -339,7 +339,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *                includeInRequests: ['segment', 'mpd'],
  *                version: 1,
- *                eventTargets: []
+ *                eventTargets: [],
+ *                customKeys: []
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -984,6 +985,16 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If not specified this value defaults to 1.
  * @property {Array.<CmcdEventTarget>} [eventTargets]
  * List of CMCD reporting targets.
+ * @property {Array.<object>} [customKeys=[]]
+ * Custom CMCD keys to include in reports as persistent session data. Each entry is an object with a
+ * "key" and a "value" property, e.g. [{ key: 'org.svta-p-n', value: 'dash.js' }].
+ *
+ * Per the CMCD specification, custom keys must carry a hyphenated prefix (reverse-DNS syntax recommended)
+ * to avoid namespace collisions, e.g. 'com.example-mykey'. Keys without a valid prefix are ignored.
+ * See the SVTA CMCD custom keys registry for registered keys.
+ *
+ * Note: event/response targets filter keys by their own enabledKeys; add custom keys there to include
+ * them in target reports.
  */
 
 /**
@@ -1528,7 +1539,8 @@ function Settings() {
                 enabledKeys: Constants.CMCD_KEYS,
                 includeInRequests: ['segment', 'mpd'],
                 version: 1,
-                eventTargets: []
+                eventTargets: [],
+                customKeys: []
             },
             cmsd: {
                 enabled: false,
