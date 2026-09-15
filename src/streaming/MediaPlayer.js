@@ -63,31 +63,32 @@ function MediaPlayer() {
 
     // Shared with the API sub-modules (see _composeApis). Single source of truth for player state.
     const state = {
-        logger: null,
-        source: null,
-        protectionData: null,
-        mediaPlayerInitialized: false,
-        streamingInitialized: false,
-        playbackInitialized: false,
-        autoPlay: true,
-        providedStartTime: NaN,
-        settings: Settings(context).getInstance(),
         abrController: null,
-        throughputController: null,
-        mediaController: null,
-        protectionController: null,
         adapter: null,
-        customParametersModel: null,
+        autoPlay: true,
         baseURLController: null,
-        streamController: null,
-        textController: null,
-        playbackController: null,
         contentSteeringController: null,
+        customParametersModel: null,
         dashMetrics: null,
+        logger: null,
         manifestModel: null,
-        videoModel: null,
+        mediaController: null,
+        mediaPlayerInitialized: false,
         offlineController: null,
+        playbackController: null,
+        playbackInitialized: false,
+        protectionController: null,
+        protectionData: null,
+        providedStartTime: NaN,
+        retrieveManifestRequest: null,
+        settings: Settings(context).getInstance(),
+        source: null,
+        streamController: null,
+        streamingInitialized: false,
+        textController: null,
+        throughputController: null,
         uriFragmentModel: null,
+        videoModel: null,
     };
     const debug = Debug(context).getInstance({ settings: state.settings });
     const wiring = MediaPlayerWiring(context).getInstance();
@@ -146,7 +147,9 @@ function MediaPlayer() {
     function _composeApis() {
         API_FACTORIES.forEach((Factory) => {
             const api = Factory(context).create();
-            api.setConfig({ state, mediaPlayer: instance, wiring, debug });
+            if (typeof api.setConfig === 'function') { // a full replacement via extend(name, obj, false) may omit it
+                api.setConfig({ state, mediaPlayer: instance, wiring, debug });
+            }
             const { setConfig, getClassName, ...methods } = api; // strip factory plumbing
             Object.assign(instance, methods);
         });

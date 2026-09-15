@@ -44,8 +44,7 @@ function LifecycleApi() {
     let instance,
         state,
         mediaPlayer,
-        wiring,
-        retrieveManifestRequest;
+        wiring;
 
     function setConfig(config) {
         if (!config) {
@@ -134,9 +133,9 @@ function LifecycleApi() {
 
         wiring.reset();
 
-        if (retrieveManifestRequest) {
-            retrieveManifestRequest.resetLoader();
-            retrieveManifestRequest = null;
+        if (state.retrieveManifestRequest) {
+            state.retrieveManifestRequest.resetLoader();
+            state.retrieveManifestRequest = null;
         }
     }
 
@@ -295,18 +294,18 @@ function LifecycleApi() {
      * @instance
      */
     function retrieveManifest(url, callback) {
-        if (retrieveManifestRequest) {
-            retrieveManifestRequest.resetLoader();
+        if (state.retrieveManifestRequest) {
+            state.retrieveManifestRequest.resetLoader();
         }
 
         const manifestLoader = wiring.createManifestLoader();
         const resetLoader = () => {
             eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, this);
             manifestLoader.reset();
-            retrieveManifestRequest = null;
+            state.retrieveManifestRequest = null;
         };
 
-        retrieveManifestRequest = { manifestLoader, resetLoader };
+        state.retrieveManifestRequest = { manifestLoader, resetLoader };
 
         const handler = (e) => {
             if (typeof callback == 'function') {

@@ -149,4 +149,11 @@ describe('MediaPlayer API surface', function () {
     it('returns the registered external subtitles', function () {
         expect(player.getExternalSubtitles()).to.be.instanceOf(Set);
     });
+
+    it('tolerates a full replacement via extend() without setConfig', function () {
+        player.extend('CoreApi', function () {
+            return { getVersion: () => 'custom' };
+        }, false);
+        expect(player.getVersion()).to.equal('custom');
+    });
 });
