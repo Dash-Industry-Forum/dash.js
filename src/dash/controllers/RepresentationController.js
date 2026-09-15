@@ -325,7 +325,10 @@ function RepresentationController(config) {
             _setCurrentVoRepresentation(rep);
 
             // Segment data was skipped at startup for non-selected Representations, resolve it now.
-            if (!rep.hasSegments()) {
+            // hasSegments() reflects the addressing mode from the manifest and stays false for
+            // SegmentBase, so we also check whether the list has already been built for this
+            // Representation to avoid reloading it on every switch back and forth.
+            if (!rep.hasSegments() && !rep.segments) {
                 return _updateRepresentation(rep, true);
             }
         }
