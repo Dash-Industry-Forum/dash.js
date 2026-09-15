@@ -687,7 +687,10 @@ function StreamProcessor(config) {
 
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
             _prepareForDefaultQualitySwitch(pendingSwitchToVoRepresentation.newRepresentation, pendingSwitchToVoRepresentation.oldRepresentation);
-        } else if (!trackSwitchInProgress) {
+        } else if (!trackSwitchInProgress && !qualityChangeInProgress) {
+            // While a quality switch is being prepared the current Representation has already
+            // changed but its segments may not be resolved yet. The schedule timer is restarted
+            // by the corresponding *QualitySwitchPreparationDone() handler.
             scheduleController.startScheduleTimer(0);
         }
     }
@@ -836,10 +839,12 @@ function StreamProcessor(config) {
         // Stop scheduling until we are done with preparing the quality switch
         clearScheduleTimer();
 
-        // Update selected Representation in RepresentationController
-        representationController.prepareQualityChange(newRepresentation);
-
-        _handleDifferentSwitchTypes(e);
+        // Update selected Representation in RepresentationController. For SegmentBase this may
+        // first have to resolve the segment list that was skipped at startup.
+        representationController.prepareQualityChange(newRepresentation)
+            .then(() => {
+                _handleDifferentSwitchTypes(e);
+            });
     }
 
     function _prepareAdaptationSwitchQualityChange(e) {
