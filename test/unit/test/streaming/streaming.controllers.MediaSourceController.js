@@ -2,6 +2,9 @@ import MediaSourceController from '../../../../src/streaming/controllers/MediaSo
 import VideoModelMock from '../../mocks/VideoModelMock.js';
 
 import {expect} from 'chai';
+import EventBus from '../../../../src/core/EventBus.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
+import sinon from 'sinon';
 const context = {};
 
 describe('MediaSourceController', function () {
@@ -14,6 +17,106 @@ describe('MediaSourceController', function () {
 
     afterEach(function () {
         mediaSourceController = null;
+    });
+
+    describe('ManagedMediaSource streaming event forwarding', function () {
+        let localContext;
+        let localController;
+        let localEventBus;
+        let videoModel;
+        let realManagedMediaSource;
+        let createObjectURLStub;
+        let startCount;
+        let endCount;
+        let onStart;
+        let onEnd;
+
+        // A real EventTarget, so listener add/remove/dispatch behaves like the
+        // engine's and duplicate registration is observable.
+        class FakeManagedMediaSource extends EventTarget {
+            constructor() {
+                super();
+                this.readyState = 'closed';
+            }
+        }
+
+        beforeEach(function () {
+            localContext = {};
+            localController = MediaSourceController(localContext).getInstance();
+            localEventBus = EventBus(localContext).getInstance();
+            videoModel = new VideoModelMock();
+            videoModel.setDisableRemotePlayback = function () {};
+            realManagedMediaSource = window.ManagedMediaSource;
+            window.ManagedMediaSource = FakeManagedMediaSource;
+            createObjectURLStub = sinon.stub(window.URL, 'createObjectURL').returns('blob:fake-mms');
+            startCount = 0;
+            endCount = 0;
+            onStart = function () {
+                startCount++;
+            };
+            onEnd = function () {
+                endCount++;
+            };
+            localEventBus.on(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING, onStart, this);
+            localEventBus.on(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING, onEnd, this);
+        });
+
+        afterEach(function () {
+            localEventBus.off(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING, onStart, this);
+            localEventBus.off(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING, onEnd, this);
+            createObjectURLStub.restore();
+            if (realManagedMediaSource !== undefined) {
+                window.ManagedMediaSource = realManagedMediaSource;
+            } else {
+                delete window.ManagedMediaSource;
+            }
+        });
+
+        it('forwards streaming events from the current open source', function () {
+            const source = localController.createMediaSource();
+            localController.attachMediaSource(videoModel);
+            source.readyState = 'open';
+            source.dispatchEvent(new Event('startstreaming'));
+            source.dispatchEvent(new Event('endstreaming'));
+            expect(startCount).to.equal(1);
+            expect(endCount).to.equal(1);
+        });
+
+        it('does not forward streaming events while the source is not open', function () {
+            const source = localController.createMediaSource();
+            localController.attachMediaSource(videoModel);
+            source.readyState = 'closed';
+            source.dispatchEvent(new Event('startstreaming'));
+            source.dispatchEvent(new Event('endstreaming'));
+            expect(startCount).to.equal(0);
+            expect(endCount).to.equal(0);
+        });
+
+        it('does not forward streaming events from a replaced source', function () {
+            const firstSource = localController.createMediaSource();
+            localController.attachMediaSource(videoModel);
+            firstSource.readyState = 'open';
+            const secondSource = localController.createMediaSource();
+            localController.attachMediaSource(videoModel);
+            secondSource.readyState = 'open';
+            firstSource.dispatchEvent(new Event('startstreaming'));
+            firstSource.dispatchEvent(new Event('endstreaming'));
+            expect(startCount).to.equal(0);
+            expect(endCount).to.equal(0);
+            secondSource.dispatchEvent(new Event('startstreaming'));
+            expect(startCount).to.equal(1);
+        });
+
+        it('does not duplicate forwarding when the same source is re-attached', function () {
+            const source = localController.createMediaSource();
+            localController.attachMediaSource(videoModel);
+            localController.attachMediaSource(videoModel);
+            source.readyState = 'open';
+            source.dispatchEvent(new Event('startstreaming'));
+            source.dispatchEvent(new Event('endstreaming'));
+            expect(startCount).to.equal(1);
+            expect(endCount).to.equal(1);
+        });
     });
 
     describe('Method createMediaSource', function () {
