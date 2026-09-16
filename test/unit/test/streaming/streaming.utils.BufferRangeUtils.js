@@ -185,6 +185,14 @@ describe('BufferRangeUtils', function () {
             ]);
         });
 
+        it('should still prune ahead from the target time when it is outside the buffer, even with an invalid bufferToKeepAhead', function () {
+            const ranges = createTimeRanges([{ start: 0, end: 10 }, { start: 50, end: 100 }]);
+
+            expect(getPruningRanges(ranges, 20, { ...pruningOptions, bufferToKeepAhead: 'invalid' })).to.deep.equal([
+                { start: 20, end: 100.5 }
+            ]);
+        });
+
         it('should not prune behind when the retained duration equals bufferToKeepBehind', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
             const options = {
@@ -211,6 +219,12 @@ describe('BufferRangeUtils', function () {
 
             expect(getContinuousBufferTime(ranges, 3)).to.equal(5);
             expect(getContinuousBufferTime(ranges, 8)).to.equal(11);
+        });
+
+        it('should return NaN when the time sits exactly on a range end with no continuation', function () {
+            const ranges = createTimeRanges([{ start: 0, end: 60 }, { start: 70, end: 120 }]);
+
+            expect(getContinuousBufferTime(ranges, 60)).to.be.NaN;
         });
     });
 

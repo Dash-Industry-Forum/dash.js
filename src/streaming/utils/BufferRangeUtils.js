@@ -41,17 +41,25 @@ function isValidTargetTime(time) {
  * Returns NaN if targetTime is not buffered.
  */
 function getContinuousBufferTime(ranges, targetTime) {
-    if (!ranges) {
+    if (!ranges || ranges.length === 0) {
         return NaN;
     }
 
-    for (let i = 0; i < ranges.length; i++) {
-        if (targetTime >= ranges.start(i) && targetTime <= ranges.end(i)) {
-            return ranges.end(i);
+    let adjustedTime = targetTime;
+    let i = 0;
+
+    while (adjustedTime === targetTime && i < ranges.length) {
+        const start = ranges.start(i);
+        const end = ranges.end(i);
+
+        if (adjustedTime >= start && adjustedTime <= end) {
+            adjustedTime = end;
         }
+
+        i += 1;
     }
 
-    return NaN;
+    return adjustedTime === targetTime ? NaN : adjustedTime;
 }
 
 function getRangeBehindForPruning(ranges, targetTime, bufferToKeepBehind, currentTimeRequest) {
@@ -90,14 +98,21 @@ function getRangeAheadForPruning(ranges, targetTime, options) {
         avoidCurrentTimeRangePruning,
         logger
     } = options;
-    const keepAhead = Number(bufferToKeepAhead);
-
-    if (isNaN(keepAhead)) {
-        return null;
-    }
 
     const continuousBufferTime = getContinuousBufferTime(ranges, targetTime);
-    let rangeStart = !isNaN(continuousBufferTime) ? Math.min(continuousBufferTime, targetTime + keepAhead) : targetTime;
+    let rangeStart;
+
+    if (!isNaN(continuousBufferTime)) {
+        const keepAhead = Number(bufferToKeepAhead);
+
+        if (isNaN(keepAhead)) {
+            return null;
+        }
+
+        rangeStart = Math.min(continuousBufferTime, targetTime + keepAhead);
+    } else {
+        rangeStart = targetTime;
+    }
 
     if (rangeStart >= endOfLastRange) {
         return null;
