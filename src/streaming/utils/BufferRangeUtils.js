@@ -33,18 +33,38 @@ const BUFFER_END_THRESHOLD = 0.5;
 const DEFAULT_RANGE_TOLERANCE = 0.15;
 
 function isValidTargetTime(time) {
-    return Boolean(time || time === 0) && !isNaN(Number(time));
+    return (time || time === 0) && !isNaN(time);
+}
+
+/**
+ * Returns the end of the buffered range that contains targetTime, i.e. the time until which the buffer is continuous.
+ * Returns NaN if targetTime is not buffered.
+ */
+function getContinuousBufferTime(ranges, targetTime) {
+    if (!ranges) {
+        return NaN;
+    }
+
+    for (let i = 0; i < ranges.length; i++) {
+        if (targetTime >= ranges.start(i) && targetTime <= ranges.end(i)) {
+            return ranges.end(i);
+        }
+    }
+
+    return NaN;
 }
 
 function getRangeBehindForPruning(ranges, targetTime, bufferToKeepBehind, currentTimeRequest) {
-    if (!Number.isFinite(bufferToKeepBehind)) {
+    const keepBehind = Number(bufferToKeepBehind);
+
+    if (isNaN(keepBehind)) {
         return null;
     }
 
     const startOfBuffer = ranges.start(0);
 
-    if (targetTime - startOfBuffer > bufferToKeepBehind) {
-        let rangeEnd = Math.max(0, targetTime - bufferToKeepBehind);
+    if (targetTime - startOfBuffer > keepBehind) {
+        let rangeEnd = Math.max(0, targetTime - keepBehind);
 
         if (currentTimeRequest) {
             rangeEnd = Math.min(currentTimeRequest.startTime, rangeEnd);
@@ -63,19 +83,21 @@ function getRangeBehindForPruning(ranges, targetTime, bufferToKeepBehind, curren
 
 function getRangeAheadForPruning(ranges, targetTime, options) {
     const endOfLastRange = ranges.end(ranges.length - 1);
+    const endOfBuffer = endOfLastRange + BUFFER_END_THRESHOLD;
     const {
         bufferToKeepAhead,
-        continuousBufferTime,
         currentTimeRequest,
         avoidCurrentTimeRangePruning,
         logger
     } = options;
+    const keepAhead = Number(bufferToKeepAhead);
 
-    if (!Number.isFinite(bufferToKeepAhead)) {
+    if (isNaN(keepAhead)) {
         return null;
     }
 
-    let rangeStart = !isNaN(continuousBufferTime) ? Math.min(continuousBufferTime, targetTime + bufferToKeepAhead) : targetTime;
+    const continuousBufferTime = getContinuousBufferTime(ranges, targetTime);
+    let rangeStart = !isNaN(continuousBufferTime) ? Math.min(continuousBufferTime, targetTime + keepAhead) : targetTime;
 
     if (rangeStart >= endOfLastRange) {
         return null;
@@ -92,7 +114,6 @@ function getRangeAheadForPruning(ranges, targetTime, options) {
                 const oldRangeStart = rangeStart;
                 rangeStart = i + 1 < ranges.length ? ranges.start(i + 1) : ranges.end(i) + 1;
                 if (logger) {
-                    const endOfBuffer = endOfLastRange + BUFFER_END_THRESHOLD;
                     logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer + '] instead' + ((rangeStart < endOfBuffer) ? '' : ' (no actual pruning)'));
                 }
                 break;
@@ -103,7 +124,7 @@ function getRangeAheadForPruning(ranges, targetTime, options) {
     if (rangeStart < endOfLastRange) {
         return {
             start: rangeStart,
-            end: endOfLastRange + BUFFER_END_THRESHOLD
+            end: endOfBuffer
         };
     }
 
@@ -126,14 +147,13 @@ function getPruningRanges(ranges, seekTime, options) {
     }
 
     const pruningOptions = options || {};
-    const targetTime = Number(seekTime);
     const behindPruningRange = getRangeBehindForPruning(
         ranges,
-        targetTime,
+        seekTime,
         pruningOptions.bufferToKeepBehind,
         pruningOptions.currentTimeRequest
     );
-    const aheadPruningRange = getRangeAheadForPruning(ranges, targetTime, pruningOptions);
+    const aheadPruningRange = getRangeAheadForPruning(ranges, seekTime, pruningOptions);
 
     if (behindPruningRange) {
         clearRanges.push(behindPruningRange);
@@ -163,7 +183,7 @@ function hasBufferAtTime(ranges, time) {
 function getRangeAt(ranges, time, tolerance) {
     let firstStart = null;
     let lastEnd = null;
-    const actualTolerance = typeof tolerance === 'number' && !isNaN(tolerance) ? tolerance : DEFAULT_RANGE_TOLERANCE;
+    const actualTolerance = !isNaN(tolerance) ? tolerance : DEFAULT_RANGE_TOLERANCE;
 
     if (ranges !== null && ranges !== undefined) {
         for (let i = 0; i < ranges.length; i++) {
@@ -190,15 +210,9 @@ function getRangeAt(ranges, time, tolerance) {
     };
 }
 
-function getBufferLength(ranges, time, tolerance) {
-    const range = getRangeAt(ranges, time, tolerance);
-    return range === null ? 0 : range.end - time;
-}
-
 export {
-    getBufferLength,
+    getContinuousBufferTime,
     getPruningRanges,
     getRangeAt,
-    hasBufferAtTime,
-    isValidTargetTime
+    hasBufferAtTime
 };

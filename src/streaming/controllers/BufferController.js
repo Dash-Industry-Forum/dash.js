@@ -38,11 +38,10 @@ import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import {
-    getBufferLength,
+    getContinuousBufferTime,
     getPruningRanges,
     getRangeAt as findRangeAt,
-    hasBufferAtTime as containsTime,
-    isValidTargetTime
+    hasBufferAtTime as containsTime
 } from '../utils/BufferRangeUtils.js';
 import InitCache from '../utils/InitCache.js';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest.js';
@@ -638,24 +637,22 @@ function BufferController(config) {
     }
 
     function getAllRangesWithSafetyFactor(seekTime) {
-        const ranges = sourceBufferSink.getAllBufferRanges();
-
-        if (!ranges || ranges.length === 0 || !isValidTargetTime(seekTime)) {
-            return getPruningRanges(ranges, seekTime);
+        if (!sourceBufferSink) {
+            return [];
         }
 
+        const ranges = sourceBufferSink.getAllBufferRanges();
         const bufferSettings = settings.get().streaming.buffer;
         const isLongFormContent = streamInfo.manifestInfo.duration >= bufferSettings.longFormContentDurationThreshold;
-        const currentTimeRequest = fragmentModel ? fragmentModel.getRequests({
+        const currentTimeRequest = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: seekTime,
             threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
-        })[0] : null;
+        })[0];
 
         return getPruningRanges(ranges, seekTime, {
             bufferToKeepBehind: bufferSettings.bufferToKeep,
             bufferToKeepAhead: isLongFormContent ? bufferSettings.bufferTimeAtTopQualityLongForm : bufferSettings.bufferTimeAtTopQuality,
-            continuousBufferTime: getContinuousBufferTimeForTargetTime(seekTime),
             currentTimeRequest,
             avoidCurrentTimeRangePruning: bufferSettings.avoidCurrentTimeRangePruning,
             logger
@@ -701,8 +698,8 @@ function BufferController(config) {
             tolerance = settings.get().streaming.gaps.smallGapLimit;
         }
 
-        const ranges = sourceBufferSink ? sourceBufferSink.getAllBufferRanges() : null;
-        return getBufferLength(ranges, time, tolerance);
+        const range = getRangeAt(time, tolerance);
+        return range ? range.end - time : 0;
     }
 
     function _updateBufferLevel() {
@@ -1036,30 +1033,9 @@ function BufferController(config) {
      */
     function getContinuousBufferTimeForTargetTime(targetTime) {
         try {
-            let adjustedTime = targetTime;
-            const ranges = sourceBufferSink.getAllBufferRanges();
-
-            if (!ranges || ranges.length === 0) {
-                return NaN;
-            }
-
-            let i = 0;
-
-            while (adjustedTime === targetTime && i < ranges.length) {
-                const start = ranges.start(i);
-                const end = ranges.end(i);
-
-                if (adjustedTime >= start && adjustedTime <= end) {
-                    adjustedTime = end;
-                }
-
-                i += 1;
-            }
-
-            return adjustedTime === targetTime ? NaN : adjustedTime;
-
+            return getContinuousBufferTime(sourceBufferSink.getAllBufferRanges(), targetTime);
         } catch (e) {
-            return NaN
+            return NaN;
         }
     }
 
