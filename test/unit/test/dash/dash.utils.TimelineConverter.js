@@ -355,6 +355,17 @@ describe('TimelineConverter', function () {
                 expect(range.end).to.be.equal(100);
             });
 
+            it('with non-contiguous periods', function () {
+                streamTwoMock.setStreamInfo({
+                    start: 75,
+                    duration: 50
+                });
+                streams.push(streamOneMock, streamTwoMock);
+                const range = timelineConverter.calcTimeShiftBufferWindow(streams, false);
+                expect(range.start).to.be.equal(0);
+                expect(range.end).to.be.equal(125);
+            });
+
             it('with SegmentTimeline and one period and shouldCalculateFromTimeline set to true', function () {
                 settings.update({
                     streaming: {
@@ -1374,4 +1385,3 @@ describe('TimelineConverter', function () {
         });
     });
 });
-

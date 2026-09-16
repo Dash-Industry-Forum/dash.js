@@ -20,6 +20,7 @@
     },
     "edge_custom": {
       "base": "Edge",
+      "edgeDataDir": "C:\\Users\\local_root\\.dashjs-edge-test-profile",
       "flags": [
         "--disable-web-security",
         "--autoplay-policy=no-user-gesture-required",

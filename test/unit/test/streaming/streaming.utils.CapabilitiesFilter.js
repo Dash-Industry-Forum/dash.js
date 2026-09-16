@@ -5,6 +5,8 @@ import Settings from '../../../../src/core/Settings.js';
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
+import DashParser from '../../../../src/dash/parser/DashParser.js';
+import DebugMock from '../../mocks/DebugMock.js';
 
 import {expect} from 'chai';
 
@@ -935,6 +937,42 @@ describe('CapabilitiesFilter', function () {
             beforeEach(function () {
                 settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true } } });
                 settings.update({ streaming: { capabilities: { filterVideoColorimetryEssentialProperties: true } } });
+            });
+
+            [
+                ['01', '016', true],
+                ['+1', '16.0', true],
+                ['1junk', '16', false],
+                ['1', '16junk', false],
+                ['0x1', '16', false],
+                ['1', '0x10', false],
+                ['1.5', '16', false]
+            ].forEach(([primaries, transfer, supported]) => {
+                it(`should interpret CICP values ${primaries}/${transfer} after parsing`, async () => {
+                    const parser = DashParser(context).create({ debug: new DebugMock() });
+                    const manifest = parser.parse(`<MPD><Period><AdaptationSet mimeType="video/mp4">
+                        <Representation mimeType="video/mp4" codecs="hvc1.2.4.L90.B0">
+                            <EssentialProperty schemeIdUri="urn:mpeg:mpegB:cicp:ColourPrimaries" value="${primaries}"/>
+                            <EssentialProperty schemeIdUri="urn:mpeg:mpegB:cicp:TransferCharacteristics" value="${transfer}"/>
+                        </Representation>
+                    </AdaptationSet></Period></MPD>`);
+                    let testedConfig;
+                    prepareCapabilitiesMock({
+                        name: 'isCodecSupportedBasedOnTestedConfigurations', definition: (config) => {
+                            testedConfig = config;
+                            return config.isSupported;
+                        }
+                    });
+
+                    await capabilitiesFilter.filterUnsupportedFeatures(manifest);
+
+                    expect(testedConfig.isSupported).to.equal(supported);
+                    expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(supported ? 1 : 0);
+                    if (supported) {
+                        expect(testedConfig.colorGamut).to.equal('srgb');
+                        expect(testedConfig.transferFunction).to.equal('pq');
+                    }
+                });
             });
 
             it('should set sRGB in config from EssentialProperties', function (done) {

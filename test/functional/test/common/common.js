@@ -19,10 +19,48 @@ export async function checkIsNotProgressing(playerAdapter) {
 }
 
 export function checkNoCriticalErrors(playerAdapter) {
+    const sanitizeUrl = (url) => {
+        if (!url) {
+            return url;
+        }
+
+        try {
+            const parsedUrl = new URL(url);
+            return `${parsedUrl.origin}${parsedUrl.pathname}${parsedUrl.search ? '?[redacted]' : ''}`;
+        } catch (e) {
+            return url.split('?')[0];
+        }
+    };
     const logEvents = playerAdapter.getLogEvents();
-    expect(logEvents[dashjs.Debug.LOG_LEVEL_ERROR]).to.be.empty;
     const errorEvents = playerAdapter.getErrorEvents();
-    expect(errorEvents).to.be.empty;
+    const errorLogs = logEvents[dashjs.Debug.LOG_LEVEL_ERROR];
+    const diagnostics = JSON.stringify({
+        errorEvents: errorEvents.map((event) => {
+            const error = event.error || event;
+            const data = error.data || {};
+            const request = data.request || {};
+            const response = data.response || {};
+
+            return {
+                code: error.code,
+                message: error.message,
+                request: {
+                    mediaType: request.mediaType,
+                    range: request.range,
+                    type: request.type,
+                    url: sanitizeUrl(request.url)
+                },
+                response: {
+                    status: response.status,
+                    statusText: response.statusText,
+                    url: sanitizeUrl(response.url)
+                }
+            };
+        }),
+        errorLogs
+    }, null, 2);
+    expect(errorLogs, diagnostics).to.be.empty;
+    expect(errorEvents, diagnostics).to.be.empty;
 }
 
 export function checkEventHasBeenTriggered(playerAdapter, eventName) {
@@ -36,15 +74,10 @@ export async function checkForEndedEvent(playerAdapter) {
 }
 
 export async function seekAndEndedEvent(playerAdapter, seekOffset) {
-    let endedEventThrown = false;
-    const _endedCallback = () => {
-        endedEventThrown = true;
-    }
-    playerAdapter.registerEvent(MediaPlayerEvents.PLAYBACK_ENDED, _endedCallback);
     const targetTime = playerAdapter.getDuration() + seekOffset;
+    const endedPromise = playerAdapter.waitForEvent(Constants.TEST_INPUTS.SEEK_ENDED.EVENT_WAITING_TIME, MediaPlayerEvents.PLAYBACK_ENDED);
     playerAdapter.seek(targetTime);
-    await playerAdapter.sleep(Constants.TEST_INPUTS.SEEK_ENDED.EVENT_WAITING_TIME);
-    playerAdapter.unregisterEvent(MediaPlayerEvents.PLAYBACK_ENDED, _endedCallback);
+    const endedEventThrown = await endedPromise;
     expect(endedEventThrown).to.be.true;
 }
 
@@ -70,22 +103,23 @@ export function checkTimeWithinThreshold(playerAdapter, seekTime, allowedDiffere
 }
 
 export function initializeDashJsAdapter(item, mpd, settings = null) {
-    const playerAdapter = _commmonInitialization(item, settings);
+    const playerAdapter = _commonInitialization(item, settings);
     playerAdapter.attachSource(mpd);
 
     return playerAdapter
 }
 
 export function initializeDashJsAdapterWithoutAttachSource(item, settings = null) {
-    const playerAdapter = _commmonInitialization(item, settings);
-
-    return playerAdapter
+    return _commonInitialization(item, settings)
 }
 
-function _commmonInitialization(item, settings) {
+function _commonInitialization(item, settings) {
     let playerAdapter = new DashJsAdapter();
     playerAdapter.init(true);
     playerAdapter.setDrmData(item.drm);
+    if (item.settings) {
+        playerAdapter.updateSettings(item.settings);
+    }
     if (settings) {
         playerAdapter.updateSettings(settings);
     }
@@ -98,6 +132,9 @@ export function initializeDashJsAdapterForPreload(item, mpd, settings) {
     let playerAdapter = new DashJsAdapter();
     playerAdapter.initForPreload(mpd);
     playerAdapter.setDrmData(item.drm);
+    if (item.settings) {
+        playerAdapter.updateSettings(item.settings);
+    }
     if (settings) {
         playerAdapter.updateSettings(settings);
     }

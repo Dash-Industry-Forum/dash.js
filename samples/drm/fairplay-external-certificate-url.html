@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fairplay DRM with external certificate URL</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+</head>
+<body>
+
+<script class="code">
+    async function init(video, wrapper) {
+        var player,
+            url = 'https://livesim2.dashif.org/livesim2/drm_EZDRM-1-key-cbcs/testpic_2s/Manifest.mpd';
+
+        player = dashjs.MediaPlayer().create();
+        player.setProtectionData({
+            'com.apple.fps': {
+                serverURL: 'https://fps.ezdrm.com/api/licenses/auth?px=A552CE&assetID=01234567-89AB-CDEF-0123-456789ABCDEF',
+                certUrls: ['https://na-fps.ezdrm.com/demo/video/eleisure.cer']
+            }
+        });
+        player.initialize(video, url, true);
+        await createControlBar(player, video, wrapper);
+    }
+</script>
+
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    initSamplePage({
+        title: 'Fairplay DRM with external certificate URL',
+        description: 'This example shows how to play streams with Fairplay DRM protection when the certificate server URL is provided via the API instead of the MPD. Fairplay requires the server certificate to be set before license requests can be issued. Here the certificate server URL is passed via <code>setProtectionData()</code> using the <code>certUrls</code> property instead of relying on a <code>dashif:Certurl</code> element in the MPD. URLs provided via the API take priority over URLs signaled in the manifest. Fairplay DRM is typically only available on Apple platforms. For a detailed explanation on DRM playback in dash.js checkout the <a href="https://dashif.org/dash.js/pages/usage/drm.html" target="_blank">documentation</a>.',
+        category: 'DRM',
+        httpWarning: true,
+        codeExpanded: true,
+        onInit: (video, container, wrapper) => init(video, wrapper)
+    });
+</script>
+</body>
+</html>

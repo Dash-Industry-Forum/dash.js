@@ -475,6 +475,15 @@
                     ]
                 },
                 {
+                    "url": "https://livesim2.dashif.org/livesim2/startrel_-20/stoprel_6/testpic_2s/Manifest.mpd",
+                    "name": "Dynamic to static transition with LiveSim2 using an MPD Location element",
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "dashif"
+                    ]
+                },
+                {
                     "url": "https://demo.unified-streaming.com/k8s/live/scte35.isml/.mpd",
                     "name": "Unified Streaming reference stream with scte35 markers",
                     "moreInfo": "http://demo.unified-streaming.com/features.html",
@@ -594,7 +603,7 @@
                         "dashif"
                     ]
                 },
-              {
+                {
                     "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
                     "name": "Akamai Low Latency Stream (Single Rate)",
                     "provider": "akamai",
@@ -730,7 +739,7 @@
                     ]
                 },
                 {
-                    "name": "Embedded CEA-608 Closed Captions",
+                    "name": "Embedded CEA-608 Closed Captions (VoD)",
                     "url": "https://livesim2.dashif.org/vod/testpic_2s/cea608.mpd",
                     "provider": "dashif",
                     "tags": [
@@ -740,7 +749,7 @@
                     ]
                 },
                 {
-                    "name": "Embedded CEA-608 Closed Captions (livesim)",
+                    "name": "Embedded CEA-608 Closed Captions (Live with LiveSim2)",
                     "url": "https://livesim2.dashif.org/livesim2/testpic_2s/cea608.mpd",
                     "provider": "dashif",
                     "tags": [
@@ -750,7 +759,17 @@
                     ]
                 },
                 {
-                    "name": "Embedded CEA-608 Closed Captions and TTML segments VoD",
+                    "name": "Embedded CEA-608 CC1 wall-clock paint-on captions (Live with LiveSim2)",
+                    "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/timecc608_CC1-eng/testpic_2s/Manifest.mpd",
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "cea-608",
+                        "dashif"
+                    ]
+                },
+                {
+                    "name": "Embedded CEA-608 Closed Captions and TTML segments (VoD)",
                     "url": "https://livesim2.dashif.org/vod/testpic_2s/cea608_and_segs.mpd",
                     "provider": "dashif",
                     "tags": [
@@ -761,7 +780,7 @@
                     ]
                 },
                 {
-                    "name": "Embedded CEA-608 Closed Captions and TTML segments Live (livesim)",
+                    "name": "Embedded CEA-608 Closed Captions and TTML segments Live (Live with LiveSim2)",
                     "url": "https://livesim2.dashif.org/livesim2/testpic_2s/cea608_and_segs.mpd",
                     "provider": "dashif",
                     "tags": [

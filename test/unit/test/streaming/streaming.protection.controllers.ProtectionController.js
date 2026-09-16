@@ -109,6 +109,24 @@ describe('ProtectionController', function () {
             protectionController.setServerCertificate();
         });
 
+        it('should normalize and dedupe string-form certUrls when setProtectionData is called', function () {
+            protectionController.setProtectionData({
+                'com.apple.fps': {
+                    certUrls: [
+                        'https://example.com/cert.cer',
+                        'https://example.com/cert.cer',
+                        { url: 'https://example.com/other.cer', certType: 'primary' }
+                    ]
+                }
+            });
+
+            const protData = protectionController.getProtectionData();
+            expect(protData['com.apple.fps'].certUrls).to.deep.equal([
+                { url: 'https://example.com/cert.cer', certType: null },
+                { url: 'https://example.com/other.cer', certType: 'primary' }
+            ]);
+        });
+
         it('onKeyMessage behavior', function (done) {
             let onDRMError = function (data) {
                 eventBus.off(ProtectionEvents.LICENSE_REQUEST_COMPLETE, onDRMError);

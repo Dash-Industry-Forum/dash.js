@@ -225,6 +225,10 @@
     vertical-align: middle;
 }
 
+.cb-static-indicator {
+    color: #8a8aa0;
+}
+
 /* ---- Thumbnail preview ---- */
 .cb-thumbnail-container {
     position: absolute;

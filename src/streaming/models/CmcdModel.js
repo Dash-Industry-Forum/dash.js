@@ -67,6 +67,7 @@ function CmcdModel() {
         _bufferLevelStarved,
         _initialMediaRequestsDone,
         _playbackStartedTime,
+        _msd,
         _isSeeking,
         streamProcessors,
         _rebufferingStartTime = {},
@@ -531,12 +532,17 @@ function CmcdModel() {
     }
 
     function onPlaybackStarted() {
-        if (!_playbackStartedTime) {
+        if (_playbackStartedTime === undefined) {
             _playbackStartedTime = Date.now();
         }
     }
 
     function onPlaybackPlaying() {
+        // MSD is the wall-clock time between the player being instructed to play (play event,
+        // or start of manifest loading for autoplay) and the first transition to the playing state.
+        if (_msd === undefined && _playbackStartedTime !== undefined) {
+            _msd = Date.now() - _playbackStartedTime;
+        }
         for (const mediaType in _rebufferingStartTime) {
             if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
                 onRebufferingCompleted(mediaType);
@@ -558,10 +564,7 @@ function CmcdModel() {
     }
 
     function _calculateMsd() {
-        if (!_playbackStartedTime) {
-            return null;
-        }
-        return Date.now() - _playbackStartedTime;
+        return _msd !== undefined ? _msd : null;
     }
 
     function getGenericCmcdData(mediaType) {
@@ -619,6 +622,7 @@ function CmcdModel() {
         _isSeeking = false;
         _lastMediaTypeRequest = undefined;
         _playbackStartedTime = undefined;
+        _msd = undefined;
         _rebufferingStartTime = {};
         _rebufferingDuration = {};
         _streamType = undefined;

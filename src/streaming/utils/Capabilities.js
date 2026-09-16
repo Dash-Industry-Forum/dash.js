@@ -130,7 +130,7 @@ function Capabilities() {
      * Check if a codec is supported by the MediaSource. We use the MediaCapabilities API or the MSE to check.
      * @param {object} basicConfiguration
      * @param {string} type
-     * @return {Promise<>}
+     * @return {Promise}
      */
     function runCodecSupportCheck(basicConfiguration, type) {
 

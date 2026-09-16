@@ -1144,6 +1144,17 @@ describe('MediaPlayer', function () {
                 expect(initialSettings.audioChannelConfiguration.value).to.equal('val4');
             });
 
+            it('should pass codec through for initial media settings', function () {
+                player.setInitialMediaSettingsFor('audio', {
+                    lang: 'de',
+                    codec: 'audio/mp4;codecs="ec-3"'
+                });
+                let initialSettings = player.getInitialMediaSettingsFor('audio');
+                expect(initialSettings).to.be.instanceOf(Object);
+                expect(initialSettings).to.have.property('codec');
+                expect(initialSettings.codec).to.equal('audio/mp4;codecs="ec-3"');
+            });
+
             it('should set current track', function () {
                 let currentTrack = mediaControllerMock.isCurrentTrack('audio');
                 expect(currentTrack).to.be.false;

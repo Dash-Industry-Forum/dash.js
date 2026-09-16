@@ -29,9 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @classdesc matches and converts xs:datetime to Date
+ * @classdesc matches and converts known timestamp attributes to Date
  */
 import BaseMatcher from './BaseMatcher.js';
+import DashConstants from '../../constants/DashConstants.js';
 
 const SECONDS_IN_MIN = 60;
 const MINUTES_IN_HOUR = 60;
@@ -39,10 +40,19 @@ const MILLISECONDS_IN_SECONDS = 1000;
 
 const datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})(?::?)([0-9]{2}))?/;
 
+// Only known timestamp attributes are converted; other strings may also start with a date.
+const dateTimeAttributes = {
+    [DashConstants.MPD]: [DashConstants.AVAILABILITY_START_TIME, DashConstants.AVAILABILITY_END_TIME, DashConstants.PUBLISH_TIME],
+    Patch: [DashConstants.PUBLISH_TIME, DashConstants.ORIGINAL_PUBLISH_TIME],
+    LeapSecondInformation: ['nextLeapChangeTime'],
+    [DashConstants.PRODUCER_REFERENCE_TIME]: [DashConstants.WALL_CLOCK_TIME]
+};
+
 class DateTimeMatcher extends BaseMatcher {
     constructor() {
         super(
-            (tagName, attrName, value) => datetimeRegex.test(value),
+            (tagName, attrName, value) => dateTimeAttributes.hasOwnProperty(tagName) &&
+                dateTimeAttributes[tagName].includes(attrName) && datetimeRegex.test(value),
             str => {
                 const match = datetimeRegex.exec(str);
                 let utcDate;
