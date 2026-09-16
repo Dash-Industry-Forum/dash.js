@@ -69,6 +69,7 @@ function TextSourceBuffer(config) {
         fragmentModel,
         initializationSegmentReceived,
         timescale,
+        sampleEntryType,
         fragmentedTracks,
         currFragmentedTrackIdx,
         embeddedTracks,
@@ -92,6 +93,7 @@ function TextSourceBuffer(config) {
     function _resetFragmented() {
         fragmentModel = null;
         timescale = NaN;
+        sampleEntryType = null;
         fragmentedTracks = [];
         initializationSegmentReceived = false;
     }
@@ -246,8 +248,77 @@ function TextSourceBuffer(config) {
         currFragmentedTrackIdx = idx;
     }
 
+    /**
+     * Returns the value of the codecs parameter of a content type such as
+     * `application/mp4;codecs="stpp.ttml.im1t"`, or an empty string when there is none.
+     * @param {string} contentType
+     * @returns {string}
+     * @private
+     */
+    function _getCodecsParameter(contentType) {
+        const match = /codecs\s*=\s*(?:"([^"]*)"|'([^']*)'|([^;,]*))/i.exec(contentType);
+        const value = match ? (match[1] || match[2] || match[3] || '').trim() : '';
+
+        // A manifest without @codecs yields the literal string "undefined" here.
+        return value === 'undefined' ? '' : value;
+    }
+
+    /**
+     * Resolves which timed text format a track is in.
+     *
+     * The codecs parameter of a fragmented text track names the ISOBMFF sample entry,
+     * optionally followed by RFC 6381 sub-parameters: `stpp`, `stpp.ttml.im1t`, `wvtt`.
+     * Only the first element says what the samples are, so it is matched in full rather
+     * than searched for as a substring. A sample entry we do not know is not something to
+     * guess at - the samples could be anything - so this returns null and the caller
+     * declines to parse them.
+     *
+     * sampleEntryType, read from the stsd of the initialization segment, wins when it is
+     * known: it is what the samples are, while the manifest only says what they should be.
+     *
+     * @param {string} codec content type with a codecs parameter, a codec, or a MIME type
+     * @param {string} [mimeType] used for side-loaded files, which name no sample entry
+     * @param {string} [sampleEntry] four-character code from the stsd, when one was read
+     * @returns {string|null} Constants.TTML, Constants.WVTT, or null when unknown
+     * @private
+     */
+    function _getTextFormat(codec, mimeType, sampleEntry) {
+        const fromSampleEntry = _getFormatForSampleEntry(sampleEntry);
+        if (fromSampleEntry) {
+            return fromSampleEntry;
+        }
+
+        const codecsParameter = codec ? _getCodecsParameter(codec) : '';
+        if (codecsParameter) {
+            // A named sample entry is authoritative, including when we do not know it.
+            return _getFormatForSampleEntry(codecsParameter.split('.')[0]);
+        }
+
+        // Side-loaded and unfragmented text names no sample entry, only a MIME type.
+        const type = (mimeType || codec || '').toLowerCase();
+        if (type.indexOf(Constants.TTML) !== -1) {
+            return Constants.TTML;
+        }
+        if (type.indexOf(Constants.VTT) !== -1) {
+            return Constants.WVTT;
+        }
+
+        return null;
+    }
+
+    function _getFormatForSampleEntry(sampleEntry) {
+        switch (sampleEntry ? sampleEntry.trim().toLowerCase() : '') {
+            case Constants.STPP:
+                return Constants.TTML;
+            case Constants.WVTT:
+                return Constants.WVTT;
+            default:
+                return null;
+        }
+    }
+
     function _checkTtml(mediaInfo) {
-        return (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) || (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0);
+        return _getTextFormat(mediaInfo.codec, mediaInfo.mimeType) === Constants.TTML;
     }
 
     function _getKind(mediaInfo, trackKindMap) {
@@ -285,6 +356,7 @@ function TextSourceBuffer(config) {
         if (chunk.segmentType === 'InitializationSegment') {
             initializationSegmentReceived = true;
             timescale = boxParser.getMediaTimescaleFromMoov(bytes);
+            sampleEntryType = boxParser.getSampleEntryTypeFromMoov(bytes);
         } else {
             if (!initializationSegmentReceived) {
                 return;
@@ -292,10 +364,13 @@ function TextSourceBuffer(config) {
             samplesInfo = boxParser.getSamplesInfo(bytes);
             sampleList = samplesInfo.sampleList;
 
-            if (codecType.search(Constants.STPP) >= 0) {
+            const format = _getTextFormat(codecType, chunk.representation.mediaInfo.mimeType, sampleEntryType);
+            if (format === Constants.TTML) {
                 _appendFragmentedSttp(bytes, sampleList, codecType);
-            } else {
+            } else if (format === Constants.WVTT) {
                 _appendFragmentedWebVtt(bytes, sampleList);
+            } else {
+                logger.error(`No parser for timed text sample entry "${sampleEntryType || _getCodecsParameter(codecType)}", not parsing the segment`);
             }
         }
     }
@@ -599,9 +674,10 @@ function TextSourceBuffer(config) {
 
     function _getParser(codecType) {
         let parser;
-        if (codecType.search(Constants.VTT) >= 0) {
+        const format = _getTextFormat(codecType, codecType, sampleEntryType);
+        if (format === Constants.WVTT) {
             parser = settings.get().streaming.text.webvtt.customRenderingEnabled && vttCustomRenderingParser ? vttCustomRenderingParser : vttParser;
-        } else if (codecType.search(Constants.TTML) >= 0 || codecType.search(Constants.STPP) >= 0) {
+        } else if (format === Constants.TTML) {
             parser = ttmlParser;
         }
         return parser;

@@ -79,6 +79,17 @@ class IsoBox {
             case 'mfhd':
                 this.sequence_number = boxData.sequence_number;
                 break;
+            case 'stsd':
+                // The sample entries say what the samples of the track are. They are
+                // boxes themselves, so they are wrapped like any other child box.
+                this.entry_count = boxData.entry_count;
+                this.entries = [];
+                if (boxData.entries) {
+                    for (let i = 0; i < boxData.entries.length; i++) {
+                        this.entries.push(new IsoBox(boxData.entries[i]));
+                    }
+                }
+                break;
             case 'subs':
                 this.entry_count = boxData.entry_count;
                 this.entries = boxData.entries;
