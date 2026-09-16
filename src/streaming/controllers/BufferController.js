@@ -642,6 +642,11 @@ function BufferController(config) {
         }
 
         const ranges = sourceBufferSink.getAllBufferRanges();
+
+        if (!ranges || ranges.length === 0) {
+            return [];
+        }
+
         const bufferSettings = settings.get().streaming.buffer;
         const isLongFormContent = streamInfo.manifestInfo.duration >= bufferSettings.longFormContentDurationThreshold;
         const currentTimeRequest = fragmentModel.getRequests({
