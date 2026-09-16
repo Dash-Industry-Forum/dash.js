@@ -484,7 +484,7 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true;
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
+            expect(currentTrack).to.be.null;
 
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
