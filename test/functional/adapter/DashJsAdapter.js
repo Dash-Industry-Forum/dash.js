@@ -546,6 +546,33 @@ class DashJsAdapter {
         })
     }
 
+    async isKeepingForwardBufferTarget(timeoutValue, target, tolerance) {
+        return new Promise((resolve) => {
+            let timeout = null;
+            let hasVideoBufferUpdate = false;
+
+            const _onComplete = (res) => {
+                clearTimeout(timeout);
+                timeout = null;
+                this.player.off(MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated);
+                resolve(res);
+            }
+            const _onTimeout = () => {
+                _onComplete(hasVideoBufferUpdate);
+            }
+            const _onBufferLevelUpdated = (e) => {
+                if (e.mediaType === Constants.DASH_JS.MEDIA_TYPES.VIDEO) {
+                    hasVideoBufferUpdate = true;
+                    if (e.bufferLevel > target + tolerance) {
+                        _onComplete(false);
+                    }
+                }
+            }
+            timeout = setTimeout(_onTimeout, timeoutValue);
+            this.player.on(MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated);
+        })
+    }
+
     getBufferStartForCurrentTime(currentTime) {
         const ranges = this.videoElement.buffered;
         for (let i = 0; i < ranges.length; i++) {
