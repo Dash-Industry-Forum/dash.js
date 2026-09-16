@@ -89,8 +89,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 segmentBase,
                 segmentURL,
                 currentSElement,
-                sElementCounterIncludingRepeats,
-                sElementCounter
+                sElementCounterIncludingRepeats
             } = data
             const targetDurationInTimescale = currentSElement.d;
             const fTimescale = representation.timescale;
@@ -101,7 +100,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 _onSegmentFound({
                     segmentBase,
                     segmentURL,
-                    sElementCounter,
                     currentSElement,
                     mediaTime: mediaStartTime,
                     durationInTimescale: targetDurationInTimescale,
@@ -119,7 +117,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
             const {
                 segmentBase,
                 segmentURL,
-                sElementCounter,
                 currentSElement,
                 mediaTime,
                 durationInTimescale,
@@ -127,8 +124,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 requiredMediaTimeInTimescaleUnits,
                 sElementCounterIncludingRepeats
             } = data
-            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, sElementCounter);
-            let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
+            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, sElementCounterIncludingRepeats);
+            let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounterIncludingRepeats);
             const totalNumberOfPartialSegments = getTotalNumberOfPartialSegments(currentSElement);
             const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequestByTime({
                 durationInTimescale,
