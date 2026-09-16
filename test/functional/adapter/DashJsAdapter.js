@@ -549,6 +549,7 @@ class DashJsAdapter {
     async isKeepingForwardBufferTarget(timeoutValue, target, tolerance) {
         return new Promise((resolve) => {
             let timeout = null;
+            let hasVideoBufferUpdate = false;
 
             const _onComplete = (res) => {
                 clearTimeout(timeout);
@@ -557,11 +558,14 @@ class DashJsAdapter {
                 resolve(res);
             }
             const _onTimeout = () => {
-                _onComplete(true);
+                _onComplete(hasVideoBufferUpdate);
             }
             const _onBufferLevelUpdated = (e) => {
-                if (e.mediaType === Constants.DASH_JS.MEDIA_TYPES.VIDEO && e.bufferLevel > target + tolerance) {
-                    _onComplete(false);
+                if (e.mediaType === Constants.DASH_JS.MEDIA_TYPES.VIDEO) {
+                    hasVideoBufferUpdate = true;
+                    if (e.bufferLevel > target + tolerance) {
+                        _onComplete(false);
+                    }
                 }
             }
             timeout = setTimeout(_onTimeout, timeoutValue);
