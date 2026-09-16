@@ -99,6 +99,13 @@ export default {
     STPP: 'stpp',
 
     /**
+     *  @constant {string} STPC experimental paint-model TTML subtitles format
+     *  @memberof Constants#
+     *  @static
+     */
+    STPC: 'stpc',
+
+    /**
      *  @constant {string} TTML STTP Subtitles format
      *  @memberof Constants#
      *  @static
@@ -118,6 +125,13 @@ export default {
      *  @static
      */
     WVTT: 'wvtt',
+
+    /**
+     *  @constant {string} WVTC experimental paint-model WebVTT subtitles format
+     *  @memberof Constants#
+     *  @static
+     */
+    WVTC: 'wvtc',
 
     /**
      *  @constant {string} Content Steering

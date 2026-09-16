@@ -70,6 +70,24 @@ function createMediaSegment(sampleBytes) {
     return new Uint8Array([...moof, ...box('mdat', sampleBytes)]).buffer;
 }
 
+/** A media segment whose samples carry the given byte arrays, back to back. */
+function createMultiSampleSegment(samples) {
+    const data = [].concat(...samples);
+
+    function createMoof(dataOffset) {
+        const tfhd = fullBox('tfhd', 0, 0, u32(1));
+        const tfdt = fullBox('tfdt', 1, 0, u32(0), u32(BASE_MEDIA_DECODE_TIME));
+        const entries = [].concat(...samples.map((sample) => [...u32(SAMPLE_DURATION), ...u32(sample.length)]));
+        // trun flags: data-offset, sample-duration and sample-size present
+        const trun = fullBox('trun', 0, 0x000301, u32(samples.length), u32(dataOffset), entries);
+        return box('moof', fullBox('mfhd', 0, 0, u32(1)), box('traf', tfhd, tfdt, trun));
+    }
+
+    const moofSize = createMoof(0).length;
+    const moof = createMoof(moofSize + 8);
+    return new Uint8Array([...moof, ...box('mdat', data)]).buffer;
+}
+
 function vttcBox(cueText) {
     return box('vttc', box('payl', stringToBytes(cueText)));
 }
@@ -206,6 +224,108 @@ describe('TextSourceBuffer', function () {
             }, null, stringToBytes('<tt xmlns="http://www.w3.org/ns/ttml"></tt>'));
 
             expect(parsed).to.have.lengthOf(1);
+        });
+    });
+
+    describe('paint-model subtitles (experimental stpc and wvtc)', function () {
+
+        const TTML_DOC = '<?xml version="1.0" encoding="UTF-8"?>' +
+            '<tt xmlns="http://www.w3.org/ns/ttml" xml:lang="en">' +
+            '<head><styling/></head>' +
+            '<body><div><p begin="00:00:00.000">first</p></div></body></tt>';
+
+        function createBuffer(ttmlParserStub) {
+            const addCaptionsCalls = [];
+            const textTracksMock = {
+                addCaptions: (idx, timeOffset, captionArray) => {
+                    addCaptionsCalls.push({ idx, timeOffset, captionArray });
+                }
+            };
+            const buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                textTracks: textTracksMock,
+                ttmlParser: ttmlParserStub || ttmlParser,
+                manifestModel: { getValue: () => ({}) }
+            });
+            buffer.buffered = CustomTimeRanges(context).create();
+            return { buffer, addCaptionsCalls };
+        }
+
+        it('re-states the active cues for a ttmn no-change sample without parsing again', function () {
+            const parsed = [];
+            const ttmlParserStub = {
+                parse: (content, offsetTime, start, end) => {
+                    parsed.push(content);
+                    return [{ start, end, type: 'html', cueID: 'c0', isd: {} }];
+                }
+            };
+            const { buffer, addCaptionsCalls } = createBuffer(ttmlParserStub);
+            const mediaInfo = { type: 'text', mimeType: 'application/mp4', codec: 'application/mp4;codecs="stpc"' };
+
+            buffer.append(createInitSegment('stpc'), { segmentType: 'InitializationSegment', representation: { mediaInfo } });
+            buffer.append(createMultiSampleSegment([stringToBytes(TTML_DOC), box('ttmn')]),
+                { segmentType: 'MediaSegment', representation: { mediaInfo } });
+
+            // The document is parsed once; the no-change sample re-states its cues.
+            expect(parsed).to.have.lengthOf(1);
+            expect(addCaptionsCalls).to.have.lengthOf(2);
+
+            const first = addCaptionsCalls[0].captionArray[0];
+            const restated = addCaptionsCalls[1].captionArray[0];
+            expect(restated.cueID).to.equal(first.cueID);
+            expect(restated.start).to.equal(first.end);
+            expect(restated.end).to.equal(first.end + SAMPLE_DURATION / TIMESCALE);
+        });
+
+        it('splices the head of the segment into a ttmb body-only sample', function () {
+            const parsed = [];
+            const ttmlParserStub = {
+                parse: (content, offsetTime, start, end) => {
+                    parsed.push(content);
+                    return [{ start, end, type: 'html', cueID: 'c', isd: {} }];
+                }
+            };
+            const { buffer } = createBuffer(ttmlParserStub);
+            const mediaInfo = { type: 'text', mimeType: 'application/mp4', codec: 'application/mp4;codecs="stpc"' };
+            const body = '<body><div><p begin="00:00:02.000">second</p></div></body>';
+
+            buffer.append(createInitSegment('stpc'), { segmentType: 'InitializationSegment', representation: { mediaInfo } });
+            buffer.append(createMultiSampleSegment([stringToBytes(TTML_DOC), box('ttmb', stringToBytes(body))]),
+                { segmentType: 'MediaSegment', representation: { mediaInfo } });
+
+            expect(parsed).to.have.lengthOf(2);
+            // The spliced document keeps the head of the first sample and takes the new body.
+            expect(parsed[1]).to.contain('<head><styling/></head>');
+            expect(parsed[1]).to.contain('second');
+            expect(parsed[1]).to.not.contain('first');
+        });
+
+        it('re-states the active cues for a vttn no-change sample', function () {
+            const { buffer, addCaptionsCalls } = createBuffer();
+            const mediaInfo = { type: 'text', mimeType: 'application/mp4', codec: 'application/mp4;codecs="wvtc"' };
+
+            buffer.append(createInitSegment('wvtc'), { segmentType: 'InitializationSegment', representation: { mediaInfo } });
+            buffer.append(createMultiSampleSegment([vttcBox('Hello'), box('vttn')]),
+                { segmentType: 'MediaSegment', representation: { mediaInfo } });
+
+            expect(addCaptionsCalls).to.have.lengthOf(1);
+            const cues = addCaptionsCalls[0].captionArray;
+            expect(cues).to.have.lengthOf(2);
+            expect(cues[1].data).to.equal(cues[0].data);
+            expect(cues[1].start).to.equal(cues[0].end);
+            expect(cues[1].end).to.equal(cues[0].end + SAMPLE_DURATION / TIMESCALE);
+        });
+
+        it('ignores a no-change box on a plain wvtt track', function () {
+            const { buffer, addCaptionsCalls } = createBuffer();
+            const mediaInfo = { type: 'text', mimeType: 'application/mp4', codec: 'application/mp4;codecs="wvtt"' };
+
+            buffer.append(createInitSegment('wvtt'), { segmentType: 'InitializationSegment', representation: { mediaInfo } });
+            buffer.append(createMultiSampleSegment([vttcBox('Hello'), box('vttn')]),
+                { segmentType: 'MediaSegment', representation: { mediaInfo } });
+
+            // wvtt has no no-change sample, so the box is just an unknown box and is skipped.
+            expect(addCaptionsCalls[0].captionArray).to.have.lengthOf(1);
         });
     });
 });

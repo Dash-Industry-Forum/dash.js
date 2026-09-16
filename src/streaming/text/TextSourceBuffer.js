@@ -44,6 +44,10 @@ import Errors from '../../core/errors/Errors.js';
 import { Cta608Parser, extractCta608DataFromSample } from '@svta/cml-608';
 import DashConstants from '../../dash/constants/DashConstants.js';
 
+// Boxes that are a whole sample under the experimental paint-model sample entries:
+// no change for TTML and for WebVTT, and a body-only TTML document.
+const PAINT_MODEL_SAMPLE_BOXES = ['ttmn', 'vttn', 'ttmb'];
+
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;
     const manifestModel = config.manifestModel;
@@ -70,6 +74,9 @@ function TextSourceBuffer(config) {
         initializationSegmentReceived,
         timescale,
         sampleEntryType,
+        lastTtmlCues,
+        segmentHeadDocument,
+        lastVttEntries,
         fragmentedTracks,
         currFragmentedTrackIdx,
         embeddedTracks,
@@ -94,6 +101,9 @@ function TextSourceBuffer(config) {
         fragmentModel = null;
         timescale = NaN;
         sampleEntryType = null;
+        lastTtmlCues = null;
+        segmentHeadDocument = null;
+        lastVttEntries = null;
         fragmentedTracks = [];
         initializationSegmentReceived = false;
     }
@@ -309,12 +319,94 @@ function TextSourceBuffer(config) {
     function _getFormatForSampleEntry(sampleEntry) {
         switch (sampleEntry ? sampleEntry.trim().toLowerCase() : '') {
             case Constants.STPP:
+            case Constants.STPC:
                 return Constants.TTML;
             case Constants.WVTT:
+            case Constants.WVTC:
                 return Constants.WVTT;
             default:
                 return null;
         }
+    }
+
+    /**
+     * Whether a sample entry is one of the experimental paint-model ones, under which a
+     * sample may be a no-change box saying that what is on screen continues unchanged,
+     * or, for stpc, a body-only box whose head comes from the first sample of the segment.
+     *
+     * The 4CCs stpc, wvtc, ttmn, ttmb and vttn are placeholders that are not registered
+     * with MP4RA. See https://github.com/Eyevinn/paint-model-subtitles.
+     * @param {string} sampleEntry
+     * @returns {boolean}
+     * @private
+     */
+    function _isPaintModelSampleEntry(sampleEntry) {
+        const type = sampleEntry ? sampleEntry.trim().toLowerCase() : '';
+
+        return type === Constants.STPC || type === Constants.WVTC;
+    }
+
+    /**
+     * Returns the type of the box that is the whole sample, or null when the sample is
+     * not one. The test is exact, as the design requires: a box header of one of the
+     * known types whose size is the sample size. A TTML document cannot match, since it
+     * cannot start with the zero byte that opens a box size.
+     * @param {ArrayBuffer} bytes the segment
+     * @param {object} sample from BoxParser.getSamplesInfo
+     * @returns {string|null}
+     * @private
+     */
+    function _getWholeSampleBoxType(bytes, sample) {
+        if (!_isPaintModelSampleEntry(sampleEntryType) || sample.size < 8) {
+            return null;
+        }
+        const view = new DataView(bytes, sample.offset, 8);
+        if (view.getUint32(0) !== sample.size) {
+            return null;
+        }
+        let type = '';
+        for (let i = 4; i < 8; i++) {
+            type += String.fromCharCode(view.getUint8(i));
+        }
+
+        return PAINT_MODEL_SAMPLE_BOXES.indexOf(type) !== -1 ? type : null;
+    }
+
+    /**
+     * Re-states cues that were already parsed over a new interval. This is what a
+     * no-change sample means: the same content continues, so the result is what a
+     * restatement of the same document would have produced - without parsing it again,
+     * which is the point of sending eight bytes instead of a document.
+     * @param {Array} cues
+     * @param {number} start
+     * @param {number} end
+     * @returns {Array}
+     * @private
+     */
+    function _restateCues(cues, start, end) {
+        return cues.map((cue) => Object.assign({}, cue, { start, end }));
+    }
+
+    /**
+     * Builds a complete TTML document from the head of the first document of the segment
+     * and a body sent on its own, which is what a ttmb sample carries.
+     * @param {string} headDocument the complete document of the first sample of the segment
+     * @param {string} body the body element
+     * @returns {string|null} null when there is no document to splice into
+     * @private
+     */
+    function _spliceTtmlBody(headDocument, body) {
+        if (!headDocument) {
+            return null;
+        }
+        const withoutBody = headDocument.replace(/<body[\s\S]*<\/body\s*>/, '');
+        if (withoutBody === headDocument) {
+            return null;
+        }
+
+        // The body goes back where the old one was, so that everything around it -
+        // the tt element with its namespaces, and the head - is kept exactly.
+        return headDocument.replace(/<body[\s\S]*<\/body\s*>/, body.trim());
     }
 
     function _checkTtml(mediaInfo) {
@@ -387,8 +479,33 @@ function TextSourceBuffer(config) {
             const start = timestampOffset + sampleStart / timescale;
             const end = start + sample.duration / timescale;
             instance.buffered.add(start, end);
-            const dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
+
+            const boxType = _getWholeSampleBoxType(bytes, sample);
+            if (boxType === 'ttmn') {
+                // Nothing changed. Re-state what is already on screen over this sample,
+                // so that the track keeps tiling the timeline and the cue is extended
+                // rather than torn down and re-created.
+                if (lastTtmlCues) {
+                    textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset,
+                        _restateCues(lastTtmlCues, start, end));
+                }
+                continue;
+            }
+
+            const documentOffset = boxType === 'ttmb' ? sample.offset + 8 : sample.offset;
+            const documentSize = boxType === 'ttmb' ? sample.size - 8 : sample.subSizes[0];
+            const dataView = new DataView(bytes, documentOffset, documentSize);
             let ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
+            if (boxType === 'ttmb') {
+                // Body only: the head comes from the first sample of this segment.
+                ccContent = _spliceTtmlBody(segmentHeadDocument, ccContent);
+                if (!ccContent) {
+                    logger.error('A ttmb sample arrived with no document to splice its body into');
+                    continue;
+                }
+            } else if (i === 0) {
+                segmentHeadDocument = ccContent;
+            }
             const images = [];
             let subOffset = sample.offset + sample.subSizes[0];
 
@@ -405,6 +522,7 @@ function TextSourceBuffer(config) {
                 // Only used for Microsoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
                 const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images);
+                lastTtmlCues = result;
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
 
             } catch (e) {
@@ -425,9 +543,19 @@ function TextSourceBuffer(config) {
             const start = timestampOffset + sample.cts / timescale;
             const end = start + sample.duration / timescale;
             instance.buffered.add(start, end);
+            if (_getWholeSampleBoxType(bytes, sample) === 'vttn') {
+                // Nothing changed: the cues that are up stay up over this sample too.
+                if (lastVttEntries) {
+                    captionArray.push(..._restateCues(lastVttEntries, start - timestampOffset,
+                        end - timestampOffset));
+                }
+                continue;
+            }
+
             const sampleData = bytes.slice(sample.offset, sample.offset + sample.size);
             // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
             const sampleBoxes = ISOBoxer.parseBuffer(sampleData);
+            const entriesOfSample = [];
 
             for (j = 0; j < sampleBoxes.boxes.length; j++) {
                 const box1 = sampleBoxes.boxes[j];
@@ -463,10 +591,13 @@ function TextSourceBuffer(config) {
                     }
                     if (entry && entry.data) {
                         captionArray.push(entry);
+                        entriesOfSample.push(entry);
                         logger.debug(`VTT  ${entry.start} - ${entry.end} :  ${entry.data}`);
                     }
                 }
             }
+            // A vtte clears the screen, so it leaves nothing to continue.
+            lastVttEntries = entriesOfSample.length > 0 ? entriesOfSample : null;
         }
         if (captionArray.length > 0) {
             // Cue times are period-local media times; the MSE timestamp offset (Period@start - presentationTimeOffset)
