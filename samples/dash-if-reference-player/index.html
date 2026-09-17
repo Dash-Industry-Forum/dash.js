@@ -135,19 +135,9 @@
                                 Timeline</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="opt-reuse-sourcebuffers">
-                            <label class="form-check-label" for="opt-reuse-sourcebuffers">Reuse Existing
-                                SourceBuffers</label>
-                        </div>
-                        <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="opt-mediasource-duration-inf">
                             <label class="form-check-label" for="opt-mediasource-duration-inf">MediaSource Duration
                                 Inf</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="opt-reset-sb-track-switch">
-                            <label class="form-check-label" for="opt-reset-sb-track-switch">Reset SB on Incompat
-                                Track</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="opt-save-last-media">
@@ -335,6 +325,26 @@
                         <input type="number" id="opt-stall-threshold" step="0.1" value="0.5" min="0">
                         <span class="option-label">LL Stall Threshold (s)</span>
                         <input type="number" id="opt-ll-stall-threshold" step="0.1" value="0.3" min="0">
+                        <div class="option-section">Period Transitions</div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="opt-reuse-sourcebuffers">
+                            <label class="form-check-label" for="opt-reuse-sourcebuffers">Reuse SourceBuffers Between Periods</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="opt-use-change-type">
+                            <label class="form-check-label" for="opt-use-change-type">Use changeType() for Codec Changes</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="opt-reuse-sourcebuffers-without-changetype">
+                            <label class="form-check-label" for="opt-reuse-sourcebuffers-without-changetype">Reuse Same Codec Family Between Periods Without changeType()</label>
+                        </div>
+                        <span class="option-label">Allowed Families for Period Reuse Without changeType()</span>
+                        <input type="text" id="opt-reuse-sourcebuffer-codec-families" value="avc, aac" placeholder="e.g. avc, aac, ec3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="opt-reset-sb-track-switch">
+                            <label class="form-check-label" for="opt-reset-sb-track-switch">Reset SourceBuffers for Incompatible Track Switches</label>
+                        </div>
+                        <div class="form-text">Use changeType() and reset-on-track-switch also apply to codec and track changes within a period.</div>
                     </div>
                 </div>
 
