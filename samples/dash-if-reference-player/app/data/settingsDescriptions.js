@@ -17,13 +17,22 @@ const SETTINGS_DESCRIPTIONS = {
         'Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in <SegmentTimeline>.',
 
     'opt-reuse-sourcebuffers':
-        'Enable reuse of existing MediaSource Sourcebuffers during period transition.',
+        'Master switch for period transitions. When disabled, dash.js recreates the MediaSource SourceBuffers at every period boundary. This does not disable changeType() for track or quality changes within a period.',
+
+    'opt-use-change-type':
+        'Allows dash.js to call the MSE SourceBuffer.changeType() API when a track or quality switch changes codec family. During a period transition, this can also allow reuse of existing SourceBuffers when period reuse is enabled. Some older devices do not support this API.',
+
+    'opt-reuse-sourcebuffers-without-changetype':
+        'Enables an alternative period-transition path when changeType() is unavailable or disabled. dash.js reuses SourceBuffers only when the selected audio/video tracks have matching MIME types and an allowed codec family. This option has no effect when period SourceBuffer reuse is disabled.',
+
+    'opt-reuse-sourcebuffer-codec-families':
+        'Comma-separated codec families allowed for the no-changeType() period-transition fallback, for example: avc, aac, ec3. Both periods must use the same MIME type and codec family. Profiles, levels, channel count, and sampling rate are not compared.',
 
     'opt-mediasource-duration-inf':
         'If this flag is set to true then dash.js will allow Infinity to be set as the MediaSource duration. Otherwise the duration will be set to Math.pow(2,32) instead of Infinity to allow appending segments indefinitely.\n\nSome platforms such as WebOS 4.x have issues with seeking when duration is set to Infinity. Setting this flag to false resolves this.',
 
     'opt-reset-sb-track-switch':
-        'When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This happens when we switch codecs on a system that does not properly implement changeType(), such as webOS 4.0 and before.',
+        'When a user or application switches to an incompatible track and changeType() cannot be used, dash.js recreates SourceBuffers before continuing playback. This applies to track switching within a period, not normal period-reuse eligibility.',
 
     'opt-save-last-media':
         'Set to true if dash.js should save media settings from the last selected track for incoming track selection during the current streaming session.',

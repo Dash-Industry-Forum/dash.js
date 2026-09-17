@@ -89,6 +89,29 @@ describe('AbrController', function () {
 
     describe('getOptimalRepresentationForBitrate()', function () {
 
+        it('should restrict automatic representation selection to the configured codec-family constraint', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            adapterMock.getVoRepresentations = () => [
+                { id: 'avc', bitrateInKbit: 100, bandwidth: 100000, mimeType: 'video/mp4', codecs: 'avc1.64001E', mediaInfo },
+                { id: 'hevc', bitrateInKbit: 200, bandwidth: 200000, mimeType: 'video/mp4', codecs: 'hev1.2.4.L90.90', mediaInfo }
+            ];
+            adapterMock.areMediaInfosEqual = () => true;
+
+            abrCtrl.setCodecFamilyConstraint(streamProcessor.getStreamInfo().id, Constants.VIDEO, {
+                mimeType: 'video/mp4',
+                codecFamily: Constants.CODEC_FAMILIES.AVC,
+                mediaInfos: [{ ...mediaInfo }]
+            });
+
+            expect(abrCtrl.getOptimalRepresentationForBitrate(mediaInfo, 1000).id).to.equal('avc');
+            expect(abrCtrl.isRepresentationAllowedByCodecFamilyConstraint(adapterMock.getVoRepresentations()[1])).to.be.false;
+
+            abrCtrl.clearCodecFamilyConstraint(streamProcessor.getStreamInfo().id);
+            expect(abrCtrl.isRepresentationAllowedByCodecFamilyConstraint(adapterMock.getVoRepresentations()[1])).to.be.true;
+        });
+
         it('Should return Representation with lowest bitrate when 0 target bitrate provided', function () {
             const mediaInfo = streamProcessor.getMediaInfo();
             adapterMock.getVoRepresentations = () => {

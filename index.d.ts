@@ -1725,6 +1725,10 @@ export class MediaPlayerSettingClass {
             fastSwitchEnabled?: boolean,
             flushBufferAtTrackSwitch?: boolean,
             reuseExistingSourceBuffers?: boolean,
+            reuseExistingSourceBuffersWithoutChangeType?: {
+                enabled?: boolean,
+                codecFamilies?: string[]
+            },
             bufferPruningInterval?: number,
             bufferToKeep?: number,
             bufferTimeAtTopQuality?: number,
