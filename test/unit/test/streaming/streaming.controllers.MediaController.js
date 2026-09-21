@@ -598,74 +598,63 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(currentTrack, aacTrack)).to.be.true;
         });
 
-        it('should check initial media settings to choose initial track with 639-2 3-letter code', function () {
-            mediaController.addTrack(qtzTrack);
-            mediaController.addTrack(frTrack);
+        describe('initial media settings based on language preferences', function () {
+            let counter = 1;
+            function _createTrack(lang) {
+                const _trackTemplate = {
+                    id: 0,
+                    type: trackType,
+                    streamInfo: streamInfo,
+                    lang: 'zxx',
+                    viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp1' }],
+                    roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                    accessibility: [],
+                    audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
+                };
+                let newTrack = Object.assign({}, _trackTemplate);
+                newTrack.id = counter;
+                newTrack.lang = lang;
+                counter++;
+                return newTrack;
+            }
 
-            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
-            expect(trackList).to.have.lengthOf(2);
-            expect(objectUtils.areEqual(trackList[0], qtzTrack)).to.be.true;
-            expect(objectUtils.areEqual(trackList[1], frTrack)).to.be.true;
+            const language_tags = ['en-US', 'en', 'en-GB', 'de-AT', 'de-DE', 'es'];
+            let trackList = [];
 
-            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
-
-            // call to setInitialMediaSettingsForType
-            mediaController.setInitialSettings(trackType, {
-                lang: 'fre',
-                viewpoint: null
+            language_tags.forEach((lang) => {
+                trackList.push(_createTrack(lang));
             });
-            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
-            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
-        });
-
-        it('should check initial media settings to choose initial track with a string/regex lang', function () {
-            mediaController.addTrack(frTrack);
-            mediaController.addTrack(qtzTrack);
-
-            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
-            expect(trackList).to.have.lengthOf(2);
-            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true;
-            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true;
-
-            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
-
-            // call to setInitialMediaSettingsForType
-            mediaController.setInitialSettings(trackType, {
-                lang: /fr|en|qtz/,
-                viewpoint: null
+            beforeEach(function () {
+                trackList.forEach((t) => {
+                    mediaController.addTrack(t);
+                });
             });
-            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
-            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
-        });
+            function _languageTagtest(name, pref, expectedLang) {
+                it(name, function () {
+                    mediaController.setInitialSettings(trackType, {
+                        lang: pref
+                    });
+                    mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
-        it('should check initial media settings to choose initial track with a regex lang', function () {
-            mediaController.addTrack(frTrack);
-            mediaController.addTrack(qtzTrack);
+                    let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+                    expect(currentTrack.lang).to.equal(expectedLang);
+                });
+            }
 
-            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
-            expect(trackList).to.have.lengthOf(2);
-            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true;
-            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true;
+            _languageTagtest('should select the correct track for 2-letter language code', 'en', 'en');
+            _languageTagtest('should select the correct track for 3-letter language code', 'eng', 'en');
+            _languageTagtest('should select the correct track for prefered and available regional language code - 1', 'en-US', 'en-US');
+            _languageTagtest('should select the correct track for prefered and available regional language code - 2', 'en-GB', 'en-GB');
+            _languageTagtest('should select the correct non-regional track for a prefered, but not available regional tag', 'en-AU', 'en');
+            _languageTagtest('should select the correct with regional code if no region is provided', 'de', 'de-AT');
+            _languageTagtest('should select the correct with regional code for a prefered, but not available regional tag', 'de-CH', 'de-AT');
+            _languageTagtest('should select the correct track for a prefered, but not available regional tag', 'es-AR', 'es');
 
-            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false;
-            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.false;
-
-            // call to setInitialMediaSettingsForType
-            mediaController.setInitialSettings(trackType, {
-                lang: /qtz|mis/,
-                viewpoint: null
-            });
-            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
-
-            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
-            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true;
+            _languageTagtest('should select the correct track for a language RegExp - 1', /^(?:fr|en|qtz)$/, 'en');
+            _languageTagtest('should select the correct track for a language RegExp - 2', /^(?:fr|en-US|qtz)$/, 'en-US');
+            _languageTagtest('should select the correct track for a language RegExp - 3', /^(?:fr|de|qtz)(?:-[A-Za-z0-9]+)*$/, 'de-AT');
         });
 
         it('should check initial media settings to choose initial track with a lang and absent accessibility setting', function () {
@@ -908,6 +897,57 @@ describe('MediaController', function () {
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
             expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true;
         });
+    });
+
+    describe('Filter Tracks By Settings', function () {
+        const streamInfo = {
+            id: 'id'
+        };
+
+        let counter = 1;
+        function _createTrack(lang) {
+            const _trackTemplate = {
+                id: 0,
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'zxx',
+                viewpoint: [{ schemeIdUri: 'test:scheme:2023', value: 'vp1' }],
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
+            };
+            let newTrack = Object.assign({}, _trackTemplate);
+            newTrack.id = counter;
+            newTrack.lang = lang;
+            counter++;
+            return newTrack;
+        }
+
+        const language_tags = ['en-US', 'en', 'en-GB', 'de-AT', 'de-DE', 'es'];
+        let trackList = [];
+
+        language_tags.forEach((lang) => {
+            trackList.push(_createTrack(lang));
+        });
+
+        function _testLanguage(name, pref, expectedLength) {
+            it(name, function () {
+                let langSettings = mediaController.getAvailablePreferredLanguages(trackList, { lang: pref });
+                let filteredTracks = mediaController.filterTracksBySettings(trackList, mediaController.matchSettingsLang, {lang: langSettings});
+                expect(filteredTracks.length).to.equal(expectedLength);
+            });
+        }
+
+        _testLanguage('should select the correct track for 2-letter language code', 'en', 1);
+        _testLanguage('should select the correct track for 3-letter language code', 'eng', 1);
+        _testLanguage('should select the correct track for prefered and available regional language code - 1', 'en-US', 1);
+        _testLanguage('should select the correct track for prefered and available regional language code - 2', 'en-GB', 1);
+        _testLanguage('should select the correct non-regional track for a prefered, but not available regional tag', 'en-AU', 1);
+        _testLanguage('should select the correct with regional code if no region is provided', 'de', 2);
+        _testLanguage('should select the correct with regional code for a prefered, but not available regional tag', 'de-CH', 2);
+        _testLanguage('should select the correct track for prefered and available regional language code - 3', 'de-DE', 1);
+        _testLanguage('should select the correct track for a prefered, but not available regional tag', 'es-AR', 1);
+        _testLanguage('should not filter tracks when desired language is not available', 'fr', language_tags.length);
     });
 
     describe('Initial Track Selection', function () {
