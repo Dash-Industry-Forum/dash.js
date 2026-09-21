@@ -151,7 +151,7 @@ function MediaController() {
             logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, localSettings)
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, {lang: getAvailablePreferredLanguages(filteredTracks, localSettings)});
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, localSettings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, localSettings);
             if (!(type === Constants.AUDIO && !!lastSelectedTracks[type])) {
@@ -442,12 +442,39 @@ function MediaController() {
         return tracks;
     }
 
+    function getAvailablePreferredLanguages(tracks, settings) {
+        function _getAllLanguages(tracks) {
+            const languages = new Set();
+            tracks.forEach(track => {
+                if (track.lang) {
+                    languages.add(track.lang);
+                }
+            });
+            return Array.from(languages);
+        }
+
+        function _getBestLanguageMatch(langs, pref_lang) {
+            let arr = [];
+            if (pref_lang) {
+                arr = langs.filter(i => i === pref_lang);
+                arr = arr.length ? arr : langs.filter(i => i.split('-')[0] === pref_lang);
+                arr = arr.length ? arr : langs.filter(i => i === pref_lang.split('-')[0]);
+                arr = arr.length ? arr : langs.filter(i => i.split('-')[0] === pref_lang.split('-')[0]);
+            }
+            return arr;
+        }
+
+        const prefLang = settings.lang;
+
+        return (prefLang instanceof RegExp) ? prefLang : _getBestLanguageMatch(_getAllLanguages(tracks), normalizeBcp47(prefLang));
+    }
+
     function matchSettingsLang(settings, track) {
         try {
             return !settings.lang ||
             (settings.lang instanceof RegExp) ?
                 (track.lang.match(settings.lang)) : track.lang !== '' ?
-                    (extendedFilter(track.lang, normalizeBcp47(settings.lang)).length > 0) : false;
+                    (settings.lang.filter(l => l === track.lang).length > 0) : false;
         } catch (e) {
             return false
         }
@@ -1003,6 +1030,8 @@ function MediaController() {
         addTrack,
         areTracksEqual,
         clearDataForStream,
+        filterTracksBySettings,
+        getAvailablePreferredLanguages,
         getCurrentTrackFor,
         getInitialSettings,
         getTracksFor,
