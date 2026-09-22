@@ -34,7 +34,6 @@ import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import {normalizeBcp47} from '../utils/BCP47Utils.js';
-import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 import getNChanFromAudioChannelConfig from '../utils/AudioChannelConfiguration.js';
@@ -474,7 +473,7 @@ function MediaController() {
             return !settings.lang ||
             (settings.lang instanceof RegExp) ?
                 (track.lang.match(settings.lang)) : track.lang !== '' ?
-                    (settings.lang.filter(l => l === track.lang).length > 0) : false;
+                    (settings.lang.map(normalizeBcp47).filter(l => l === normalizeBcp47(track.lang)).length > 0) : false;
         } catch (e) {
             return false
         }
@@ -548,10 +547,8 @@ function MediaController() {
 
             // If the track has a language and we can normalize the target language check if we got a match
             else if (track.lang !== '') {
-                const normalizedSettingsLang = normalizeBcp47(settings.lang);
-                if (normalizedSettingsLang) {
-                    matchLang = extendedFilter(track.lang, normalizedSettingsLang).length > 0
-                }
+                const preferredLanguages = Array.isArray(settings.lang) ? settings.lang : [settings.lang];
+                matchLang = matchSettingsLang({lang: preferredLanguages}, track);
             }
 
             const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
