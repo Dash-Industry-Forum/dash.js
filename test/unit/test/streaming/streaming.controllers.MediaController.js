@@ -940,6 +940,7 @@ describe('MediaController', function () {
 
         _testLanguage('should select the correct track for 2-letter language code', 'en', 1);
         _testLanguage('should select the correct track for 3-letter language code', 'eng', 1);
+        _testLanguage('should match language tags case-insensitively', 'EN-us', 1);
         _testLanguage('should select the correct track for prefered and available regional language code - 1', 'en-US', 1);
         _testLanguage('should select the correct track for prefered and available regional language code - 2', 'en-GB', 1);
         _testLanguage('should select the correct non-regional track for a prefered, but not available regional tag', 'en-AU', 1);
@@ -948,6 +949,36 @@ describe('MediaController', function () {
         _testLanguage('should select the correct track for prefered and available regional language code - 3', 'de-DE', 1);
         _testLanguage('should select the correct track for a prefered, but not available regional tag', 'es-AR', 1);
         _testLanguage('should not filter tracks when desired language is not available', 'fr', language_tags.length);
+    });
+
+    describe('Match Settings', function () {
+        function createTrack(lang) {
+            return {
+                lang,
+                index: 0,
+                type: Constants.TEXT,
+                roles: [],
+                viewpoint: [],
+                accessibility: [],
+                audioChannelConfiguration: []
+            };
+        }
+
+        it('should match equivalent normalized language tags', function () {
+            expect(mediaController.matchSettings({lang: 'eng-us'}, createTrack('en-US'))).to.be.true;
+        });
+
+        it('should match a language from the resolved preference list', function () {
+            expect(mediaController.matchSettings({lang: ['en-US', 'en-GB']}, createTrack('en-GB'))).to.be.true;
+        });
+
+        it('should match a track using a language RegExp preference', function () {
+            expect(mediaController.matchSettings({lang: /^(?:en-US|en-GB)$/}, createTrack('en-GB'))).to.be.true;
+        });
+
+        it('should not match a different regional language tag', function () {
+            expect(mediaController.matchSettings({lang: 'en'}, createTrack('en-US'))).to.be.false;
+        });
     });
 
     describe('Initial Track Selection', function () {

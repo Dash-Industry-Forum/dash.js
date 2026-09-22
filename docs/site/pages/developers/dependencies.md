@@ -18,7 +18,6 @@ development. The dependencies are listed in `package.json` and are installed whe
 | `@svta/cml-id3`     | Parsing of ID3 timed metadata                                                                                            |
 | `@svta/cml-request` | `CommonMediaRequest`/`CommonMediaResponse` types used by the HTTP loading stack and the network interceptor API          |
 | `@svta/cml-xml`     | XML parsing used by the manifest parser                                                                                  |
-| `bcp-47-match`      | Match BCP 47 language tags with language ranges per RFC 4647                                                             |
 | `codem-isoboxer`    | ISOBMFF box parser used to parse boxes such as `EMSG`                                                                    |
 | `fast-deep-equal`   | Used to deep compare two objects                                                                                         |
 | `html-entities`     | Used to decode HTML entities when playing in offline mode                                                                |
