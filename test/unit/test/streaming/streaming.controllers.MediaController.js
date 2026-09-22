@@ -943,6 +943,7 @@ describe('MediaController', function () {
         _testLanguage('should match language tags case-insensitively', 'EN-us', 1);
         _testLanguage('should select the correct track for prefered and available regional language code - 1', 'en-US', 1);
         _testLanguage('should select the correct track for prefered and available regional language code - 2', 'en-GB', 1);
+        _testLanguage('should select tracks for multiple language preferences', ['en-GB', 'en'], 2);
         _testLanguage('should select the correct non-regional track for a prefered, but not available regional tag', 'en-AU', 1);
         _testLanguage('should select the correct with regional code if no region is provided', 'de', 2);
         _testLanguage('should select the correct with regional code for a prefered, but not available regional tag', 'de-CH', 2);
