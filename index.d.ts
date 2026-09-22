@@ -2890,7 +2890,7 @@ export interface MediaSettings {
     codec?: string;
     id?: string | number,
     index?: number;
-    lang?: string | RegExp;
+    lang?: string | string[] | RegExp;
     role?: { schemeIdUri?: string, value?: string } | string;
     viewpoint?: { schemeIdUri?: string, value?: string } | string;
 }

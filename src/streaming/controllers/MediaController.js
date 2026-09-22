@@ -453,19 +453,26 @@ function MediaController() {
         }
 
         function _getBestLanguageMatch(langs, pref_lang) {
-            let arr = [];
-            if (pref_lang) {
-                arr = langs.filter(i => i === pref_lang);
-                arr = arr.length ? arr : langs.filter(i => i.split('-')[0] === pref_lang);
-                arr = arr.length ? arr : langs.filter(i => i === pref_lang.split('-')[0]);
-                arr = arr.length ? arr : langs.filter(i => i.split('-')[0] === pref_lang.split('-')[0]);
+            if (!pref_lang) {
+                return [];
             }
-            return arr;
+
+            const normalizedPreference = normalizeBcp47(pref_lang);
+            let arr = langs.filter(i => normalizeBcp47(i) === normalizedPreference);
+            arr = arr.length ? arr : langs.filter(i => normalizeBcp47(i).split('-')[0] === normalizedPreference);
+            arr = arr.length ? arr : langs.filter(i => normalizeBcp47(i) === normalizedPreference.split('-')[0]);
+            return arr.length ? arr : langs.filter(i => normalizeBcp47(i).split('-')[0] === normalizedPreference.split('-')[0]);
         }
 
         const prefLang = settings.lang;
+        const availableLanguages = _getAllLanguages(tracks);
 
-        return (prefLang instanceof RegExp) ? prefLang : _getBestLanguageMatch(_getAllLanguages(tracks), normalizeBcp47(prefLang));
+        if (prefLang instanceof RegExp) {
+            return prefLang;
+        }
+
+        const preferredLanguages = Array.isArray(prefLang) ? prefLang : [prefLang];
+        return [...new Set(preferredLanguages.flatMap(preference => _getBestLanguageMatch(availableLanguages, preference)))];
     }
 
     function matchSettingsLang(settings, track) {
