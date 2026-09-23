@@ -1,7 +1,7 @@
 name: Lint CI workflows
 on:
     push:
-        branches: ["main"]
+        branches: ["master"]
     pull_request:
         branches: ["**"]
 jobs:

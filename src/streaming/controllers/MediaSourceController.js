@@ -152,6 +152,7 @@ function MediaSourceController() {
 
     function signalEndOfStream(source) {
         if (!source || source.readyState !== 'open') {
+            logger.debug(`signalEndOfStream: not applicable, MediaSource readyState is ${source ? source.readyState : 'unavailable'}`);
             return;
         }
 
@@ -159,9 +160,11 @@ function MediaSourceController() {
 
         for (let i = 0; i < buffers.length; i++) {
             if (buffers[i].updating) {
+                logger.debug('signalEndOfStream: not applicable, a SourceBuffer is still updating');
                 return;
             }
             if (buffers[i].buffered.length === 0) {
+                logger.debug('signalEndOfStream: not applicable, a SourceBuffer holds no data');
                 return;
             }
         }

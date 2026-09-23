@@ -1011,6 +1011,138 @@ describe('DashAdapter', function () {
 
         });
 
+        describe('getFragmentDurationForLiveDelayCalculation', function () {
+            function makeStreamInfo(maxFragmentDuration, periodIndex = 0) {
+                return {
+                    id: 'defaultId_' + periodIndex,
+                    index: periodIndex,
+                    manifestInfo: maxFragmentDuration !== undefined ? { maxFragmentDuration } : undefined
+                };
+            }
+
+            const ssrVideoAdaptation = {
+                id: 0, mimeType: Constants.VIDEO,
+                [DashConstants.REPRESENTATION]: [{
+                    id: 'v0', bandwidth: 1000000,
+                    SegmentTemplate: { duration: 8000, timescale: 1000, k: 16, media: '$Number$_$SubNumber$.m4s' }
+                }]
+            };
+            const plainAudioAdaptation = {
+                id: 1, mimeType: Constants.AUDIO,
+                [DashConstants.REPRESENTATION]: [{
+                    id: 'a0', bandwidth: 128000,
+                    SegmentTemplate: { duration: 8000, timescale: 1000, media: '$Number$.m4s' }
+                }]
+            };
+            const ssrAudioAdaptation = {
+                id: 1, mimeType: Constants.AUDIO,
+                [DashConstants.REPRESENTATION]: [{
+                    id: 'a0', bandwidth: 128000,
+                    SegmentTemplate: { duration: 8000, timescale: 1000, k: 16, media: '$Number$_$SubNumber$.m4s' }
+                }]
+            };
+
+            function makeManifest(adaptationSets) {
+                return {
+                    loadedTime: new Date(),
+                    mediaPresentationDuration: 10,
+                    Period: [{ AdaptationSet: adaptationSets }]
+                };
+            }
+
+            afterEach(function () {
+                dashAdapter.reset();
+            });
+
+            it('should return the full segment duration when only some adaptation sets use partial segments', function () {
+                dashAdapter.updatePeriods(makeManifest([ssrVideoAdaptation, plainAudioAdaptation]));
+
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo(8))).to.equal(8);
+            });
+
+            it('should return the partial segment duration when all adaptation sets use partial segments', function () {
+                dashAdapter.updatePeriods(makeManifest([ssrVideoAdaptation, ssrAudioAdaptation]));
+
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo(8))).to.equal(0.5);
+            });
+
+            it('should return the full segment duration when a fragmented text adaptation set does not use partial segments', function () {
+                const plainTextAdaptation = {
+                    id: 2, mimeType: 'application/ttml+xml',
+                    [DashConstants.REPRESENTATION]: [{
+                        id: 't0', bandwidth: 1000,
+                        SegmentTemplate: { duration: 8000, timescale: 1000, media: '$Number$.m4s' }
+                    }]
+                };
+                dashAdapter.updatePeriods(makeManifest([ssrVideoAdaptation, ssrAudioAdaptation, plainTextAdaptation]));
+
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo(8))).to.equal(8);
+            });
+
+            it('should return the partial segment duration for SegmentTimeline with S@k', function () {
+                const timelineVideoAdaptation = {
+                    id: 0, mimeType: Constants.VIDEO,
+                    [DashConstants.REPRESENTATION]: [{
+                        id: 'v0', bandwidth: 1000000,
+                        SegmentTemplate: {
+                            timescale: 1000, media: '$Time$_$SubNumber$.m4s',
+                            SegmentTimeline: { S: [{ t: 0, d: 8000, k: 16 }] }
+                        }
+                    }]
+                };
+                dashAdapter.updatePeriods(makeManifest([timelineVideoAdaptation]));
+
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo(8))).to.equal(0.5);
+            });
+
+            it('should return the full segment duration for a SegmentTimeline whose live edge S element carries no @k', function () {
+                const timelineVideoAdaptation = {
+                    id: 0, mimeType: Constants.VIDEO,
+                    [DashConstants.REPRESENTATION]: [{
+                        id: 'v0', bandwidth: 1000000,
+                        SegmentTemplate: {
+                            timescale: 1000, media: '$Time$_$SubNumber$.m4s',
+                            SegmentTimeline: { S: [{ t: 0, d: 8000, k: 16 }, { t: 8000, d: 8000 }] }
+                        }
+                    }]
+                };
+                dashAdapter.updatePeriods(makeManifest([timelineVideoAdaptation]));
+
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo(8))).to.equal(8);
+            });
+
+            it('should only consider the period the given streamInfo belongs to', function () {
+                const manifest = {
+                    loadedTime: new Date(),
+                    mediaPresentationDuration: 20,
+                    Period: [
+                        { start: 0, duration: 10, AdaptationSet: [plainAudioAdaptation] },
+                        { start: 10, AdaptationSet: [ssrVideoAdaptation, ssrAudioAdaptation] }
+                    ]
+                };
+                dashAdapter.updatePeriods(manifest);
+
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo(8, 1))).to.equal(0.5);
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo(8, 0))).to.equal(8);
+            });
+
+            it('should fall back to manifestInfo.maxFragmentDuration without partial segments', function () {
+                dashAdapter.updatePeriods(makeManifest([plainAudioAdaptation]));
+
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo(6))).to.equal(6);
+            });
+
+            it('should fall back to manifestInfo.maxFragmentDuration when representations have no segment duration', function () {
+                dashAdapter.updatePeriods(makeManifest([{ id: 0, mimeType: Constants.VIDEO }]));
+
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo(6))).to.equal(6);
+            });
+
+            it('should return NaN when no periods and no manifestInfo are available', function () {
+                expect(dashAdapter.getFragmentDurationForLiveDelayCalculation(makeStreamInfo())).to.be.NaN;
+            });
+        });
+
         describe('getPatchLocation', function () {
 
             // example patch location element with ttl

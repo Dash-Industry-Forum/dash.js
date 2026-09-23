@@ -1098,6 +1098,8 @@ export interface DashAdapter {
 
     getEventsFor(info: object, voRepresentation: object): Array<Event>;
 
+    getFragmentDurationForLiveDelayCalculation(streamInfo: object): number;
+
     getFramerate(representation: object): number;
 
     getIndexForRepresentation(representationId: string, periodIdx: number): number;
@@ -1672,6 +1674,7 @@ export class MediaPlayerSettingClass {
     };
     streaming?: {
         abandonLoadTimeout?: number,
+        seekDurationBackoff?: number,
         wallclockTimeUpdateInterval?: number,
         manifestUpdateRetryInterval?: number,
         liveUpdateTimeThresholdInMilliseconds?: number,

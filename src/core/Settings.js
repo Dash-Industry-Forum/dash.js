@@ -61,6 +61,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *        },
  *        streaming: {
  *            abandonLoadTimeout: 10000,
+ *            seekDurationBackoff: 0.5,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
@@ -400,6 +401,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Changing this value will lower or increase live stream latency.
  *
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
+ *
+ * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the maximum effective segment duration across all audio, video and fragmented text adaptation sets is used instead.
+ * The effective segment duration is the partial segment duration (segment duration / k) for adaptation sets using partial segments, and the full segment duration otherwise.
+ * Consequently, the partial segment duration is only applied if all these adaptation sets use partial segments.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
  * @property {number} [liveDelay=NaN]
@@ -1064,6 +1069,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
+ * @property {number} [seekDurationBackoff=0.5]
+ * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of last period - seekDurationBackoff).
+ *
+ * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
+ * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and seek to the exact end of the content.
  * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
@@ -1238,6 +1248,7 @@ function Settings() {
         },
         streaming: {
             abandonLoadTimeout: 10000,
+            seekDurationBackoff: 0.5,
             wallclockTimeUpdateInterval: 100,
             manifestUpdateRetryInterval: 100,
             liveUpdateTimeThresholdInMilliseconds: 0,

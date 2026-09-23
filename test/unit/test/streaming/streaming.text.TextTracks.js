@@ -231,6 +231,92 @@ describe('TextTracks', function () {
             expect(track.cues[2].endTime).to.equal(12);
         });
 
+        // CEA-608 uses a paint-on model: every screen is a self-contained,
+        // explicitly-timed caption that was never split across segments, so the
+        // extendSegmentedCues logic must never coalesce 608 cues. Previously it
+        // did, because the rendered content of a 608 cue lives in cueHTMLElement
+        // (a DOM node the cue-equality check does not inspect), so all 608 cues
+        // compared as equal and only the first caption of each segment was shown.
+        const makeCea608Item = (html, cueID, start, end) => {
+            const cueHTMLElement = document.createElement('div');
+            cueHTMLElement.innerHTML = html;
+            return {
+                type: 'html',
+                start,
+                end,
+                cueHTMLElement,
+                cueID,
+                cellResolution: [32, 15],
+                isFromCEA608: true,
+                fontSize: { bodyStyle: ['%', 90] },
+                lineHeight: {},
+                linePadding: {}
+            };
+        };
+
+        const addCea608Track = () => {
+            // A real DOM container is required for the HTML caption path.
+            videoModelMock.getTTMLRenderingDiv = () => document.createElement('div');
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'captions',
+                id: 'eng',
+                defaultTrack: true,
+                isEmbedded: true}, 1);
+            textTracks.createTracks();
+            return videoModelMock.getTextTrack('captions', 'eng');
+        };
+
+        it('should not merge adjacent CEA-608 cues with different content even when extendSegmentedCues is enabled', function () {
+            settings.update({ streaming: { text: { extendSegmentedCues: true } } });
+            const track = addCea608Track();
+
+            textTracks.addCaptions(0, 0, [
+                makeCea608Item('<span>00:00:00.000</span><br><span>SEG 0</span>', 'sub_cea608_0', 0, 1),
+                makeCea608Item('<span>00:00:01.000</span><br><span>SEG 0</span>', 'sub_cea608_1', 1, 2),
+                makeCea608Item('<span>00:00:02.000</span><br><span>SEG 1</span>', 'sub_cea608_2', 2, 3)
+            ]);
+
+            textTracks.updateTextTrackWindow(0, true);
+
+            // All three captions are distinct and must be preserved.
+            expect(track.cues.length).to.equal(3);
+        });
+
+        it('should not merge adjacent CEA-608 cues with identical content even when extendSegmentedCues is enabled', function () {
+            settings.update({ streaming: { text: { extendSegmentedCues: true } } });
+            const track = addCea608Track();
+
+            // Same rendered content in adjacent slots. TTML/WebVTT would coalesce
+            // these, but 608 is paint-on so each screen stays its own caption.
+            textTracks.addCaptions(0, 0, [
+                makeCea608Item('<span>Same caption</span>', 'sub_cea608_0', 0, 2),
+                makeCea608Item('<span>Same caption</span>', 'sub_cea608_1', 2, 4)
+            ]);
+
+            textTracks.updateTextTrackWindow(0, true);
+
+            expect(track.cues.length).to.equal(2);
+        });
+
+        it('should deduplicate a re-appended CEA-608 caption with identical timing and content but a fresh cueID', function () {
+            const track = addCea608Track();
+
+            // Seeking back past the buffer re-downloads the text segment; the
+            // 608 parser re-emits the same caption with a new cueID. Only one
+            // copy may live in the track or it renders stacked.
+            textTracks.addCaptions(0, 0, [
+                makeCea608Item('<span>Same caption</span>', 'sub_cea608_0', 0, 2)
+            ]);
+            textTracks.addCaptions(0, 0, [
+                makeCea608Item('<span>Same caption</span>', 'sub_cea608_5', 0, 2)
+            ]);
+
+            textTracks.updateTextTrackWindow(0, true);
+
+            expect(track.cues.length).to.equal(1);
+        });
+
         it('should not extend adjacent cues when streaming.text.extendSegmentedCues is disabled', function () {
             // Ensure cue extension is disabled
             settings.update({ streaming: { text: { extendSegmentedCues: false } } });

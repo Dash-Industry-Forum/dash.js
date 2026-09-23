@@ -32,7 +32,7 @@ Other media capabilities can be matched against `EssentialProperty` descriptors 
 ### Filtering using `EssentialProperty` descriptors
 By default, dash.js will filter-out AdaptationSets / Representations whose `EssentialProperty` descriptors are not 
 recognized.
-This behavour is controlled by the `streaming.capabilities.filterUnsupportedEssentialProperties` setting.
+This behaviour is controlled by the `streaming.capabilities.filterUnsupportedEssentialProperties` setting.
 If set to ***false***, all EssentialProperty descriptors are ignored and do not influence track selection.
 
 Two mechanisms can be used to configure filtering using EssentialProperty descriptors:

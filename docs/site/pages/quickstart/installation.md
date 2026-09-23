@@ -112,6 +112,16 @@ bundlers can be found in
 the [`samples/modules`](https://github.com/Dash-Industry-Forum/dash.js/tree/development/samples/modules) directory of
 the dash.js repository.
 
+### Release candidates
+
+Release candidates for the upcoming version (`x.y.z-rc.N`) are published under the `next` tag:
+
+````bash
+npm install dashjs@next
+````
+
+The `latest` tag always points to the latest stable release.
+
 ### Version 4.x and older
 
 For version 4.x and older, we define the following entry point in the `package.json`:

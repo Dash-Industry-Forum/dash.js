@@ -1,6 +1,6 @@
 {
   "name": "dashjs",
-  "version": "5.2.1",
+  "version": "5.2.2",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
   "author": "Dash Industry Forum",
   "license": "BSD-3-Clause",
@@ -49,6 +49,7 @@
     "test:compliance:package": "publint",
     "test:compliance:vite": "npm --prefix test/compliance/vite-consumer install --no-audit --no-fund && npm --prefix test/compliance/vite-consumer run build",
     "test:package": "node test/package/verify-package.mjs",
+    "test-functional-dashboard": "node test/functional/results-dashboard/server.mjs",
     "test-refplayer": "karma start test/unit/config/karma.unit.conf.cjs --grep \"Reference Player\"",
     "test-functional": "karma start test/functional/config/karma.functional.conf.cjs --configfile=local --streamsfile=smoke",
     "webpack-build-legacy": "webpack --config build/webpack/legacy/webpack.legacy.prod.cjs",
@@ -106,7 +107,7 @@
     "yargs": "^18.0.0"
   },
   "dependencies": {
-    "@svta/cml-608": "1.0.2",
+    "@svta/cml-608": "1.1.0",
     "@svta/cml-c2pa": "1.1.1",
     "@svta/cml-cmcd": "2.3.2",
     "@svta/cml-cmsd": "1.0.6",

@@ -520,7 +520,8 @@ function StreamProcessor(config) {
             // If there is no valid target time ahead and the buffering time is within the duration of one segment we slightly adjust it.
             // Restrict the tail-time fallback to the final period — for any earlier period, an inter-period gap jump should advance into the
             // next period rather than seeking backward inside the current one.
-            if (streamInfo.isLast && isFinite(periodEnd) && bufferingTime < periodEnd && bufferingTime >= periodEnd - representation.segmentDuration) {
+            // <= : a seek to the exact stream end lands precisely on periodEnd and must be adjusted as well, otherwise the seek never completes.
+            if (streamInfo.isLast && isFinite(periodEnd) && bufferingTime <= periodEnd && bufferingTime >= periodEnd - representation.segmentDuration) {
                 adjustedTime = Math.max(period.start, bufferingTime - 0.1);
             }
         }

@@ -71,6 +71,7 @@ const arrayNodes = [
     DashConstants.SERVICE_DESCRIPTION,
     DashConstants.SUPPLEMENTAL_PROPERTY,
     DashConstants.UTC_TIMING,
+    DashConstants.VIEWPOINT,
 ];
 
 function DashParser(config) {
