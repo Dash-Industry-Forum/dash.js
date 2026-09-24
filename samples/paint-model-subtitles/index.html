@@ -346,7 +346,7 @@
             player = dashjs.MediaPlayer().create();
             player.updateSettings({
                 debug: { logLevel: dashjs.Debug.LOG_LEVEL_WARNING },
-                streaming: { text: { defaultEnabled: true }, delay: { liveDelay: 2 } }
+                streaming: { text: { defaultEnabled: true } }
             });
             player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, () => selectTrack(wanted));
             player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, (e) => {
