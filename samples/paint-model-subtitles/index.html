@@ -44,6 +44,11 @@
         tr.sel td { font-weight: 600; }
         .scroll { overflow-x: auto; }
         .note { color: var(--muted); font-size: 0.85rem; margin: 8px 0 0; }
+        button.secondary { background: transparent; color: var(--accent); min-width: 6.5em; }
+        button.secondary.on { background: var(--accent); color: #fff; }
+        .frozen-note { display: none; margin: 10px 0 0; padding: 6px 10px; border-radius: 6px;
+            background: color-mix(in srgb, var(--accent) 12%, transparent); font-size: 0.9rem; }
+        body.frozen .frozen-note { display: block; }
         .cue { font: 13px ui-monospace, monospace; min-height: 1.4em; }
         .good { color: var(--good); }
         code { font: 0.9em ui-monospace, monospace; }
@@ -61,7 +66,9 @@
         <div class="row">
             <input type="text" id="mpd" aria-label="MPD URL" spellcheck="false">
             <button id="load">Load</button>
+            <button id="freeze" class="secondary" title="Pause and hold all figures">Freeze</button>
         </div>
+        <p class="frozen-note" id="frozenNote" role="status"></p>
         <div class="tracks" id="tracks"></div>
     </div>
 
@@ -128,6 +135,7 @@
         let work = null;
         let lastNr = null;
         let toParseAt = 0;
+        let frozen = false;
 
         function newWork(codec) {
             return { codec, since: performance.now(), segments: 0, samples: {}, parses: 0, xmlChars: 0, parseMs: 0 };
@@ -283,8 +291,34 @@
             document.getElementById('cue').textContent = txt || '–';
         }
 
+        // --- Freeze: pause and hold every figure until resumed ---
+        // Freezing pauses the video, so the page stops fetching comparison segments and
+        // ignores parse events. A paused player may still buffer ahead and parse a little;
+        // that work would have no segment to go with it, and is discarded anyway when
+        // resuming jumps back to the live edge.
+        function setFrozen(on) {
+            if (on === frozen) { return; }
+            frozen = on;
+            document.body.classList.toggle('frozen', on);
+            const btn = document.getElementById('freeze');
+            btn.textContent = on ? 'Resume' : 'Freeze';
+            btn.classList.toggle('on', on);
+            btn.title = on ? 'Return to the live edge and continue counting' : 'Pause and hold all figures';
+            if (on) {
+                document.getElementById('frozenNote').textContent =
+                    `Frozen at ${new Date().toLocaleTimeString()}: playback is paused and all figures are held. ` +
+                    'Resume returns to the live edge and continues counting.';
+                if (!video.paused) { video.pause(); }
+            } else {
+                lastNr = null;
+                if (player && player.isDynamic()) { player.seekToOriginalLive(); }
+                if (video.paused) { video.play().catch(() => {}); }
+            }
+        }
+
         // --- Player ---
         function selectTrack(codec) {
+            setFrozen(false);
             wanted = codec;
             renderTracks();
             renderBytes();
@@ -302,7 +336,7 @@
 
         async function onTextSegment(url) {
             const m = url.match(/\/([^/]+)\/(\d+)\.m4s(\?.*)?$/);
-            if (!m || m[2] === lastNr) { return; }
+            if (frozen || !m || m[2] === lastNr) { return; }
             const nr = m[2];
             lastNr = nr;
             const base = url.slice(0, url.length - m[0].length);
@@ -338,6 +372,7 @@
             const u = new URL(location.href);
             u.searchParams.set('mpd', mpd);
             history.replaceState(null, '', u);
+            setFrozen(false);
             if (player) { player.reset(); }
             byteRows = {};
             lastNr = null;
@@ -364,7 +399,7 @@
             });
             player.on('ttmlToParse', () => { toParseAt = performance.now(); });
             player.on('ttmlParsed', (e) => {
-                if (!work) { return; }
+                if (!work || frozen) { return; }
                 work.parses++;
                 work.parseMs += performance.now() - toParseAt;
                 work.xmlChars += e && e.ttmlString ? e.ttmlString.length : 0;
@@ -374,8 +409,14 @@
         }
 
         document.getElementById('load').addEventListener('click', load);
+        document.getElementById('freeze').addEventListener('click', () => setFrozen(!frozen));
+        // The video's own controls freeze and resume too, so the two never disagree.
+        video.addEventListener('pause', () => setFrozen(true));
+        video.addEventListener('play', () => setFrozen(false));
         mpdInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { load(); } });
-        setInterval(() => { renderWork(); renderCue(); }, 250);
+        setInterval(() => {
+            if (!frozen) { renderWork(); renderCue(); }
+        }, 250);
         load();
     })();
 </script>
