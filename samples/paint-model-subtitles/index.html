@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Paint-model subtitles</title>
+    <script src="../../dist/modern/umd/dash.all.min.js"></script>
+    <style>
+        :root {
+            --bg: #f7f7f5; --fg: #1d1d1b; --muted: #6b6b66; --card: #ffffff; --line: #deded8;
+            --accent: #2f5fd0; --good: #1f7a43;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #161615; --fg: #ececea; --muted: #9a9a94; --card: #20201f; --line: #353533;
+                --accent: #7fa2ff; --good: #5cc98a; }
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--fg);
+            font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+        main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+        h1 { font-size: 1.35rem; margin: 0 0 4px; }
+        h2 { font-size: 1rem; margin: 0 0 8px; }
+        p.lead { margin: 0 0 16px; color: var(--muted); }
+        .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        input[type=text] { flex: 1 1 400px; min-width: 0; padding: 6px 8px; font: 13px ui-monospace, monospace;
+            border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+        button { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent);
+            color: #fff; font: inherit; cursor: pointer; }
+        .tracks { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; margin-top: 10px; }
+        .tracks label { display: block; border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+        .tracks label.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+        .tracks input { margin-right: 6px; }
+        .tracks small { display: block; color: var(--muted); margin-left: 22px; }
+        .player { position: relative; width: 100%; max-width: 720px; aspect-ratio: 16 / 9; background: #000; }
+        .player video { width: 100%; height: 100%; display: block; }
+        .player .ttml { position: absolute; inset: 0; pointer-events: none; }
+        .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+        @media (max-width: 820px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+        table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+        th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        th { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
+        td.num { text-align: right; }
+        tr.sel td { font-weight: 600; }
+        .scroll { overflow-x: auto; }
+        .note { color: var(--muted); font-size: 0.85rem; margin: 8px 0 0; }
+        .cue { font: 13px ui-monospace, monospace; min-height: 1.4em; }
+        .good { color: var(--good); }
+        code { font: 0.9em ui-monospace, monospace; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Paint-model subtitles in dash.js</h1>
+    <p class="lead">Compare the experimental <code>stpc</code>/<code>wvtc</code> tracks with ordinary
+        <code>stpp</code>/<code>wvtt</code> on the same low-latency livesim2 stream: bytes on the wire, and
+        how many TTML documents the player has to parse. The 4CCs <code>stpc</code>, <code>wvtc</code>,
+        <code>ttmn</code>, <code>ttmb</code> and <code>vttn</code> are placeholders, not registered with MP4RA.</p>
+
+    <div class="card">
+        <div class="row">
+            <input type="text" id="mpd" aria-label="MPD URL" spellcheck="false">
+            <button id="load">Load</button>
+        </div>
+        <div class="tracks" id="tracks"></div>
+    </div>
+
+    <div class="grid2">
+        <div class="card">
+            <div class="player">
+                <video id="video" muted playsinline controls></video>
+                <div class="ttml" id="ttml"></div>
+            </div>
+            <p class="note">Active cue: <span class="cue" id="cue">–</span></p>
+        </div>
+
+        <div class="card">
+            <h2>Player work, selected track</h2>
+            <p class="note" id="workSince" style="margin:0 0 8px">Counting since the track was selected.</p>
+            <table>
+                <tbody id="work"></tbody>
+            </table>
+            <p class="note">TTML parses and parse time come from dash.js's own <code>ttmlToParse</code> and
+                <code>ttmlParsed</code> events around <code>imsc.fromXML</code>. Samples restated from a
+                <code>ttmn</code>/<code>vttn</code> are never parsed.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Bytes on the wire, same segment, all four tracks</h2>
+        <div class="scroll">
+            <table>
+                <thead>
+                <tr><th>Track</th><th>Segment</th><th class="num">Bytes</th><th class="num">kbit/s (avg)</th><th>Samples</th></tr>
+                </thead>
+                <tbody id="bytes"></tbody>
+            </table>
+        </div>
+        <p class="note">Each time the player completes a text segment, this page fetches the same segment number for
+            the other three tracks and walks its boxes. The average covers the last 10 segments.</p>
+    </div>
+</main>
+
+<script>
+    (function () {
+        const FORMATS = {
+            stpp: { name: 'stpp', desc: 'TTML, a full document per chunk' },
+            stpc: { name: 'stpc', desc: 'TTML paint model: ttmn no-change, ttmb body-only' },
+            wvtt: { name: 'wvtt', desc: 'WebVTT, the cue repeated per chunk' },
+            wvtc: { name: 'wvtc', desc: 'WebVTT paint model: vttn no-change' }
+        };
+        const WHOLE_SAMPLE_BOXES = ['ttmn', 'ttmb', 'vttn'];
+        const HISTORY = 10;
+
+        const params = new URLSearchParams(location.search);
+        const defaultMpd = location.origin + '/livesim2/chunkdur_0.2/utc_head/timesubsdur_4500/timesubssegnr_0/' +
+            'timesubsstpp_en/timesubsstpc_en;body=1/timesubswvtt_en/timesubswvtc_en/testpic_2s/Manifest.mpd';
+        const mpdInput = document.getElementById('mpd');
+        mpdInput.value = params.get('mpd') || defaultMpd;
+        let wanted = params.get('track') || 'stpc';
+
+        const video = document.getElementById('video');
+        let player = null;
+        let reps = {};          // codec -> { id, segDurS }
+        let byteRows = {};      // codec -> { nr, bytes, mix, history: [] }
+        let work = null;
+        let lastNr = null;
+        let toParseAt = 0;
+
+        function newWork(codec) {
+            return { codec, since: performance.now(), segments: 0, samples: {}, parses: 0, xmlChars: 0, parseMs: 0 };
+        }
+
+        // --- ISOBMFF: sample sizes from trun, then classify each sample in mdat ---
+        function fourcc(dv, o) {
+            return String.fromCharCode(dv.getUint8(o), dv.getUint8(o + 1), dv.getUint8(o + 2), dv.getUint8(o + 3));
+        }
+
+        function classifySegment(buf) {
+            const dv = new DataView(buf);
+            const mix = {};
+            let sizes = [];
+            let defaultSize = 0;
+            const walk = (start, end) => {
+                let p = start;
+                while (p + 8 <= end) {
+                    const size = dv.getUint32(p);
+                    const type = fourcc(dv, p + 4);
+                    if (size < 8) { return; }
+                    if (type === 'moof' || type === 'traf') {
+                        sizes = type === 'moof' ? [] : sizes;
+                        walk(p + 8, p + size);
+                    } else if (type === 'tfhd') {
+                        const flags = dv.getUint32(p + 8) & 0xffffff;
+                        let q = p + 16;
+                        if (flags & 0x1) { q += 8; }
+                        if (flags & 0x2) { q += 4; }
+                        if (flags & 0x8) { q += 4; }
+                        defaultSize = (flags & 0x10) ? dv.getUint32(q) : 0;
+                    } else if (type === 'trun') {
+                        const flags = dv.getUint32(p + 8) & 0xffffff;
+                        const count = dv.getUint32(p + 12);
+                        let q = p + 16;
+                        if (flags & 0x1) { q += 4; }
+                        if (flags & 0x4) { q += 4; }
+                        for (let i = 0; i < count; i++) {
+                            if (flags & 0x100) { q += 4; }
+                            let s = defaultSize;
+                            if (flags & 0x200) { s = dv.getUint32(q); q += 4; }
+                            if (flags & 0x400) { q += 4; }
+                            if (flags & 0x800) { q += 4; }
+                            sizes.push(s);
+                        }
+                    } else if (type === 'mdat') {
+                        let q = p + 8;
+                        for (const s of sizes) {
+                            let kind = 'doc';
+                            if (s >= 8 && q + 8 <= end) {
+                                const inner = fourcc(dv, q + 4);
+                                if (dv.getUint32(q) === s && WHOLE_SAMPLE_BOXES.includes(inner)) {
+                                    kind = inner;
+                                } else if (inner === 'vttc' || inner === 'vtte') {
+                                    kind = inner;
+                                }
+                            }
+                            mix[kind] = (mix[kind] || 0) + 1;
+                            q += s;
+                        }
+                        sizes = [];
+                    }
+                    p += size;
+                }
+            };
+            walk(0, buf.byteLength);
+            return mix;
+        }
+
+        function mixText(mix) {
+            const order = ['doc', 'ttmb', 'ttmn', 'vttc', 'vtte', 'vttn'];
+            return order.filter(k => mix[k]).map(k => mix[k] + ' ' + (k === 'doc' ? 'TTML doc' : k)).join(' + ') || '–';
+        }
+
+        // --- Manifest: find the Representation of each text codec ---
+        async function readReps(mpdUrl) {
+            const text = await (await fetch(mpdUrl)).text();
+            const doc = new DOMParser().parseFromString(text, 'application/xml');
+            const out = {};
+            for (const as of doc.getElementsByTagName('AdaptationSet')) {
+                const rep = as.getElementsByTagName('Representation')[0];
+                const codecs = (rep && rep.getAttribute('codecs')) || as.getAttribute('codecs') || '';
+                const codec = codecs.split('.')[0];
+                if (!FORMATS[codec] || out[codec]) { continue; }
+                const st = as.getElementsByTagName('SegmentTemplate')[0];
+                const segDurS = st ? Number(st.getAttribute('duration')) / Number(st.getAttribute('timescale') || 1) : 2;
+                out[codec] = { id: rep.getAttribute('id'), segDurS };
+            }
+            return out;
+        }
+
+        // --- UI ---
+        function renderTracks() {
+            const el = document.getElementById('tracks');
+            el.innerHTML = '';
+            for (const codec of Object.keys(FORMATS)) {
+                const present = !!reps[codec];
+                const label = document.createElement('label');
+                label.className = codec === wanted ? 'sel' : '';
+                label.innerHTML = `<input type="radio" name="track" value="${codec}" ${codec === wanted ? 'checked' : ''}
+                    ${present ? '' : 'disabled'}><code>${codec}</code><small>${FORMATS[codec].desc}${present ? '' : ' (not in MPD)'}</small>`;
+                label.querySelector('input').addEventListener('change', () => selectTrack(codec));
+                el.appendChild(label);
+            }
+        }
+
+        function renderBytes() {
+            const rows = Object.keys(FORMATS).filter(c => reps[c]).map(codec => {
+                const r = byteRows[codec];
+                const seg = reps[codec].segDurS;
+                const avg = r && r.history.length ? r.history.reduce((a, b) => a + b, 0) / r.history.length : null;
+                return `<tr class="${codec === wanted ? 'sel' : ''}"><td><code>${codec}</code></td>
+                    <td>${r ? r.nr : '–'}</td>
+                    <td class="num">${r ? r.bytes.toLocaleString() : '–'}</td>
+                    <td class="num">${avg !== null ? (avg * 8 / seg / 1000).toFixed(1) : '–'}</td>
+                    <td>${r ? mixText(r.mix) : '–'}</td></tr>`;
+            });
+            document.getElementById('bytes').innerHTML = rows.join('');
+        }
+
+        function renderWork() {
+            if (!work) { return; }
+            const isTtml = work.codec === 'stpp' || work.codec === 'stpc';
+            const samples = Object.values(work.samples).reduce((a, b) => a + b, 0);
+            const restated = (work.samples.ttmn || 0) + (work.samples.vttn || 0);
+            const perSeg = (n) => work.segments ? (n / work.segments).toFixed(1) : '–';
+            const rows = [
+                ['Segments received', work.segments],
+                ['Samples', `${samples} (${mixText(work.samples)})`],
+                ['Samples restated without parsing', `<span class="${restated ? 'good' : ''}">${restated}</span>`]
+            ];
+            if (isTtml) {
+                rows.push(['TTML documents parsed', `${work.parses} (${perSeg(work.parses)} per segment)`]);
+                rows.push(['XML characters parsed', `${work.xmlChars.toLocaleString()} (${perSeg(work.xmlChars)} per segment)`]);
+                rows.push(['Time in imsc.fromXML', `${work.parseMs.toFixed(1)} ms (${perSeg(work.parseMs)} ms per segment)`]);
+            } else {
+                rows.push(['WebVTT cue boxes parsed', `${work.samples.vttc || 0} (${perSeg(work.samples.vttc || 0)} per segment)`]);
+            }
+            const tt = [...video.textTracks].find(t => t.mode !== 'disabled' && t.cues && t.cues.length);
+            rows.push(['Cue objects in the TextTrack', tt && tt.cues ? tt.cues.length : '–']);
+            document.getElementById('work').innerHTML = rows.map(([k, v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join('');
+            const s = ((performance.now() - work.since) / 1000).toFixed(0);
+            document.getElementById('workSince').textContent = `Counting since ${FORMATS[work.codec].name} was selected, ${s} s ago.`;
+        }
+
+        function renderCue() {
+            const tt = [...video.textTracks].find(t => t.mode !== 'disabled' && t.cues && t.cues.length);
+            const cues = tt && tt.activeCues ? [...tt.activeCues] : [];
+            const txt = cues.map(c => {
+                const t = c.text || (document.getElementById('ttml').innerText || '').trim();
+                return `${t.replace(/\s+/g, ' ').slice(0, 60)}  [${c.startTime.toFixed(2)}–${c.endTime.toFixed(2)}]`;
+            }).join(' | ');
+            document.getElementById('cue').textContent = txt || '–';
+        }
+
+        // --- Player ---
+        function selectTrack(codec) {
+            wanted = codec;
+            renderTracks();
+            renderBytes();
+            if (!player) { return; }
+            const t = player.getTracksFor('text').find(t => (t.codec || '').includes(`"${codec}"`));
+            if (t) {
+                player.setCurrentTrack(t);
+            }
+            work = newWork(codec);
+            lastNr = null;
+            const u = new URL(location.href);
+            u.searchParams.set('track', codec);
+            history.replaceState(null, '', u);
+        }
+
+        async function onTextSegment(url) {
+            const m = url.match(/\/([^/]+)\/(\d+)\.m4s(\?.*)?$/);
+            if (!m || m[2] === lastNr) { return; }
+            const nr = m[2];
+            lastNr = nr;
+            const base = url.slice(0, url.length - m[0].length);
+            await Promise.all(Object.entries(reps).map(async ([codec, rep]) => {
+                try {
+                    const buf = await (await fetch(`${base}/${rep.id}/${nr}.m4s`)).arrayBuffer();
+                    const mix = classifySegment(buf);
+                    const row = byteRows[codec] || { history: [] };
+                    row.nr = nr;
+                    row.bytes = buf.byteLength;
+                    row.mix = mix;
+                    row.history = row.history.concat(buf.byteLength).slice(-HISTORY);
+                    byteRows[codec] = row;
+                    if (work && codec === work.codec) {
+                        work.segments++;
+                        for (const [k, v] of Object.entries(mix)) { work.samples[k] = (work.samples[k] || 0) + v; }
+                    }
+                } catch (e) {
+                    console.warn('segment fetch failed', codec, e);
+                }
+            }));
+            renderBytes();
+        }
+
+        async function load() {
+            const mpd = mpdInput.value.trim();
+            const u = new URL(location.href);
+            u.searchParams.set('mpd', mpd);
+            history.replaceState(null, '', u);
+            if (player) { player.reset(); }
+            byteRows = {};
+            lastNr = null;
+            try {
+                reps = await readReps(mpd);
+            } catch (e) {
+                reps = {};
+                console.error('could not read the MPD', e);
+            }
+            if (!reps[wanted]) { wanted = Object.keys(FORMATS).find(c => reps[c]) || wanted; }
+            renderTracks();
+            renderBytes();
+
+            player = dashjs.MediaPlayer().create();
+            player.updateSettings({
+                debug: { logLevel: dashjs.Debug.LOG_LEVEL_WARNING },
+                streaming: { text: { defaultEnabled: true }, delay: { liveDelay: 2 } }
+            });
+            player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, () => selectTrack(wanted));
+            player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, (e) => {
+                if (e.request && e.request.mediaType === 'text' && e.request.type === 'MediaSegment') {
+                    onTextSegment(e.request.url);
+                }
+            });
+            player.on('ttmlToParse', () => { toParseAt = performance.now(); });
+            player.on('ttmlParsed', (e) => {
+                if (!work) { return; }
+                work.parses++;
+                work.parseMs += performance.now() - toParseAt;
+                work.xmlChars += e && e.ttmlString ? e.ttmlString.length : 0;
+            });
+            player.initialize(video, mpd, true);
+            player.attachTTMLRenderingDiv(document.getElementById('ttml'));
+        }
+
+        document.getElementById('load').addEventListener('click', load);
+        mpdInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { load(); } });
+        setInterval(() => { renderWork(); renderCue(); }, 250);
+        load();
+    })();
+</script>
+</body>
+</html>
