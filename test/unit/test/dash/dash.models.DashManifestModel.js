@@ -59,6 +59,30 @@ describe('DashManifestModel', function () {
             expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw('type is not defined');
         });
 
+        describe('text detection for fragmented subtitles', function () {
+            // As livesim2 signals them: an application/mp4 AdaptationSet whose only
+            // text marker is the sample entry in @codecs.
+            const composeFragmentedText = (codecs) => ({
+                contentType: 'text',
+                mimeType: 'application/mp4',
+                Representation: [{ id: 'sub-' + codecs, codecs }]
+            });
+
+            ['stpp', 'wvtt', 'stpc', 'wvtc'].forEach((codecs) => {
+                it(`should detect an application/mp4 AdaptationSet with codecs ${codecs} as text`, function () {
+                    const adaptation = composeFragmentedText(codecs);
+
+                    expect(dashManifestModel.getIsText(adaptation)).to.be.true;
+                    expect(dashManifestModel.getIsTypeOf(adaptation, Constants.VIDEO)).to.be.false;
+                    expect(dashManifestModel.getIsTypeOf(adaptation, Constants.AUDIO)).to.be.false;
+                });
+            });
+
+            it('should not detect an application/mp4 AdaptationSet with an unknown codec as text', function () {
+                expect(dashManifestModel.getIsText(composeFragmentedText('abcd'))).to.be.false;
+            });
+        });
+
         it('should return null when getSuggestedPresentationDelay is called and mpd is undefined', () => {
             const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay();
 

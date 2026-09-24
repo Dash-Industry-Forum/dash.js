@@ -101,7 +101,7 @@ function DashManifestModel() {
             }
         }
 
-        const mimeTypeRegEx = (type === Constants.TEXT) ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type);
+        const mimeTypeRegEx = (type === Constants.TEXT) ? new RegExp('(ttml|vtt|wvtt|stpp|stpc|wvtc)') : new RegExp(type);
 
         // Check codecs
         if (adaptation.Representation && adaptation.Representation.length) {
