@@ -96,8 +96,9 @@
                 <tbody id="bytes"></tbody>
             </table>
         </div>
-        <p class="note">Each time the player completes a text segment, this page fetches the same segment number for
-            the other three tracks and walks its boxes. The average covers the last 10 segments.</p>
+        <p class="note">This page fetches and walks each segment of the selected track once the player has
+            completed it, and the same segment number of the other three tracks every fifth segment, to keep the
+            request count low. The average covers the last 10 segments fetched per track.</p>
     </div>
 </main>
 
@@ -111,6 +112,7 @@
         };
         const WHOLE_SAMPLE_BOXES = ['ttmn', 'ttmb', 'vttn'];
         const HISTORY = 10;
+        const COMPARE_EVERY = 5;
 
         const params = new URLSearchParams(location.search);
         const defaultMpd = location.origin + '/livesim2/chunkdur_0.2/utc_head/timesubsdur_4500/timesubssegnr_0/' +
@@ -304,7 +306,13 @@
             const nr = m[2];
             lastNr = nr;
             const base = url.slice(0, url.length - m[0].length);
-            await Promise.all(Object.entries(reps).map(async ([codec, rep]) => {
+            // The selected track is walked every segment for the player-work panel; the
+            // other three only every COMPARE_EVERY segments, to stay well inside the
+            // per-IP request limit that livesim2 servers apply.
+            const compareAll = Number(nr) % COMPARE_EVERY === 0;
+            const toFetch = Object.entries(reps).filter(([codec]) =>
+                (work && codec === work.codec) || compareAll || !byteRows[codec]);
+            await Promise.all(toFetch.map(async ([codec, rep]) => {
                 try {
                     const buf = await (await fetch(`${base}/${rep.id}/${nr}.m4s`)).arrayBuffer();
                     const mix = classifySegment(buf);
