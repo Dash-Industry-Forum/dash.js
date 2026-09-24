@@ -104,18 +104,24 @@
     </div>
 
     <div class="card">
-        <h2>Bytes on the wire, same segment, all four tracks</h2>
+        <h2>Payload bytes on the wire, same segment, all four tracks</h2>
         <div class="scroll">
             <table>
                 <thead>
-                <tr><th>Track</th><th>Segment</th><th class="num">Bytes</th><th class="num">kbit/s (avg)</th><th>Samples</th></tr>
+                <tr><th>Track</th><th>Segment</th><th class="num">CMAF bytes</th><th class="num">CMAF kbit/s</th>
+                    <th class="num">LOCMAF bytes</th><th class="num">LOCMAF kbit/s</th><th>Samples</th></tr>
                 </thead>
                 <tbody id="bytes"></tbody>
             </table>
         </div>
-        <p class="note">This page fetches and walks each segment of the selected track once the player has
-            completed it, and the same segment number of the other three tracks every fifth segment, to keep the
-            request count low. The average covers the last 10 segments fetched per track.</p>
+        <p class="note">Bytes are the segment as served, without HTTP: for CMAF the <code>styp</code> and every
+            chunk's <code>moof</code> and <code>mdat</code> header; for LOCMAF the same chunks encoded as LOCMAF
+            Objects, one MoQ group per segment, without MoQ Object headers. The LOCMAF figures come from the
+            <a href="https://github.com/Eyevinn/locmaf">Eyevinn/locmaf</a> reference encoder, run in this page as
+            WebAssembly (<span id="locmafStatus">loading</span>).
+            This page fetches and walks each segment of the selected track once the player has completed it, and
+            the same segment number of the other three tracks every fifth segment, to keep the request count low.
+            kbit/s is the average over the last 10 segments fetched per track.</p>
     </div>
 </main>
 
@@ -146,6 +152,8 @@
         let lastNr = null;
         let toParseAt = 0;
         let frozen = false;
+        let locmafReady = false;
+        const initSegments = {};   // codec -> Promise<Uint8Array|null>
 
         function newWork(codec) {
             return { codec, since: performance.now(), segments: 0, samples: {}, parses: 0, xmlChars: 0, parseMs: 0 };
@@ -232,7 +240,9 @@
                 if (!FORMATS[codec] || out[codec]) { continue; }
                 const st = as.getElementsByTagName('SegmentTemplate')[0];
                 const segDurS = st ? Number(st.getAttribute('duration')) / Number(st.getAttribute('timescale') || 1) : 2;
-                out[codec] = { id: rep.getAttribute('id'), segDurS };
+                const init = (st && st.getAttribute('initialization')) || '$RepresentationID$/init.mp4';
+                out[codec] = { id: rep.getAttribute('id'), segDurS,
+                    init: init.replace('$RepresentationID$', rep.getAttribute('id')) };
             }
             return out;
         }
@@ -256,11 +266,15 @@
             const rows = Object.keys(FORMATS).filter(c => reps[c]).map(codec => {
                 const r = byteRows[codec];
                 const seg = reps[codec].segDurS;
-                const avg = r && r.history.length ? r.history.reduce((a, b) => a + b, 0) / r.history.length : null;
+                const kbps = (h) => h && h.length ?
+                    (h.reduce((a, b) => a + b, 0) / h.length * 8 / seg / 1000).toFixed(1) : '–';
+                const num = (v) => v !== null && v !== undefined ? v.toLocaleString() : '–';
                 return `<tr class="${codec === wanted ? 'sel' : ''}"><td><code>${codec}</code></td>
                     <td>${r ? r.nr : '–'}</td>
-                    <td class="num">${r ? r.bytes.toLocaleString() : '–'}</td>
-                    <td class="num">${avg !== null ? (avg * 8 / seg / 1000).toFixed(1) : '–'}</td>
+                    <td class="num">${r ? num(r.bytes) : '–'}</td>
+                    <td class="num">${kbps(r && r.history)}</td>
+                    <td class="num">${r ? num(r.locmaf) : '–'}</td>
+                    <td class="num">${kbps(r && r.locmafHistory)}</td>
                     <td>${r ? mixText(r.mix) : '–'}</td></tr>`;
             });
             document.getElementById('bytes').innerHTML = rows.join('');
@@ -335,6 +349,61 @@
             a.href = u.href;
         }
 
+        // --- LOCMAF: the reference encoder, as WebAssembly ---
+        // Served from a locmaf/ directory next to the player trees; without it the
+        // LOCMAF columns stay empty and everything else works as before.
+        const LOCMAF_BASE = '../../../locmaf/';
+
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const el = document.createElement('script');
+                el.src = src;
+                el.onload = resolve;
+                el.onerror = () => reject(new Error('could not load ' + src));
+                document.head.appendChild(el);
+            });
+        }
+
+        async function loadLocmaf() {
+            const status = document.getElementById('locmafStatus');
+            try {
+                await loadScript(LOCMAF_BASE + 'wasm_exec.js');
+                const go = new Go();
+                const bytes = await (await fetch(LOCMAF_BASE + 'locmaf.wasm')).arrayBuffer();
+                const { instance } = await WebAssembly.instantiate(bytes, go.importObject);
+                go.run(instance);
+                locmafReady = typeof window.locmafInspect === 'function';
+                status.textContent = locmafReady ?
+                    `LOCMAF ${window.locmafVersion}, build ${window.locmafBuild}` : 'not available';
+            } catch (e) {
+                console.warn('LOCMAF encoder not available', e);
+                status.textContent = 'not available here';
+            }
+        }
+
+        function initSegment(base, codec) {
+            if (!initSegments[codec]) {
+                initSegments[codec] = fetch(`${base}/${reps[codec].init}`)
+                    .then(r => r.ok ? r.arrayBuffer() : null)
+                    .then(b => b && new Uint8Array(b))
+                    .catch(() => null);
+            }
+            return initSegments[codec];
+        }
+
+        // The segment's size as LOCMAF Objects, from the reference encoder's round trip.
+        async function locmafBytes(base, codec, buf) {
+            if (!locmafReady) { return null; }
+            const init = await initSegment(base, codec);
+            if (!init) { return null; }
+            const res = JSON.parse(window.locmafInspect(new Uint8Array(buf), init));
+            if (!res.ok || res.result.mode !== 'align') {
+                console.warn('LOCMAF encode failed', codec, res.error);
+                return null;
+            }
+            return res.result.align.chunks.reduce((sum, c) => sum + c.wireBytes, 0);
+        }
+
         // --- Player ---
         function selectTrack(codec) {
             setFrozen(false);
@@ -370,11 +439,16 @@
                 try {
                     const buf = await (await fetch(`${base}/${rep.id}/${nr}.m4s`)).arrayBuffer();
                     const mix = classifySegment(buf);
-                    const row = byteRows[codec] || { history: [] };
+                    const locmaf = await locmafBytes(base, codec, buf);
+                    const row = byteRows[codec] || { history: [], locmafHistory: [] };
                     row.nr = nr;
                     row.bytes = buf.byteLength;
+                    row.locmaf = locmaf;
                     row.mix = mix;
                     row.history = row.history.concat(buf.byteLength).slice(-HISTORY);
+                    if (locmaf !== null) {
+                        row.locmafHistory = row.locmafHistory.concat(locmaf).slice(-HISTORY);
+                    }
                     byteRows[codec] = row;
                     if (work && codec === work.codec) {
                         work.segments++;
@@ -396,6 +470,7 @@
             if (player) { player.reset(); }
             byteRows = {};
             lastNr = null;
+            for (const k of Object.keys(initSegments)) { delete initSegments[k]; }
             try {
                 reps = await readReps(mpd);
             } catch (e) {
@@ -437,6 +512,7 @@
         setInterval(() => {
             if (!frozen) { renderWork(); renderCue(); }
         }, 250);
+        loadLocmaf();
         load();
     })();
 </script>
