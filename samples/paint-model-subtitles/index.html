@@ -60,7 +60,8 @@
     <p class="lead">Compare the experimental <code>stpc</code>/<code>wvtc</code> tracks with ordinary
         <code>stpp</code>/<code>wvtt</code> on the same low-latency livesim2 stream: bytes on the wire, and
         how many TTML documents the player has to parse. The 4CCs <code>stpc</code>, <code>wvtc</code>,
-        <code>ttmn</code>, <code>ttmb</code> and <code>vttn</code> are placeholders, not registered with MP4RA.</p>
+        <code>ttmn</code>, <code>ttmb</code> and <code>vttn</code> are placeholders, not registered with MP4RA.
+        <a id="otherPlayer" href="../../../shaka-paint/demo/paint-model-subtitles/">Same comparison in Shaka Player &rarr;</a></p>
 
     <div class="card">
         <div class="row">
@@ -316,6 +317,15 @@
             }
         }
 
+        // The other player's page, on the same stream and track.
+        function updateOtherPlayerLink() {
+            const a = document.getElementById('otherPlayer');
+            const u = new URL(a.getAttribute('href').split('?')[0], location.href);
+            u.searchParams.set('mpd', mpdInput.value.trim());
+            u.searchParams.set('track', wanted);
+            a.href = u.href;
+        }
+
         // --- Player ---
         function selectTrack(codec) {
             setFrozen(false);
@@ -332,6 +342,7 @@
             const u = new URL(location.href);
             u.searchParams.set('track', codec);
             history.replaceState(null, '', u);
+            updateOtherPlayerLink();
         }
 
         async function onTextSegment(url) {
