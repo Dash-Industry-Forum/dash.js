@@ -159,8 +159,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                maximumAllowedDrift: 100,
  *                enableBackgroundSyncAfterSegmentDownloadError: true,
  *                defaultTimingSource: {
- *                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
- *                    value: 'http://time.akamai.com/?iso&ms'
+ *                    scheme: 'urn:mpeg:dash:utc:http-iso:2014',
+ *                    value: 'https://time.akamai.com/?iso&ms'
  *                },
  *                artificialTimeOffsetToApply: 0
  *            },
@@ -621,7 +621,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [enableBackgroundSyncAfterSegmentDownloadError=true]
  * Enables or disables the background sync after the player ran into a segment download error.
  *
- * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
+ * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-iso:2014',value: 'https://time.akamai.com/?iso&ms'}]
  * The default timing source to be used. The timing sources in the MPD take precedence over this one.
  *
  * @property {number} [artificialTimeOffsetToApply=0]
@@ -1326,7 +1326,7 @@ function Settings() {
                 maximumAllowedDrift: 100,
                 enableBackgroundSyncAfterSegmentDownloadError: true,
                 defaultTimingSource: {
-                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+                    scheme: 'urn:mpeg:dash:utc:http-iso:2014',
                     value: 'https://time.akamai.com/?iso&ms'
                 },
                 artificialTimeOffsetToApply: 0,
