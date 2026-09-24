@@ -20,6 +20,12 @@
         main { max-width: 1100px; margin: 0 auto; padding: 16px; }
         h1 { font-size: 1.35rem; margin: 0 0 4px; }
         h2 { font-size: 1rem; margin: 0 0 8px; }
+        .header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            flex-wrap: wrap; margin: 0 0 6px; }
+        .header h1 { margin: 0; }
+        a.button { display: inline-block; padding: 8px 18px; border-radius: 6px; background: var(--accent);
+            color: #fff; font-weight: 600; text-decoration: none; white-space: nowrap; }
+        a.button:hover, a.button:focus-visible { filter: brightness(1.1); }
         p.lead { margin: 0 0 16px; color: var(--muted); }
         .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
         .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -56,12 +62,15 @@
 </head>
 <body>
 <main>
-    <h1>Paint-model subtitles in dash.js</h1>
+    <div class="header">
+        <h1>Paint-model subtitles in dash.js</h1>
+        <a id="otherPlayer" class="button" href="../../../shaka-paint/demo/paint-model-subtitles/"
+           title="Open the same stream and track in Shaka Player">Switch to Shaka Player &rarr;</a>
+    </div>
     <p class="lead">Compare the experimental <code>stpc</code>/<code>wvtc</code> tracks with ordinary
         <code>stpp</code>/<code>wvtt</code> on the same low-latency livesim2 stream: bytes on the wire, and
         how many TTML documents the player has to parse. The 4CCs <code>stpc</code>, <code>wvtc</code>,
-        <code>ttmn</code>, <code>ttmb</code> and <code>vttn</code> are placeholders, not registered with MP4RA.
-        <a id="otherPlayer" href="../../../shaka-paint/demo/paint-model-subtitles/">Same comparison in Shaka Player &rarr;</a></p>
+        <code>ttmn</code>, <code>ttmb</code> and <code>vttn</code> are placeholders, not registered with MP4RA.</p>
 
     <div class="card">
         <div class="row">
