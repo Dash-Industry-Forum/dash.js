@@ -148,6 +148,28 @@ describe('TimeSyncController', function () {
         });
     });
 
+    it('should parse an http-iso UTC source without a timezone as UTC', function () {
+        const clock = sinon.useFakeTimers({ now: Date.UTC(2026, 8, 13, 12, 34, 56), toFake: ['Date'] });
+        let offset;
+        const onOffset = event => { offset = event.offset; };
+        eventBus.on(Events.UPDATE_TIME_SYNC_OFFSET, onOffset, this);
+
+        try {
+            settings.update({ streaming: { utcSynchronization: { backgroundAttempts: 0 } } });
+            timeSyncController.initialize();
+            timeSyncController.attemptSync([{
+                schemeIdUri: 'urn:mpeg:dash:utc:http-iso:2014',
+                value: 'https://time.akamai.com/?iso&ms'
+            }], true);
+            this.requests[0].respond(200, { 'Content-Type': 'text/plain' }, '2026-09-13T12:34:56.789');
+
+            expect(offset).to.equal(789);
+        } finally {
+            eventBus.off(Events.UPDATE_TIME_SYNC_OFFSET, onOffset, this);
+            clock.restore();
+        }
+    });
+
 });
 
 function check(done, f) {
