@@ -101,6 +101,12 @@ function DashManifestModel() {
             }
         }
 
+        // Check AdaptationSet@contentType. It names the media type even when the codecs are
+        // ones this player does not know, so such a track is still recognised for what it is.
+        if (adaptation.contentType === type) {
+            return true;
+        }
+
         const mimeTypeRegEx = (type === Constants.TEXT) ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type);
 
         // Check codecs

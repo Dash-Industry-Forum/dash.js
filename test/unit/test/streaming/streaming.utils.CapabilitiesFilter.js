@@ -501,6 +501,80 @@ describe('CapabilitiesFilter', function () {
 
         });
 
+        describe('filter text codecs', function () {
+
+            function textAdaptationSet(id, mimeType, codecs) {
+                return {
+                    id,
+                    contentType: 'text',
+                    mimeType,
+                    Representation: [{ id: `${id}-1`, mimeType, codecs }]
+                };
+            }
+
+            beforeEach(function () {
+                settings.update({ streaming: { capabilities: { filterUnsupportedEssentialProperties: false } } });
+                adapterMock.getIsTypeOf = function (as, type) {
+                    return type === 'text' && as.contentType === 'text';
+                };
+                // Text must not depend on the platform codec check, which knows no text formats.
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function () {
+                        return false;
+                    }
+                });
+            });
+
+            it('should keep text AdaptationSets that dash.js can parse', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [
+                            textAdaptationSet('stpp', 'application/mp4', 'stpp.ttml.im1t'),
+                            textAdaptationSet('wvtt', 'application/mp4', 'wvtt'),
+                            textAdaptationSet('nocodecs', 'application/mp4', undefined),
+                            textAdaptationSet('sideloaded', 'text/vtt', undefined)
+                        ]
+                    }]
+                };
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet.map(as => as.id))
+                            .to.deep.equal(['stpp', 'wvtt', 'nocodecs', 'sideloaded']);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            });
+
+            it('should filter text AdaptationSets with a sample entry dash.js cannot parse', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [
+                            textAdaptationSet('stpp', 'application/mp4', 'stpp'),
+                            textAdaptationSet('stpc', 'application/mp4', 'stpc'),
+                            textAdaptationSet('wvtc', 'application/mp4', 'wvtc')
+                        ]
+                    }]
+                };
+                const removed = [];
+                const onRemoved = (e) => removed.push(e.adaptationSet.id);
+                eventBus.on(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, onRemoved);
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        eventBus.off(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, onRemoved);
+                        expect(manifest.Period[0].AdaptationSet.map(as => as.id)).to.deep.equal(['stpp']);
+                        expect(removed).to.deep.equal(['stpc', 'wvtc']);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            });
+        });
+
         describe('filter codecs using codec properties', function () {
 
             it('should filter AdaptationSets, ignoring channels', function (done) {
