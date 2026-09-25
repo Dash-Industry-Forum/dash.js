@@ -34,6 +34,11 @@ describe('StreamProcessor', function () {
             expect(streamProcessor.setEnhancementStreamProcessor.bind(streamProcessor, {})).to.not.throw();
         });
 
+        it('selectMediaInfo should resolve when the representation controller is not initialized', async function () {
+            const result = await streamProcessor.selectMediaInfo({});
+            expect(result).to.be.undefined;
+        });
+
     });
 
 });
