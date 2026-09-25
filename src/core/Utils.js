@@ -344,9 +344,13 @@ class Utils {
             case 'avc1':
             case 'avc3':
                 return Constants.CODEC_FAMILIES.AVC
+            case 'hev1':
             case 'hvc1':
             case 'hvc3':
                 return Constants.CODEC_FAMILIES.HEVC
+            case 'ec-3':
+            case 'ec3':
+                return Constants.CODEC_FAMILIES.EC3
             default:
                 return base
         }
