@@ -539,6 +539,8 @@ describe('MediaController', function () {
         });
 
         it('should check initial media settings to choose initial track via codec', function () {
+            const codecRegex = /audio\/mp4;codecs="mp4a\.40\.[0-9]*"/;
+            
             const aacTrack = {
                 id: 'aac',
                 type: trackType,
@@ -550,6 +552,18 @@ describe('MediaController', function () {
                 audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '2' }],
                 codec: 'audio/mp4;codecs="mp4a.40.2"'
             };
+            const heaacTrack = {
+                id: 'heaac',
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'de',
+                viewpoint: null,
+                roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                accessibility: [],
+                audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011', value: '2' }],
+                codec: 'audio/mp4;codecs="mp4a.40.29"'
+            };
+
             const ec3Track = {
                 id: 'ec3',
                 type: trackType,
@@ -572,6 +586,31 @@ describe('MediaController', function () {
 
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
             expect(objectUtils.areEqual(currentTrack, ec3Track)).to.be.true;
+
+            mediaController.reset();
+
+            mediaController.addTrack(ec3Track);
+            mediaController.addTrack(aacTrack);
+
+            mediaController.setInitialSettings(trackType, {
+                codec: codecRegex
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, aacTrack)).to.be.true;
+
+            mediaController.reset();
+
+            mediaController.addTrack(ec3Track);
+            mediaController.addTrack(heaacTrack);
+
+            mediaController.setInitialSettings(trackType, {
+                codec: codecRegex
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, heaacTrack)).to.be.true;
         });
 
         it('should ignore codec in initial media settings if no track matches', function () {
