@@ -300,6 +300,11 @@ function Stream(config) {
 
             Promise.all(promises)
                 .then(() => {
+                    const audioProcessor = _getStreamProcessorForType(Constants.AUDIO);
+                    const videoProcessor = _getStreamProcessorForType(Constants.VIDEO);
+                    if (audioProcessor && videoProcessor) {
+                        audioProcessor.setBufferTargetLink(videoProcessor);
+                    }
                     return _createBufferSinks(previousSourceBufferSinks, representationsFromPreviousPeriod)
                 })
                 .then((bufferSinks) => {
