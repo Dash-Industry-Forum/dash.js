@@ -234,6 +234,7 @@ function TextController(config) {
                     codec: currentTrack.codec,
                     accessibility: currentTrack.accessibility[0]
                 };
+                defaultSettings.lang = mediaController.getAvailablePreferredLanguages(tracks, defaultSettings);
                 tracks.some((item, idx) => {
                     // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
                     if (mediaController.matchSettings(defaultSettings, item)) {
