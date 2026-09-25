@@ -33,7 +33,7 @@ jobs:
                 run: npm ci
 
             # The pack in the build job runs with --ignore-scripts, so the prepack hook (and
-            # with it the prebuild -> ci:verify chain) never runs in this workflow. Gate explicitly.
+            # with it build -> ci:verify) never runs in this workflow. Gate explicitly.
             -   name: Run unit tests and lint
                 run: npm run ci:verify
 
