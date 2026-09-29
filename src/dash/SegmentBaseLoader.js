@@ -32,7 +32,6 @@ import DashJSError from '../streaming/vo/DashJSError.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import URLLoader from '../streaming/net/URLLoader.js';
-import FullSegment from './vo/FullSegment.js';
 
 function SegmentBaseLoader() {
 
@@ -297,24 +296,31 @@ function SegmentBaseLoader() {
         let time = sidx.earliest_presentation_time;
         let start = info.range.start + sidx.offset + sidx.first_offset + sidx.size;
         const segments = [];
-        let segment,
-            end,
+        let end,
             duration,
             size;
 
         for (let i = 0; i < len; i++) {
             duration = refs[i].subsegment_duration;
             size = refs[i].referenced_size;
-
-            segment = new FullSegment();
-            // note that we don't explicitly set segment.media as this will be
-            // computed when all BaseURLs are resolved later
-            segment.duration = duration;
-            segment.startTime = time;
-            segment.timescale = timescale;
             end = start + size - 1;
-            segment.mediaRange = start + '-' + end;
-            segments.push(segment);
+
+            // Plain record rather than a FullSegment. This list is an intermediate: the only
+            // consumers, RepresentationController._onSegmentDataUpdated() and
+            // ThumbnailTracks._normalizeSegments(), read five fields off each entry and then
+            // build the real Segment through getTimeBasedSegment(). Instantiating the class
+            // here cost a fifteen property constructor plus an off-shape startTime write for
+            // every entry, which dominates startup on constrained devices when a manifest has
+            // a long index range.
+            // media stays null, it is resolved once all BaseURLs are known.
+            segments.push({
+                duration,
+                startTime: time,
+                timescale,
+                mediaRange: start + '-' + end,
+                media: null
+            });
+
             time += duration;
             start += size;
         }
