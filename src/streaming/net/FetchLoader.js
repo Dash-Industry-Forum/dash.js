@@ -382,13 +382,16 @@ function FetchLoader() {
     function abort() {
         // this = httpRequest (CommonMediaRequest)
         if (this.customData.abortController) {
-            // For firefox and edge
+            // For devices supporting AbortController
             this.customData.abortController.abort();
         } else if (this.customData.reader) {
-            // For Chrome
+            // For those devices that do not support AbortController but have implemented the Streams API
+            // E.g Chrome-v65 and earlier
             try {
                 this.customData.reader.cancel();
-                this.customData.onabort();
+                if (this.customData.onabort) {
+                    this.customData.onabort();
+                }
             } catch (e) {
                 // throw exceptions (TypeError) when reader was previously closed,
                 // for example, because a network issue
