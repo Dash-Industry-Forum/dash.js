@@ -231,7 +231,12 @@ function PlaybackController() {
             _adjustLiveDelayAfterUserInteraction(time);
         }
 
-        videoModel.setCurrentTime(time, stickToBuffered);
+        const appliedTime = videoModel.setCurrentTime(time, stickToBuffered);
+
+        // With stickToBuffered, we won't necessarily get the time we asked for so adjust internalSeekTarget.
+        if (internal === true && !isNaN(appliedTime)) {
+            internalSeekTarget = appliedTime;
+        }
     }
 
     /**

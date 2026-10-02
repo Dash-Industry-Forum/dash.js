@@ -160,6 +160,19 @@ describe('PlaybackController', function () {
                 expect(dispatchedSeekingEvents).to.have.lengthOf(1);
                 expect(dispatchedSeekingEvents[0].seekTime).to.equal(120);
             });
+
+            it('should not dispatch PLAYBACK_SEEKING when the element adjusted the requested internal seek time', function () {
+                // The element applies a different time than requested, as stickToBuffered does
+                videoModelMock.setCurrentTime = function (time) {
+                    this.time = time + 5;
+                    return this.time;
+                };
+
+                playbackController.seek(120, false, true);
+                videoModelMock.fireEvent('seeking');
+
+                expect(dispatchedSeekingEvents).to.have.lengthOf(0);
+            });
         });
 
         describe('computeAndSetLiveDelay()', function () {
