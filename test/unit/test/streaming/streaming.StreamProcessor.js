@@ -5,7 +5,6 @@ import EventBus from '../../../../src/core/EventBus.js';
 import Settings from '../../../../src/core/Settings.js';
 import BoxParser from '../../../../src/streaming/utils/BoxParser.js';
 import MediaInfoSelectionInput from '../../../../src/streaming/vo/MediaInfoSelectionInput.js';
-import DashConstants from '../../../../src/dash/constants/DashConstants.js';
 import AbrControllerMock from '../../mocks/AbrControllerMock.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
@@ -105,19 +104,14 @@ describe('StreamProcessor', function () {
         let representations;
         let mediaInfo;
 
-        function createSegmentBaseRepresentation(index) {
-            const representation = voHelper.createRepresentation(testType, index);
-            representation.segmentInfoType = DashConstants.SEGMENT_BASE;
-            representation.segments = null;
-            return representation;
-        }
-
         beforeEach(function () {
             holdSegmentList = false;
             pendingSegmentListResolvers = [];
             segmentListRequestedFor = [];
             getRequestsCalls = 0;
-            representations = [createSegmentBaseRepresentation(0), createSegmentBaseRepresentation(1)];
+            representations = [0, 1].map(function (index) {
+                return voHelper.createSegmentBaseRepresentation(testType, index);
+            });
 
             // One AdaptationSet, so every Representation shares the MediaInfo. segmentAlignment
             // decides which branch _defaultQualitySwitchPreparationDone() takes; pin it so the
@@ -134,10 +128,7 @@ describe('StreamProcessor', function () {
                 mimeType: 'video/mp4',
                 streamInfo: { id: 'streamId', manifestInfo: { isDynamic: false }, duration: 100 },
                 abrController: Object.assign(new AbrControllerMock(), {
-                    registerStreamType: function () {
-                    },
-                    handleNewMediaInfo: function () {
-                    },
+                    // Representation aware, so this stays local to the suite.
                     getOptimalRepresentationForBitrate: function () {
                         return representations[0];
                     },

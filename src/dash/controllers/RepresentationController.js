@@ -160,7 +160,7 @@ function RepresentationController(config) {
         _endDataUpdate();
     }
 
-    function _updateRepresentation(currentRep, isSelected = true) {
+    function _updateRepresentation(currentRep, isSelected) {
         return new Promise((resolve, reject) => {
             const hasInitialization = currentRep.hasInitialization();
             const hasSegments = currentRep.hasSegments();
@@ -172,7 +172,7 @@ function RepresentationController(config) {
             promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
             // For SegmentBase streams the segment list is only fetched for the Representation we
             // are about to play. The others are resolved lazily in prepareQualityChange().
-            promises.push(segmentsController.updateSegmentData(currentRep, isSelected ? hasSegments : true));
+            promises.push(isSelected ? segmentsController.updateSegmentData(currentRep, hasSegments) : Promise.resolve());
 
             Promise.all(promises)
                 .then((data) => {
@@ -313,27 +313,17 @@ function RepresentationController(config) {
      * We get the new selected Representation which will not hold the ranges and the segment references in case of SegmentBase.
      * In any case use the id to find the right Representation instance in our array of Representations.
      * @param newRep
-     * @return {Promise}
+     * @return {Promise} resolves once the segment list of the new Representation is available
      */
     function prepareQualityChange(newRep) {
-        const voRepresentations = voAvailableRepresentations.filter((rep) => {
-            return rep.id === newRep.id;
-        })
-
-        if (voRepresentations.length > 0) {
-            const rep = voRepresentations[0];
-            _setCurrentVoRepresentation(rep);
-
-            // Segment data was skipped at startup for non-selected Representations, resolve it now.
-            // hasSegments() reflects the addressing mode from the manifest and stays false for
-            // SegmentBase, so we also check whether the list has already been built for this
-            // Representation to avoid reloading it on every switch back and forth.
-            if (!rep.hasSegments() && !rep.segments) {
-                return _updateRepresentation(rep, true);
-            }
+        const rep = getRepresentationById(newRep.id);
+        if (!rep) {
+            return Promise.resolve();
         }
 
-        return Promise.resolve();
+        _setCurrentVoRepresentation(rep);
+        // Only fetches for a SegmentBase Representation whose segment list was skipped at startup.
+        return _updateRepresentation(rep, true);
     }
 
     function _setCurrentVoRepresentation(value) {

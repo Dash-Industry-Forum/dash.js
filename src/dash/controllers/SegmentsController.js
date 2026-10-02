@@ -67,7 +67,8 @@ function SegmentsController(config) {
     }
 
     function updateSegmentData(voRepresentation, hasSegments) {
-        if (hasSegments) {
+        // The segment list is fetched once per Representation instance; callers may ask again (lazy SegmentBase loading).
+        if (hasSegments || voRepresentation.segments) {
             return Promise.resolve();
         }
         return segmentBaseController.getSegmentList({

@@ -135,54 +135,29 @@ describe('RepresentationController', function () {
     });
 
     describe('SegmentBase segment lists are loaded lazily', function () {
-        // hasSegments() returns false for SegmentBase, which is what makes the segment list
-        // something we have to fetch rather than read straight from the manifest.
-        function createSegmentBaseRepresentations() {
-            return [0, 1, 2].map((index) => {
-                const representation = voHelper.createRepresentation(testType, index);
-                representation.segmentInfoType = DashConstants.SEGMENT_BASE;
-                representation.segments = null;
-                return representation;
-            });
-        }
-
-        // Mirrors SegmentsController.updateSegmentData: it is a no-op when the segment list is
-        // already known, and otherwise resolves it and populates representation.segments the way
-        // _onSegmentDataUpdated does for a real response.
-        class RecordingSegmentsControllerMock {
-            constructor() {
-                this.segmentDataLoadedFor = [];
-            }
-
-            updateInitData() {
-                return Promise.resolve();
-            }
-
-            updateSegmentData(representation, hasSegments) {
-                if (hasSegments) {
-                    return Promise.resolve();
-                }
-                this.segmentDataLoadedFor.push(representation.id);
-                representation.segments = [{ index: 0 }];
-                return Promise.resolve();
-            }
-
-            getMediaFinishedInformation() {
-                return { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
-            }
-        }
-
         let segmentBaseRepresentations;
-        let recordingSegmentsController;
+        let segmentDataLoadedFor;
         let lazyRepresentationController;
 
+        // Mirrors SegmentsController.updateSegmentData: the list is fetched once per Representation
+        // and populated the way _onSegmentDataUpdated does for a real response.
+        const segmentsControllerMock = Object.assign(new SegmentsControllerMock(), {
+            updateSegmentData(representation, hasSegments) {
+                if (!hasSegments && !representation.segments) {
+                    segmentDataLoadedFor.push(representation.id);
+                    representation.segments = [{ index: 0 }];
+                }
+                return Promise.resolve();
+            }
+        });
+
         beforeEach(function () {
-            segmentBaseRepresentations = createSegmentBaseRepresentations();
-            recordingSegmentsController = new RecordingSegmentsControllerMock();
+            segmentDataLoadedFor = [];
+            segmentBaseRepresentations = [0, 1, 2].map((index) => voHelper.createSegmentBaseRepresentation(testType, index));
             lazyRepresentationController = RepresentationController(context).create({
                 streamInfo: streamProcessor.getStreamInfo(),
                 abrController: abrControllerMock,
-                segmentsController: recordingSegmentsController,
+                segmentsController: segmentsControllerMock,
                 timelineConverter: timelineConverter,
                 playbackController: playbackControllerMock,
                 dashMetrics: dashMetricsMock,
@@ -203,7 +178,7 @@ describe('RepresentationController', function () {
             return lazyRepresentationController
                 .updateData(segmentBaseRepresentations, true, segmentBaseRepresentations[0].id)
                 .then(function () {
-                    expect(recordingSegmentsController.segmentDataLoadedFor).to.deep.equal([segmentBaseRepresentations[0].id]);
+                    expect(segmentDataLoadedFor).to.deep.equal([segmentBaseRepresentations[0].id]);
                 });
         });
 
@@ -224,7 +199,7 @@ describe('RepresentationController', function () {
                 .then(function () {
                     // A is loaded at startup, B on the first switch to it. Switching back must
                     // reuse both lists rather than fetching and rebuilding them again.
-                    expect(recordingSegmentsController.segmentDataLoadedFor).to.deep.equal([repA.id, repB.id]);
+                    expect(segmentDataLoadedFor).to.deep.equal([repA.id, repB.id]);
                     expect(lazyRepresentationController.getCurrentRepresentation().id).to.equal(repB.id);
                 });
         });

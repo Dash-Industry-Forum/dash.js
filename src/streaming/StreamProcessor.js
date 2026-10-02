@@ -694,9 +694,7 @@ function StreamProcessor(config) {
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
             _prepareForDefaultQualitySwitch(pendingSwitchToVoRepresentation.newRepresentation, pendingSwitchToVoRepresentation.oldRepresentation);
         } else if (!trackSwitchInProgress && !qualityChangeInProgress) {
-            // While a quality switch is being prepared the current Representation has already
-            // changed but its segments may not be resolved yet. The schedule timer is restarted
-            // by the corresponding *QualitySwitchPreparationDone() handler.
+            // Paused while a quality switch is prepared; the *QualitySwitchPreparationDone() handlers restart it.
             scheduleController.startScheduleTimer(0);
         }
     }
