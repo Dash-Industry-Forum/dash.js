@@ -188,7 +188,8 @@ function WebmSegmentBaseLoader() {
             }
 
             // Plain record, see the equivalent comment in SegmentBaseLoader.getSegmentsForSidx().
-            // media stays null, it is resolved once all BaseURLs are known.
+            // media stays null. The request URL is resolved later from the BaseURL, this record
+            // is not updated.
             segments.push({
                 duration,
                 startTime: parsed[i].CueTime,

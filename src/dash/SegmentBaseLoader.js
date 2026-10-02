@@ -307,12 +307,10 @@ function SegmentBaseLoader() {
 
             // Plain record rather than a FullSegment. This list is an intermediate: the only
             // consumers, RepresentationController._onSegmentDataUpdated() and
-            // ThumbnailTracks._normalizeSegments(), read five fields off each entry and then
-            // build the real Segment through getTimeBasedSegment(). Instantiating the class
-            // here cost a fifteen property constructor plus an off-shape startTime write for
-            // every entry, which dominates startup on constrained devices when a manifest has
-            // a long index range.
-            // media stays null, it is resolved once all BaseURLs are known.
+            // ThumbnailTracks._normalizeSegments(), read these five fields off each entry and
+            // then build the real Segment through getTimeBasedSegment().
+            // media stays null. The request URL is resolved later from the BaseURL, this record
+            // is not updated.
             segments.push({
                 duration,
                 startTime: time,
