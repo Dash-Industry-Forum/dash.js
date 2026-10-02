@@ -77,6 +77,12 @@ describe('SegmentBaseLoader', function () {
         describe('multi-SIDX', function () {
             let requests, parent, firstChild, secondChild;
 
+            const toBuffer = (words) => {
+                const data = new DataView(new ArrayBuffer(words.length * 4));
+                words.forEach((word, index) => data.setUint32(index * 4, word));
+                return data.buffer;
+            };
+
             beforeEach(function () {
                 requests = [];
                 FactoryMaker.extend('URLLoader', () => ({
@@ -94,11 +100,7 @@ describe('SegmentBaseLoader', function () {
                     [56, 0x73696478, 0, 1, 1000, 0, 0, 2, 0x8000002c, 1000, 0, 0x8000002c, 1000, 0],
                     [44, 0x73696478, 0, 1, 1000, 0, 44, 1, 100, 1000, 0],
                     [44, 0x73696478, 0, 1, 1000, 1000, 100, 1, 100, 1000, 0]
-                ].map((words) => {
-                    const data = new DataView(new ArrayBuffer(words.length * 4));
-                    words.forEach((word, index) => data.setUint32(index * 4, word));
-                    return data.buffer;
-                });
+                ].map(toBuffer);
             });
 
             it('should keep segments in parent reference order when child requests complete out of order', async function () {
@@ -125,6 +127,22 @@ describe('SegmentBaseLoader', function () {
                 const { segments, error } = await loading;
                 expect(error).to.equal(undefined);
                 expect(segments.map((segment) => segment.mediaRange)).to.deep.equal(['144-243', '244-343']);
+            });
+
+            it('should request child SIDX boxes relative to the parent SIDX position and first_offset', async function () {
+                // A free box, then a parent SIDX with first_offset 16 referencing two child indexes.
+                const offsetParent = toBuffer([8, 0x66726565, 56, 0x73696478, 0, 1, 1000, 0, 16, 2, 0x8000002c, 1000, 0, 0x8000002c, 1000, 0]);
+
+                const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video', '100-163');
+                requests[0].success(offsetParent);
+                // 100 (index range start) + 8 (free box) + 56 (parent size) + 16 (first_offset)
+                expect(requests.slice(1).map(({ request }) => request.range)).to.deep.equal(['180-223', '224-267']);
+                requests[1].success(firstChild);
+                requests[2].success(secondChild);
+
+                const { segments, error } = await loading;
+                expect(error).to.equal(undefined);
+                expect(segments.map((segment) => segment.mediaRange)).to.deep.equal(['268-367', '368-467']);
             });
         });
     });
