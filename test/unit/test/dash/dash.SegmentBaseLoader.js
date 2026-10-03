@@ -61,39 +61,58 @@ describe('SegmentBaseLoader', function () {
                 });
         });
 
-        it('should keep multi-SIDX segments in parent reference order when child requests complete out of order', async function () {
-            const requests = [];
-            FactoryMaker.extend('URLLoader', () => ({
-                load: (request) => requests.push(request),
-                abort: () => {}
-            }), false, context);
-            try {
-                segmentBaseLoader.initialize();
-            } finally {
-                delete context.URLLoader;
-            }
+        describe('multi-SIDX', function () {
+            let requests, parent, firstChild, secondChild;
 
-            // Version 0 SIDX boxes: a parent referencing two child indexes, each with one media segment.
-            const [parent, firstChild, secondChild] = [
-                [56, 0x73696478, 0, 1, 1000, 0, 0, 2, 0x8000002c, 1000, 0, 0x8000002c, 1000, 0],
-                [44, 0x73696478, 0, 1, 1000, 0, 44, 1, 100, 1000, 0],
-                [44, 0x73696478, 0, 1, 1000, 1000, 100, 1, 100, 1000, 0]
-            ].map((words) => {
-                const data = new DataView(new ArrayBuffer(words.length * 4));
-                words.forEach((word, index) => data.setUint32(index * 4, word));
-                return data.buffer;
+            beforeEach(function () {
+                requests = [];
+                FactoryMaker.extend('URLLoader', () => ({
+                    load: (request) => requests.push(request),
+                    abort: () => {}
+                }), false, context);
+                try {
+                    segmentBaseLoader.initialize();
+                } finally {
+                    delete context.URLLoader;
+                }
+
+                // Version 0 SIDX boxes: a parent referencing two child indexes, each with one media segment.
+                [parent, firstChild, secondChild] = [
+                    [56, 0x73696478, 0, 1, 1000, 0, 0, 2, 0x8000002c, 1000, 0, 0x8000002c, 1000, 0],
+                    [44, 0x73696478, 0, 1, 1000, 0, 44, 1, 100, 1000, 0],
+                    [44, 0x73696478, 0, 1, 1000, 1000, 100, 1, 100, 1000, 0]
+                ].map((words) => {
+                    const data = new DataView(new ArrayBuffer(words.length * 4));
+                    words.forEach((word, index) => data.setUint32(index * 4, word));
+                    return data.buffer;
+                });
             });
 
-            const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video', '0-55');
-            requests[0].success(parent);
-            expect(requests.slice(1).map(({ request }) => request.range)).to.deep.equal(['56-99', '100-143']);
-            requests[2].success(secondChild);
-            requests[1].success(firstChild);
+            it('should keep segments in parent reference order when child requests complete out of order', async function () {
+                const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video', '0-55');
+                requests[0].success(parent);
+                expect(requests.slice(1).map(({ request }) => request.range)).to.deep.equal(['56-99', '100-143']);
+                requests[2].success(secondChild);
+                requests[1].success(firstChild);
 
-            const { segments, error } = await loading;
-            expect(error).to.equal(undefined);
-            expect(segments.map((segment) => segment.startTime)).to.deep.equal([0, 1000]);
-            expect(segments.map((segment) => segment.mediaRange)).to.deep.equal(['144-243', '244-343']);
+                const { segments, error } = await loading;
+                expect(error).to.equal(undefined);
+                expect(segments.map((segment) => segment.startTime)).to.deep.equal([0, 1000]);
+                expect(segments.map((segment) => segment.mediaRange)).to.deep.equal(['144-243', '244-343']);
+            });
+
+            it('should keep collecting child results when an incomplete child SIDX is reloaded', async function () {
+                const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video', '0-55');
+                requests[0].success(parent);
+                requests[1].success(firstChild.slice(0, 40));
+                expect(requests[3].request.range).to.equal('56-100');
+                requests[2].success(secondChild);
+                requests[3].success(firstChild);
+
+                const { segments, error } = await loading;
+                expect(error).to.equal(undefined);
+                expect(segments.map((segment) => segment.mediaRange)).to.deep.equal(['144-243', '244-343']);
+            });
         });
     });
 });

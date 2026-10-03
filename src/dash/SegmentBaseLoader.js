@@ -216,7 +216,7 @@ function SegmentBaseLoader() {
                         info.range.end += extraBytes;
                     }
                 }
-                _loadSegmentsRecursively(representation, mediaType, info.range, resolve, null, info);
+                _loadSegmentsRecursively(representation, mediaType, info.range, resolve, callback, info);
             } else {
                 const ref = sidx.references;
                 let loadMultiSidx,
