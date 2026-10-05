@@ -964,6 +964,55 @@
         ]
     },
     {
+        "section": "Player Intelligence",
+        "samples": [
+            {
+                "title": "ML-based client-side upscaling (overview)",
+                "description": "Entry page for the client-side upscaling samples: bilinear baseline, ESPCN and Real-ESRGAN super-resolution on WebGPU.",
+                "href": "ai/index.html",
+                "image": "lib/img/bbb-4.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "WebGPU"
+                ]
+            },
+            {
+                "title": "1a: WebGPU upscaling (passthrough)",
+                "description": "Fetches the lowest video rendition and upscales it 4x with a bilinear WebGPU shader, next to the original. Baseline for client-side super-resolution.",
+                "href": "ai/1a-webgpu-upscale-passthrough/index.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "WebGPU"
+                ]
+            },
+            {
+                "title": "1b: ESPCN super-resolution (WebGPU)",
+                "description": "Fetches the lowest video rendition and upscales it 4x with ESPCN, a small super-resolution CNN running as WebGPU compute shaders, next to the original.",
+                "href": "ai/1b-espcn-super-resolution/index.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "WebGPU"
+                ]
+            },
+            {
+                "title": "1c: Real-ESRGAN animevideov3 (WebGPU)",
+                "description": "Fetches the lowest video rendition and upscales it 4x with Real-ESRGAN realesr-animevideov3, run by onnxruntime-web on WebGPU, next to the original.",
+                "href": "ai/1c-realesrgan-animevideov3/index.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "WebGPU"
+                ]
+            }
+        ]
+    },
+    {
         "section": "Builds",
         "samples": [
             {

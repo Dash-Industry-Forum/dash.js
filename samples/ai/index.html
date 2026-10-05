@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="https://dashif.org/img/favicon.ico"/>
+    <title>ML-based client-side upscaling</title>
+
+    <!-- Same look as the DASH-IF reference client: reuse its Bootstrap build, icons and theme CSS -->
+    <link href="../dash-if-reference-player/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../dash-if-reference-player/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../dash-if-reference-player/app/css/main.css" rel="stylesheet">
+    <style>
+        .sr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        /* option-card is sized for the reference client's horizontal scroller; let it fill grid cells here */
+        .sr-grid .option-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sr-grid .option-card-body {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            max-height: none;
+            font-size: 0.85rem;
+        }
+
+        .sr-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+            color: var(--rp-text);
+        }
+
+        .sr-facts {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.2rem 0.75rem;
+            margin: 0.5rem 0 0.75rem;
+        }
+
+        .sr-facts dt {
+            font-weight: 500;
+            color: var(--rp-text-muted);
+        }
+
+        .sr-facts dd {
+            margin: 0;
+        }
+
+        .sr-grid .btn {
+            margin-top: auto;
+            align-self: flex-start;
+        }
+
+        .sr-planned {
+            opacity: 0.75;
+            border-style: dashed;
+        }
+
+        .sr-planned .option-card-header {
+            color: var(--rp-text-muted);
+        }
+
+        .sr-full {
+            margin-bottom: 1rem;
+        }
+
+        .sr-full .option-card-body {
+            max-height: none;
+            font-size: 0.85rem;
+        }
+
+        .sr-full ul {
+            margin: 0;
+            padding-left: 1.1rem;
+        }
+
+        .sr-full li {
+            margin-bottom: 0.25rem;
+        }
+
+        .notice-banner.sr-info {
+            background: var(--rp-accent-subtle);
+            border-color: rgba(13, 110, 253, 0.3);
+            border-left-color: var(--rp-accent);
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+
+    <!-- ============ HEADER ============ -->
+    <div class="header-bar">
+        <div class="logo-area">
+            <img src="../dash-if-reference-player/img/if.png" alt="DASH-IF">
+            <h1>ML-based client-side upscaling</h1>
+            <span class="version-badge">SVTA Hackathon · Player Intelligence</span>
+            <a href="../index.html" class="homepage-link">dash.js samples</a>
+        </div>
+        <div class="github-links">
+            <select class="theme-select" id="theme-select" aria-label="Theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="latte">Catppuccin Latte</option>
+                <option value="frappe">Catppuccin Frappe</option>
+                <option value="macchiato">Catppuccin Macchiato</option>
+                <option value="mocha">Catppuccin Mocha</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ============ NOTICE ============ -->
+    <div class="notice-banner sr-info" role="note">
+        <i class="bi bi-gpu-card"></i>
+        <div>
+            The samples need a browser with <strong>WebGPU</strong> (e.g. Chrome or Edge). Costs below were measured on an
+            Apple GPU in Chrome.
+        </div>
+    </div>
+
+    <!-- ============ CONCEPT ============ -->
+    <div class="option-card sr-full">
+        <div class="option-card-header">Concept</div>
+        <div class="option-card-body">
+            dash.js deliberately fetches a low-resolution rendition (320x180, 200 kbps) and upscales it 4x to 1280x720 on
+            the device with WebGPU. Super-resolution models recover detail, so the viewer gets a sharper picture while
+            much less bandwidth is used. Only the player can make this trade between bandwidth and on-device compute.
+            Everything runs in the browser and frames never leave the GPU; each step is an isolated sample that uses only
+            the public dash.js API.
+        </div>
+    </div>
+
+    <!-- ============ SAMPLES ============ -->
+    <div class="sr-grid">
+        <div class="option-card">
+            <div class="option-card-header">Step 1a · Baseline</div>
+            <div class="option-card-body">
+                <div class="sr-card-title">WebGPU upscaling (passthrough)</div>
+                <div>Plain bilinear upscaling in a WebGPU shader. Proves the frame pipeline and sets the baseline cost.</div>
+                <dl class="sr-facts">
+                    <dt>Method</dt><dd>Bilinear ×4</dd>
+                    <dt>Cost</dt><dd>~3 ms/frame</dd>
+                    <dt>Result</dt><dd>Same as the original; difference view is flat grey</dd>
+                </dl>
+                <a class="btn btn-sm btn-success" href="1a-webgpu-upscale-passthrough/index.html">
+                    <i class="bi bi-play-fill"></i> Open sample
+                </a>
+            </div>
+        </div>
+
+        <div class="option-card">
+            <div class="option-card-header">Step 1b · Super-resolution</div>
+            <div class="option-card-body">
+                <div class="sr-card-title">ESPCN super-resolution</div>
+                <div>ESPCN x4, a small 3-layer CNN, written by hand as WebGPU compute shaders. No ML runtime.</div>
+                <dl class="sr-facts">
+                    <dt>Method</dt><dd>ESPCN ×4 (luma), OpenCV weights</dd>
+                    <dt>Cost</dt><dd>~7–10 ms/frame</dd>
+                    <dt>Result</dt><dd>Slightly crisper edges; compression artifacts stay</dd>
+                </dl>
+                <a class="btn btn-sm btn-success" href="1b-espcn-super-resolution/index.html">
+                    <i class="bi bi-play-fill"></i> Open sample
+                </a>
+            </div>
+        </div>
+
+        <div class="option-card">
+            <div class="option-card-header">Step 1c · Super-resolution</div>
+            <div class="option-card-body">
+                <div class="sr-card-title">Real-ESRGAN animevideov3</div>
+                <div>Compact Real-ESRGAN video model trained on realistic degradations, run by onnxruntime-web on WebGPU.</div>
+                <dl class="sr-facts">
+                    <dt>Method</dt><dd>Real-ESRGAN ×4 (RGB), official weights</dd>
+                    <dt>Cost</dt><dd>~40–70 ms/frame (11–25 SR fps)</dd>
+                    <dt>Result</dt><dd>Clearly sharper; compression blur and blocking removed</dd>
+                </dl>
+                <a class="btn btn-sm btn-success" href="1c-realesrgan-animevideov3/index.html">
+                    <i class="bi bi-play-fill"></i> Open sample
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ PLANNED ============ -->
+    <div class="sr-grid">
+        <div class="option-card sr-planned">
+            <div class="option-card-header">Step 2 · Planned</div>
+            <div class="option-card-body">
+                <div class="sr-card-title">SR-aware quality selection</div>
+                <div>While upscaling is active, dash.js caps the bitrate at the lowest rendition the model can upscale to the
+                    display size, and shows the bandwidth saved.</div>
+            </div>
+        </div>
+
+        <div class="option-card sr-planned">
+            <div class="option-card-header">Step 3 · Planned</div>
+            <div class="option-card-body">
+                <div class="sr-card-title">Energy-aware upscaling</div>
+                <div>The upscaling level (Real-ESRGAN, ESPCN, off) adapts to frame cost, CPU pressure, battery and dropped
+                    frames. When it steps down, the bitrate cap lifts.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ COMMON FEATURES ============ -->
+    <div class="option-card sr-full">
+        <div class="option-card-header">In every sample</div>
+        <div class="option-card-body">
+            <ul>
+                <li>Original <code>&lt;video&gt;</code> and upscaled canvas side by side, both at the exact output size (one
+                    canvas pixel per screen pixel).</li>
+                <li>Overlays with decoded and output resolution, upscaling method and ms/frame.</li>
+                <li><strong>Difference ×10</strong>: what the upscaler adds compared with bilinear (grey = nothing).
+                    <strong>Zoom 4×</strong>: both panels magnified at the cursor.</li>
+                <li>Content selector: Big Buck Bunny (animation) and Envivio (live action), both played from their 320x180
+                    rendition.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ============ FOOTER ============ -->
+    <div class="footer-area">
+        <h6>Built on dash.js · <a href="../dash-if-reference-player/index.html">DASH-IF Reference Client</a></h6>
+    </div>
+
+</div>
+
+<script>
+    // Theme selector, same themes and storage key as the reference client
+    (function () {
+        var THEMES = ['light', 'dark', 'latte', 'frappe', 'macchiato', 'mocha'];
+        var select = document.getElementById('theme-select');
+        var saved = null;
+        try {
+            saved = localStorage.getItem('rp-theme');
+        } catch (e) {
+            // storage unavailable: keep the default
+        }
+
+        function apply(theme) {
+            theme = THEMES.indexOf(theme) !== -1 ? theme : 'light';
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            select.value = theme;
+            return theme;
+        }
+
+        apply(saved);
+        select.addEventListener('change', function () {
+            var theme = apply(select.value);
+            try {
+                localStorage.setItem('rp-theme', theme);
+            } catch (e) {
+                // storage unavailable: theme still applies for this page
+            }
+        });
+    })();
+</script>
+</body>
+</html>

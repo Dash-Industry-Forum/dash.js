@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1b: ESPCN super-resolution (WebGPU)</title>
+
+    <script src="../../../dist/modern/umd/dash.all.debug.js"></script>
+    <!-- sample-template.js resolves samples/lib/ from this tag; its fallback assumes one folder depth -->
+    <script type="module" src="../../lib/sample-template.js"></script>
+
+    <link href="../../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../../lib/sample.css" rel="stylesheet">
+    <link href="../../../contrib/controlbar/controlbar.css" rel="stylesheet">
+    <style>
+        /* Two 1280x720 device-pixel panels don't fit the default 1200px sample width */
+        .sample-container {
+            max-width: none;
+        }
+
+        .sample-content-main {
+            flex: 1 1 auto;
+        }
+
+        /* Both panels are sized to the upscaled resolution from JS and wrap when they don't fit */
+        .sr-compare {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .sr-compare .sample-video-wrapper,
+        .sr-compare video {
+            max-width: none;
+            aspect-ratio: auto;
+        }
+
+        #sr-canvas {
+            display: block;
+        }
+
+        /* Per-panel info overlay; below the control bar (z-index 10) */
+        .sr-overlay {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            z-index: 5;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.65);
+            color: #fff;
+            font: 12px/1.4 ui-monospace, monospace;
+            white-space: pre;
+            pointer-events: none;
+        }
+
+        .sr-overlay b {
+            font-size: 13px;
+        }
+
+        /* Zoom: scale the content inside each (overflow: hidden) wrapper around the cursor */
+        .sr-compare video,
+        #sr-canvas {
+            transition: transform 0.1s;
+        }
+
+        #sr-canvas {
+            image-rendering: pixelated;
+        }
+
+        .sr-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<script class="code">
+    async function init(video, wrapper, createEspcnRenderer) {
+        // Selectable content; both have a 320x180 @ 200 kbps rendition, upscaled 4x to 1280x720
+        var streams = [
+            { name: 'Big Buck Bunny (animation)', url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd' },
+            { name: 'Envivio (live action)', url: 'https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd' }
+        ];
+        var player = dashjs.MediaPlayer().create();
+
+        // Fetch only the lowest video rendition; ESPCN upscales it 4x
+        player.updateSettings({
+            streaming: {
+                abr: {
+                    autoSwitchBitrate: { video: false },
+                    initialBitrate: { video: 1 }
+                }
+            }
+        });
+        player.initialize(video, streams[0].url, true);
+
+        // Side by side: original <video> left, WebGPU canvas right
+        var grid = document.createElement('div');
+        grid.className = 'sr-compare';
+        wrapper.replaceWith(grid);
+        grid.innerHTML =
+            '<div class="sample-video-wrapper" id="upscaled-wrapper"><canvas id="sr-canvas"></canvas>' +
+            '<div class="sr-overlay" id="overlay-upscaled"><b>UPSCALED (ESPCN, WebGPU)</b>\nwaiting for frames…</div></div>';
+        grid.prepend(wrapper);
+        grid.insertAdjacentHTML('afterend', '<div class="sr-controls">' +
+            '<div class="d-flex align-items-center gap-2"><label for="select-stream" class="form-label mb-0">Content</label>' +
+            '<select class="form-select form-select-sm w-auto" id="select-stream">' +
+            streams.map(function (s, i) { return '<option value="' + i + '">' + s.name + '</option>'; }).join('') +
+            '</select></div>' +
+            '<div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="toggle-diff">' +
+            '<label class="form-check-label" for="toggle-diff">Difference ×10 (upscaled − bilinear, grey = no change)</label></div>' +
+            '<div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="toggle-zoom">' +
+            '<label class="form-check-label" for="toggle-zoom">Zoom 4× (follows the cursor, both panels)</label></div>' +
+            '</div>');
+        // The ABR settings above stay active, so the new stream also starts on its lowest rendition
+        document.getElementById('select-stream').addEventListener('change', function (e) {
+            player.attachSource(streams[e.target.value].url);
+        });
+        wrapper.insertAdjacentHTML('beforeend', '<div class="sr-overlay" id="overlay-original"><b>ORIGINAL</b></div>');
+        await createControlBar(player, video, wrapper);
+
+        var overlayOriginal = document.getElementById('overlay-original');
+        var overlayUpscaled = document.getElementById('overlay-upscaled');
+        try {
+            var renderer = await createEspcnRenderer(video, document.getElementById('sr-canvas'), {
+                onStats: function (s) {
+                    // Canvas pixels vs. CSS pixels: on HiDPI screens the elements are output / devicePixelRatio CSS px
+                    var wh = s.output.split('x');
+                    var shown = devicePixelRatio === 1 ? '' : ' (shown at ' + Math.round(wh[0] / devicePixelRatio) + 'x' +
+                        Math.round(wh[1] / devicePixelRatio) + ' CSS px × ' + devicePixelRatio + ')';
+                    // The <video> element is shown at the same size, so the browser scales it by the same factor
+                    overlayOriginal.innerHTML = '<b>ORIGINAL</b>\n' +
+                        'Decoded:   ' + s.input + '\n' +
+                        'Displayed: ' + s.output + shown + '\n' +
+                        'Upscaling: none (browser display scaling ×' + s.scale + ')';
+                    overlayUpscaled.innerHTML = '<b>UPSCALED (ESPCN, WebGPU)</b>\n' +
+                        'Input:     ' + s.input + '\n' +
+                        'Output:    ' + s.output + shown + '\n' +
+                        'Upscaling: ESPCN ×' + s.scale + ' (luma), ' + s.ms.toFixed(2) + ' ms/frame';
+                },
+                // Show the original <video> at the same size as the upscaled canvas
+                onResize: function (w, h) {
+                    [wrapper, document.getElementById('upscaled-wrapper')].forEach(function (el) {
+                        el.style.width = w + 'px';
+                        el.style.height = h + 'px';
+                    });
+                }
+            });
+            document.getElementById('toggle-diff').addEventListener('change', function (e) {
+                renderer.setDifference(e.target.checked);
+            });
+        } catch (e) {
+            document.getElementById('toggle-diff').disabled = true;
+            overlayUpscaled.innerHTML = '<b>UPSCALED (ESPCN, WebGPU)</b>\n' + e.message;
+        }
+
+        // Zoom both panels by the same factor around the same relative point, so they stay comparable
+        var zoomTargets = [video, document.getElementById('sr-canvas')];
+        var zoomToggle = document.getElementById('toggle-zoom');
+        function setZoom(origin) {
+            zoomTargets.forEach(function (el) {
+                el.style.transformOrigin = origin || '';
+                el.style.transform = origin ? 'scale(4)' : '';
+            });
+        }
+        grid.addEventListener('mousemove', function (e) {
+            var panel = e.target.closest('.sample-video-wrapper');
+            if (!zoomToggle.checked || !panel) {
+                return;
+            }
+            var r = panel.getBoundingClientRect();
+            setZoom((e.clientX - r.left) / r.width * 100 + '% ' + (e.clientY - r.top) / r.height * 100 + '%');
+        });
+        grid.addEventListener('mouseleave', function () {
+            setZoom(null);
+        });
+        zoomToggle.addEventListener('change', function () {
+            setZoom(null);
+        });
+    }
+</script>
+
+<script type="module">
+    import { initSamplePage } from '../../lib/sample-template.js';
+    import { createEspcnRenderer } from './espcn.js';
+
+    initSamplePage({
+        title: '1b: ESPCN super-resolution (WebGPU)',
+        description: 'Fetches only the lowest video rendition and upscales it 4x with ESPCN, a small super-resolution CNN running as WebGPU compute shaders, next to the original video element. Phase 1b. Weights: OpenCV dnn_superres ESPCN_x4 (Apache-2.0).',
+        category: 'Player Intelligence',
+        layout: 'full-width',
+        showCodeOutput: false,
+        onInit: (video, container, wrapper) => init(video, wrapper, createEspcnRenderer)
+    });
+</script>
+</body>
+</html>
