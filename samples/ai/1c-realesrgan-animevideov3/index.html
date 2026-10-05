@@ -114,6 +114,10 @@
             '<select class="form-select form-select-sm w-auto" id="select-stream">' +
             streams.map(function (s, i) { return '<option value="' + i + '">' + s.name + '</option>'; }).join('') +
             '</select></div>' +
+            '<div class="d-flex align-items-center gap-2"><label for="select-precision" class="form-label mb-0">Precision</label>' +
+            '<select class="form-select form-select-sm w-auto" id="select-precision">' +
+            '<option value="fp32">fp32</option><option value="fp16">fp16 (faster)</option>' +
+            '</select></div>' +
             '<div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="toggle-diff">' +
             '<label class="form-check-label" for="toggle-diff">Difference ×10 (upscaled − bilinear, grey = no change)</label></div>' +
             '<div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="toggle-zoom">' +
@@ -143,7 +147,7 @@
                     overlayUpscaled.innerHTML = '<b>UPSCALED (Real-ESRGAN, WebGPU)</b>\n' +
                         'Input:     ' + s.input + '\n' +
                         'Output:    ' + s.output + shown + '\n' +
-                        'Upscaling: Real-ESRGAN animevideov3 ×' + s.scale + ', ' + s.ms.toFixed(1) + ' ms/frame\n' +
+                        'Upscaling: Real-ESRGAN animevideov3 ×' + s.scale + ' (' + s.precision + '), ' + s.ms.toFixed(1) + ' ms/frame\n' +
                         'SR fps:    ' + s.srFps + ' (video 30; frames are skipped while the model runs)';
                 },
                 // Show the original <video> at the same size as the upscaled canvas
@@ -154,11 +158,24 @@
                     });
                 }
             });
+            // Same network as fp32 with weights rounded to float16; needs the 'shader-f16' GPU feature
+            var precisionSelect = document.getElementById('select-precision');
+            if (!renderer.supportsFp16) {
+                precisionSelect.querySelector('[value="fp16"]').disabled = true;
+                precisionSelect.querySelector('[value="fp16"]').textContent = 'fp16 (not supported by this GPU)';
+            }
+            precisionSelect.addEventListener('change', function () {
+                precisionSelect.disabled = true;
+                renderer.setPrecision(precisionSelect.value).finally(function () {
+                    precisionSelect.disabled = false;
+                });
+            });
             document.getElementById('toggle-diff').addEventListener('change', function (e) {
                 renderer.setDifference(e.target.checked);
             });
         } catch (e) {
             document.getElementById('toggle-diff').disabled = true;
+            document.getElementById('select-precision').disabled = true;
             overlayUpscaled.innerHTML = '<b>UPSCALED (Real-ESRGAN, WebGPU)</b>\n' + e.message;
         }
 

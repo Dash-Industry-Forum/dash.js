@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """
-Verifies that model.onnx (third-party export) contains the official Real-ESRGAN realesr-animevideov3 weights.
+Verifies that model.onnx / model_fp16.onnx (third-party exports) contain the official Real-ESRGAN realesr-animevideov3
+weights (fp16: the official weights rounded to float16).
 
-model.onnx: https://huggingface.co/skillsafe-ai/realesr-animevideov3 (commit 185e9142d439d17e3fb99395600fb7d08af09de5)
+ONNX files: https://huggingface.co/skillsafe-ai/realesr-animevideov3 (commit 185e9142d439d17e3fb99395600fb7d08af09de5)
 Official weights (BSD-3-Clause, see LICENSE-realesr-animevideov3.txt):
     https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesr-animevideov3.pth
 
     python3 verify-model.py realesr-animevideov3.pth model.onnx [input-64x64.npy output-64x64.npy]
+    python3 verify-model.py realesr-animevideov3.pth model_fp16.onnx
 
 Checks (numpy only, no torch / onnx packages):
   1. sha256 of the official .pth
   2. graph is SRVGGNetCompact: (Conv, PRelu) x 17, Conv 64->48, DepthToSpace(4, CRD), nearest Resize of input, Add
-  3. every ONNX weight equals the .pth weight
+     (fp16 adds Cast nodes; input and output stay float32)
+  3. every ONNX weight equals the .pth weight (cast to the ONNX weight type)
   4. optional: numpy forward on the repo's reference input reproduces the reference output
 
 The numpy forward (srvgg) is also the reference for checking the WebGPU output in the browser.
@@ -107,11 +110,11 @@ def load_onnx(path):
                     af = _fields(a)  # AttributeProto: name=1, i=3, s=4
                     attrs[next(x for n, x in af if n == 1).decode()] = next((x for n, x in af if n in (3, 4)), None)
             nodes.append((next(x for k, x in nf if k == 4).decode(), [x.decode() for k, x in nf if k == 1], attrs))
-        elif f == 5:  # TensorProto: dims=1, data_type=2, name=8, raw_data=9
+        elif f == 5:  # TensorProto: dims=1, data_type=2 (1 float32, 10 float16), name=8, raw_data=9
             tf = _fields(v)
-            assert dict(tf)[2] == 1, 'expected float32 initializers'
+            dtype = {1: '<f4', 10: '<f2'}[dict(tf)[2]]
             dims = [x for k, x in tf if k == 1]
-            inits[dict(tf)[8].decode()] = np.frombuffer(dict(tf)[9], dtype='<f4').reshape(dims)
+            inits[dict(tf)[8].decode()] = np.frombuffer(dict(tf)[9], dtype=dtype).reshape(dims)
     return nodes, inits
 
 
@@ -145,7 +148,7 @@ def main():
     print(f'official .pth: sha256 ok, {len(params)} tensors')
 
     nodes, inits = load_onnx(onnx_path)
-    ops = [op for op, _, _ in nodes if op != 'Constant']
+    ops = [op for op, _, _ in nodes if op not in ('Constant', 'Cast')]
     assert ops == ['Conv', 'PRelu'] * (NUM_CONV + 1) + ['Conv', 'DepthToSpace', 'Resize', 'Add'], ops
     d2s = next(a for op, _, a in nodes if op == 'DepthToSpace')
     assert d2s['blocksize'] == SCALE and d2s.get('mode', b'DCR') == b'CRD', d2s
@@ -156,9 +159,10 @@ def main():
     prelus = [inputs[1] for op, inputs, _ in nodes if op == 'PRelu']
     names = {f'body.{2 * i + 1}.weight': prelus[i] for i in range(NUM_CONV + 1)}
     for key, ref in params.items():
-        got = inits[names.get(key, key)].reshape(ref.shape)
+        got = inits[names.get(key, key)]
+        ref = ref.astype(got.dtype).reshape(got.shape)
         assert np.array_equal(got, ref), f'{key} differs (max {np.abs(got - ref).max()})'
-    print(f'onnx weights: all {len(params)} tensors identical to the official .pth')
+    print(f'onnx weights: all {len(params)} tensors identical to the official .pth ({got.dtype})')
 
     if len(sys.argv) > 4:
         inp, out = np.load(sys.argv[3]), np.load(sys.argv[4])

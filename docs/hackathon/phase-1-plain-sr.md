@@ -58,7 +58,10 @@ Upscale dash.js video output in real time on WebGPU. No ABR changes and no energ
 ## Open questions
 
 - ~~Anime4K or ESPCN?~~ ESPCN (trained on natural images; fits the test content).
-- Real time with 1c: next speed knobs are fp16 (`model_fp16.onnx`, needs `shader-f16`) and onnxruntime graph capture.
+- Real time with 1c: the sample has a fp32/fp16 switch (`model_fp16.onnx`, needs `shader-f16`, also verified by
+  `verify-model.py`). fp16 averages ~48 ms/frame (~22 SR fps) vs. ~65 ms (~16 SR fps) for fp32, and matches the fp32
+  reference at 57.7 dB. Next knob: onnxruntime graph capture. Note: all onnxruntime calls (run, create, release,
+  dispose) must be serialized; the asyncify wasm build corrupts memory if a session is created during a run.
   In Phase 3 the energy budget can switch between 1c (best), ESPCN (cheap) and off.
 - The visible gain on 200 kbps content is modest: ESPCN sharpens edges but was trained on clean bicubic
   downscales, so it does not remove compression artifacts. A model trained on compressed video would help more.

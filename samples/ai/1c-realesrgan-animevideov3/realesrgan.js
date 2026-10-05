@@ -30,8 +30,9 @@
  */
 
 // Phase 1c: Real-ESRGAN realesr-animevideov3 (SRVGGNetCompact, x4) via onnxruntime-web on WebGPU.
-// Weights: official Real-ESRGAN v0.2.5.0 (BSD-3-Clause, see LICENSE-realesr-animevideov3.txt); model.onnx is a
-// third-party export, checked against the official .pth by verify-model.py.
+// Weights: official Real-ESRGAN v0.2.5.0 (BSD-3-Clause, see LICENSE-realesr-animevideov3.txt); model.onnx (fp32) and
+// model_fp16.onnx (weights rounded to float16, float32 input/output) are third-party exports, checked against the
+// official .pth by verify-model.py.
 //
 // One GPUDevice is shared with onnxruntime, so frames never leave the GPU:
 //   compute: video frame -> input buffer, NCHW float32 [1,3,H,W], RGB 0..1
@@ -44,6 +45,9 @@ import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/o
 
 // Output resolution = input resolution * SCALE (320x180 -> 1280x720). Fixed by the model.
 export const SCALE = 4;
+
+// Same network in two precisions; fp16 halves memory traffic and needs the 'shader-f16' GPU feature
+const MODELS = { fp32: './model.onnx', fp16: './model_fp16.onnx' };
 
 // Difference view (setDifference(true)): 0.5 + 10 * (upscaled - bilinear), so mid-grey means the upscaler added nothing
 const DIFF_GAIN = 10;
@@ -127,11 +131,27 @@ export async function createRealEsrganRenderer(video, canvas, { onStats, onResiz
         requiredLimits: Object.fromEntries(limits.map(l => [l, adapter.limits[l]])),
         requiredFeatures: ['shader-f16', 'timestamp-query'].filter(f => adapter.features.has(f))
     });
+    const supportsFp16 = device.features.has('shader-f16');
+
+    // onnxruntime's wasm runtime must not create or release a session while another call is suspended in a run,
+    // so every onnxruntime call goes through this queue
+    let ortQueue = Promise.resolve();
+    const exclusive = fn => {
+        const result = ortQueue.then(fn);
+        ortQueue = result.catch(() => {});
+        return result;
+    };
+
     // onnxruntime-web 1.30 takes a shared device through the execution provider options (not env.webgpu.device)
-    const session = await ort.InferenceSession.create(new URL('./model.onnx', import.meta.url).href, {
+    const loadSession = p => ort.InferenceSession.create(new URL(MODELS[p], import.meta.url).href, {
         executionProviders: [{ name: 'webgpu', device }],
         preferredOutputLocation: 'gpu-buffer'
     });
+    let precision = 'fp32';
+    let session = await loadSession(precision);
+    let outputSession = null; // session that produced the output currently on screen
+    let runningSession = null; // session of the inference in flight
+    let inputSession = null; // onnxruntime registers a GPU buffer with the first session that uses it
 
     const format = navigator.gpu.getPreferredCanvasFormat();
     const ctx = canvas.getContext('webgpu');
@@ -170,6 +190,10 @@ export async function createRealEsrganRenderer(video, canvas, { onStats, onResiz
         });
         inputTensor = ort.Tensor.fromGpuBuffer(input, { dataType: 'float32', dims: [1, 3, h, w] });
 
+        // Assigning canvas.width clears the canvas, so only resize when the size changes
+        if (canvas.width === w * SCALE && canvas.height === h * SCALE) {
+            return;
+        }
         canvas.width = w * SCALE;
         canvas.height = h * SCALE;
         const cssW = canvas.width / devicePixelRatio;
@@ -223,8 +247,10 @@ export async function createRealEsrganRenderer(video, canvas, { onStats, onResiz
         busy = true;
         const t0 = performance.now();
         try {
-            if (width !== video.videoWidth || height !== video.videoHeight) {
+            if (width !== video.videoWidth || height !== video.videoHeight || inputSession !== session) {
+                // New size, or precision switched: a fresh input buffer, since the old one is bound to the old session
                 allocate(video.videoWidth, video.videoHeight);
+                inputSession = session;
             }
 
             const encoder = device.createCommandEncoder();
@@ -242,10 +268,21 @@ export async function createRealEsrganRenderer(video, canvas, { onStats, onResiz
             pass.end();
             device.queue.submit([encoder.finish()]);
 
-            const result = await session.run({ [session.inputNames[0]]: inputTensor });
-            // Queue order makes the previous frame's render read finish before onnxruntime reuses its buffer
-            output?.dispose();
-            output = result[session.outputNames[0]];
+            const s = runningSession = session;
+            const p = precision;
+            const result = await exclusive(() => s.run({ [s.inputNames[0]]: inputTensor }));
+            // GPU queue order makes the previous frame's render read finish before onnxruntime reuses its buffer
+            const previous = output;
+            exclusive(() => previous?.dispose());
+            if (outputSession && outputSession !== s) {
+                // Precision was switched: release the old session after its last output (queued above)
+                const old = outputSession;
+                exclusive(() => old.release());
+                avgMs = 0;
+                done = [];
+            }
+            outputSession = s;
+            output = result[s.outputNames[0]];
             draw();
             await device.queue.onSubmittedWorkDone();
 
@@ -256,12 +293,14 @@ export async function createRealEsrganRenderer(video, canvas, { onStats, onResiz
             onStats?.({
                 ms: avgMs,
                 srFps: done.length,
+                precision: p,
                 input: `${width}x${height}`,
                 output: `${canvas.width}x${canvas.height}`,
                 scale: SCALE
             });
         } finally {
             busy = false;
+            runningSession = null;
             if (pending) {
                 pending = false;
                 upscale();
@@ -275,7 +314,29 @@ export async function createRealEsrganRenderer(video, canvas, { onStats, onResiz
     }
     video.requestVideoFrameCallback(onFrame);
 
+    let loading = null;
+
     return {
+        supportsFp16,
+        // Loads the other model; the next frame uses it. Resolves once it is active.
+        async setPrecision(p) {
+            if (!MODELS[p] || (p === 'fp16' && !supportsFp16)) {
+                throw new Error(`Precision ${p} not available on this device`);
+            }
+            const token = loading = {};
+            const next = await exclusive(() => loadSession(p));
+            if (token !== loading) {
+                exclusive(() => next.release()); // a newer switch superseded this one
+                return;
+            }
+            if (session !== outputSession && session !== runningSession) {
+                const unused = session;
+                exclusive(() => unused.release()); // loaded but never used for a frame
+            }
+            session = next;
+            precision = p;
+            upscale();
+        },
         setDifference(on) {
             difference = on;
             writeDims();
