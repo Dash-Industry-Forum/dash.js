@@ -267,6 +267,48 @@ describe('CmcdController', function () {
             expect(secondReport).to.not.have.property('ec');
         });
 
+        it('should buffer ec per event target and report it once to each target', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/a',
+                            enabled: true,
+                            enabledKeys: ['e', 'ec'],
+                            events: ['ps'],
+                            interval: 0
+                        }, {
+                            url: 'https://cmcd.event.collector/b',
+                            enabled: true,
+                            enabledKeys: ['e', 'ec'],
+                            events: ['e', 'ps'],
+                            interval: 0
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+
+            const reports = urlLoaderMock.load.getCalls().map((call) => ({
+                url: call.args[0].request.url,
+                cmcd: decodeCmcd(decodeURIComponent(call.args[0].request.body))
+            }));
+            const find = (url, e) => reports.find((r) => r.url === url && r.cmcd.e === e).cmcd;
+
+            expect(reports).to.have.lengthOf(3);
+            expect(find('https://cmcd.event.collector/b', 'e').ec).to.deep.equal(['123']);
+            // Target a did not record the error event, so its first report carries the code
+            expect(find('https://cmcd.event.collector/a', 'ps').ec).to.deep.equal(['123']);
+            // Target b already reported the code
+            expect(find('https://cmcd.event.collector/b', 'ps')).to.not.have.property('ec');
+        });
+
         it('should not send a report when the ERROR event is triggered by a CMCD_EVENT', () => {
             settings.update({
                 streaming: {
@@ -818,6 +860,43 @@ describe('CmcdController', function () {
             // The buffer is flushed by the first response report; later reports must not repeat the code
             const secondReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.secondCall.args[0].request.body));
             expect(secondReport).to.not.have.property('ec');
+        });
+
+        it('should not repeat ec in response reports to a target that already received it in an error event', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            includeInRequests: ['segment'],
+                            enabledKeys: ['e', 'rc', 'ec'],
+                            events: ['e', 'rr'],
+                            interval: 0
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+            cmcdController.getCmcdResponseReceivedInterceptors()[0]({
+                status: 200,
+                request: {
+                    url: 'http://test.url/video.m4s',
+                    customData: { request: { type: HTTPRequest.MEDIA_SEGMENT_TYPE, url: 'http://test.url/video.m4s' } }
+                }
+            });
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+            const errorReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+            expect(errorReport.ec).to.deep.equal(['123']);
+            const responseReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.secondCall.args[0].request.body));
+            expect(responseReport).to.have.property('e', 'rr');
+            expect(responseReport).to.not.have.property('ec');
         });
 
         it('should send a response report with cmsdd and cmsds keys when CMSD headers are present', () => {
