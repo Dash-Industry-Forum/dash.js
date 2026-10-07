@@ -135,7 +135,8 @@ function RepresentationController(config) {
             const promises = [];
             for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
                 const currentRep = voAvailableRepresentations[i];
-                promises.push(_updateRepresentation(currentRep));
+                const isSelected = currentRep.id === selectedRepresentationId;
+                promises.push(_updateRepresentation(currentRep, isSelected));
             }
 
             Promise.all(promises)
@@ -159,7 +160,7 @@ function RepresentationController(config) {
         _endDataUpdate();
     }
 
-    function _updateRepresentation(currentRep) {
+    function _updateRepresentation(currentRep, isSelected) {
         return new Promise((resolve, reject) => {
             const hasInitialization = currentRep.hasInitialization();
             const hasSegments = currentRep.hasSegments();
@@ -169,7 +170,9 @@ function RepresentationController(config) {
             const promises = [];
 
             promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
-            promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
+            // For SegmentBase streams the segment list is only fetched for the Representation we
+            // are about to play. The others are resolved lazily in prepareQualityChange().
+            promises.push(isSelected ? segmentsController.updateSegmentData(currentRep, hasSegments) : Promise.resolve());
 
             Promise.all(promises)
                 .then((data) => {
@@ -310,15 +313,17 @@ function RepresentationController(config) {
      * We get the new selected Representation which will not hold the ranges and the segment references in case of SegmentBase.
      * In any case use the id to find the right Representation instance in our array of Representations.
      * @param newRep
+     * @return {Promise} resolves once the segment list of the new Representation is available
      */
     function prepareQualityChange(newRep) {
-        const voRepresentations = voAvailableRepresentations.filter((rep) => {
-            return rep.id === newRep.id;
-        })
-
-        if (voRepresentations.length > 0) {
-            _setCurrentVoRepresentation(voRepresentations[0]);
+        const rep = getRepresentationById(newRep.id);
+        if (!rep) {
+            return Promise.resolve();
         }
+
+        _setCurrentVoRepresentation(rep);
+        // Only fetches for a SegmentBase Representation whose segment list was skipped at startup.
+        return _updateRepresentation(rep, true);
     }
 
     function _setCurrentVoRepresentation(value) {

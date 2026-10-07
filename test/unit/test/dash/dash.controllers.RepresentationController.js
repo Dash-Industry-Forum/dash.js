@@ -133,4 +133,75 @@ describe('RepresentationController', function () {
             });
         });
     });
+
+    describe('SegmentBase segment lists are loaded lazily', function () {
+        let segmentBaseRepresentations;
+        let segmentDataLoadedFor;
+        let lazyRepresentationController;
+
+        // Mirrors SegmentsController.updateSegmentData: the list is fetched once per Representation
+        // and populated the way _onSegmentDataUpdated does for a real response.
+        const segmentsControllerMock = Object.assign(new SegmentsControllerMock(), {
+            updateSegmentData(representation, hasSegments) {
+                if (!hasSegments && !representation.segments) {
+                    segmentDataLoadedFor.push(representation.id);
+                    representation.segments = [{ index: 0 }];
+                }
+                return Promise.resolve();
+            }
+        });
+
+        beforeEach(function () {
+            segmentDataLoadedFor = [];
+            segmentBaseRepresentations = [0, 1, 2].map((index) => voHelper.createSegmentBaseRepresentation(testType, index));
+            lazyRepresentationController = RepresentationController(context).create({
+                streamInfo: streamProcessor.getStreamInfo(),
+                abrController: abrControllerMock,
+                segmentsController: segmentsControllerMock,
+                timelineConverter: timelineConverter,
+                playbackController: playbackControllerMock,
+                dashMetrics: dashMetricsMock,
+                type: testType,
+                events: Events,
+                eventBus: eventBus,
+                dashConstants: DashConstants,
+                adapter: adapterMock
+            });
+        });
+
+        afterEach(function () {
+            lazyRepresentationController.reset();
+            lazyRepresentationController = null;
+        });
+
+        it('should only load the segment list of the selected Representation at startup', function () {
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, segmentBaseRepresentations[0].id)
+                .then(function () {
+                    expect(segmentDataLoadedFor).to.deep.equal([segmentBaseRepresentations[0].id]);
+                });
+        });
+
+        it('should load the segment list of each Representation only once across repeated quality switches', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    return lazyRepresentationController.prepareQualityChange(repB);
+                })
+                .then(function () {
+                    return lazyRepresentationController.prepareQualityChange(repA);
+                })
+                .then(function () {
+                    return lazyRepresentationController.prepareQualityChange(repB);
+                })
+                .then(function () {
+                    // A is loaded at startup, B on the first switch to it. Switching back must
+                    // reuse both lists rather than fetching and rebuilding them again.
+                    expect(segmentDataLoadedFor).to.deep.equal([repA.id, repB.id]);
+                    expect(lazyRepresentationController.getCurrentRepresentation().id).to.equal(repB.id);
+                });
+        });
+    });
 });
