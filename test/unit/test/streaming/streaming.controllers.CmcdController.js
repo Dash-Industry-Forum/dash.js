@@ -8,6 +8,7 @@ import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
+import CmcdConfigAccessor from '../../../../src/streaming/cmcd/config/CmcdConfigAccessor.js';
 import {decodeCmcd} from '@svta/cml-cmcd';
 import StreamMock from '../../mocks/StreamMock.js';
 import {expect} from 'chai';
@@ -1775,6 +1776,104 @@ describe('CmcdController', function () {
             }));
 
             expect(result.url).to.not.include('CMCD=');
+        });
+    });
+
+    describe('Request Mode with CMCDParameters applied after start', () => {
+        let internalServiceDescriptionControllerMock;
+
+        beforeEach(function () {
+            internalServiceDescriptionControllerMock = new ServiceDescriptionControllerMock();
+        });
+
+        afterEach(function () {
+            // Manifest params are cached in the accessor and would leak into later tests
+            CmcdConfigAccessor(context).getInstance().reset();
+        });
+
+        function createCommonMediaRequest(request) {
+            return {
+                url: request.url,
+                headers: request.headers || {},
+                customData: { request }
+            };
+        }
+
+        function getCmcdFromUrl(url) {
+            const parsed = new URL(url);
+            const cmcdParam = parsed.searchParams.get('CMCD');
+            return cmcdParam ? decodeCmcd(cmcdParam) : {};
+        }
+
+        it('should not buffer error codes while CMCD v1 is active', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 1 } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+
+            // Switch to v2 through the MPD, the code raised under v1 must not show up
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', includeInRequests: 'segment' } }
+            });
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'static' } });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const result = interceptor(createCommonMediaRequest({
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            }));
+
+            const metrics = getCmcdFromUrl(result.url);
+            expect(metrics).to.have.property('v', 2);
+            expect(metrics).to.not.have.property('ec');
+        });
+
+        it('should keep the generated sid when the reporters are rebuilt on manifest reload', function () {
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '1', keys: 'sid', includeInRequests: 'segment' } }
+            });
+            settings.update({ streaming: { cmcd: { enabled: true } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const requestConfig = {
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            };
+
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const firstSid = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url).sid;
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const secondSid = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url).sid;
+
+            expect(firstSid).to.be.a('string').and.not.be.empty;
+            expect(secondSid).to.equal(firstSid);
         });
     });
 });

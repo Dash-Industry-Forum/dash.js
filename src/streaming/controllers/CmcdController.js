@@ -56,6 +56,7 @@ function CmcdController() {
         requestEnabledKeys,
         eventReporters = [],
         pendingRequestErrorCodes,
+        generatedSessionId,
         dashMetrics,
         errHandler,
         instance,
@@ -139,6 +140,7 @@ function CmcdController() {
     function _resetInitialSettings() {
         reporterNeedsRebuild = false;
         requestReporter = null;
+        generatedSessionId = null;
         requestEnabledKeys = [];
         eventReporters = [];
         // Error codes buffered for the request destination until the next request report carries them
@@ -187,11 +189,15 @@ function CmcdController() {
      * @private
      */
     function _createCmcdReporters() {
+        // Generate the session ID once per session, so rebuilding the reporters does not start a new session
+        if (!generatedSessionId) {
+            generatedSessionId = Utils.generateUuid();
+        }
         const baseConfig = {
             version: cmcdConfigAccessor.getVersion(),
             transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS ? CMCD_HEADERS : CMCD_QUERY,
             // All reporters must share the same session ID
-            sid: cmcdConfigAccessor.get('sessionID') || Utils.generateUuid(),
+            sid: cmcdConfigAccessor.get('sessionID') || generatedSessionId,
         };
 
         // Only pass cid if it has an actual value
@@ -245,7 +251,8 @@ function CmcdController() {
     }
 
     function _canReportErrorCodes(enabledKeys) {
-        return Array.isArray(enabledKeys) && enabledKeys.includes('ec');
+        // ec is a CMCD v2 key. Under v1 it is never encoded, so buffering would never be flushed.
+        return cmcdConfigAccessor.getVersion() >= 2 && Array.isArray(enabledKeys) && enabledKeys.includes('ec');
     }
 
     /**
