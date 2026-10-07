@@ -4,7 +4,6 @@ import FactoryMaker from '../core/FactoryMaker.js';
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import URLLoader from '../streaming/net/URLLoader.js';
 import DashJSError from '../streaming/vo/DashJSError.js';
-import FullSegment from '../dash/vo/FullSegment.js';
 
 function WebmSegmentBaseLoader() {
 
@@ -160,7 +159,6 @@ function WebmSegmentBaseLoader() {
         let duration,
             parsed,
             segments,
-            segment,
             i,
             len,
             start,
@@ -173,7 +171,6 @@ function WebmSegmentBaseLoader() {
         // both duration and media range require the i + 1 segment
         // the final segment has to use global segment parameters
         for (i = 0, len = parsed.length; i < len; i += 1) {
-            segment = new FullSegment();
             duration = 0;
 
             if (i < parsed.length - 1) {
@@ -182,11 +179,6 @@ function WebmSegmentBaseLoader() {
                 duration = segmentDuration - parsed[i].CueTime;
             }
 
-            // note that we don't explicitly set segment.media as this will be
-            // computed when all BaseURLs are resolved later
-            segment.duration = duration;
-            segment.startTime = parsed[i].CueTime;
-            segment.timescale = 1000; // hardcoded for ms
             start = parsed[i].CueTracks[0].ClusterPosition + segmentStart;
 
             if (i < parsed.length - 1) {
@@ -195,8 +187,16 @@ function WebmSegmentBaseLoader() {
                 end = segmentEnd - 1;
             }
 
-            segment.mediaRange = start + '-' + end;
-            segments.push(segment);
+            // Plain record, see the equivalent comment in SegmentBaseLoader.getSegmentsForSidx().
+            // media stays null. The request URL is resolved later from the BaseURL, this record
+            // is not updated.
+            segments.push({
+                duration,
+                startTime: parsed[i].CueTime,
+                timescale: 1000, // hardcoded for ms
+                mediaRange: start + '-' + end,
+                media: null
+            });
         }
 
         logger.debug('Parsed cues: ' + segments.length + ' cues.');
