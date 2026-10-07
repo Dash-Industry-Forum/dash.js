@@ -28,6 +28,7 @@ dash.js offers various configuration options related to CMCD. The following sett
 | enabledKeys            | This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.                                                                                                     | 
 | includeInRequests      | Specifies which HTTP GET requests shall carry parameters. If not specified this value defaults to ['segment', 'mpd].                                                                                                  | 
 | version                | The version of the CMCD to use. If not specified this value defaults to 1.                                                                                                                                            | 
+| customKeys             | Custom CMCD keys to include in reports as a list of key/value entries, e.g. `[{ key: 'org.svta-p-n', value: 'dash.js' }]`. See [Custom keys](#custom-keys).                                                            | 
 
 For a full documentation of all CMCD related options please refer to
 our [API documentation](https://cdn.dashjs.org/latest/jsdoc/module-Settings.html#~CmcdSettings).
@@ -52,6 +53,35 @@ player.updateSettings({
     },
 })
 ````
+
+## Custom keys
+
+Next to the standard keys, CMCD allows application-defined custom keys. Per the CMCD specification, custom keys must
+carry a hyphenated prefix to avoid namespace collisions with future revisions, and a reverse-DNS syntax is recommended
+for the prefix, e.g. `com.example-mykey`. The
+[SVTA CMCD custom keys registry](https://github.com/streaming-video-technology-alliance/common-media-client-data-custom-keys)
+lists well-known custom keys, such as the player name (`org.svta-p-n`) and player version (`org.svta-p-v`).
+
+dash.js supports custom keys via the `customKeys` setting. Each entry defines a key and a value; the values are included
+in all CMCD reports as persistent session data. Entries whose key does not carry a valid hyphenated prefix are ignored
+with a console warning. The setting applies identically to CMCD version 1 and version 2.
+
+````js
+player.updateSettings({
+    streaming: {
+        cmcd: {
+            enabled: true,
+            customKeys: [
+                { key: 'org.svta-p-n', value: 'dash.js' },
+                { key: 'org.svta-p-v', value: player.getVersion() }
+            ]
+        }
+    },
+})
+````
+
+Note: event and response reporting targets (see below) filter keys by their own `enabledKeys` list. To include custom
+keys in reports sent to a target, add the custom key names to that target's `enabledKeys`.
 
 ## CMCD Version 2
 
