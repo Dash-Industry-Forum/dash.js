@@ -8,6 +8,8 @@ import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
+import CmcdConfigAccessor from '../../../../src/streaming/cmcd/config/CmcdConfigAccessor.js';
+import CmcdModel from '../../../../src/streaming/models/CmcdModel.js';
 import {decodeCmcd} from '@svta/cml-cmcd';
 import StreamMock from '../../mocks/StreamMock.js';
 import {expect} from 'chai';
@@ -193,6 +195,156 @@ describe('CmcdController', function () {
 
             const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'e');
+        });
+
+        it('should send the error code (ec) as an inner list of strings', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            enabledKeys: ['e', 'ec'],
+                            events: ['e'],
+                            interval: 0
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: {
+                    code: 123,
+                    message: 'Test Error Message',
+                    data: {
+                        request: {
+                            type: 'someOtherRequestType'
+                        }
+                    }
+                }
+            });
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+
+            // ec must use list notation with string entries even for a single code: ec=("123")
+            expect(decodeURIComponent(requestSent.body)).to.include('ec=("123")');
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
+            expect(metrics.ec).to.deep.equal(['123']);
+        });
+
+        it('should not repeat ec on subsequent event reports', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            enabledKeys: ['e', 'ec', 'sta'],
+                            events: ['e', 'ps'],
+                            interval: 0
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+
+            const firstReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+            expect(firstReport).to.have.property('e', 'e');
+            expect(firstReport.ec).to.deep.equal(['123']);
+
+            // The error event flushed the buffer; the following play state report must not carry ec
+            const secondReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.secondCall.args[0].request.body));
+            expect(secondReport).to.have.property('e', 'ps');
+            expect(secondReport).to.not.have.property('ec');
+        });
+
+        it('should buffer ec per event target and report it once to each target', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/a',
+                            enabled: true,
+                            enabledKeys: ['e', 'ec'],
+                            events: ['ps'],
+                            interval: 0
+                        }, {
+                            url: 'https://cmcd.event.collector/b',
+                            enabled: true,
+                            enabledKeys: ['e', 'ec'],
+                            events: ['e', 'ps'],
+                            interval: 0
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+
+            const reports = urlLoaderMock.load.getCalls().map((call) => ({
+                url: call.args[0].request.url,
+                cmcd: decodeCmcd(decodeURIComponent(call.args[0].request.body))
+            }));
+            const find = (url, e) => reports.find((r) => r.url === url && r.cmcd.e === e).cmcd;
+
+            expect(reports).to.have.lengthOf(3);
+            expect(find('https://cmcd.event.collector/b', 'e').ec).to.deep.equal(['123']);
+            // Target a did not record the error event, so its first report carries the code
+            expect(find('https://cmcd.event.collector/a', 'ps').ec).to.deep.equal(['123']);
+            // Target b already reported the code
+            expect(find('https://cmcd.event.collector/b', 'ps')).to.not.have.property('ec');
+        });
+
+        it('should keep separate ec buffers for targets sharing a url across a reporter rebuild', () => {
+            const target = { url: 'https://cmcd.event.collector/api', enabled: true, events: ['ps'], interval: 0 };
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{ ...target, enabledKeys: ['e', 'ec'] }, { ...target, enabledKeys: ['e', 'ec', 'sta'] }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            // MPD CMCDParameters with a new content ID force a reporter rebuild on the next CMCD event
+            serviceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', contentID: 'new-content-id' } }
+            });
+            try {
+                eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'static' } });
+                // The code is buffered, then the error event runs the rebuild. No target subscribes to 'e', so nothing is flushed.
+                eventBus.trigger(MediaPlayerEvents.ERROR, {
+                    error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+                });
+                eventBus.trigger(MediaPlayerEvents.ERROR, {
+                    error: { code: 456, data: { request: { type: 'someOtherRequestType' } } }
+                });
+                urlLoaderMock.load.resetHistory();
+                eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+
+                const reports = urlLoaderMock.load.getCalls().map((call) => decodeCmcd(decodeURIComponent(call.args[0].request.body)));
+                expect(reports).to.have.lengthOf(2);
+                reports.forEach((report) => expect(report.ec).to.deep.equal(['123', '456']));
+            } finally {
+                CmcdConfigAccessor(context).getInstance().reset();
+            }
         });
 
         it('should not send a report when the ERROR event is triggered by a CMCD_EVENT', () => {
@@ -518,7 +670,7 @@ describe('CmcdController', function () {
         });
 
         it('should send reports periodically according to the interval', () => {
-            // CmcdReporter fires the first TIME_INTERVAL event immediately on start()
+            // The first TIME_INTERVAL report is sent immediately
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             let requestSent = urlLoaderMock.load.firstCall.args[0].request;
             expect(requestSent.method).to.equal(HTTPRequest.POST);
@@ -528,6 +680,73 @@ describe('CmcdController', function () {
             expect(urlLoaderMock.load.calledTwice).to.be.true;
             clock.tick(1000);
             expect(urlLoaderMock.load.calledThrice).to.be.true;
+        });
+
+        it('should stop the time interval reports once the collector answers 410 Gone', async () => {
+            // Same signature as HTTPLoader: the response carrying the status is the fourth argument
+            urlLoaderMock.load = sinon.spy((config) => config.error(config.request, 'error', 'Gone', { status: 410 }));
+            const timerCount = clock.countTimers();
+
+            await clock.tickAsync(1000);
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            // The retired target's interval timer must be cleared, not left running without a target
+            expect(clock.countTimers()).to.equal(timerCount - 1);
+
+            await clock.tickAsync(3000);
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+        });
+
+        it('should not recreate a target retired by 410 Gone when the reporters are rebuilt', async () => {
+            urlLoaderMock.load = sinon.spy((config) => config.error(config.request, 'error', 'Gone', { status: 410 }));
+            await clock.tickAsync(1000);
+            urlLoaderMock.load.resetHistory();
+
+            // An MPD with different CMCDParameters forces a rebuild of the reporters
+            serviceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', contentID: 'new-content-id' } }
+            });
+            try {
+                eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+                // Any CMCD event runs the pending rebuild, which would send a 't' report right away for a recreated target
+                eventBus.trigger(MediaPlayerEvents.ERROR, { error: { code: 27 } });
+                await clock.tickAsync(3000);
+
+                expect(urlLoaderMock.load.called).to.be.false;
+            } finally {
+                CmcdConfigAccessor(context).getInstance().reset();
+            }
+        });
+
+        it('should attach buffered error codes (ec) to the next time interval report only', () => {
+            cmcdController.reset();
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            enabledKeys: ['e', 'ec'],
+                            events: ['t'],
+                            interval: 1
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+            urlLoaderMock.load.resetHistory();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 27, data: { request: { type: 'someOtherRequestType' } } }
+            });
+            clock.tick(1000);
+            clock.tick(1000);
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+            const firstReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+            expect(firstReport).to.have.property('e', 't');
+            expect(firstReport.ec).to.deep.equal(['27']);
+            const secondReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.secondCall.args[0].request.body));
+            expect(secondReport).to.not.have.property('ec');
         });
     })
 
@@ -688,6 +907,135 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('url', 'http://test.url/video.m4s');
             expect(metrics).to.have.property('ttfb');
             expect(metrics).to.have.property('ttlb');
+        });
+
+        it('should attach buffered error codes (ec) to the next response report only', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            includeInRequests: ['segment'],
+                            enabledKeys: ['rc', 'ec'],
+                            events: ['rr']
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+
+            let currentTime = new Date(Date.now());
+            const mockResponse = {
+                status: 200,
+                request: {
+                    url: 'http://test.url/video.m4s',
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s',
+                            startDate: currentTime - 1000,
+                            firstByteDate: currentTime - 500,
+                            endDate: new Date()
+                        }
+                    },
+                    cmcd: {},
+                },
+                resourceTiming: {
+                    startTime: currentTime - 1000,
+                    responseStart: currentTime - 500,
+                    duration: 1000
+                }
+            };
+
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
+            interceptor(mockResponse);
+            interceptor(mockResponse);
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+
+            const firstReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+            expect(firstReport.ec).to.deep.equal(['123']);
+
+            // The buffer is flushed by the first response report; later reports must not repeat the code
+            const secondReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.secondCall.args[0].request.body));
+            expect(secondReport).to.not.have.property('ec');
+        });
+
+        it('should not repeat ec in response reports to a target that already received it in an error event', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            includeInRequests: ['segment'],
+                            enabledKeys: ['e', 'rc', 'ec'],
+                            events: ['e', 'rr'],
+                            interval: 0
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+            cmcdController.getCmcdResponseReceivedInterceptors()[0]({
+                status: 200,
+                request: {
+                    url: 'http://test.url/video.m4s',
+                    customData: { request: { type: HTTPRequest.MEDIA_SEGMENT_TYPE, url: 'http://test.url/video.m4s' } }
+                }
+            });
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+            const errorReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+            expect(errorReport.ec).to.deep.equal(['123']);
+            const responseReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.secondCall.args[0].request.body));
+            expect(responseReport).to.have.property('e', 'rr');
+            expect(responseReport).to.not.have.property('ec');
+        });
+
+        it('should not copy the request report ec into response reports', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            includeInRequests: ['segment'],
+                            enabledKeys: ['e', 'rc', 'ec'],
+                            events: ['rr']
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            cmcdController.getCmcdResponseReceivedInterceptors()[0]({
+                status: 200,
+                request: {
+                    url: 'http://test.url/video.m4s',
+                    customData: {
+                        request: { type: HTTPRequest.MEDIA_SEGMENT_TYPE, url: 'http://test.url/video.m4s' },
+                        cmcd: { ec: ['27'] }
+                    }
+                }
+            });
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const responseReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+            expect(responseReport).to.have.property('e', 'rr');
+            expect(responseReport).to.not.have.property('ec');
         });
 
         it('should send a response report with cmsdd and cmsds keys when CMSD headers are present', () => {
@@ -995,6 +1343,72 @@ describe('CmcdController', function () {
             const metrics = getCmcdFromUrl(result.url);
             expect(metrics).to.have.property('ot', 'v');
             expect(metrics).to.have.property('v', 2);
+        });
+
+        it('should attach buffered error codes (ec) to the next request only', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 2 } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock
+            });
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const requestConfig = {
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            };
+
+            const first = interceptor(createCommonMediaRequest(requestConfig));
+            expect(getCmcdFromUrl(first.url).ec).to.deep.equal(['123']);
+
+            // The buffer is flushed by the first report; later requests must not repeat the code
+            const second = interceptor(createCommonMediaRequest(requestConfig));
+            expect(getCmcdFromUrl(second.url)).to.not.have.property('ec');
+        });
+
+        it('should accumulate multiple error codes into a single ec list', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 2 } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock
+            });
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 456, data: { request: { type: 'someOtherRequestType' } } }
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const result = interceptor(createCommonMediaRequest({
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            }));
+
+            expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123', '456']);
         });
 
         it('should decorate a v1 request with CMCD headers when mode is headers', function () {
@@ -1434,6 +1848,287 @@ describe('CmcdController', function () {
             }));
 
             expect(result.url).to.not.include('CMCD=');
+        });
+    });
+
+    describe('Request Mode with CMCDParameters applied after start', () => {
+        let internalServiceDescriptionControllerMock;
+
+        beforeEach(function () {
+            internalServiceDescriptionControllerMock = new ServiceDescriptionControllerMock();
+        });
+
+        afterEach(function () {
+            // Manifest params are cached in the accessor and would leak into later tests
+            CmcdConfigAccessor(context).getInstance().reset();
+        });
+
+        function createCommonMediaRequest(request) {
+            return {
+                url: request.url,
+                headers: request.headers || {},
+                customData: { request }
+            };
+        }
+
+        function getCmcdFromUrl(url) {
+            const parsed = new URL(url);
+            const cmcdParam = parsed.searchParams.get('CMCD');
+            return cmcdParam ? decodeCmcd(cmcdParam) : {};
+        }
+
+        it('should not buffer error codes while CMCD v1 is active', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 1 } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+
+            // Switch to v2 through the MPD, the code raised under v1 must not show up
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', includeInRequests: 'segment' } }
+            });
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'static' } });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const result = interceptor(createCommonMediaRequest({
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            }));
+
+            const metrics = getCmcdFromUrl(result.url);
+            expect(metrics).to.have.property('v', 2);
+            expect(metrics).to.not.have.property('ec');
+        });
+
+        it('should keep the generated sid when the reporters are rebuilt on manifest reload', function () {
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '1', keys: 'sid', includeInRequests: 'segment' } }
+            });
+            settings.update({ streaming: { cmcd: { enabled: true } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const requestConfig = {
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            };
+
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const firstSid = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url).sid;
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const secondSid = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url).sid;
+
+            expect(firstSid).to.be.a('string').and.not.be.empty;
+            expect(secondSid).to.equal(firstSid);
+        });
+
+        it('should not hand buffered error codes to license requests outside the request filter', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 2 } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+
+            // ProtectionController decorates license requests directly, without the request filter
+            const licenseRequest = { url: 'http://example.com/license', type: HTTPRequest.LICENSE, headers: {} };
+            cmcdController.applyCmcdToRequest(licenseRequest);
+            expect(getCmcdFromUrl(licenseRequest.url)).to.not.have.property('ec');
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const result = interceptor(createCommonMediaRequest({
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            }));
+            expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123']);
+        });
+
+        it('should drop buffered request error codes when a rebuild stops reporting ec', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 2 } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const requestConfig = {
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            };
+
+            // MPD disables ec, so nothing could ever flush the buffered code
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', keys: 'sid', includeInRequests: 'segment' } }
+            });
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            interceptor(createCommonMediaRequest(requestConfig));
+
+            // MPD enables ec again, the stale code must not show up
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', includeInRequests: 'segment' } }
+            });
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const metrics = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url);
+
+            expect(metrics).to.have.property('v', 2);
+            expect(metrics).to.not.have.property('ec');
+        });
+
+        it('should start a new session when a CMCD config change rebuilds the reporters', function () {
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', contentID: 'content-a', includeInRequests: 'segment' } }
+            });
+            settings.update({ streaming: { cmcd: { enabled: true } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const requestConfig = {
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            };
+
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            interceptor(createCommonMediaRequest(requestConfig));
+            const before = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url);
+
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', contentID: 'content-b', includeInRequests: 'segment' } }
+            });
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const after = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url);
+
+            // The rebuilt reporters restart sn, so the session must not continue under the old sid
+            expect(after.sid).to.not.equal(before.sid);
+            expect(after.sn).to.be.below(before.sn);
+        });
+
+        it('should keep CMCD and buffered error codes when deriving the request data fails', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 2 } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+
+            // deriveCmcdDataForRequest returns null when it fails internally
+            const stub = sinon.stub(CmcdModel(context).getInstance(), 'deriveCmcdDataForRequest').returns(null);
+            try {
+                const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+                const result = interceptor(createCommonMediaRequest({
+                    url: 'http://example.com/segment.m4s',
+                    type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                    mediaType: 'video'
+                }));
+                const metrics = getCmcdFromUrl(result.url);
+                expect(metrics).to.have.property('sid');
+                expect(metrics.ec).to.deep.equal(['123']);
+            } finally {
+                stub.restore();
+            }
+        });
+
+        it('should keep counting sn when the manifest reloads without CMCD config changes', function () {
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', includeInRequests: 'segment' } }
+            });
+            settings.update({ streaming: { cmcd: { enabled: true } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const requestConfig = {
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            };
+
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const firstSn = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url).sn;
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const secondSn = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url).sn;
+
+            expect(firstSn).to.be.a('number');
+            expect(secondSn).to.equal(firstSn + 1);
         });
     });
 });

@@ -41,6 +41,7 @@ import {
     CMCD_HEADERS,
 } from '@svta/cml-cmcd';
 import Debug from '../../core/Debug.js';
+import Utils from '../../core/Utils.js';
 
 import CmcdReportRequest from '../../streaming/vo/CmcdReportRequest.js';
 import URLLoader from '../net/URLLoader.js';
@@ -51,7 +52,13 @@ import CmcdConfigAccessor from '../cmcd/config/CmcdConfigAccessor.js';
 function CmcdController() {
     let cmcdConfigAccessor,
         cmcdModel,
-        cmcdReporter,
+        requestReporter,
+        requestEnabledKeys,
+        eventReporters = [],
+        pendingRequestErrorCodes,
+        generatedSessionId,
+        reportersConfigKey,
+        retiredTargetUrls,
         dashMetrics,
         errHandler,
         instance,
@@ -126,14 +133,22 @@ function CmcdController() {
             });
         }
 
-        cmcdReporter = _createCmcdReporter();
-        cmcdReporter.start();
+        _createCmcdReporters();
+        _startTimeIntervalReports();
 
         _initializePlaybackStateListeners();
     }
 
     function _resetInitialSettings() {
         reporterNeedsRebuild = false;
+        requestReporter = null;
+        generatedSessionId = null;
+        reportersConfigKey = null;
+        retiredTargetUrls = new Set();
+        requestEnabledKeys = [];
+        eventReporters = [];
+        // Error codes buffered for the request destination until the next request report carries them
+        pendingRequestErrorCodes = [];
     }
 
     function _initializeEventBus(autoPlay) {
@@ -166,33 +181,131 @@ function CmcdController() {
     }
 
     function _onPlaybackStateChange(state) {
-        // Update CmcdReporter with the new player state
-        if (cmcdReporter) {
-            cmcdReporter.update({ sta: state });
-        }
+        // Update the CmcdReporters with the new player state
+        _updateReporters({ sta: state });
         triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
     }
 
-    function _createCmcdReporter() {
-        const cmcdConfig = {
+    /**
+     * Creates one CmcdReporter for request mode and one per event target. Per the CMCD v2 specification,
+     * error codes (ec) are buffered per report destination. CmcdReporter shares the per-event data across
+     * all of its targets, so a dedicated reporter per event target is needed to send each target only its own codes.
+     * @private
+     */
+    function _getReportersConfig() {
+        // Generate the session ID once per session, so rebuilding the reporters does not start a new session
+        if (!generatedSessionId) {
+            // crypto.randomUUID only exists in secure contexts
+            generatedSessionId = globalThis.crypto?.randomUUID?.() ?? Utils.generateUuid();
+        }
+        const baseConfig = {
             version: cmcdConfigAccessor.getVersion(),
             transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS ? CMCD_HEADERS : CMCD_QUERY,
-            enabledKeys: cmcdConfigAccessor.get('keys'),
-            eventTargets: _buildReporterTargets(),
+            // All reporters must share the same session ID
+            sid: cmcdConfigAccessor.get('sessionID') || generatedSessionId,
         };
 
-        // Only pass sid/cid if they have actual values, so CmcdReporter
-        // uses its own defaults (e.g., auto-generated uuid for sid)
-        const sid = cmcdConfigAccessor.get('sessionID');
-        if (sid) {
-            cmcdConfig.sid = sid;
-        }
+        // Only pass cid if it has an actual value
         const cid = cmcdConfigAccessor.get('contentID');
         if (cid) {
-            cmcdConfig.cid = cid;
+            baseConfig.cid = cid;
         }
 
-        return new CmcdReporter(cmcdConfig, _customRequester);
+        // CmcdReporter ignores targets without url or events
+        const targets = _buildReporterTargets().filter((target) => target.url && target.events?.length);
+
+        return { baseConfig, requestEnabledKeys: cmcdConfigAccessor.get('keys'), targets };
+    }
+
+    function _createCmcdReporters(config = _getReportersConfig()) {
+        const { baseConfig, targets } = config;
+        reportersConfigKey = JSON.stringify(config);
+        requestEnabledKeys = config.requestEnabledKeys;
+        requestReporter = new CmcdReporter({ ...baseConfig, enabledKeys: requestEnabledKeys }, _customRequester);
+
+        // A target retired by 410 Gone stays retired for the session
+        eventReporters = targets
+            .filter((target) => !retiredTargetUrls.has(target.url))
+            .map((target) => {
+                const eventReporter = { target, pendingErrorCodes: [], intervalId: null };
+                // Interval 0 disables the reporter's own time-interval timer. dash.js runs it instead
+                // (see _startTimeIntervalReports), so 't' reports can carry the target's buffered error codes.
+                eventReporter.reporter = new CmcdReporter({ ...baseConfig, eventTargets: [{ ...target, interval: 0 }] }, (request) => {
+                    return _customRequester(request).then((response) => {
+                        // CmcdReporter drops a target whose collector answers 410 Gone, so retire it here as well
+                        if (response.status === 410) {
+                            _retireEventReporter(eventReporter);
+                        }
+                        return response;
+                    });
+                });
+                return eventReporter;
+            });
+    }
+
+    function _retireEventReporter(eventReporter) {
+        retiredTargetUrls.add(eventReporter.target.url);
+        clearInterval(eventReporter.intervalId);
+        eventReporters = eventReporters.filter((entry) => entry !== eventReporter);
+    }
+
+    function _startTimeIntervalReports() {
+        const event = Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL;
+        eventReporters.forEach((eventReporter) => {
+            const { target } = eventReporter;
+            if (!(target.interval > 0) || !target.events.includes(event)) {
+                return;
+            }
+            const timeIntervalEvent = () => _recordOnEventTarget(eventReporter, {}, (reporter, data) => reporter.recordEvent(event, data));
+            eventReporter.intervalId = setInterval(timeIntervalEvent, target.interval * 1000);
+            // Like CmcdReporter.start(), send the first report right away
+            timeIntervalEvent();
+        });
+    }
+
+    function _updateReporters(data) {
+        if (requestReporter) {
+            requestReporter.update(data);
+        }
+        eventReporters.forEach(({ reporter }) => reporter.update(data));
+    }
+
+    function _stopReporters() {
+        eventReporters.forEach(({ reporter, intervalId }) => {
+            clearInterval(intervalId);
+            reporter.stop(true);
+        });
+    }
+
+    function _canReportErrorCodes(enabledKeys) {
+        // ec is a CMCD v2 key. Under v1 it is never encoded, so buffering would never be flushed.
+        return cmcdConfigAccessor.getVersion() >= 2 && Array.isArray(enabledKeys) && enabledKeys.includes('ec');
+    }
+
+    /**
+     * Records an event on every event target subscribed to it, attaching the error codes buffered for that target.
+     * @param {string} event
+     * @param {function} record - (reporter, data) => void
+     * @private
+     */
+    function _recordOnEventTargets(event, data, record) {
+        eventReporters.forEach((eventReporter) => {
+            if (eventReporter.target.events.includes(event)) {
+                _recordOnEventTarget(eventReporter, data, record);
+            }
+        });
+    }
+
+    function _recordOnEventTarget(eventReporter, data, record) {
+        const hasErrorCodes = eventReporter.pendingErrorCodes.length > 0;
+        try {
+            record(eventReporter.reporter, hasErrorCodes ? { ...data, ec: eventReporter.pendingErrorCodes } : data);
+            if (hasErrorCodes) {
+                eventReporter.pendingErrorCodes = [];
+            }
+        } catch (e) {
+            logger.warn('Failed to record CMCD event.', e);
+        }
     }
 
     function _buildReporterTargets() {
@@ -228,7 +341,8 @@ function CmcdController() {
             urlLoader.load({
                 request: httpRequest,
                 success: () => resolve({ status: 200 }),
-                error: (e) => resolve({ status: e?.status || 500 }),
+                // HTTPLoader passes the response as the fourth argument
+                error: (request, error, statusText, response) => resolve({ status: response?.status || 500 }),
             });
         });
     }
@@ -250,19 +364,27 @@ function CmcdController() {
         if (errorData.error?.data?.request?.type === HTTPRequest.CMCD_EVENT) {
             return;
         }
-        // Update CmcdReporter with the error code
-        if (cmcdReporter) {
-            const errorCode = errorData.error?.code || errorData.error?.data?.code;
-            if (errorCode) {
-                cmcdReporter.update({ ec: errorCode });
+        // Per the CMCD v2 specification, error codes are buffered per report destination
+        // as they occur and reported as an inner list of strings, e.g. ec=("16" "27"),
+        // along with the next CMCD report sent to that destination.
+        const errorCode = errorData.error?.code || errorData.error?.data?.code;
+        if (errorCode) {
+            const code = String(errorCode);
+            if (isCmcdEnabled() && _canReportErrorCodes(requestEnabledKeys)) {
+                pendingRequestErrorCodes.push(code);
             }
+            eventReporters.forEach((eventReporter) => {
+                if (_canReportErrorCodes(eventReporter.target.enabledKeys)) {
+                    eventReporter.pendingErrorCodes.push(code);
+                }
+            });
         }
 
         triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.ERROR);
     }
 
     function _rebuildReporterIfNeeded() {
-        if (!reporterNeedsRebuild || !cmcdReporter) {
+        if (!reporterNeedsRebuild || !requestReporter) {
             return;
         }
 
@@ -277,12 +399,48 @@ function CmcdController() {
             return;
         }
 
-        // Reset flag only after confirming we will rebuild
         reporterNeedsRebuild = false;
 
-        cmcdReporter.stop(true);
-        cmcdReporter = _createCmcdReporter();
-        cmcdReporter.start();
+        // Most MPD refreshes do not change the CMCD config. Keep the reporters then, since rebuilding
+        // drops their state: sn would restart under the same sid, msd could be sent again, st/sf/pr are lost.
+        let config = _getReportersConfig();
+        if (JSON.stringify(config) === reportersConfigKey) {
+            return;
+        }
+
+        // New reporters restart sn at 0, so a generated sid must change with them to avoid duplicate sn in one session
+        if (!cmcdConfigAccessor.get('sessionID')) {
+            generatedSessionId = null;
+            config = _getReportersConfig();
+        }
+
+        _stopReporters();
+        const previousEventReporters = eventReporters;
+        _createCmcdReporters(config);
+
+        // The new config may no longer report ec to the request destination, so nothing would flush the buffer
+        if (!_canReportErrorCodes(requestEnabledKeys)) {
+            pendingRequestErrorCodes = [];
+        }
+
+        // Keep error codes not yet reported to a target that still exists. Several targets can share a url,
+        // so prefer an identical target config, fall back to the url, and use each previous target only once.
+        const unmatched = [...previousEventReporters];
+        eventReporters.forEach((eventReporter) => {
+            const targetKey = JSON.stringify(eventReporter.target);
+            let index = unmatched.findIndex(({ target }) => JSON.stringify(target) === targetKey);
+            if (index === -1) {
+                index = unmatched.findIndex(({ target }) => target.url === eventReporter.target.url);
+            }
+            if (index === -1) {
+                return;
+            }
+            const [previous] = unmatched.splice(index, 1);
+            if (_canReportErrorCodes(eventReporter.target.enabledKeys)) {
+                eventReporter.pendingErrorCodes = [...previous.pendingErrorCodes];
+            }
+        });
+        _startTimeIntervalReports();
     }
 
     /**
@@ -290,7 +448,7 @@ function CmcdController() {
      * @param event
      */
     function triggerCmcdEventMode(event) {
-        if (!cmcdReporter) {
+        if (!requestReporter) {
             return;
         }
 
@@ -301,11 +459,11 @@ function CmcdController() {
         // Route media start delay (MSD) through update() for the reporter's internal send-once tracking
         const msdData = cmcdModel.calculateMsd();
         if (msdData.msd !== undefined) {
-            cmcdReporter.update(msdData);
+            _updateReporters(msdData);
         }
 
         // Pass event-mode data as transient per-event data (not persisted)
-        cmcdReporter.recordEvent(event, cmcdData);
+        _recordOnEventTargets(event, cmcdData, (reporter, data) => reporter.recordEvent(event, data));
     }
 
     /**
@@ -317,22 +475,33 @@ function CmcdController() {
      *                           Will be mutated with CMCD-decorated url/headers.
      */
     function applyCmcdToRequest(request) {
-        if (!cmcdReporter || !isCmcdEnabled()) {
+        if (!requestReporter || !isCmcdEnabled()) {
             return;
         }
 
         _rebuildReporterIfNeeded();
 
         try {
-            const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
+            // deriveCmcdDataForRequest returns null when it fails internally
+            const cmcdData = cmcdModel.deriveCmcdDataForRequest(request) || {};
 
             // Route MSD through update() for the reporter's internal send-once tracking
             const msdData = cmcdModel.calculateMsd();
             if (msdData.msd !== undefined) {
-                cmcdReporter.update(msdData);
+                _updateReporters(msdData);
             }
 
-            const decorated = cmcdReporter.createRequestReport(request, cmcdData);
+            // Attach buffered error codes only to requests of the configured request destination.
+            // License requests are decorated without passing the request filter.
+            if (pendingRequestErrorCodes.length > 0 && cmcdModel.isIncludedInRequestFilter(request.type)) {
+                cmcdData.ec = pendingRequestErrorCodes;
+            }
+
+            const decorated = requestReporter.createRequestReport(request, cmcdData);
+            // Clear the buffer only once the codes were actually encoded into the report
+            if (decorated.customData?.cmcd?.ec) {
+                pendingRequestErrorCodes = [];
+            }
             request.url = decorated.url;
             request.headers = decorated.headers;
             request.cmcd = decorated.customData?.cmcd || {};
@@ -457,8 +626,8 @@ function CmcdController() {
 
     function _onPlaybackRateChanged(data) {
         const prData = cmcdModel.onPlaybackRateChanged(data);
-        if (cmcdReporter && prData) {
-            cmcdReporter.update(prData);
+        if (prData) {
+            _updateReporters(prData);
         }
     }
 
@@ -471,9 +640,9 @@ function CmcdController() {
         // The reporter will be rebuilt lazily before the next request or event.
         reporterNeedsRebuild = true;
 
-        if (cmcdReporter) {
+        if (requestReporter) {
             const streamFormatInfo = cmcdModel.onManifestLoaded(data);
-            cmcdReporter.update(streamFormatInfo);
+            _updateReporters(streamFormatInfo);
         }
     }
 
@@ -507,7 +676,7 @@ function CmcdController() {
     function _cmcdRequestModeInterceptor(commonMediaRequest) {
         const requestType = commonMediaRequest.customData.request.type;
 
-        if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(requestType)) {
+        if (!requestReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(requestType)) {
             commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
             return commonMediaRequest;
         }
@@ -541,7 +710,8 @@ function CmcdController() {
     }
 
     function _handleResponseReceived(response) {
-        if (!cmcdReporter) {
+        // CmcdReporter ignores responses without a request URL
+        if (!requestReporter || !response.request?.url) {
             return;
         }
 
@@ -553,7 +723,7 @@ function CmcdController() {
         // Route MSD through update() for the reporter's internal send-once tracking
         const msdData = cmcdModel.calculateMsd();
         if (msdData.msd !== undefined) {
-            cmcdReporter.update(msdData);
+            _updateReporters(msdData);
         }
 
         // Collect dash.js-specific additional data
@@ -575,11 +745,17 @@ function CmcdController() {
             }
         }
 
-        try {
-            cmcdReporter.recordResponseReceived(response, { ...eventData, ...additionalData });
-        } catch (e) {
-            logger.warn('Failed to record response received in CMCD reporter.', e);
+        // CmcdReporter merges the request's CMCD data into the rr report. Drop the request destination's
+        // ec so each event target only receives the error codes buffered for it.
+        const requestCmcd = response.request.customData?.cmcd;
+        if (requestCmcd?.ec) {
+            const cmcd = { ...requestCmcd };
+            delete cmcd.ec;
+            response = { ...response, request: { ...response.request, customData: { ...response.request.customData, cmcd } } };
         }
+
+        _recordOnEventTargets(Constants.CMCD_REPORTING_EVENTS.RESPONSE_RECEIVED, { ...eventData, ...additionalData },
+            (reporter, data) => reporter.recordResponseReceived(response, data));
     }
 
     function getCmcdParametersFromManifest() {
@@ -607,11 +783,9 @@ function CmcdController() {
             eventBus.off(event, playbackStateHandlers[event], instance);
         });
 
-        if (cmcdReporter) {
-            cmcdReporter.stop(true);
-            cmcdReporter = null;
-        }
+        _stopReporters();
 
+        _resetInitialSettings();
         cmcdModel.resetInitialSettings();
     }
 
