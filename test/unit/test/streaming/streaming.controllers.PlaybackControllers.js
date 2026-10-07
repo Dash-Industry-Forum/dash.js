@@ -104,6 +104,77 @@ describe('PlaybackController', function () {
             expect(playbackController.getLiveDelay()).to.be.NaN; // jshint ignore:line
         });
 
+        describe('internal seek handling', function () {
+
+            const listenerScope = {};
+            let dispatchedSeekingEvents;
+
+            function onPlaybackSeeking(e) {
+                dispatchedSeekingEvents.push(e);
+            }
+
+            beforeEach(function () {
+                dispatchedSeekingEvents = [];
+                eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, listenerScope);
+            });
+
+            afterEach(function () {
+                eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, listenerScope);
+            });
+
+            it('should dispatch PLAYBACK_SEEKING for an external seek', function () {
+                playbackController.seek(500, false, false);
+
+                expect(dispatchedSeekingEvents).to.have.lengthOf(1);
+                expect(dispatchedSeekingEvents[0].seekTime).to.equal(500);
+            });
+
+            it('should not dispatch PLAYBACK_SEEKING for the seeking event caused by an internal seek', function () {
+                playbackController.seek(120, false, true);
+
+                expect(dispatchedSeekingEvents).to.have.lengthOf(0);
+            });
+
+            it('should not dispatch PLAYBACK_SEEKING when the element lands close to the internal seek target', function () {
+                playbackController.seek(120, false, true);
+                videoModelMock.setCurrentTime(120.05);
+
+                expect(dispatchedSeekingEvents).to.have.lengthOf(0);
+            });
+
+            it('should dispatch PLAYBACK_SEEKING when the element is seeked elsewhere while an internal seek is pending', function () {
+                playbackController.seek(120, false, true);
+
+                // Seeking the element directly bypasses seek(), so the internal seek is still pending here
+                videoModelMock.setCurrentTime(500);
+
+                expect(dispatchedSeekingEvents).to.have.lengthOf(1);
+                expect(dispatchedSeekingEvents[0].seekTime).to.equal(500);
+            });
+
+            it('should dispatch PLAYBACK_SEEKING for a seeking event once the internal seek completed', function () {
+                playbackController.seek(120, false, true);
+                videoModelMock.fireEvent('seeked');
+
+                videoModelMock.setCurrentTime(120);
+                expect(dispatchedSeekingEvents).to.have.lengthOf(1);
+                expect(dispatchedSeekingEvents[0].seekTime).to.equal(120);
+            });
+
+            it('should not dispatch PLAYBACK_SEEKING when the element adjusted the requested internal seek time', function () {
+                // The element applies a different time than requested, as stickToBuffered does
+                videoModelMock.setCurrentTime = function (time) {
+                    this.time = time + 5;
+                    return this.time;
+                };
+
+                playbackController.seek(120, false, true);
+                videoModelMock.fireEvent('seeking');
+
+                expect(dispatchedSeekingEvents).to.have.lengthOf(0);
+            });
+        });
+
         describe('computeAndSetLiveDelay()', function () {
             let manifestInfo;
 

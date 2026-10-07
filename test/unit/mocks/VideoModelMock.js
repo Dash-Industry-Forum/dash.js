@@ -125,6 +125,7 @@ class VideoModelMock {
     setCurrentTime(time) {
         this.time = time;
         this.fireEvent('seeking', {});
+        return this.time;
     }
 
     getTime() {
