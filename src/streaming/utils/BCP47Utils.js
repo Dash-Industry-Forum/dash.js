@@ -82,6 +82,17 @@ export const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescripto
     yor: 'yo', zha: 'za', zho: 'zh', zul: 'zu'
 }));
 
+/**
+ * CLDR normalizations applied by bcp-47-normalize before it was removed.
+ *
+ * Keep the mappings used by the DASH-IF complex multi-period test vector so
+ * MediaInfo.lang remains compatible with dash.js versions prior to 5.2.0.
+ */
+const COMPATIBILITY_TAG_MAPPINGS = Object.create(null, Object.getOwnPropertyDescriptors({
+    'zh-cmn': 'zh',
+    'nl-nl': 'nl'
+}));
+
 export function normalizeBcp47(tag) {
     if (!tag || typeof tag !== 'string') {
         return tag;
@@ -102,5 +113,6 @@ export function normalizeBcp47(tag) {
         }
     }
 
-    return parts.join('-');
+    const normalizedTag = parts.join('-');
+    return COMPATIBILITY_TAG_MAPPINGS[normalizedTag.toLowerCase()] || normalizedTag;
 }

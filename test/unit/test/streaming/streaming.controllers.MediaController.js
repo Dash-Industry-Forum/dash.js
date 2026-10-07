@@ -70,6 +70,14 @@ describe('MediaController', function () {
         });
     });
 
+    describe('Language Matching', function () {
+        it('should keep language range matching directional', function () {
+            expect(mediaController.matchSettingsLang({ lang: 'en-GB' }, { lang: 'en' })).to.be.false;
+            expect(mediaController.matchSettingsLang({ lang: 'en-US' }, { lang: 'en-GB' })).to.be.false;
+            expect(mediaController.matchSettingsLang({ lang: 'en-GB' }, { lang: 'en-GB' })).to.be.true;
+        });
+    });
+
     describe('Track Equality', function () {
         it('should return false if track are not equals', function () {
 
