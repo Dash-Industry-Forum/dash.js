@@ -1560,14 +1560,22 @@ function Settings() {
 
     let settings = Utils.clone(defaultSettings);
 
+    function _isMergeableObject(value) {
+        return typeof value === 'object' && !(value instanceof RegExp) && !(value instanceof Array) && value !== null;
+    }
+
     //Merge in the settings. If something exists in the new config that doesn't match the schema of the default config,
     //regard it as an error and log it.
     function mixinSettings(source, dest, path) {
         for (let n in source) {
             if (source.hasOwnProperty(n)) {
                 if (dest.hasOwnProperty(n)) {
-                    if (typeof source[n] === 'object' && !(source[n] instanceof RegExp) && !(source[n] instanceof Array) && source[n] !== null) {
-                        mixinSettings(source[n], dest[n], path.slice() + n + '.');
+                    if (_isMergeableObject(source[n])) {
+                        if (_isMergeableObject(dest[n])) {
+                            mixinSettings(source[n], dest[n], path.slice() + n + '.');
+                        } else {
+                            console.error('Settings parameter ' + path + n + ' is not supported');
+                        }
                     } else {
                         dest[n] = Utils.clone(source[n]);
                         if (DISPATCH_KEY_MAP[path + n]) {
