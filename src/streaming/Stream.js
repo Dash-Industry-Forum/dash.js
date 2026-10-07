@@ -77,7 +77,8 @@ function Stream(config) {
     const settings = config.settings;
 
 
-    let boxParser,
+    let activationEpoch,
+        boxParser,
         debug,
         fragmentController,
         hasAudioTrack,
@@ -99,6 +100,7 @@ function Stream(config) {
      * Setup the stream
      */
     function setup() {
+        activationEpoch = 0;
         try {
             debug = Debug(context).getInstance();
             logger = debug.getLogger(instance);
@@ -217,8 +219,17 @@ function Stream(config) {
             }
 
 
+            // deactivate() bumps the epoch: an activation that was started
+            // before a deactivation must not mark the stream active when its
+            // initialization settles late, or the next activate() would
+            // short-circuit on isActive with no processors behind it.
+            const epoch = activationEpoch;
             _initializeMedia(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod)
-                .then(() => {
+                .then((result) => {
+                    if ((result && result.cancelled) || epoch !== activationEpoch) {
+                        resolve({ cancelled: true });
+                        return;
+                    }
                     isActive = true;
                     if (representationsFromPreviousPeriod && representationsFromPreviousPeriod.length > 0) {
                         startScheduleControllers();
@@ -246,7 +257,12 @@ function Stream(config) {
             _setPreloaded(true);
 
             _commonMediaInitialization(mediaSource, previousBuffers, representationsFromPreviousPeriod)
-                .then(() => {
+                .then((result) => {
+                    if (result && result.cancelled) {
+                        _setPreloaded(false);
+                        resolve({ cancelled: true });
+                        return;
+                    }
                     for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
                         streamProcessors[i].setExplicitBufferingTime(getStartTime());
                         streamProcessors[i].getScheduleController().startScheduleTimer();
@@ -281,6 +297,11 @@ function Stream(config) {
      */
     function _commonMediaInitialization(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod) {
         return new Promise((resolve, reject) => {
+            // deactivate() bumps the epoch; an initialization overtaken by a
+            // deactivation must stop before its side effects (buffer sinks,
+            // error signalling, text tracks) and report itself cancelled, so
+            // no caller mistakes it for a successful initialization.
+            const epoch = activationEpoch;
             checkConfig();
 
             _addInlineEvents();
@@ -300,9 +321,16 @@ function Stream(config) {
 
             Promise.all(promises)
                 .then(() => {
+                    if (epoch !== activationEpoch) {
+                        return null;
+                    }
                     return _createBufferSinks(previousSourceBufferSinks, representationsFromPreviousPeriod)
                 })
                 .then((bufferSinks) => {
+                    if (epoch !== activationEpoch) {
+                        resolve({ cancelled: true });
+                        return;
+                    }
                     if (streamProcessors.length === 0) {
                         const msg = 'No streams to play.';
                         errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
@@ -589,6 +617,7 @@ function Stream(config) {
         }
         streamProcessors = [];
         isActive = false;
+        activationEpoch++;
         hasFinishedBuffering = false;
         _setPreloaded(false);
         setIsEndedEventSignaled(false);
