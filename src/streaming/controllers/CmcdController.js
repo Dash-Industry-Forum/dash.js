@@ -195,7 +195,8 @@ function CmcdController() {
     function _getReportersConfig() {
         // Generate the session ID once per session, so rebuilding the reporters does not start a new session
         if (!generatedSessionId) {
-            generatedSessionId = Utils.generateUuid();
+            // crypto.randomUUID only exists in secure contexts
+            generatedSessionId = globalThis.crypto?.randomUUID?.() ?? Utils.generateUuid();
         }
         const baseConfig = {
             version: cmcdConfigAccessor.getVersion(),
@@ -411,11 +412,26 @@ function CmcdController() {
         const previousEventReporters = eventReporters;
         _createCmcdReporters(config);
 
-        // Keep error codes not yet reported to a target that still exists
+        // The new config may no longer report ec to the request destination, so nothing would flush the buffer
+        if (!_canReportErrorCodes(requestEnabledKeys)) {
+            pendingRequestErrorCodes = [];
+        }
+
+        // Keep error codes not yet reported to a target that still exists. Several targets can share a url,
+        // so prefer an identical target config, fall back to the url, and use each previous target only once.
+        const unmatched = [...previousEventReporters];
         eventReporters.forEach((eventReporter) => {
-            const previous = previousEventReporters.find(({ target }) => target.url === eventReporter.target.url);
-            if (previous && _canReportErrorCodes(eventReporter.target.enabledKeys)) {
-                eventReporter.pendingErrorCodes = previous.pendingErrorCodes;
+            const targetKey = JSON.stringify(eventReporter.target);
+            let index = unmatched.findIndex(({ target }) => JSON.stringify(target) === targetKey);
+            if (index === -1) {
+                index = unmatched.findIndex(({ target }) => target.url === eventReporter.target.url);
+            }
+            if (index === -1) {
+                return;
+            }
+            const [previous] = unmatched.splice(index, 1);
+            if (_canReportErrorCodes(eventReporter.target.enabledKeys)) {
+                eventReporter.pendingErrorCodes = [...previous.pendingErrorCodes];
             }
         });
         _startTimeIntervalReports();
@@ -468,8 +484,9 @@ function CmcdController() {
                 _updateReporters(msdData);
             }
 
-            // Attach buffered error codes to this request report
-            if (pendingRequestErrorCodes.length > 0) {
+            // Attach buffered error codes only to requests of the configured request destination.
+            // License requests are decorated without passing the request filter.
+            if (pendingRequestErrorCodes.length > 0 && cmcdModel.isIncludedInRequestFilter(request.type)) {
                 cmcdData.ec = pendingRequestErrorCodes;
             }
 
