@@ -280,4 +280,43 @@ describe('TimelineSegmentsGetter', () => {
             expect(seg).to.be.null; // jshint ignore:line
         });
     });
+
+    describe('when the SegmentTimeline is incomplete', () => {
+        // A dynamic manifest is not necessarily read in a complete state, and
+        // both reads below used to assume otherwise.
+        function representationWithTimeline(timeline) {
+            const voHelper = new VoHelper();
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.timescale = 90000;
+            representation.SegmentTemplate = {
+                timescale: 90000,
+                initialization: 'test-$RepresentationID$.dash',
+                SegmentTimeline: timeline,
+                media: 'test-$RepresentationID$-$Time$.dash'
+            };
+            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+            return representation;
+        }
+
+        it('should report no segments when the timeline has no S elements', () => {
+            const representation = representationWithTimeline({});
+            const info = timelineSegmentsGetter.getMediaFinishedInformation(representation);
+
+            expect(info.numberOfSegments).to.equal(0);
+        });
+
+        it('should report no segments when the timeline is absent', () => {
+            const representation = representationWithTimeline(undefined);
+            const info = timelineSegmentsGetter.getMediaFinishedInformation(representation);
+
+            expect(info.numberOfSegments).to.equal(0);
+        });
+
+        it('should return null rather than throw when looking a segment up by time', () => {
+            const representation = representationWithTimeline({});
+            const seg = timelineSegmentsGetter.getSegmentByTime(representation, 1.0);
+
+            expect(seg).to.be.null; // jshint ignore:line
+        });
+    });
 });
