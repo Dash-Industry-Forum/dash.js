@@ -34,7 +34,6 @@ import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import {normalizeBcp47} from '../utils/BCP47Utils.js';
-import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 import getNChanFromAudioChannelConfig from '../utils/AudioChannelConfiguration.js';
@@ -151,7 +150,7 @@ function MediaController() {
             logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, localSettings)
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, {lang: getAvailablePreferredLanguages(filteredTracks, localSettings)});
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, localSettings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, localSettings);
             if (!(type === Constants.AUDIO && !!lastSelectedTracks[type])) {
@@ -442,12 +441,46 @@ function MediaController() {
         return tracks;
     }
 
+    function getAvailablePreferredLanguages(tracks, settings) {
+        function _getAllLanguages(tracks) {
+            const languages = new Set();
+            tracks.forEach(track => {
+                if (track.lang) {
+                    languages.add(track.lang);
+                }
+            });
+            return Array.from(languages);
+        }
+
+        function _getBestLanguageMatch(langs, pref_lang) {
+            if (!pref_lang) {
+                return [];
+            }
+
+            const normalizedPreference = normalizeBcp47(pref_lang);
+            let arr = langs.filter(i => normalizeBcp47(i) === normalizedPreference);
+            arr = arr.length ? arr : langs.filter(i => normalizeBcp47(i).split('-')[0] === normalizedPreference);
+            arr = arr.length ? arr : langs.filter(i => normalizeBcp47(i) === normalizedPreference.split('-')[0]);
+            return arr.length ? arr : langs.filter(i => normalizeBcp47(i).split('-')[0] === normalizedPreference.split('-')[0]);
+        }
+
+        const prefLang = settings.lang;
+        const availableLanguages = _getAllLanguages(tracks);
+
+        if (prefLang instanceof RegExp) {
+            return prefLang;
+        }
+
+        const preferredLanguages = Array.isArray(prefLang) ? prefLang : [prefLang];
+        return [...new Set(preferredLanguages.flatMap(preference => _getBestLanguageMatch(availableLanguages, preference)))];
+    }
+
     function matchSettingsLang(settings, track) {
         try {
             return !settings.lang ||
             (settings.lang instanceof RegExp) ?
                 (track.lang.match(settings.lang)) : track.lang !== '' ?
-                    (extendedFilter(track.lang, normalizeBcp47(settings.lang)).length > 0) : false;
+                    (settings.lang.map(normalizeBcp47).filter(l => l === normalizeBcp47(track.lang)).length > 0) : false;
         } catch (e) {
             return false
         }
@@ -521,10 +554,8 @@ function MediaController() {
 
             // If the track has a language and we can normalize the target language check if we got a match
             else if (track.lang !== '') {
-                const normalizedSettingsLang = normalizeBcp47(settings.lang);
-                if (normalizedSettingsLang) {
-                    matchLang = extendedFilter(track.lang, normalizedSettingsLang).length > 0
-                }
+                const preferredLanguages = Array.isArray(settings.lang) ? settings.lang : [settings.lang];
+                matchLang = matchSettingsLang({lang: preferredLanguages}, track);
             }
 
             const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
@@ -1003,6 +1034,8 @@ function MediaController() {
         addTrack,
         areTracksEqual,
         clearDataForStream,
+        filterTracksBySettings,
+        getAvailablePreferredLanguages,
         getCurrentTrackFor,
         getInitialSettings,
         getTracksFor,
