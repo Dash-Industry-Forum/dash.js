@@ -493,6 +493,24 @@ class MediaPlayerEvents extends EventsBase {
          * @type {string}
          */
         this.MANAGED_MEDIA_SOURCE_END_STREAMING = 'managedMediaSourceEndStreaming';
+
+        /**
+         * Triggered when C2PA scanning has processed an init segment.
+         * @event MediaPlayerEvents#C2PA_INIT_PROCESSED
+         */
+        this.C2PA_INIT_PROCESSED = 'c2paInitProcessed';
+
+        /**
+         * Triggered when C2PA scanning has validated a media segment.
+         * @event MediaPlayerEvents#C2PA_SEGMENT_VALIDATED
+         */
+        this.C2PA_SEGMENT_VALIDATED = 'c2paSegmentValidated';
+
+        /**
+         * Triggered when C2PA scanning could not validate a segment.
+         * @event MediaPlayerEvents#C2PA_ERROR
+         */
+        this.C2PA_ERROR = 'c2paError';
     }
 }
 

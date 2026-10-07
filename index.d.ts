@@ -1983,6 +1983,11 @@ export class MediaPlayerSettingClass {
                 etpWeightRatio?: number
             }
         },
+        c2pa?: {
+            enabled?: boolean,
+            method?: 'auto' | '19.3' | '19.4',
+            mediaTypes?: Array<'video' | 'audio'>
+        },
         defaultSchemeIdUri?: {
             viewpoint?: string,
             audioChannelConfiguration?: string,
@@ -2408,6 +2413,9 @@ export interface MediaPlayerEvents {
     BUFFER_LOADED: 'bufferLoaded';
     BUFFER_LEVEL_STATE_CHANGED: 'bufferStateChanged';
     BUFFER_LEVEL_UPDATED: 'bufferLevelUpdated';
+    C2PA_INIT_PROCESSED: 'c2paInitProcessed';
+    C2PA_SEGMENT_VALIDATED: 'c2paSegmentValidated';
+    C2PA_ERROR: 'c2paError';
     CAN_PLAY: 'canPlay';
     CAN_PLAY_THROUGH: 'canPlayThrough';
     CAPTION_RENDERED: 'captionRendered';
