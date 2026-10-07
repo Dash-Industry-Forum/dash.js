@@ -1235,6 +1235,12 @@ function StreamProcessor(config) {
         return scheduleController;
     }
 
+    function setBufferTargetLink(sourceProcessor) {
+        if (type === Constants.AUDIO && sourceProcessor && sourceProcessor.getType() === Constants.VIDEO) {
+            scheduleController.setBufferTargetLink(sourceProcessor.getBufferController());
+        }
+    }
+
     function clearScheduleTimer() {
         if (scheduleController) {
             scheduleController.clearScheduleTimer();
@@ -1645,6 +1651,7 @@ function StreamProcessor(config) {
         probeNextRequest,
         reset,
         selectMediaInfo,
+        setBufferTargetLink,
         setEnhancementStreamProcessor,
         setExplicitBufferingTime,
         setMediaInfoArray,
