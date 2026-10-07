@@ -646,7 +646,8 @@ describe('CmcdController', function () {
         });
 
         it('should stop the time interval reports once the collector answers 410 Gone', async () => {
-            urlLoaderMock.load = sinon.spy((config) => config.error({ status: 410 }));
+            // Same signature as HTTPLoader: the response carrying the status is the fourth argument
+            urlLoaderMock.load = sinon.spy((config) => config.error(config.request, 'error', 'Gone', { status: 410 }));
             const timerCount = clock.countTimers();
 
             await clock.tickAsync(1000);
@@ -656,6 +657,27 @@ describe('CmcdController', function () {
 
             await clock.tickAsync(3000);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
+        });
+
+        it('should not recreate a target retired by 410 Gone when the reporters are rebuilt', async () => {
+            urlLoaderMock.load = sinon.spy((config) => config.error(config.request, 'error', 'Gone', { status: 410 }));
+            await clock.tickAsync(1000);
+            urlLoaderMock.load.resetHistory();
+
+            // An MPD with different CMCDParameters forces a rebuild of the reporters
+            serviceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', contentID: 'new-content-id' } }
+            });
+            try {
+                eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+                // Any CMCD event runs the pending rebuild, which would send a 't' report right away for a recreated target
+                eventBus.trigger(MediaPlayerEvents.ERROR, { error: { code: 27 } });
+                await clock.tickAsync(3000);
+
+                expect(urlLoaderMock.load.called).to.be.false;
+            } finally {
+                CmcdConfigAccessor(context).getInstance().reset();
+            }
         });
 
         it('should attach buffered error codes (ec) to the next time interval report only', () => {
@@ -1887,6 +1909,40 @@ describe('CmcdController', function () {
 
             expect(firstSid).to.be.a('string').and.not.be.empty;
             expect(secondSid).to.equal(firstSid);
+        });
+
+        it('should keep counting sn when the manifest reloads without CMCD config changes', function () {
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', includeInRequests: 'segment' } }
+            });
+            settings.update({ streaming: { cmcd: { enabled: true } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const requestConfig = {
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            };
+
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const firstSn = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url).sn;
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const secondSn = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url).sn;
+
+            expect(firstSn).to.be.a('number');
+            expect(secondSn).to.equal(firstSn + 1);
         });
     });
 });

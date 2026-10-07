@@ -57,6 +57,8 @@ function CmcdController() {
         eventReporters = [],
         pendingRequestErrorCodes,
         generatedSessionId,
+        reportersConfigKey,
+        retiredTargetUrls,
         dashMetrics,
         errHandler,
         instance,
@@ -141,6 +143,8 @@ function CmcdController() {
         reporterNeedsRebuild = false;
         requestReporter = null;
         generatedSessionId = null;
+        reportersConfigKey = null;
+        retiredTargetUrls = new Set();
         requestEnabledKeys = [];
         eventReporters = [];
         // Error codes buffered for the request destination until the next request report carries them
@@ -188,7 +192,7 @@ function CmcdController() {
      * all of its targets, so a dedicated reporter per event target is needed to send each target only its own codes.
      * @private
      */
-    function _createCmcdReporters() {
+    function _getReportersConfig() {
         // Generate the session ID once per session, so rebuilding the reporters does not start a new session
         if (!generatedSessionId) {
             generatedSessionId = Utils.generateUuid();
@@ -206,12 +210,21 @@ function CmcdController() {
             baseConfig.cid = cid;
         }
 
-        requestEnabledKeys = cmcdConfigAccessor.get('keys');
+        // CmcdReporter ignores targets without url or events
+        const targets = _buildReporterTargets().filter((target) => target.url && target.events?.length);
+
+        return { baseConfig, requestEnabledKeys: cmcdConfigAccessor.get('keys'), targets };
+    }
+
+    function _createCmcdReporters(config = _getReportersConfig()) {
+        const { baseConfig, targets } = config;
+        reportersConfigKey = JSON.stringify(config);
+        requestEnabledKeys = config.requestEnabledKeys;
         requestReporter = new CmcdReporter({ ...baseConfig, enabledKeys: requestEnabledKeys }, _customRequester);
 
-        // CmcdReporter ignores targets without url or events
-        eventReporters = _buildReporterTargets()
-            .filter((target) => target.url && target.events?.length)
+        // A target retired by 410 Gone stays retired for the session
+        eventReporters = targets
+            .filter((target) => !retiredTargetUrls.has(target.url))
             .map((target) => {
                 const eventReporter = { target, pendingErrorCodes: [], intervalId: null };
                 // Interval 0 disables the reporter's own time-interval timer. dash.js runs it instead
@@ -230,6 +243,7 @@ function CmcdController() {
     }
 
     function _retireEventReporter(eventReporter) {
+        retiredTargetUrls.add(eventReporter.target.url);
         clearInterval(eventReporter.intervalId);
         eventReporters = eventReporters.filter((entry) => entry !== eventReporter);
     }
@@ -326,7 +340,8 @@ function CmcdController() {
             urlLoader.load({
                 request: httpRequest,
                 success: () => resolve({ status: 200 }),
-                error: (e) => resolve({ status: e?.status || 500 }),
+                // HTTPLoader passes the response as the fourth argument
+                error: (request, error, statusText, response) => resolve({ status: response?.status || 500 }),
             });
         });
     }
@@ -383,12 +398,18 @@ function CmcdController() {
             return;
         }
 
-        // Reset flag only after confirming we will rebuild
         reporterNeedsRebuild = false;
+
+        // Most MPD refreshes do not change the CMCD config. Keep the reporters then, since rebuilding
+        // drops their state: sn would restart under the same sid, msd could be sent again, st/sf/pr are lost.
+        const config = _getReportersConfig();
+        if (JSON.stringify(config) === reportersConfigKey) {
+            return;
+        }
 
         _stopReporters();
         const previousEventReporters = eventReporters;
-        _createCmcdReporters();
+        _createCmcdReporters(config);
 
         // Keep error codes not yet reported to a target that still exists
         eventReporters.forEach((eventReporter) => {
