@@ -645,6 +645,19 @@ describe('CmcdController', function () {
             expect(urlLoaderMock.load.calledThrice).to.be.true;
         });
 
+        it('should stop the time interval reports once the collector answers 410 Gone', async () => {
+            urlLoaderMock.load = sinon.spy((config) => config.error({ status: 410 }));
+            const timerCount = clock.countTimers();
+
+            await clock.tickAsync(1000);
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            // The retired target's interval timer must be cleared, not left running without a target
+            expect(clock.countTimers()).to.equal(timerCount - 1);
+
+            await clock.tickAsync(3000);
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+        });
+
         it('should attach buffered error codes (ec) to the next time interval report only', () => {
             cmcdController.reset();
             settings.update({

@@ -212,14 +212,26 @@ function CmcdController() {
         // CmcdReporter ignores targets without url or events
         eventReporters = _buildReporterTargets()
             .filter((target) => target.url && target.events?.length)
-            .map((target) => ({
-                target,
+            .map((target) => {
+                const eventReporter = { target, pendingErrorCodes: [], intervalId: null };
                 // Interval 0 disables the reporter's own time-interval timer. dash.js runs it instead
                 // (see _startTimeIntervalReports), so 't' reports can carry the target's buffered error codes.
-                reporter: new CmcdReporter({ ...baseConfig, eventTargets: [{ ...target, interval: 0 }] }, _customRequester),
-                pendingErrorCodes: [],
-                intervalId: null
-            }));
+                eventReporter.reporter = new CmcdReporter({ ...baseConfig, eventTargets: [{ ...target, interval: 0 }] }, (request) => {
+                    return _customRequester(request).then((response) => {
+                        // CmcdReporter drops a target whose collector answers 410 Gone, so retire it here as well
+                        if (response.status === 410) {
+                            _retireEventReporter(eventReporter);
+                        }
+                        return response;
+                    });
+                });
+                return eventReporter;
+            });
+    }
+
+    function _retireEventReporter(eventReporter) {
+        clearInterval(eventReporter.intervalId);
+        eventReporters = eventReporters.filter((entry) => entry !== eventReporter);
     }
 
     function _startTimeIntervalReports() {
