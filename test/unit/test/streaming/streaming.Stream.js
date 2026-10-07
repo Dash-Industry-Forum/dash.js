@@ -113,6 +113,11 @@ describe('Stream', function () {
             expect(duration).to.be.NaN; // jshint ignore:line
         });
 
+        it('should allow resetting a stream more than once', () => {
+            stream.reset();
+            expect(() => stream.reset()).not.to.throw();
+        });
+
         it('No Licenser server url defined behavior', function () {
             stream.initialize();
 

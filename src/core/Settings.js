@@ -445,7 +445,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * Otherwise, track switching will be effective only once after previous buffered track is fully consumed.
  * @property {boolean} [reuseExistingSourceBuffers=true]
- * Enable reuse of existing MediaSource Sourcebuffers during period transition.
+ * Master switch to enable reuse of existing MediaSource SourceBuffers during period transitions.
+ * @property {module:Settings~ReuseExistingSourceBuffersWithoutChangeType} [reuseExistingSourceBuffersWithoutChangeType]
+ * Enables reuse during period transitions without SourceBuffer.changeType() when the selected audio and video tracks use an allowed, matching codec family.
  * @property {number} [bufferPruningInterval=10]
  * The interval of pruning buffer in seconds.
  * @property {number} [bufferToKeep=20]
@@ -490,6 +492,14 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [resetSourceBuffersForTrackSwitch=false]
  * When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This happens when we switch codecs on a system
  * that does not properly implement "changeType()", such as webOS 4.0 and before.
+ */
+
+/**
+ * @typedef {Object} ReuseExistingSourceBuffersWithoutChangeType
+ * @property {boolean} [enabled=false]
+ * Enables codec-family-based SourceBuffer reuse during period transitions when SourceBuffer.changeType() is unavailable or disabled.
+ * @property {string[]} [codecFamilies=['avc', 'aac']]
+ * Codec families eligible for reuse without SourceBuffer.changeType(). Both periods must use the same MIME type and the same allowed codec family.
  */
 
 /**
@@ -1211,6 +1221,10 @@ function Settings() {
         'streaming.abr.maxBitrate.audio': Events.SETTING_UPDATED_MAX_BITRATE,
         'streaming.abr.minBitrate.video': Events.SETTING_UPDATED_MIN_BITRATE,
         'streaming.abr.minBitrate.audio': Events.SETTING_UPDATED_MIN_BITRATE,
+        'streaming.buffer.reuseExistingSourceBuffers': Events.SETTING_UPDATED_SOURCE_BUFFER_REUSE,
+        'streaming.buffer.useChangeType': Events.SETTING_UPDATED_SOURCE_BUFFER_REUSE,
+        'streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.enabled': Events.SETTING_UPDATED_SOURCE_BUFFER_REUSE,
+        'streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.codecFamilies': Events.SETTING_UPDATED_SOURCE_BUFFER_REUSE,
     };
 
     /**
@@ -1284,6 +1298,10 @@ function Settings() {
                 fastSwitchEnabled: null,
                 flushBufferAtTrackSwitch: false,
                 reuseExistingSourceBuffers: true,
+                reuseExistingSourceBuffersWithoutChangeType: {
+                    enabled: false,
+                    codecFamilies: ['avc', 'aac']
+                },
                 bufferPruningInterval: 10,
                 bufferToKeep: 20,
                 bufferTimeAtTopQuality: 30,

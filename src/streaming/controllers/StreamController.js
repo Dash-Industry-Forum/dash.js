@@ -48,6 +48,7 @@ import ConformanceViolationConstants from '../constants/ConformanceViolationCons
 import ExtUrlQueryInfoController from './ExtUrlQueryInfoController.js';
 import ProtectionEvents from '../protection/ProtectionEvents.js';
 import ProtectionErrors from '../protection/errors/ProtectionErrors.js';
+import Utils from '../../core/Utils.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -66,7 +67,7 @@ function StreamController() {
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
-        pendingDynamicToStaticUpdate;
+        pendingDynamicToStaticUpdate, preloadingGeneration;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -148,6 +149,7 @@ function StreamController() {
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
         eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
+        eventBus.on(Events.SETTING_UPDATED_SOURCE_BUFFER_REUSE, _deactivateAllPreloadingStreams, instance);
 
         eventBus.on(ProtectionEvents.INTERNAL_KEY_STATUSES_CHANGED, _onInternalKeyStatusesChanged, instance);
     }
@@ -176,6 +178,7 @@ function StreamController() {
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
+        eventBus.off(Events.SETTING_UPDATED_SOURCE_BUFFER_REUSE, _deactivateAllPreloadingStreams, instance);
 
         eventBus.off(ProtectionEvents.INTERNAL_KEY_STATUSES_CHANGED, _onInternalKeyStatusesChanged, instance);
     }
@@ -478,11 +481,11 @@ function StreamController() {
 
             let keepBuffers = false;
             let representationsFromPreviousPeriod = [];
-            // Only reuse the previous period's SourceBuffers when the buffers can actually be kept
-            // (keepBuffers). _canSourceBuffersBeKept() already requires SourceBuffer.changeType()
-            // support, so on platforms without it (e.g. Chrome 68 / LG WebOS <= 5) keepBuffers is
-            // false and we fall back to a fresh-SourceBuffer ("cold") switch. keepBuffers is also
-            // false when the transition is incompatible (e.g. clear -> encrypted): in that case the
+            let codecFamilyConstraints = null;
+            // Only reuse the previous period's SourceBuffers when the buffers can actually be kept.
+            // On platforms without SourceBuffer.changeType(), reuse is limited to configured codec
+            // families and matching MIME types. keepBuffers is also false when the transition is
+            // incompatible (e.g. clear -> encrypted): in that case the
             // previous SourceBufferSinks are reset/aborted by previousStream.deactivate(false), so
             // they must NOT be handed to the next period - doing so would make the new stream reuse
             // an already-cleared buffer and stall playback at the period boundary.
@@ -490,7 +493,14 @@ function StreamController() {
             activeStream = targetStream;
 
             if (previousStream) {
-                keepBuffers = _canSourceBuffersBeKept(targetStream, previousStream);
+                const bufferReuseDecision = _getBufferReuseDecision(targetStream, previousStream);
+                keepBuffers = bufferReuseDecision.keepBuffers;
+                codecFamilyConstraints = bufferReuseDecision.codecFamilyConstraints;
+                if (!keepBuffers && targetStream.getPreloaded()) {
+                    // The preloaded stream shares the active stream's SourceBuffers. Preserve them
+                    // until the active stream is deactivated below, then activate the target cold.
+                    targetStream.deactivate(true);
+                }
                 if (keepBuffers) {
                     sourceBufferSinksFromPreviousPeriod = _getSourceBufferSinksFromPreviousPeriod(previousStream);
                 }
@@ -516,10 +526,11 @@ function StreamController() {
                     keepBuffers,
                     sourceBufferSinksFromPreviousPeriod,
                     streamActivated: false,
-                    representationsFromPreviousPeriod
+                    representationsFromPreviousPeriod,
+                    codecFamilyConstraints
                 });
             } else {
-                _activateStream({ seekTime, keepBuffers, sourceBufferSinksFromPreviousPeriod });
+                _activateStream({ seekTime, keepBuffers, sourceBufferSinksFromPreviousPeriod, codecFamilyConstraints });
             }
         } catch (e) {
             isStreamSwitchingInProgress = false;
@@ -589,7 +600,7 @@ function StreamController() {
      */
     function _activateStream(inputParameters) {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
-        activeStream.activate(mediaSource, inputParameters.sourceBufferSinksFromPreviousPeriod, representationsFromPreviousPeriod)
+        activeStream.activate(mediaSource, inputParameters.sourceBufferSinksFromPreviousPeriod, representationsFromPreviousPeriod, inputParameters.codecFamilyConstraints, inputParameters.initialRepresentations, inputParameters.initialMediaInfos)
             .then(() => {
 
                 // Set the initial time for this stream in the StreamProcessor
@@ -717,11 +728,13 @@ function StreamController() {
      * @private
      */
     function _deactivateAllPreloadingStreams() {
+        preloadingGeneration += 1;
         if (preloadingStreams && preloadingStreams.length > 0) {
-            preloadingStreams.forEach((s) => {
+            const streamsToDeactivate = preloadingStreams;
+            preloadingStreams = [];
+            streamsToDeactivate.forEach((s) => {
                 s.deactivate(true);
             });
-            preloadingStreams = [];
         }
     }
 
@@ -779,10 +792,17 @@ function StreamController() {
         // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
         _deactivateAllPreloadingStreams();
 
-        if (settings.get().streaming.buffer.resetSourceBuffersForTrackSwitch && e.oldMediaInfo && e.oldMediaInfo.codec !== e.newMediaInfo.codec) {
+        const requiresResetForCodecConstraint = !abrController.isMediaInfoAllowedByCodecFamilyConstraint(activeStream.getId(), e.newMediaInfo.type, e.newMediaInfo);
+        if ((settings.get().streaming.buffer.resetSourceBuffersForTrackSwitch && e.oldMediaInfo && e.oldMediaInfo.codec !== e.newMediaInfo.codec) || requiresResetForCodecConstraint) {
             const seekTime = playbackController.getTime();
+            abrController.clearCodecFamilyConstraint(activeStream.getId());
             activeStream.deactivate(false);
-            _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
+            _openMediaSource({
+                seekTime,
+                keepBuffers: false,
+                streamActivated: false,
+                initialMediaInfos: { [e.newMediaInfo.type]: e.newMediaInfo }
+            });
             return;
         }
 
@@ -793,21 +813,100 @@ function StreamController() {
      * If the source buffer can be reused we can potentially start buffering the next period
      * @param {object} nextStream
      * @param {object} previousStream
-     * @return {boolean}
+     * @return {object}
      * @private
      */
-    function _canSourceBuffersBeKept(nextStream, previousStream) {
+    function _getBufferReuseDecision(nextStream, previousStream) {
         try {
-            // Seamless period switch allowed only if:
-            // - none of the periods uses contentProtection.
-            // - AND changeType method is implemented
-            // TODO: If the codec family is the same or if there is period connectivity we can also use the same SourceBuffer
-            return (settings.get().streaming.buffer.reuseExistingSourceBuffers
-                && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched)
-                && (capabilities.supportsChangeType() && settings.get().streaming.buffer.useChangeType));
+            const bufferSettings = settings.get().streaming.buffer;
+            const protectionCompatible = capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched;
+
+            if (!bufferSettings.reuseExistingSourceBuffers || !protectionCompatible) {
+                return { keepBuffers: false, codecFamilyConstraints: null };
+            }
+
+            if (capabilities.supportsChangeType() && bufferSettings.useChangeType) {
+                return { keepBuffers: true, codecFamilyConstraints: null };
+            }
+
+            const codecFamilyConstraints = _getCodecFamilyConstraintsForBufferReuse(nextStream, previousStream);
+            return { keepBuffers: !!codecFamilyConstraints, codecFamilyConstraints };
         } catch (e) {
-            return false;
+            return { keepBuffers: false, codecFamilyConstraints: null };
         }
+    }
+
+    function _getCodecFamilyConstraintsForBufferReuse(nextStream, previousStream) {
+        const reuseExistingSourceBuffersWithoutChangeType = settings.get().streaming.buffer.reuseExistingSourceBuffersWithoutChangeType;
+        if (!reuseExistingSourceBuffersWithoutChangeType || !reuseExistingSourceBuffersWithoutChangeType.enabled || !Array.isArray(reuseExistingSourceBuffersWithoutChangeType.codecFamilies)) {
+            return null;
+        }
+
+        const constraints = {};
+        const previousStreamProcessors = previousStream.getStreamProcessors();
+        for (const type of [Constants.AUDIO, Constants.VIDEO]) {
+            const previousStreamProcessor = previousStreamProcessors.find((processor) => processor.getType() === type);
+            const nextMediaInfos = adapter.getAllMediaInfoForType(nextStream.getStreamInfo(), type) || [];
+            if (!!previousStreamProcessor !== (nextMediaInfos.length > 0)) {
+                return null;
+            }
+            if (!previousStreamProcessor || !previousStreamProcessor.getBuffer()) {
+                continue;
+            }
+
+            const previousCodecInfo = _getCodecInfo(_getEffectiveRepresentation(previousStreamProcessor.getRepresentation()));
+            if (!previousCodecInfo || !reuseExistingSourceBuffersWithoutChangeType.codecFamilies.includes(previousCodecInfo.codecFamily)) {
+                return null;
+            }
+
+            const selectedMediaInfo = mediaController.getInitialTrackForType(type, nextStream.getStreamInfo(), nextMediaInfos);
+            if (!selectedMediaInfo) {
+                return null;
+            }
+            const compatibleMediaInfos = [selectedMediaInfo].filter((mediaInfo) => {
+                if (!capabilities.areKeyIdsUsable(mediaInfo)) {
+                    return false;
+                }
+                return (adapter.getVoRepresentations(mediaInfo) || []).some((representation) => {
+                    const codecInfo = _getCodecInfo(_getEffectiveRepresentation(representation));
+                    return codecInfo && codecInfo.mimeType === previousCodecInfo.mimeType && codecInfo.codecFamily === previousCodecInfo.codecFamily;
+                });
+            });
+
+            if (compatibleMediaInfos.length === 0) {
+                return null;
+            }
+
+            constraints[type] = {
+                mimeType: previousCodecInfo.mimeType,
+                codecFamily: previousCodecInfo.codecFamily,
+                mediaInfos: compatibleMediaInfos
+            };
+        }
+
+        return Object.keys(constraints).length > 0 ? constraints : null;
+    }
+
+    function _getEffectiveRepresentation(representation) {
+        return representation?.dependentRepresentation || representation;
+    }
+
+    function _getCodecInfo(representation) {
+        if (!representation) {
+            return null;
+        }
+
+        let mimeType = representation.mimeType || representation.mediaInfo?.mimeType;
+        let codecs = representation.codecs;
+        const codecString = representation.mediaInfo?.codec;
+        if ((!mimeType || !codecs) && codecString) {
+            const codecMatch = codecString.match(/^([^;]+);\s*codecs="([^"]+)"/i);
+            mimeType = mimeType || codecMatch?.[1];
+            codecs = codecs || codecMatch?.[2];
+        }
+
+        const codecFamily = codecs ? Utils.getCodecFamily(codecs) : null;
+        return mimeType && codecFamily ? { mimeType, codecFamily } : null;
     }
 
     /**
@@ -822,7 +921,8 @@ function StreamController() {
             return;
         }
 
-        let seamlessPeriodSwitch = _canSourceBuffersBeKept(nextStream, previousStream);
+        const bufferReuseDecision = _getBufferReuseDecision(nextStream, previousStream);
+        let seamlessPeriodSwitch = bufferReuseDecision.keepBuffers;
 
         if (!seamlessPeriodSwitch) {
             return;
@@ -830,9 +930,17 @@ function StreamController() {
 
         const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
         const previousSourceBufferSinks = _getSourceBufferSinksFromPreviousPeriod(previousStream);
-        nextStream.startPreloading(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod)
+        const currentPreloadingGeneration = preloadingGeneration;
+        preloadingStreams.push(nextStream);
+        nextStream.startPreloading(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod, bufferReuseDecision.codecFamilyConstraints)
             .then(() => {
-                preloadingStreams.push(nextStream);
+                if (currentPreloadingGeneration !== preloadingGeneration) {
+                    nextStream.deactivate(true);
+                    preloadingStreams = preloadingStreams.filter((stream) => stream !== nextStream);
+                }
+            })
+            .catch(() => {
+                preloadingStreams = preloadingStreams.filter((stream) => stream !== nextStream);
             });
     }
 
@@ -918,6 +1026,20 @@ function StreamController() {
      * @private
      */
     function _onQualityChanged(e) {
+        if (e.streamInfo.id === activeStream.getId() && !abrController.isRepresentationAllowedByCodecFamilyConstraint(e.newRepresentation)) {
+            const seekTime = playbackController.getTime();
+            _deactivateAllPreloadingStreams();
+            abrController.clearCodecFamilyConstraint(activeStream.getId());
+            activeStream.deactivate(false);
+            _openMediaSource({
+                seekTime,
+                keepBuffers: false,
+                streamActivated: false,
+                initialRepresentations: [e.newRepresentation]
+            });
+            return;
+        }
+
         if (e.streamInfo.id === activeStream.getId()) {
             _deactivateAllPreloadingStreams();
         }
@@ -1745,6 +1867,7 @@ function StreamController() {
         pendingDynamicToStaticUpdate = false;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
+        preloadingGeneration = 0;
         waitForPlaybackStartTimeout = null;
         errorInformation = {
             counts: {

@@ -119,9 +119,23 @@ function MediaController() {
      * @param {StreamInfo} streamInfo
      * @memberof MediaController#
      */
-    function setInitialMediaSettingsForType(type, streamInfo) {
+    function setInitialMediaSettingsForType(type, streamInfo, compatibleMediaInfos = null, areMediaInfosEqual = null) {
+        let possibleTracks = getTracksFor(type, streamInfo.id);
+
+        if (compatibleMediaInfos) {
+            possibleTracks = possibleTracks.filter((track) => compatibleMediaInfos.some((compatibleMediaInfo) => {
+                return areMediaInfosEqual ? areMediaInfosEqual(track, compatibleMediaInfo) : track === compatibleMediaInfo;
+            }));
+        }
+
+        const selectedTrack = getInitialTrackForType(type, streamInfo, possibleTracks);
+        if (selectedTrack) {
+            setTrack(selectedTrack);
+        }
+    }
+
+    function getInitialTrackForType(type, streamInfo, possibleTracks) {
         let localSettings = lastSelectedTracks[type] || getInitialSettings(type);
-        const possibleTracks = getTracksFor(type, streamInfo.id);
         let filteredTracks = [];
 
         if (!localSettings || Object.keys(localSettings).length === 0) {
@@ -134,15 +148,12 @@ function MediaController() {
             setInitialSettings(type, localSettings);
         }
 
-        if (!possibleTracks || (possibleTracks.length === 0)) {
-            return;
+        if (!possibleTracks || possibleTracks.length === 0) {
+            return null;
         }
 
         if (!settings.get().streaming.includePreselectionsForInitialTrackSelection) {
-            // Removing all preselections
             filteredTracks = possibleTracks.filter(track => !track.isPreselection);
-            // Since each preselection always refers at least one AdaptationSet,
-            // filteredTracks.length will always be > 0
         } else {
             filteredTracks = Array.from(possibleTracks);
         }
@@ -163,14 +174,7 @@ function MediaController() {
             logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
         }
 
-        // More than one possibility
-        if (filteredTracks.length > 1) {
-            setTrack(selectInitialTrack(type, filteredTracks));
-        }
-        // Only one possibility use this one
-        else {
-            setTrack(filteredTracks[0]);
-        }
+        return filteredTracks.length > 1 ? selectInitialTrack(type, filteredTracks) : filteredTracks[0];
     }
 
     /**
@@ -1004,6 +1008,7 @@ function MediaController() {
         areTracksEqual,
         clearDataForStream,
         getCurrentTrackFor,
+        getInitialTrackForType,
         getInitialSettings,
         getTracksFor,
         getTracksWithHighestSelectionPriority,

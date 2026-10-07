@@ -574,6 +574,18 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(currentTrack, ec3Track)).to.be.true;
         });
 
+        it('should restrict initial track selection to compatible period-transition tracks', function () {
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(esTrack);
+            mediaController.setInitialSettings(trackType, { lang: 'en' });
+
+            const equivalentSpanishTrack = { ...esTrack };
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo, [equivalentSpanishTrack], (first, second) => first.id === second.id);
+
+            const currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
+        });
+
         it('should ignore codec in initial media settings if no track matches', function () {
             const aacTrack = {
                 id: 'aac',

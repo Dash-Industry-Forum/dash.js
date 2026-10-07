@@ -85,6 +85,10 @@ function AbrControllerMock () {
 
     this.clearDataForStream = function () {};
 
+    this.clearCodecFamilyConstraint = function () {};
+
+    this.setCodecFamilyConstraint = function () {};
+
     this.getPossibleVoRepresentations = function () {
         return []
     }

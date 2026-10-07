@@ -79,6 +79,8 @@ describe('Reference Player - SettingsController', function () {
         createCheckbox('opt-schedule-while-paused', true);
         createCheckbox('opt-calc-seg-avail', false);
         createCheckbox('opt-reuse-sourcebuffers', true);
+        createCheckbox('opt-use-change-type', true);
+        createCheckbox('opt-reuse-sourcebuffers-without-changetype', false);
         createCheckbox('opt-mediasource-duration-inf', true);
         createCheckbox('opt-reset-sb-track-switch', false);
         createCheckbox('opt-save-last-media', true);
@@ -122,6 +124,7 @@ describe('Reference Player - SettingsController', function () {
         // --- Number / text inputs ---
         createInput('opt-stall-threshold', '0.5');
         createInput('opt-ll-stall-threshold', '0.3');
+        createInput('opt-reuse-sourcebuffer-codec-families', 'avc, aac');
         createInput('opt-live-delay', '');
         createInput('opt-live-delay-frag-count', '');
         createInput('opt-utc-offset', '0');
@@ -275,6 +278,23 @@ describe('Reference Player - SettingsController', function () {
 
             s = setCheckboxAndApply('opt-reuse-sourcebuffers', true);
             expect(s.streaming.buffer.reuseExistingSourceBuffers).to.be.true;
+        });
+
+        it('should apply streaming.buffer.useChangeType', function () {
+            let s = setCheckboxAndApply('opt-use-change-type', false);
+            expect(s.streaming.buffer.useChangeType).to.be.false;
+
+            s = setCheckboxAndApply('opt-use-change-type', true);
+            expect(s.streaming.buffer.useChangeType).to.be.true;
+        });
+
+        it('should apply compatible-family buffer reuse settings', function () {
+            document.getElementById('opt-reuse-sourcebuffers-without-changetype').checked = true;
+            document.getElementById('opt-reuse-sourcebuffer-codec-families').value = ' AVC, aac, EC3, , ac3 ';
+
+            const s = applyConfig();
+            expect(s.streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.enabled).to.be.true;
+            expect(s.streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.codecFamilies).to.deep.equal(['avc', 'aac', 'ec3', 'ac3']);
         });
 
         it('should apply streaming.buffer.mediaSourceDurationInfinity', function () {
@@ -810,6 +830,8 @@ describe('Reference Player - SettingsController', function () {
             expect(document.getElementById('opt-schedule-while-paused').checked).to.equal(s.streaming.scheduling.scheduleWhilePaused);
             expect(document.getElementById('opt-jump-gaps').checked).to.equal(s.streaming.gaps.jumpGaps);
             expect(document.getElementById('opt-reuse-sourcebuffers').checked).to.equal(s.streaming.buffer.reuseExistingSourceBuffers);
+            expect(document.getElementById('opt-use-change-type').checked).to.equal(s.streaming.buffer.useChangeType);
+            expect(document.getElementById('opt-reuse-sourcebuffers-without-changetype').checked).to.equal(s.streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.enabled);
             expect(document.getElementById('opt-mediasource-duration-inf').checked).to.equal(s.streaming.buffer.mediaSourceDurationInfinity);
             expect(document.getElementById('opt-auto-switch-video').checked).to.equal(s.streaming.abr.autoSwitchBitrate.video);
             expect(document.getElementById('opt-content-steering').checked).to.equal(s.streaming.applyContentSteering);
@@ -855,6 +877,52 @@ describe('Reference Player - SettingsController', function () {
             const s = player.getSettings();
             const el = document.getElementById('opt-ll-stall-threshold');
             expect(parseFloat(el.value)).to.equal(s.streaming.buffer.lowLatencyStallThreshold);
+        });
+
+        it('should sync codec-family fallback settings and dependent controls from player defaults on init', function () {
+            settingsController.init();
+
+            const s = player.getSettings();
+            const reuseWithoutChangeType = document.getElementById('opt-reuse-sourcebuffers-without-changetype');
+            const codecFamilies = document.getElementById('opt-reuse-sourcebuffer-codec-families');
+            expect(codecFamilies.value).to.equal(s.streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.codecFamilies.join(', '));
+            expect(reuseWithoutChangeType.disabled).to.equal(!s.streaming.buffer.reuseExistingSourceBuffers);
+            expect(codecFamilies.disabled).to.equal(!s.streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.enabled);
+        });
+
+        it('should keep track-switch controls enabled when period buffer reuse is disabled', function () {
+            player.updateSettings({
+                streaming: {
+                    buffer: {
+                        reuseExistingSourceBuffers: false,
+                        useChangeType: false,
+                        resetSourceBuffersForTrackSwitch: true
+                    }
+                }
+            });
+
+            settingsController.init();
+
+            expect(document.getElementById('opt-use-change-type').disabled).to.be.false;
+            expect(document.getElementById('opt-reset-sb-track-switch').disabled).to.be.false;
+            expect(document.getElementById('opt-reuse-sourcebuffers-without-changetype').disabled).to.be.true;
+            expect(document.getElementById('opt-reuse-sourcebuffer-codec-families').disabled).to.be.true;
+        });
+
+        it('should update period-transition control states when checkboxes change', function () {
+            settingsController.init();
+            const reuse = document.getElementById('opt-reuse-sourcebuffers');
+            const fallback = document.getElementById('opt-reuse-sourcebuffers-without-changetype');
+            const codecFamilies = document.getElementById('opt-reuse-sourcebuffer-codec-families');
+
+            fallback.checked = true;
+            fallback.dispatchEvent(new Event('change'));
+            expect(codecFamilies.disabled).to.be.false;
+
+            reuse.checked = false;
+            reuse.dispatchEvent(new Event('change'));
+            expect(fallback.disabled).to.be.true;
+            expect(codecFamilies.disabled).to.be.true;
         });
 
         it('should sync opt-cmcd-rtp-safety from player defaults on init', function () {
@@ -1142,6 +1210,19 @@ describe('Reference Player - SettingsController', function () {
             setUrlAndApply('streaming.buffer.fastSwitchEnabled=true');
             expect(player.getSettings().streaming.buffer.fastSwitchEnabled).to.be.true;
             expect(document.getElementById('opt-fast-switch').checked).to.be.true;
+        });
+
+        it('should apply and sync period-transition settings from URL', function () {
+            setUrlAndApply('streaming.buffer.useChangeType=false&streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.enabled=true&streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.codecFamilies=AVC%2Caac%2CEC3');
+
+            const bufferSettings = player.getSettings().streaming.buffer;
+            expect(bufferSettings.useChangeType).to.be.false;
+            expect(bufferSettings.reuseExistingSourceBuffersWithoutChangeType.enabled).to.be.true;
+            expect(bufferSettings.reuseExistingSourceBuffersWithoutChangeType.codecFamilies).to.deep.equal(['avc', 'aac', 'ec3']);
+            expect(document.getElementById('opt-use-change-type').checked).to.be.false;
+            expect(document.getElementById('opt-reuse-sourcebuffers-without-changetype').checked).to.be.true;
+            expect(document.getElementById('opt-reuse-sourcebuffer-codec-families').value).to.equal('avc, aac, ec3');
+            expect(document.getElementById('opt-reuse-sourcebuffer-codec-families').disabled).to.be.false;
         });
 
         it('should apply and sync streaming.gaps.jumpGaps=false from URL', function () {

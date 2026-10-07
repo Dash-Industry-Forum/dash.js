@@ -41,6 +41,7 @@ import SwitchRequest from '../rules/SwitchRequest.js';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import Debug from '../../core/Debug.js';
+import Utils from '../../core/Utils.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 const DEFAULT_VIDEO_BITRATE = 1000;
@@ -59,6 +60,7 @@ function AbrController() {
         capabilities,
         cmsdModel,
         currentRepresentationId,
+        codecFamilyConstraints,
         customParametersModel,
         dashMetrics,
         domStorage,
@@ -149,6 +151,7 @@ function AbrController() {
 
     function resetInitialSettings() {
         abandonmentStateDict = {};
+        codecFamilyConstraints = {};
         streamProcessorDict = {};
         queuedManualQualitySwitches = new Map();
 
@@ -263,12 +266,12 @@ function AbrController() {
         })
     }
 
-    function getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos = true) {
-        return _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos)
+    function getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos = true, applyCodecFamilyConstraint = true) {
+        return _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos, applyCodecFamilyConstraint)
     }
 
-    function getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos = true) {
-        let voRepresentations = _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
+    function getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos = true, applyCodecFamilyConstraint = true) {
+        let voRepresentations = _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos, applyCodecFamilyConstraint);
 
         // Filter the list of options based on the provided settings
         voRepresentations = _filterByAllowedSettings(voRepresentations)
@@ -276,7 +279,7 @@ function AbrController() {
         return voRepresentations;
     }
 
-    function _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos) {
+    function _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos, applyCodecFamilyConstraint) {
         let voRepresentations = [];
         if (!mediaInfo) {
             return voRepresentations;
@@ -309,10 +312,65 @@ function AbrController() {
             const isMediaInfoAllowed = includeCompatibleMediaInfos ? true : adapter.areMediaInfosEqual(representation.mediaInfo, mediaInfo);
             const areKeyIdsUsable =
                 representation && representation.mediaInfo ? capabilities.areKeyIdsUsable(representation.mediaInfo) : true;
-            return isMediaInfoAllowed && areKeyIdsUsable
+            const codecFamilyConstraint = applyCodecFamilyConstraint ? _getCodecFamilyConstraint(representation) : null;
+            const codecInfo = _getCodecInfo(representation);
+            const isCodecFamilyAllowed = !codecFamilyConstraint || (_isMediaInfoInConstraint(representation.mediaInfo, codecFamilyConstraint) && codecInfo?.mimeType === codecFamilyConstraint.mimeType && codecInfo.codecFamily === codecFamilyConstraint.codecFamily);
+            return isMediaInfoAllowed && areKeyIdsUsable && isCodecFamilyAllowed
         })
 
         return voRepresentations
+    }
+
+    function _getCodecFamilyConstraint(representation) {
+        const streamId = representation?.mediaInfo?.streamInfo?.id;
+        const type = representation?.mediaInfo?.type;
+        return streamId && type && codecFamilyConstraints[streamId] ? codecFamilyConstraints[streamId][type] : null;
+    }
+
+    function _getCodecInfo(representation) {
+        const mimeType = representation?.mimeType || representation?.mediaInfo?.mimeType;
+        const codecs = representation?.codecs || representation?.mediaInfo?.codec?.match(/codecs="([^"]+)"/i)?.[1];
+        const codecFamily = codecs ? Utils.getCodecFamily(codecs) : null;
+        return mimeType && codecFamily ? { mimeType, codecFamily } : null;
+    }
+
+    function setCodecFamilyConstraint(streamId, type, constraint) {
+        if (!streamId || !type) {
+            return;
+        }
+
+        if (!codecFamilyConstraints[streamId]) {
+            codecFamilyConstraints[streamId] = {};
+        }
+        codecFamilyConstraints[streamId][type] = constraint;
+    }
+
+    function clearCodecFamilyConstraint(streamId, type) {
+        if (!streamId) {
+            return;
+        }
+
+        if (type && codecFamilyConstraints[streamId]) {
+            delete codecFamilyConstraints[streamId][type];
+            return;
+        }
+
+        delete codecFamilyConstraints[streamId];
+    }
+
+    function isRepresentationAllowedByCodecFamilyConstraint(representation) {
+        const codecFamilyConstraint = _getCodecFamilyConstraint(representation);
+        const codecInfo = _getCodecInfo(representation);
+        return !codecFamilyConstraint || (_isMediaInfoInConstraint(representation.mediaInfo, codecFamilyConstraint) && codecInfo?.mimeType === codecFamilyConstraint.mimeType && codecInfo.codecFamily === codecFamilyConstraint.codecFamily);
+    }
+
+    function isMediaInfoAllowedByCodecFamilyConstraint(streamId, type, mediaInfo) {
+        const codecFamilyConstraint = streamId && type && codecFamilyConstraints[streamId] ? codecFamilyConstraints[streamId][type] : null;
+        return !codecFamilyConstraint || _isMediaInfoInConstraint(mediaInfo, codecFamilyConstraint);
+    }
+
+    function _isMediaInfoInConstraint(mediaInfo, codecFamilyConstraint) {
+        return codecFamilyConstraint.mediaInfos.some((constraintMediaInfo) => adapter.areMediaInfosEqual(mediaInfo, constraintMediaInfo));
     }
 
     function _getPossibleMediaInfos(mediaInfo) {
@@ -1044,6 +1102,7 @@ function AbrController() {
         if (streamProcessorDict[streamId]) {
             delete streamProcessorDict[streamId];
         }
+        delete codecFamilyConstraints[streamId];
         if (switchRequestHistory) {
             switchRequestHistory.clearForStream(streamId);
         }
@@ -1063,6 +1122,10 @@ function AbrController() {
         canPerformQualitySwitch,
         checkPlaybackQuality,
         clearDataForStream,
+        clearCodecFamilyConstraint,
+        isMediaInfoAllowedByCodecFamilyConstraint,
+        isRepresentationAllowedByCodecFamilyConstraint,
+        setCodecFamilyConstraint,
         getAbandonmentStateFor,
         getInitialBitrateFor,
         getOptimalRepresentationForBitrate,
@@ -1091,4 +1154,3 @@ AbrController.__dashjs_factory_name = 'AbrController';
 const factory = FactoryMaker.getSingletonFactory(AbrController);
 FactoryMaker.updateSingletonFactory(AbrController.__dashjs_factory_name, factory);
 export default factory;
-
