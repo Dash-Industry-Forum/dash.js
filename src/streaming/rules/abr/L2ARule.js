@@ -31,7 +31,6 @@
 
 // For a description of the Learn2Adapt-LowLatency (L2A-LL) bitrate adaptation algorithm, see https://github.com/unifiedstreaming/Learn2Adapt-LowLatency/blob/master/Online_learning_for_bitrate_adaptation_in_low_latency_live_streaming_CR.pdf
 
-import MetricsConstants from '../../constants/MetricsConstants.js';
 import SwitchRequest from '../SwitchRequest.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest.js';
@@ -70,7 +69,6 @@ function L2ARule(config) {
 
         eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
-        eventBus.on(Events.METRIC_ADDED, _onMetricAdded, instance);
     }
 
     /**
@@ -106,8 +104,6 @@ function L2ARule(config) {
         l2AParameterDict[mediaInfo.type].w = []; //Vector of probabilities associated with bitrate decisions
         l2AParameterDict[mediaInfo.type].prev_w = []; //Vector of probabilities associated with bitrate decisions calculated in the previous step
         l2AParameterDict[mediaInfo.type].Q = 0; //Initialization of Lagrangian multiplier (This keeps track of the buffer displacement)
-        l2AParameterDict[mediaInfo.type].segment_request_start_s = 0;
-        l2AParameterDict[mediaInfo.type].segment_download_finish_s = 0;
         l2AParameterDict[mediaInfo.type].B_target = 1.5; //Target buffer level
     }
 
@@ -118,13 +114,7 @@ function L2ARule(config) {
      * @private
      */
     function _clearL2AStateOnSeek(l2AState) {
-        l2AState.placeholderBuffer = 0;
-        l2AState.mostAdvancedSegmentStart = NaN;
-        l2AState.lastSegmentWasReplacement = false;
-        l2AState.lastSegmentStart = NaN;
         l2AState.lastSegmentDurationS = NaN;
-        l2AState.lastSegmentRequestTimeMs = NaN;
-        l2AState.lastSegmentFinishTimeMs = NaN;
         l2AState.lastSegmentUrl = '';
     }
 
@@ -171,59 +161,13 @@ function L2ARule(config) {
     function _onMediaFragmentLoaded(e) {
         if (e && e.chunk && e.chunk.representation && e.chunk.representation.mediaInfo) {
             const l2AState = l2AStateDict[e.chunk.representation.mediaInfo.type];
-            const l2AParameters = l2AParameterDict[e.chunk.representation.mediaInfo.type];
 
             if (l2AState && l2AState.state !== L2A_STATE_ONE_BITRATE) {
-                const start = e.chunk.start;
-                if (isNaN(l2AState.mostAdvancedSegmentStart) || start > l2AState.mostAdvancedSegmentStart) {
-                    l2AState.mostAdvancedSegmentStart = start;
-                    l2AState.lastSegmentWasReplacement = false;
-                } else {
-                    l2AState.lastSegmentWasReplacement = true;
-                }
-
-                l2AState.lastSegmentStart = start;
                 l2AState.lastSegmentDurationS = e.chunk.duration;
                 l2AState.currentRepresentation = e.chunk.representation;
-
-                _checkNewSegment(l2AState, l2AParameters);
             }
         }
     }
-
-    /**
-     * Event handler for the metricAdded event
-     * @param {object} e
-     * @private
-     */
-    function _onMetricAdded(e) {
-        if (e && e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && e.value.trace && e.value.trace.length) {
-            const l2AState = l2AStateDict[e.mediaType];
-            const l2AParameters = l2AParameterDict[e.mediaType];
-
-            if (l2AState && l2AState.state !== L2A_STATE_ONE_BITRATE) {
-                l2AState.lastSegmentRequestTimeMs = e.value.trequest.getTime();
-                l2AState.lastSegmentFinishTimeMs = e.value._tfinish.getTime();
-                _checkNewSegment(l2AState, l2AParameters);
-            }
-        }
-    }
-
-    /**
-     * When a new metric has been added or a media fragment has been loaded the state is adjusted accordingly
-     * @param {object} L2AState
-     * @param {object} l2AParameters
-     * @private
-     */
-    function _checkNewSegment(L2AState, l2AParameters) {
-        if (!isNaN(L2AState.lastSegmentStart) && !isNaN(L2AState.lastSegmentRequestTimeMs)) {
-            l2AParameters.segment_request_start_s = 0.001 * L2AState.lastSegmentRequestTimeMs;
-            l2AParameters.segment_download_finish_s = 0.001 * L2AState.lastSegmentFinishTimeMs;
-            L2AState.lastSegmentStart = NaN;
-            L2AState.lastSegmentRequestTimeMs = NaN;
-        }
-    }
-
 
     /**
      * Dot multiplication of two arrays
@@ -488,7 +432,6 @@ function L2ARule(config) {
         _resetInitialSettings();
         eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
-        eventBus.off(Events.METRIC_ADDED, _onMetricAdded, instance);
     }
 
     instance = {
