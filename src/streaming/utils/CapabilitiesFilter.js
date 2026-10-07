@@ -6,6 +6,7 @@ import Events from '../../core/events/Events.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 
 import getNChanFromAudioChannelConfig from './AudioChannelConfiguration.js';
+import {isTextCodecSupported} from './TextFormatUtils.js';
 
 function CapabilitiesFilter() {
 
@@ -72,6 +73,11 @@ function CapabilitiesFilter() {
                     mediaTypesToCheck.forEach((mediaType) => {
                         _filterUnsupportedCodecs(mediaType, manifest)
                     })
+
+                    // Text is parsed by dash.js, not by the platform, so it is not part of the
+                    // codec support check above. It is still filtered, against the formats
+                    // dash.js can parse, so that a track it cannot show is never offered.
+                    _filterUnsupportedCodecs(Constants.TEXT, manifest);
 
                     if (settings.get().streaming.capabilities.filterUnsupportedEssentialProperties) {
                         _filterUnsupportedEssentialProperties(manifest);
@@ -190,6 +196,9 @@ function CapabilitiesFilter() {
 
     function _isSupplementalCodecSupported(rep, type) {
         let isSupplementalCodecSupported = false;
+        if (type === Constants.TEXT) {
+            return isSupplementalCodecSupported;
+        }
         const supplementalCodecs = adapter.getSupplementalCodecs(rep);
 
         if (supplementalCodecs.length > 0) {
@@ -204,6 +213,10 @@ function CapabilitiesFilter() {
     }
 
     function _isCodecSupported(type, primaryElement, codec, prslCommonRepresentation = undefined) {
+        if (type === Constants.TEXT) {
+            return isTextCodecSupported(codec);
+        }
+
         const config = _createConfiguration(type, primaryElement, codec, prslCommonRepresentation);
 
         return capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);

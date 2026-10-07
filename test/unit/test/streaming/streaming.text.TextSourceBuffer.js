@@ -14,6 +14,66 @@ const adapterMock = new AdapterMock();
 const errorHandlerMock = new ErrorHandlerMock();
 const ttmlParser = TTMLParser(context).getInstance();
 
+const TIMESCALE = 1000;
+const BASE_MEDIA_DECODE_TIME = 10000; // 10s in media (period-local) time
+const SAMPLE_DURATION = 2000;
+
+function u16(v) {
+    return [(v >>> 8) & 0xFF, v & 0xFF];
+}
+
+function u32(v) {
+    return [(v >>> 24) & 0xFF, (v >>> 16) & 0xFF, (v >>> 8) & 0xFF, v & 0xFF];
+}
+
+function stringToBytes(str) {
+    return Array.from(str, c => c.charCodeAt(0));
+}
+
+function box(type, ...payloads) {
+    const payload = [].concat(...payloads);
+    return [...u32(8 + payload.length), ...stringToBytes(type), ...payload];
+}
+
+function fullBox(type, version, flags, ...payloads) {
+    return box(type, [version, (flags >>> 16) & 0xFF, (flags >>> 8) & 0xFF, flags & 0xFF], ...payloads);
+}
+
+/**
+ * An initialization segment. sampleEntryType adds a Sample Description Box naming that
+ * sample entry; without it the moov has no stsd, as in a manifest-only description.
+ */
+function createInitSegment(sampleEntryType) {
+    const mdhd = fullBox('mdhd', 0, 0, u32(0), u32(0), u32(TIMESCALE), u32(0), u16(0), u16(0));
+    if (!sampleEntryType) {
+        return new Uint8Array(box('moov', box('trak', box('mdia', mdhd)))).buffer;
+    }
+    // SampleEntry: six reserved bytes and a data reference index.
+    const sampleEntry = box(sampleEntryType, [0, 0, 0, 0, 0, 0], u16(1));
+    const stsd = fullBox('stsd', 0, 0, u32(1), sampleEntry);
+    return new Uint8Array(
+        box('moov', box('trak', box('mdia', mdhd, box('minf', box('stbl', stsd)))))).buffer;
+}
+
+/** A media segment of one sample carrying the given bytes. */
+function createMediaSegment(sampleBytes) {
+    function createMoof(dataOffset) {
+        const tfhd = fullBox('tfhd', 0, 0, u32(1));
+        const tfdt = fullBox('tfdt', 1, 0, u32(0), u32(BASE_MEDIA_DECODE_TIME));
+        // trun flags: data-offset, sample-duration and sample-size present
+        const trun = fullBox('trun', 0, 0x000301, u32(1), u32(dataOffset), u32(SAMPLE_DURATION), u32(sampleBytes.length));
+        return box('moof', fullBox('mfhd', 0, 0, u32(1)), box('traf', tfhd, tfdt, trun));
+    }
+
+    const moofSize = createMoof(0).length;
+    const moof = createMoof(moofSize + 8); // sample data starts after the mdat header
+    return new Uint8Array([...moof, ...box('mdat', sampleBytes)]).buffer;
+}
+
+function vttcBox(cueText) {
+    return box('vttc', box('payl', stringToBytes(cueText)));
+}
+
 describe('TextSourceBuffer', function () {
 
     let textSourceBuffer = TextSourceBuffer(context).create({
@@ -37,52 +97,7 @@ describe('TextSourceBuffer', function () {
     });
 
     describe('fragmented WebVTT', function () {
-        const TIMESCALE = 1000;
-        const BASE_MEDIA_DECODE_TIME = 10000; // 10s in media (period-local) time
-        const SAMPLE_DURATION = 2000;
         const TIMESTAMP_OFFSET = 100; // MSE offset for a later period
-
-        function u16(v) {
-            return [(v >>> 8) & 0xFF, v & 0xFF];
-        }
-
-        function u32(v) {
-            return [(v >>> 24) & 0xFF, (v >>> 16) & 0xFF, (v >>> 8) & 0xFF, v & 0xFF];
-        }
-
-        function stringToBytes(str) {
-            return Array.from(str, c => c.charCodeAt(0));
-        }
-
-        function box(type, ...payloads) {
-            const payload = [].concat(...payloads);
-            return [...u32(8 + payload.length), ...stringToBytes(type), ...payload];
-        }
-
-        function fullBox(type, version, flags, ...payloads) {
-            return box(type, [version, (flags >>> 16) & 0xFF, (flags >>> 8) & 0xFF, flags & 0xFF], ...payloads);
-        }
-
-        function createInitSegment() {
-            const mdhd = fullBox('mdhd', 0, 0, u32(0), u32(0), u32(TIMESCALE), u32(0), u16(0), u16(0));
-            return new Uint8Array(box('moov', box('trak', box('mdia', mdhd)))).buffer;
-        }
-
-        function createMediaSegment(cueText) {
-            const vttc = box('vttc', box('payl', stringToBytes(cueText)));
-
-            function createMoof(dataOffset) {
-                const tfhd = fullBox('tfhd', 0, 0, u32(1));
-                const tfdt = fullBox('tfdt', 1, 0, u32(0), u32(BASE_MEDIA_DECODE_TIME));
-                // trun flags: data-offset, sample-duration and sample-size present
-                const trun = fullBox('trun', 0, 0x000301, u32(1), u32(dataOffset), u32(SAMPLE_DURATION), u32(vttc.length));
-                return box('moof', fullBox('mfhd', 0, 0, u32(1)), box('traf', tfhd, tfdt, trun));
-            }
-
-            const moofSize = createMoof(0).length;
-            const moof = createMoof(moofSize + 8); // sample data starts after the mdat header
-            return new Uint8Array([...moof, ...box('mdat', vttc)]).buffer;
-        }
 
         it('should apply the timestamp offset when adding cues for fragmented WebVTT', function () {
             const addCaptionsCalls = [];
@@ -104,7 +119,7 @@ describe('TextSourceBuffer', function () {
                 codec: 'application/mp4;codecs="wvtt"'
             };
             buffer.append(createInitSegment(), { segmentType: 'InitializationSegment', representation: { mediaInfo } });
-            buffer.append(createMediaSegment('Hello'), { segmentType: 'MediaSegment', representation: { mediaInfo } });
+            buffer.append(createMediaSegment(vttcBox('Hello')), { segmentType: 'MediaSegment', representation: { mediaInfo } });
 
             expect(addCaptionsCalls).to.have.lengthOf(1);
             expect(addCaptionsCalls[0].timeOffset).to.equal(TIMESTAMP_OFFSET);
@@ -115,6 +130,82 @@ describe('TextSourceBuffer', function () {
             // Buffered range is in presentation time: timestampOffset + cts / timescale
             expect(buffer.buffered.start(0)).to.equal(TIMESTAMP_OFFSET + BASE_MEDIA_DECODE_TIME / TIMESCALE);
             expect(buffer.buffered.end(0)).to.equal(TIMESTAMP_OFFSET + (BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
+        });
+    });
+
+    describe('text format resolution', function () {
+
+        function createBuffer(ttmlParserStub) {
+            const addCaptionsCalls = [];
+            const textTracksMock = {
+                addCaptions: (idx, timeOffset, captionArray) => {
+                    addCaptionsCalls.push({ idx, timeOffset, captionArray });
+                }
+            };
+            const buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                textTracks: textTracksMock,
+                ttmlParser: ttmlParserStub || ttmlParser,
+                manifestModel: { getValue: () => ({}) }
+            });
+            buffer.buffered = CustomTimeRanges(context).create();
+            return { buffer, addCaptionsCalls };
+        }
+
+        function appendSegments(buffer, mediaInfo, sampleEntryType, sampleBytes) {
+            buffer.append(createInitSegment(sampleEntryType),
+                { segmentType: 'InitializationSegment', representation: { mediaInfo } });
+            buffer.append(createMediaSegment(sampleBytes),
+                { segmentType: 'MediaSegment', representation: { mediaInfo } });
+        }
+
+        it('takes the format from the sample description when the manifest gives no codecs', function () {
+            const parsed = [];
+            const ttmlParserStub = {
+                parse: (content) => {
+                    parsed.push(content);
+                    return [{ start: 0, end: 1, data: 'from ttml' }];
+                }
+            };
+            const { buffer, addCaptionsCalls } = createBuffer(ttmlParserStub);
+
+            // No codecs parameter, so only the stsd says that these are TTML documents.
+            appendSegments(buffer, { type: 'text', mimeType: 'application/mp4', codec: 'application/mp4' },
+                'stpp', stringToBytes('<tt xmlns="http://www.w3.org/ns/ttml"></tt>'));
+
+            expect(parsed).to.have.lengthOf(1);
+            expect(addCaptionsCalls).to.have.lengthOf(1);
+        });
+
+        it('does not parse samples of a sample entry it does not know', function () {
+            const { buffer, addCaptionsCalls } = createBuffer();
+
+            // abcd is not a sample entry dash.js knows. Its samples happen to look like
+            // WebVTT ones here, which is exactly why guessing is wrong: the format is
+            // whatever its specification says, not whatever the bytes can be read as.
+            appendSegments(buffer, { type: 'text', mimeType: 'application/mp4', codec: 'application/mp4;codecs="abcd"' },
+                'abcd', vttcBox('Hello'));
+
+            expect(addCaptionsCalls).to.have.lengthOf(0);
+        });
+
+        it('reads the sample entry of an RFC 6381 codecs string with sub-parameters', function () {
+            const parsed = [];
+            const ttmlParserStub = {
+                parse: (content) => {
+                    parsed.push(content);
+                    return [];
+                }
+            };
+            const { buffer } = createBuffer(ttmlParserStub);
+
+            appendSegments(buffer, {
+                type: 'text',
+                mimeType: 'application/mp4',
+                codec: 'application/mp4;codecs="stpp.ttml.im1t"'
+            }, null, stringToBytes('<tt xmlns="http://www.w3.org/ns/ttml"></tt>'));
+
+            expect(parsed).to.have.lengthOf(1);
         });
     });
 });

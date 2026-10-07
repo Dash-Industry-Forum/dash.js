@@ -59,6 +59,27 @@ describe('DashManifestModel', function () {
             expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw('type is not defined');
         });
 
+        it('should recognise a text AdaptationSet by its contentType when its codec is unknown', function () {
+            const adaptation = {
+                contentType: 'text',
+                mimeType: 'application/mp4',
+                Representation: [{ mimeType: 'application/mp4', codecs: 'abcd' }]
+            };
+
+            expect(dashManifestModel.getIsTypeOf(adaptation, Constants.TEXT)).to.be.true;
+            expect(dashManifestModel.getIsTypeOf(adaptation, Constants.VIDEO)).to.be.false;
+            expect(dashManifestModel.getIsTypeOf(adaptation, Constants.AUDIO)).to.be.false;
+        });
+
+        it('should not recognise an AdaptationSet with an unknown text codec and no contentType as text', function () {
+            const adaptation = {
+                mimeType: 'application/mp4',
+                Representation: [{ mimeType: 'application/mp4', codecs: 'abcd' }]
+            };
+
+            expect(dashManifestModel.getIsTypeOf(adaptation, Constants.TEXT)).to.be.false;
+        });
+
         it('should return null when getSuggestedPresentationDelay is called and mpd is undefined', () => {
             const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay();
 

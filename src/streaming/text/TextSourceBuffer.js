@@ -43,6 +43,7 @@ import DashJSError from '../vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
 import { Cta608Parser, extractCta608DataFromSample } from '@svta/cml-608';
 import DashConstants from '../../dash/constants/DashConstants.js';
+import {getCodecsParameter, getTextFormat} from '../utils/TextFormatUtils.js';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;
@@ -69,6 +70,7 @@ function TextSourceBuffer(config) {
         fragmentModel,
         initializationSegmentReceived,
         timescale,
+        sampleEntryType,
         fragmentedTracks,
         currFragmentedTrackIdx,
         embeddedTracks,
@@ -92,6 +94,7 @@ function TextSourceBuffer(config) {
     function _resetFragmented() {
         fragmentModel = null;
         timescale = NaN;
+        sampleEntryType = null;
         fragmentedTracks = [];
         initializationSegmentReceived = false;
     }
@@ -247,7 +250,7 @@ function TextSourceBuffer(config) {
     }
 
     function _checkTtml(mediaInfo) {
-        return (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) || (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0);
+        return getTextFormat(mediaInfo.codec, mediaInfo.mimeType) === Constants.TTML;
     }
 
     function _getKind(mediaInfo, trackKindMap) {
@@ -285,6 +288,7 @@ function TextSourceBuffer(config) {
         if (chunk.segmentType === 'InitializationSegment') {
             initializationSegmentReceived = true;
             timescale = boxParser.getMediaTimescaleFromMoov(bytes);
+            sampleEntryType = boxParser.getSampleEntryTypeFromMoov(bytes);
         } else {
             if (!initializationSegmentReceived) {
                 return;
@@ -292,10 +296,13 @@ function TextSourceBuffer(config) {
             samplesInfo = boxParser.getSamplesInfo(bytes);
             sampleList = samplesInfo.sampleList;
 
-            if (codecType.search(Constants.STPP) >= 0) {
+            const format = getTextFormat(codecType, chunk.representation.mediaInfo.mimeType, sampleEntryType);
+            if (format === Constants.TTML) {
                 _appendFragmentedSttp(bytes, sampleList, codecType);
-            } else {
+            } else if (format === Constants.WVTT) {
                 _appendFragmentedWebVtt(bytes, sampleList);
+            } else {
+                logger.error(`No parser for timed text sample entry "${sampleEntryType || getCodecsParameter(codecType)}", not parsing the segment`);
             }
         }
     }
@@ -599,9 +606,10 @@ function TextSourceBuffer(config) {
 
     function _getParser(codecType) {
         let parser;
-        if (codecType.search(Constants.VTT) >= 0) {
+        const format = getTextFormat(codecType, codecType, sampleEntryType);
+        if (format === Constants.WVTT) {
             parser = settings.get().streaming.text.webvtt.customRenderingEnabled && vttCustomRenderingParser ? vttCustomRenderingParser : vttParser;
-        } else if (codecType.search(Constants.TTML) >= 0 || codecType.search(Constants.STPP) >= 0) {
+        } else if (format === Constants.TTML) {
             parser = ttmlParser;
         }
         return parser;
