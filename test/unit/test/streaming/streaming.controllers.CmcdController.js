@@ -632,7 +632,7 @@ describe('CmcdController', function () {
         });
 
         it('should send reports periodically according to the interval', () => {
-            // CmcdReporter fires the first TIME_INTERVAL event immediately on start()
+            // The first TIME_INTERVAL report is sent immediately
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             let requestSent = urlLoaderMock.load.firstCall.args[0].request;
             expect(requestSent.method).to.equal(HTTPRequest.POST);
@@ -642,6 +642,38 @@ describe('CmcdController', function () {
             expect(urlLoaderMock.load.calledTwice).to.be.true;
             clock.tick(1000);
             expect(urlLoaderMock.load.calledThrice).to.be.true;
+        });
+
+        it('should attach buffered error codes (ec) to the next time interval report only', () => {
+            cmcdController.reset();
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            enabledKeys: ['e', 'ec'],
+                            events: ['t'],
+                            interval: 1
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+            urlLoaderMock.load.resetHistory();
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 27, data: { request: { type: 'someOtherRequestType' } } }
+            });
+            clock.tick(1000);
+            clock.tick(1000);
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+            const firstReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+            expect(firstReport).to.have.property('e', 't');
+            expect(firstReport.ec).to.deep.equal(['27']);
+            const secondReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.secondCall.args[0].request.body));
+            expect(secondReport).to.not.have.property('ec');
         });
     })
 
@@ -895,6 +927,40 @@ describe('CmcdController', function () {
             const errorReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
             expect(errorReport.ec).to.deep.equal(['123']);
             const responseReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.secondCall.args[0].request.body));
+            expect(responseReport).to.have.property('e', 'rr');
+            expect(responseReport).to.not.have.property('ec');
+        });
+
+        it('should not copy the request report ec into response reports', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            includeInRequests: ['segment'],
+                            enabledKeys: ['e', 'rc', 'ec'],
+                            events: ['rr']
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            cmcdController.getCmcdResponseReceivedInterceptors()[0]({
+                status: 200,
+                request: {
+                    url: 'http://test.url/video.m4s',
+                    customData: {
+                        request: { type: HTTPRequest.MEDIA_SEGMENT_TYPE, url: 'http://test.url/video.m4s' },
+                        cmcd: { ec: ['27'] }
+                    }
+                }
+            });
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const responseReport = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
             expect(responseReport).to.have.property('e', 'rr');
             expect(responseReport).to.not.have.property('ec');
         });

@@ -131,6 +131,7 @@ function CmcdController() {
         }
 
         _createCmcdReporters();
+        _startTimeIntervalReports();
 
         _initializePlaybackStateListeners();
     }
@@ -207,11 +208,26 @@ function CmcdController() {
             .filter((target) => target.url && target.events?.length)
             .map((target) => ({
                 target,
-                reporter: new CmcdReporter({ ...baseConfig, eventTargets: [target] }, _customRequester),
-                pendingErrorCodes: []
+                // Interval 0 disables the reporter's own time-interval timer. dash.js runs it instead
+                // (see _startTimeIntervalReports), so 't' reports can carry the target's buffered error codes.
+                reporter: new CmcdReporter({ ...baseConfig, eventTargets: [{ ...target, interval: 0 }] }, _customRequester),
+                pendingErrorCodes: [],
+                intervalId: null
             }));
+    }
 
-        eventReporters.forEach(({ reporter }) => reporter.start());
+    function _startTimeIntervalReports() {
+        const event = Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL;
+        eventReporters.forEach((eventReporter) => {
+            const { target } = eventReporter;
+            if (!(target.interval > 0) || !target.events.includes(event)) {
+                return;
+            }
+            const timeIntervalEvent = () => _recordOnEventTarget(eventReporter, {}, (reporter, data) => reporter.recordEvent(event, data));
+            eventReporter.intervalId = setInterval(timeIntervalEvent, target.interval * 1000);
+            // Like CmcdReporter.start(), send the first report right away
+            timeIntervalEvent();
+        });
     }
 
     function _updateReporters(data) {
@@ -222,7 +238,10 @@ function CmcdController() {
     }
 
     function _stopReporters() {
-        eventReporters.forEach(({ reporter }) => reporter.stop(true));
+        eventReporters.forEach(({ reporter, intervalId }) => {
+            clearInterval(intervalId);
+            reporter.stop(true);
+        });
     }
 
     function _canReportErrorCodes(enabledKeys) {
@@ -237,19 +256,22 @@ function CmcdController() {
      */
     function _recordOnEventTargets(event, data, record) {
         eventReporters.forEach((eventReporter) => {
-            if (!eventReporter.target.events.includes(event)) {
-                return;
-            }
-            const hasErrorCodes = eventReporter.pendingErrorCodes.length > 0;
-            try {
-                record(eventReporter.reporter, hasErrorCodes ? { ...data, ec: eventReporter.pendingErrorCodes } : data);
-                if (hasErrorCodes) {
-                    eventReporter.pendingErrorCodes = [];
-                }
-            } catch (e) {
-                logger.warn('Failed to record CMCD event.', e);
+            if (eventReporter.target.events.includes(event)) {
+                _recordOnEventTarget(eventReporter, data, record);
             }
         });
+    }
+
+    function _recordOnEventTarget(eventReporter, data, record) {
+        const hasErrorCodes = eventReporter.pendingErrorCodes.length > 0;
+        try {
+            record(eventReporter.reporter, hasErrorCodes ? { ...data, ec: eventReporter.pendingErrorCodes } : data);
+            if (hasErrorCodes) {
+                eventReporter.pendingErrorCodes = [];
+            }
+        } catch (e) {
+            logger.warn('Failed to record CMCD event.', e);
+        }
     }
 
     function _buildReporterTargets() {
@@ -356,6 +378,7 @@ function CmcdController() {
                 eventReporter.pendingErrorCodes = previous.pendingErrorCodes;
             }
         });
+        _startTimeIntervalReports();
     }
 
     /**
@@ -656,6 +679,15 @@ function CmcdController() {
             } catch (e) {
                 logger.warn('Failed to base64 encode CMSD headers, ignoring.', e);
             }
+        }
+
+        // CmcdReporter merges the request's CMCD data into the rr report. Drop the request destination's
+        // ec so each event target only receives the error codes buffered for it.
+        const requestCmcd = response.request.customData?.cmcd;
+        if (requestCmcd?.ec) {
+            const cmcd = { ...requestCmcd };
+            delete cmcd.ec;
+            response = { ...response, request: { ...response.request, customData: { ...response.request.customData, cmcd } } };
         }
 
         _recordOnEventTargets(Constants.CMCD_REPORTING_EVENTS.RESPONSE_RECEIVED, { ...eventData, ...additionalData },
