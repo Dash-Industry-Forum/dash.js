@@ -403,9 +403,15 @@ function CmcdController() {
 
         // Most MPD refreshes do not change the CMCD config. Keep the reporters then, since rebuilding
         // drops their state: sn would restart under the same sid, msd could be sent again, st/sf/pr are lost.
-        const config = _getReportersConfig();
+        let config = _getReportersConfig();
         if (JSON.stringify(config) === reportersConfigKey) {
             return;
+        }
+
+        // New reporters restart sn at 0, so a generated sid must change with them to avoid duplicate sn in one session
+        if (!cmcdConfigAccessor.get('sessionID')) {
+            generatedSessionId = null;
+            config = _getReportersConfig();
         }
 
         _stopReporters();
@@ -476,7 +482,8 @@ function CmcdController() {
         _rebuildReporterIfNeeded();
 
         try {
-            const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
+            // deriveCmcdDataForRequest returns null when it fails internally
+            const cmcdData = cmcdModel.deriveCmcdDataForRequest(request) || {};
 
             // Route MSD through update() for the reporter's internal send-once tracking
             const msdData = cmcdModel.calculateMsd();

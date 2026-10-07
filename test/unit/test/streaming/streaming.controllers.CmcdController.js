@@ -9,6 +9,7 @@ import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
 import CmcdConfigAccessor from '../../../../src/streaming/cmcd/config/CmcdConfigAccessor.js';
+import CmcdModel from '../../../../src/streaming/models/CmcdModel.js';
 import {decodeCmcd} from '@svta/cml-cmcd';
 import StreamMock from '../../mocks/StreamMock.js';
 import {expect} from 'chai';
@@ -2022,6 +2023,78 @@ describe('CmcdController', function () {
 
             expect(metrics).to.have.property('v', 2);
             expect(metrics).to.not.have.property('ec');
+        });
+
+        it('should start a new session when a CMCD config change rebuilds the reporters', function () {
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', contentID: 'content-a', includeInRequests: 'segment' } }
+            });
+            settings.update({ streaming: { cmcd: { enabled: true } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const requestConfig = {
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            };
+
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            interceptor(createCommonMediaRequest(requestConfig));
+            const before = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url);
+
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', contentID: 'content-b', includeInRequests: 'segment' } }
+            });
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+            const after = getCmcdFromUrl(interceptor(createCommonMediaRequest(requestConfig)).url);
+
+            // The rebuilt reporters restart sn, so the session must not continue under the old sid
+            expect(after.sid).to.not.equal(before.sid);
+            expect(after.sn).to.be.below(before.sn);
+        });
+
+        it('should keep CMCD and buffered error codes when deriving the request data fails', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 2 } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock
+            });
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+
+            // deriveCmcdDataForRequest returns null when it fails internally
+            const stub = sinon.stub(CmcdModel(context).getInstance(), 'deriveCmcdDataForRequest').returns(null);
+            try {
+                const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+                const result = interceptor(createCommonMediaRequest({
+                    url: 'http://example.com/segment.m4s',
+                    type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                    mediaType: 'video'
+                }));
+                const metrics = getCmcdFromUrl(result.url);
+                expect(metrics).to.have.property('sid');
+                expect(metrics.ec).to.deep.equal(['123']);
+            } finally {
+                stub.restore();
+            }
         });
 
         it('should keep counting sn when the manifest reloads without CMCD config changes', function () {
