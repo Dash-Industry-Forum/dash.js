@@ -251,7 +251,8 @@ function CmcdController() {
         if (cmcdReporter) {
             const errorCode = errorData.error?.code || errorData.error?.data?.code;
             if (errorCode) {
-                cmcdReporter.update({ ec: errorCode });
+                // ec is a list of strings in CMCD v2. cmcd 2.8 drops a bare number
+                cmcdReporter.update({ ec: [String(errorCode)] });
             }
         }
 
