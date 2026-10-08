@@ -997,6 +997,34 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('v', 2);
         });
 
+        it('should carry the player state (sta) in request reports after a play state change', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 2 } } });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock
+            });
+
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const result = interceptor(createCommonMediaRequest({
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            }));
+
+            const metrics = getCmcdFromUrl(result.url);
+            expect(metrics).to.have.property('sta', 'p');
+        });
+
         it('should decorate a v1 request with CMCD headers when mode is headers', function () {
             settings.update({ streaming: { cmcd: { enabled: true, version: 1, mode: 'headers' } } });
             cmcdController.reset();
