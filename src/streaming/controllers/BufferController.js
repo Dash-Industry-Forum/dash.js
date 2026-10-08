@@ -513,13 +513,13 @@ function BufferController(config) {
         }
 
         // Abort the current request and empty all possible segments to be appended
-        return sourceBufferSink.abort();
+        return abort();
     }
 
     function prepareForForceReplacementQualitySwitch(newRepresentation, oldRepresentation) {
         return new Promise((resolve) => {
             const promises = [];
-            promises.push(sourceBufferSink.abort())
+            promises.push(abort());
             promises.push(updateAppendWindow())
             promises.push(pruneAllSafely())
             promises.push(updateBufferTimestampOffset(newRepresentation))
@@ -558,7 +558,7 @@ function BufferController(config) {
     function prepareForReplacementTrackSwitch(newRepresentation, oldRepresentation) {
         return new Promise((resolve) => {
             const promises = [];
-            promises.push(sourceBufferSink.abort());
+            promises.push(abort());
             promises.push(updateAppendWindow());
             promises.push(_changeCodec(newRepresentation, oldRepresentation));
             promises.push(pruneAllSafely());
@@ -587,6 +587,10 @@ function BufferController(config) {
     }
 
     function _changeCodec(newRepresentation, oldRepresentation) {
+
+        if (!sourceBufferSink) {
+            return Promise.resolve();
+        }
 
         if (!newRepresentation || !oldRepresentation) {
             logger.warn(`BufferController._changeCodec() is missing the information about the Representations. Doing nothing`);
