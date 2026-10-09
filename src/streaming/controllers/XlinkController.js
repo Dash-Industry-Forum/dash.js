@@ -79,7 +79,7 @@ function XlinkController(config) {
     function resolveManifestOnLoad(mpd, previousMpd) {
         let elements;
 
-        // First merge all periods previsouly resolved (in case iof manifest update)
+        // First merge all periods previously resolved (in case of a manifest update)
         manifest = mergeResolvedPeriods(mpd, previousMpd)
 
         // Resolve all periods, so unnecessary requests inside onLoad Periods with Default content are avoided
