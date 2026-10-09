@@ -41,6 +41,7 @@ class StreamInfo {
         this.manifestInfo = null;
         this.isLast = true;
         this.isEncrypted = false;
+        this.isResolved = true;
     }
 }
 

@@ -490,6 +490,7 @@ function MediaPlayerWiring() {
             dashMetrics: state.dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             mssHandler: mssHandler,
+            baseURLController: state.baseURLController,
             settings: state.settings
         });
     }
