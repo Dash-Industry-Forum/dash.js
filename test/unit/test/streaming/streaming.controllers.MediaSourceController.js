@@ -65,6 +65,36 @@ describe('MediaSourceController', function () {
             video.src = window.URL.createObjectURL(source);
         });
 
+        it('should clamp the duration to the highest buffered end time to avoid setting it below buffered coded frames', function (done) {
+            function _onSourceOpen() {
+                Object.defineProperty(source, 'sourceBuffers', {
+                    get: function () {
+                        return [{
+                            updating: false,
+                            buffered: {
+                                length: 1,
+                                start: function () {
+                                    return 0;
+                                },
+                                end: function () {
+                                    return 26.5;
+                                }
+                            }
+                        }];
+                    }
+                });
+                mediaSourceController.setDuration(26);
+                expect(source.duration).to.equal(26.5);
+                done();
+            }
+
+            let source = mediaSourceController.createMediaSource();
+            let video = document.createElement('video');
+
+            source.addEventListener('sourceopen', _onSourceOpen)
+            video.src = window.URL.createObjectURL(source);
+        });
+
         it('should not update source seekable range if not in readystate open', function () {
             let source = mediaSourceController.createMediaSource();
 

@@ -256,14 +256,7 @@ function DashManifestModel() {
     }
 
     function getViewpointForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.VIEWPOINT) || !adaptation[DashConstants.VIEWPOINT].length) {
-            return [];
-        }
-        return adaptation[DashConstants.VIEWPOINT].map(viewpoint => {
-            const vp = new DescriptorType();
-            vp.init(viewpoint);
-            return vp
-        });
+        return _getDescriptorTypes(DashConstants.VIEWPOINT, adaptation);
     }
 
     function getRolesForAdaptation(adaptation) {
@@ -271,48 +264,28 @@ function DashManifestModel() {
             return [];
         }
         return adaptation[DashConstants.ROLE].map(role => {
-            // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
-            if (role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === 'Main') {
-                role.value = DashConstants.MAIN;
-            }
-
             const r = new DescriptorType();
             r.init(role);
+
+            // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+            if (role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === 'Main') {
+                r.value = DashConstants.MAIN;
+            }
+
             return r
         });
     }
 
     function getAccessibilityForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ACCESSIBILITY) || !adaptation[DashConstants.ACCESSIBILITY].length) {
-            return [];
-        }
-        return adaptation[DashConstants.ACCESSIBILITY].map(accessibility => {
-            const a = new DescriptorType();
-            a.init(accessibility);
-            return a
-        });
+        return _getDescriptorTypes(DashConstants.ACCESSIBILITY, adaptation);
     }
 
     function getAudioChannelConfigurationForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) {
-            return [];
-        }
-        return adaptation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
-            const acc = new DescriptorType();
-            acc.init(audioChanCfg);
-            return acc
-        });
+        return _getDescriptorTypes(DashConstants.AUDIO_CHANNEL_CONFIGURATION, adaptation);
     }
 
     function getAudioChannelConfigurationForRepresentation(representation) {
-        if (!representation || !representation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) || !representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].length) {
-            return [];
-        }
-        return representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
-            const acc = new DescriptorType();
-            acc.init(audioChanCfg);
-            return acc
-        });
+        return _getDescriptorTypes(DashConstants.AUDIO_CHANNEL_CONFIGURATION, representation);
     }
 
     function getRepresentationSortFunction() {
@@ -651,16 +624,15 @@ function DashManifestModel() {
         }
     }
 
-    // propertyType is one of { DashConstants.ESSENTIAL_PROPERTY, DashConstants.SUPPLEMENTAL_PROPERTY }
-    function _getProperties(propertyType, element) {
-        if (!element || !element.hasOwnProperty(propertyType) || !element[propertyType].length) {
+    function _getDescriptorTypes(propertyName, element) {
+        if (!element || !element.hasOwnProperty(propertyName) || !element[propertyName].length) {
             return [];
         }
 
-        return element[propertyType].map((property) => {
-            const s = new DescriptorType();
-            s.init(property);
-            return s
+        return element[propertyName].map((data) => {
+            const descriptor = new DescriptorType();
+            descriptor.init(data);
+            return descriptor
         });
     }
 
@@ -676,7 +648,7 @@ function DashManifestModel() {
         }
 
         if (repr.length === 1) {
-            return propertiesOfFirstRepresentation;
+            return propertiesOfFirstRepresentation.slice();
         }
 
         // now, only return properties present on all Representations
@@ -717,7 +689,7 @@ function DashManifestModel() {
     }
 
     function getEssentialProperties(element) {
-        return _getProperties(DashConstants.ESSENTIAL_PROPERTY, element);
+        return _getDescriptorTypes(DashConstants.ESSENTIAL_PROPERTY, element);
     }
 
     function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
@@ -725,7 +697,7 @@ function DashManifestModel() {
     }
 
     function getSupplementalProperties(element) {
-        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, element);
+        return _getDescriptorTypes(DashConstants.SUPPLEMENTAL_PROPERTY, element);
     }
 
     function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
@@ -986,7 +958,7 @@ function DashManifestModel() {
     }
 
     function calcSegmentDuration(segmentTimeline) {
-        if (!segmentTimeline || !segmentTimeline.S) {
+        if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
             return NaN;
         }
         let s0 = segmentTimeline.S[0];
@@ -995,11 +967,12 @@ function DashManifestModel() {
     }
 
     function _getKValue(segmentTimeline) {
-        if (!segmentTimeline || !segmentTimeline.S) {
+        if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
             return 1;
         }
-        const s0 = segmentTimeline.S[0];
-        return s0.hasOwnProperty(DashConstants.K) ? s0.k : 1;
+        // @k may vary between S elements; consumers of Representation.k (low latency mode, live delay) care about the live edge, which is the last S element
+        const s = segmentTimeline.S[segmentTimeline.S.length - 1];
+        return s.hasOwnProperty(DashConstants.K) ? s.k : 1;
     }
 
     function _calcMseTimeOffset(representation) {

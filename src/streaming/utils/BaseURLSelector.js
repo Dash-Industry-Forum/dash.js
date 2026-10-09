@@ -132,12 +132,17 @@ function BaseURLSelector() {
         return selectedBaseUrl;
     }
 
+    function initialize() {
+        serviceLocationBlacklistController.initialize();
+    }
+
     function reset() {
         serviceLocationBlacklistController.reset();
     }
 
     instance = {
         chooseSelector: chooseSelector,
+        initialize: initialize,
         select: select,
         reset: reset,
         setConfig: setConfig

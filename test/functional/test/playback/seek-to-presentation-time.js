@@ -1,5 +1,7 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
+import {expect} from 'chai';
 import {
     checkIsPlaying,
     checkIsProgressing,
@@ -83,10 +85,14 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             } else {
                 seektime = playerAdapter.getCurrentTime() + playerAdapter.getTargetLiveDelay() + 100
             }
+            // Register before seeking: the seek must actually complete, a forever-pending seek is a bug.
+            const seekedPromise = playerAdapter.waitForEvent(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME, MediaPlayerEvents.PLAYBACK_SEEKED);
             playerAdapter.seekToPresentationTime(seektime);
+            const seekCompleted = await seekedPromise;
+            expect(seekCompleted).to.be.true;
 
-            // For live we expect to be playing close to the live edge, For VoD we are at the end of the stream.
-            const targetTime = playerAdapter.isDynamic() ? playerAdapter.getDuration() - playerAdapter.getCurrentLiveLatency() : playerAdapter.getDuration();
+            // For live we expect to be playing close to the live edge. For VoD we are at the end of the stream minus the seekDurationBackoff.
+            const targetTime = playerAdapter.isDynamic() ? playerAdapter.getDuration() - playerAdapter.getCurrentLiveLatency() : playerAdapter.getDuration() - playerAdapter.getSettings().streaming.seekDurationBackoff;
             const allowedDifference = playerAdapter.isDynamic() ? Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE_LIVE_EDGE : Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE;
 
             checkTimeWithinThresholdForDvrWindow(playerAdapter, targetTime, allowedDifference);

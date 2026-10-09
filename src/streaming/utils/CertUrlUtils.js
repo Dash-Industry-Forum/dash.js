@@ -72,8 +72,8 @@ function normalizeCertUrls(raw) {
 /**
  * Deduplicates an array of Certurl descriptor objects by URL + certType combination.
  * Keeps first occurrence order stable.
- * @param {Array<{url:string, certType:string|null}>} list
- * @returns {Array<{url:string, certType:string|null}>}
+ * @param {Array<{url: string, certType: (string|null)}>} list
+ * @returns {Array<{url: string, certType: (string|null)}>}
  */
 function dedupeCertUrls(list) {
     if (!Array.isArray(list) || list.length === 0) { return []; }

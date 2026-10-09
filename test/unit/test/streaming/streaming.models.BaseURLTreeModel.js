@@ -41,4 +41,25 @@ describe('BaseURLTreeModel', function () {
         expect(nodes).to.be.instanceOf(Array);
         expect(nodes).to.be.empty;
     });
+
+    it('getBaseUrlsForPayload should drop BaseURLs of periods removed across updates', () => {
+        const model = BaseURLTreeModel(context).create();
+        const p0 = { id: 'p0' };
+        const p1 = { id: 'p1' };
+        const baseUrlMap = new Map();
+        baseUrlMap.set(p0, [{ url: 'https://a/', serviceLocation: 'a' }]);
+        baseUrlMap.set(p1, [{ url: 'https://b/', serviceLocation: 'b' }]);
+        const adapter = {
+            getBaseURLsFromElement: (el) => (baseUrlMap.get(el) || []).slice(),
+            getRepresentationSortFunction: () => () => 0
+        };
+        model.setConfig({ adapter, contentSteeringController: new ContentSteeringControllerMock() });
+
+        model.update({ Period: [p0, p1] });
+        expect(model.getBaseUrlsForPayload().childBaseUrls.map((b) => b.serviceLocation)).to.deep.equal(['a', 'b']);
+
+        // Second update has one fewer period. The removed period's BaseURL must not leak into the payload.
+        model.update({ Period: [p0] });
+        expect(model.getBaseUrlsForPayload().childBaseUrls.map((b) => b.serviceLocation)).to.deep.equal(['a']);
+    });
 });

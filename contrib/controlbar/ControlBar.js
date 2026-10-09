@@ -183,6 +183,7 @@ export class ControlBar {
             this.timeSeparator.classList.remove('cb-hidden-element');
         }
         this._updateRateDisplay(1);
+        this._hideSeekPreview();
         this._closeAllMenus();
         this._destroyMenus();
     }
@@ -237,7 +238,7 @@ export class ControlBar {
 
     _buildDOM() {
         // Thumbnail preview
-        this.thumbnailElem = createElement('div', { className: 'cb-thumbnail-elem' });
+        this.thumbnailElem = createElement('div', { className: 'cb-thumbnail-elem cb-hidden-element' });
         this.thumbnailTimeLabel = createElement('div', { className: 'cb-thumbnail-time' });
         this.thumbnailContainer = createElement('div', { className: 'cb-thumbnail-container cb-hidden-element' },
             this.thumbnailElem,
@@ -251,7 +252,12 @@ export class ControlBar {
             this.seekbarBuffer,
             this.seekbarPlayed
         );
-        const seekbarRow = createElement('div', { className: 'cb-seekbar-row' }, this.seekbarContainer);
+        // The preview is placed inside the seekbar row so that its offset parent is
+        // aligned with the seekbar itself.
+        const seekbarRow = createElement('div', { className: 'cb-seekbar-row' },
+            this.thumbnailContainer,
+            this.seekbarContainer
+        );
 
         // Play / Pause
         this.playPauseIcon = createElement('i', { className: 'bi bi-play-fill' });
@@ -346,7 +352,6 @@ export class ControlBar {
 
         // Root container
         this.container = createElement('div', { className: 'cb-controlbar cb-disabled' },
-            this.thumbnailContainer,
             seekbarRow,
             controlsRow
         );
@@ -459,8 +464,11 @@ export class ControlBar {
             return;
         }
         try {
+            // isPaused() returns null when the stream is not yet activated. Only an
+            // explicit `false` means playback is running, so treat null/undefined/true
+            // as paused and show the play icon.
             const isPaused = this.player.isPaused();
-            this.playPauseIcon.className = isPaused ? 'bi bi-play-fill' : 'bi bi-pause-fill';
+            this.playPauseIcon.className = isPaused === false ? 'bi bi-pause-fill' : 'bi bi-play-fill';
         } catch (e) {
             // Player not ready yet — default to play icon
             this.playPauseIcon.className = 'bi bi-play-fill';
@@ -512,8 +520,12 @@ export class ControlBar {
                 this.durationDisplay.classList.toggle('cb-at-live-edge', atLiveEdge);
             } else {
                 this.timeDisplay.textContent = formatTime(time);
-                this.durationDisplay.textContent = formatTime(duration);
                 this.durationDisplay.classList.remove('cb-live-indicator', 'cb-at-live-edge');
+                this.durationDisplay.textContent = formatTime(duration);
+                this.durationDisplay.appendChild(createElement('span', {
+                    className: 'cb-static-indicator',
+                    textContent: ' STATIC'
+                }));
 
                 // Show separator for VoD
                 if (this.timeSeparator) {
@@ -616,6 +628,7 @@ export class ControlBar {
         const pct = (this._duration > 0) ? (time / this._duration) * 100 : 0;
         this.seekbarPlayed.style.width = `${pct}%`;
         this.timeDisplay.textContent = formatTime(time);
+        this._showSeekPreview(e.clientX, time);
     }
 
     _onDocumentMouseUp(e) {
@@ -623,6 +636,7 @@ export class ControlBar {
             return;
         }
         this._seeking = false;
+        this._hideSeekPreview();
         const time = this._getSeekTime(e.clientX);
         this.player.seek(time);
     }
@@ -632,11 +646,14 @@ export class ControlBar {
             return;
         }
         const time = this._getSeekTime(e.clientX);
-        this._showThumbnail(e.clientX, time);
+        this._showSeekPreview(e.clientX, time);
     }
 
     _onSeekMouseLeave() {
-        this._hideThumbnail();
+        // Keep the preview visible while dragging outside the seekbar
+        if (!this._seeking) {
+            this._hideSeekPreview();
+        }
     }
 
     _onSeekTouchStart(e) {
@@ -656,6 +673,7 @@ export class ControlBar {
         const pct = (this._duration > 0) ? (time / this._duration) * 100 : 0;
         this.seekbarPlayed.style.width = `${pct}%`;
         this.timeDisplay.textContent = formatTime(time);
+        this._showSeekPreview(e.touches[0].clientX, time);
     }
 
     _onSeekTouchEnd(e) {
@@ -663,6 +681,7 @@ export class ControlBar {
             return;
         }
         this._seeking = false;
+        this._hideSeekPreview();
         if (e.changedTouches && e.changedTouches[0]) {
             const time = this._getSeekTime(e.changedTouches[0].clientX);
             this.player.seek(time);
@@ -670,47 +689,60 @@ export class ControlBar {
     }
 
     // ================================================================
-    // Thumbnails
+    // Seek preview (time label + optional thumbnail)
     // ================================================================
 
-    _showThumbnail(clientX, time) {
+    /**
+     * Show the preview above the seekbar for the given position. The time label is
+     * always shown; the thumbnail image only when the stream provides one.
+     */
+    _showSeekPreview(clientX, time) {
+        if (!this.thumbnailContainer) {
+            return;
+        }
+
+        const containerRect = this.seekbarContainer.getBoundingClientRect();
+        // For live, express the position as an offset from the live edge, matching
+        // the negative latency shown in the time display.
+        this.thumbnailTimeLabel.textContent = this._isDynamic
+            ? `-${formatTime(Math.max(0, this._duration - time))}`
+            : formatTime(time);
+        this.thumbnailContainer.style.bottom = `${containerRect.height + 10}px`;
+        this.thumbnailContainer.classList.remove('cb-hidden-element');
+        this._positionSeekPreview(clientX, this.thumbnailTimeLabel.offsetWidth);
+
         if (!this.player.provideThumbnail) {
             return;
         }
 
         this.player.provideThumbnail(time, (thumbnail) => {
             if (!thumbnail || !thumbnail.url) {
-                this._hideThumbnail();
+                this.thumbnailElem.classList.add('cb-hidden-element');
                 return;
             }
 
-            const containerRect = this.seekbarContainer.getBoundingClientRect();
-            const wrapperRect = this.wrapper.getBoundingClientRect();
-
             // Scale thumbnail
-            const maxHeight = wrapperRect.height * 0.15;
+            const maxHeight = this.wrapper.getBoundingClientRect().height * 0.15;
             const scale = Math.min(maxHeight / thumbnail.height, 2);
-            const width = thumbnail.width * scale;
-            const height = thumbnail.height * scale;
 
             this.thumbnailElem.style.width = `${thumbnail.width}px`;
             this.thumbnailElem.style.height = `${thumbnail.height}px`;
             this.thumbnailElem.style.background = `url("${thumbnail.url}") -${thumbnail.x}px -${thumbnail.y}px`;
             this.thumbnailElem.style.backgroundSize = '';
             this.thumbnailElem.style.transform = `scale(${scale})`;
+            this.thumbnailElem.classList.remove('cb-hidden-element');
 
-            // Position horizontally centered on mouse
-            let left = clientX - containerRect.left - width / 2;
-            left = Math.max(0, Math.min(left, containerRect.width - width));
-
-            this.thumbnailContainer.style.left = `${left}px`;
-            this.thumbnailContainer.style.bottom = `${containerRect.height + 10}px`;
-            this.thumbnailTimeLabel.textContent = formatTime(time);
-            this.thumbnailContainer.classList.remove('cb-hidden-element');
+            this._positionSeekPreview(clientX, thumbnail.width * scale);
         });
     }
 
-    _hideThumbnail() {
+    _positionSeekPreview(clientX, width) {
+        const containerRect = this.seekbarContainer.getBoundingClientRect();
+        const left = clientX - containerRect.left - width / 2;
+        this.thumbnailContainer.style.left = `${Math.max(0, Math.min(left, containerRect.width - width))}px`;
+    }
+
+    _hideSeekPreview() {
         if (this.thumbnailContainer) {
             this.thumbnailContainer.classList.add('cb-hidden-element');
         }

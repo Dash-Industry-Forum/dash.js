@@ -51,6 +51,9 @@ function DashMetricsMock() {
     this.createPlaylistTraceMetrics = function () {
     };
 
+    this.createPlaylistMetrics = function () {
+    };
+
     this.addRepresentationSwitch = function () {
     };
 

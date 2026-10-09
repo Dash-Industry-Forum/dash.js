@@ -3,6 +3,10 @@ import AdapterMock from '../../mocks/AdapterMock.js';
 import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
 import Settings from '../../../../src/core/Settings.js';
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
+import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
+import DashParser from '../../../../src/dash/parser/DashParser.js';
+import DebugMock from '../../mocks/DebugMock.js';
 
 import {expect} from 'chai';
 
@@ -10,20 +14,25 @@ let adapterMock;
 let capabilitiesFilter;
 let settings;
 let capabilitiesMock;
-let customParametersModel = CustomParametersModel({}).getInstance();
+let customParametersModel;
+let context;
+let eventBus;
 
 describe('CapabilitiesFilter', function () {
     beforeEach(function () {
+        context = {};
         adapterMock = new AdapterMock();
         adapterMock.getIsTypeOf = function (as, type) {
             return (type === 'audio' && as.mimeType === 'audio/mp4') || (type === 'video' && as.mimeType === 'video/mp4');
         };
 
-        settings = Settings({}).getInstance();
+        settings = Settings(context).getInstance();
         capabilitiesMock = new CapabilitiesMock();
+        customParametersModel = CustomParametersModel(context).getInstance();
+        eventBus = EventBus(context).getInstance();
         customParametersModel.reset();
 
-        capabilitiesFilter = CapabilitiesFilter({}).getInstance();
+        capabilitiesFilter = CapabilitiesFilter(context).getInstance();
 
         capabilitiesFilter.setConfig({
             adapter: adapterMock,
@@ -31,6 +40,18 @@ describe('CapabilitiesFilter', function () {
             settings: settings,
             customParametersModel
         });
+    });
+
+    afterEach(function () {
+        if (eventBus) {
+            eventBus.reset();
+        }
+        if (settings) {
+            settings.reset();
+        }
+        if (customParametersModel) {
+            customParametersModel.reset();
+        }
     });
 
     describe('filterUnsupportedFeatures', function () {
@@ -107,6 +128,75 @@ describe('CapabilitiesFilter', function () {
                         done();
                     })
                     .catch((e) => {
+                        done(e);
+                    });
+            });
+
+            it('should include remaining same-type AdaptationSets in removal event payload', function (done) {
+                const adaptationSet1 = {
+                    id: '1',
+                    mimeType: 'audio/mp4',
+                    Representation: [
+                        {
+                            mimeType: 'audio/mp4',
+                            codecs: 'mp4a.40.1',
+                            audioSamplingRate: '48000'
+                        }
+                    ]
+                };
+                const adaptationSet2 = {
+                    id: '2',
+                    mimeType: 'audio/mp4',
+                    Representation: [
+                        {
+                            mimeType: 'audio/mp4',
+                            codecs: 'mp4a.40.2',
+                            audioSamplingRate: '48000'
+                        }
+                    ]
+                };
+                const adaptationSet3 = {
+                    id: '3',
+                    mimeType: 'audio/mp4',
+                    Representation: [
+                        {
+                            mimeType: 'audio/mp4',
+                            codecs: 'mp4a.40.5',
+                            audioSamplingRate: '48000'
+                        }
+                    ]
+                };
+
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [adaptationSet1, adaptationSet2, adaptationSet3]
+                    }]
+                };
+
+                const removedEvents = [];
+                const onAdaptationSetRemoved = function (e) {
+                    removedEvents.push(e);
+                };
+
+                capabilitiesMock.isCodecSupportedBasedOnTestedConfigurations = function (config) {
+                    return config.codec === 'audio/mp4;codecs="mp4a.40.5"';
+                };
+
+                eventBus.on(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, onAdaptationSetRemoved);
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(removedEvents).to.have.lengthOf(2);
+                        expect(removedEvents[0].adaptationSet.id).to.equal('1');
+                        expect(removedEvents[0].remainingAdaptationSets).to.deep.equal([adaptationSet2, adaptationSet3]);
+                        expect(removedEvents[1].adaptationSet.id).to.equal('2');
+                        expect(removedEvents[1].remainingAdaptationSets).to.deep.equal([adaptationSet3]);
+
+                        eventBus.off(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, onAdaptationSetRemoved);
+                        done();
+                    })
+                    .catch((e) => {
+                        eventBus.off(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, onAdaptationSetRemoved);
                         done(e);
                     });
             });
@@ -346,6 +436,67 @@ describe('CapabilitiesFilter', function () {
                         done(e);
                     });
 
+            });
+
+            it('should check all Representations of the main AdaptationSet for a Preselection codec override', function (done) {
+                const preselectionCodec = 'audio/mp4;codecs="iamf.000.000.mp4a.40.2"';
+                const checkedPreselectionBitrates = [];
+                const manifest = {
+                    Period: [{
+                        Preselection: [{
+                            id: '10',
+                            codecs: 'iamf.000.000.mp4a.40.2',
+                            preselectionComponents: '1',
+                            tagName: 'Preselection'
+                        }],
+                        AdaptationSet: [{
+                            id: '1',
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    id: '1-low',
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000',
+                                    bandwidth: 64000
+                                },
+                                {
+                                    id: '1-high',
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000',
+                                    bandwidth: 128000
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                prepareCapabilitiesMock({
+                    name: 'runCodecSupportCheck', definition: function (config) {
+                        if (config.codec === preselectionCodec) {
+                            checkedPreselectionBitrates.push(config.bitrate);
+                        }
+                        return Promise.resolve();
+                    }
+                });
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        return config.codec !== preselectionCodec || config.bitrate === 64000;
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(checkedPreselectionBitrates).to.have.members([64000, 128000]);
+                        expect(manifest.Period[0].Preselection).to.be.empty;
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(2);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
             });
 
         });
@@ -847,6 +998,42 @@ describe('CapabilitiesFilter', function () {
             beforeEach(function () {
                 settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true } } });
                 settings.update({ streaming: { capabilities: { filterVideoColorimetryEssentialProperties: true } } });
+            });
+
+            [
+                ['01', '016', true],
+                ['+1', '16.0', true],
+                ['1junk', '16', false],
+                ['1', '16junk', false],
+                ['0x1', '16', false],
+                ['1', '0x10', false],
+                ['1.5', '16', false]
+            ].forEach(([primaries, transfer, supported]) => {
+                it(`should interpret CICP values ${primaries}/${transfer} after parsing`, async () => {
+                    const parser = DashParser(context).create({ debug: new DebugMock() });
+                    const manifest = parser.parse(`<MPD><Period><AdaptationSet mimeType="video/mp4">
+                        <Representation mimeType="video/mp4" codecs="hvc1.2.4.L90.B0">
+                            <EssentialProperty schemeIdUri="urn:mpeg:mpegB:cicp:ColourPrimaries" value="${primaries}"/>
+                            <EssentialProperty schemeIdUri="urn:mpeg:mpegB:cicp:TransferCharacteristics" value="${transfer}"/>
+                        </Representation>
+                    </AdaptationSet></Period></MPD>`);
+                    let testedConfig;
+                    prepareCapabilitiesMock({
+                        name: 'isCodecSupportedBasedOnTestedConfigurations', definition: (config) => {
+                            testedConfig = config;
+                            return config.isSupported;
+                        }
+                    });
+
+                    await capabilitiesFilter.filterUnsupportedFeatures(manifest);
+
+                    expect(testedConfig.isSupported).to.equal(supported);
+                    expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(supported ? 1 : 0);
+                    if (supported) {
+                        expect(testedConfig.colorGamut).to.equal('srgb');
+                        expect(testedConfig.transferFunction).to.equal('pq');
+                    }
+                });
             });
 
             it('should set sRGB in config from EssentialProperties', function (done) {

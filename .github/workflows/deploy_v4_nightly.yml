@@ -5,6 +5,9 @@ on:
         branches:
             - 'v4_development'
 
+permissions:
+    contents: read
+
 jobs:
     deploy_staging:
         if: github.repository == 'Dash-Industry-Forum/dash.js'

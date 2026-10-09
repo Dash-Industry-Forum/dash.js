@@ -67,12 +67,14 @@ function CmcdModel() {
         _bufferLevelStarved,
         _initialMediaRequestsDone,
         _playbackStartedTime,
+        _msd,
         _isSeeking,
         streamProcessors,
         _rebufferingStartTime = {},
         _rebufferingDuration = {},
         _streamType,
-        _streamingFormat;
+        _streamingFormat,
+        _topBitrateCache;
 
     let context = this.context;
 
@@ -300,10 +302,19 @@ function CmcdModel() {
 
     function _getTopBitrateByType(mediaInfo) {
         try {
+            // Within a single request's data build the same representation list backs both tb and
+            // tpb. Reuse the result so the list is rebuilt once per mediaInfo, not per key.
+            if (_topBitrateCache && _topBitrateCache.has(mediaInfo)) {
+                return _topBitrateCache.get(mediaInfo);
+            }
             const bitrates = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => {
                 return rep.bitrateInKbit
             });
-            return Math.max(...bitrates)
+            const tb = Math.max(...bitrates);
+            if (_topBitrateCache) {
+                _topBitrateCache.set(mediaInfo, tb);
+            }
+            return tb;
         } catch (e) {
             return null;
         }
@@ -521,12 +532,17 @@ function CmcdModel() {
     }
 
     function onPlaybackStarted() {
-        if (!_playbackStartedTime) {
+        if (_playbackStartedTime === undefined) {
             _playbackStartedTime = Date.now();
         }
     }
 
     function onPlaybackPlaying() {
+        // MSD is the wall-clock time between the player being instructed to play (play event,
+        // or start of manifest loading for autoplay) and the first transition to the playing state.
+        if (_msd === undefined && _playbackStartedTime !== undefined) {
+            _msd = Date.now() - _playbackStartedTime;
+        }
         for (const mediaType in _rebufferingStartTime) {
             if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
                 onRebufferingCompleted(mediaType);
@@ -548,10 +564,7 @@ function CmcdModel() {
     }
 
     function _calculateMsd() {
-        if (!_playbackStartedTime) {
-            return null;
-        }
-        return Date.now() - _playbackStartedTime;
+        return _msd !== undefined ? _msd : null;
     }
 
     function getGenericCmcdData(mediaType) {
@@ -609,6 +622,7 @@ function CmcdModel() {
         _isSeeking = false;
         _lastMediaTypeRequest = undefined;
         _playbackStartedTime = undefined;
+        _msd = undefined;
         _rebufferingStartTime = {};
         _rebufferingDuration = {};
         _streamType = undefined;
@@ -730,6 +744,10 @@ function CmcdModel() {
     }
 
     function deriveCmcdDataForRequest(request) {
+        // Share one top-bitrate computation across this request's data build (tb and tpb both
+        // resolve it from the representation list). Scoped to the call, so a later request still
+        // recomputes and runtime setting changes remain reflected.
+        _topBitrateCache = new Map();
         try {
             _updateLastMediaTypeRequest(request.type, request.mediaType);
             let cmcdData = {};
@@ -753,6 +771,8 @@ function CmcdModel() {
             return cmcdData;
         } catch (e) {
             return null;
+        } finally {
+            _topBitrateCache = null;
         }
     }
 

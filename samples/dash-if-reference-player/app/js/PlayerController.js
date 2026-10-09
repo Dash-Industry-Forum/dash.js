@@ -173,6 +173,7 @@ export class PlayerController extends EventEmitter {
 
         this.player.on(events.ERROR, (e) => this._onError(e));
         this.player.on(events.MANIFEST_LOADED, (e) => this._onManifestLoaded(e));
+        this.player.on(events.DYNAMIC_TO_STATIC, () => this._onDynamicToStatic());
         this.player.on(events.REPRESENTATION_SWITCH, (e) => this._onRepresentationSwitch(e));
         this.player.on(events.PERIOD_SWITCH_COMPLETED, (e) => this._onPeriodSwitchCompleted(e));
         this.player.on(events.QUALITY_CHANGE_RENDERED, (e) => this._onQualityChangeRendered(e));
@@ -193,6 +194,14 @@ export class PlayerController extends EventEmitter {
             this.isDynamic = e.data.type === 'dynamic';
             this.periodCount = e.data.Period ? e.data.Period.length : 0;
         }
+        this.emit('manifestLoaded', {
+            isDynamic: this.isDynamic,
+            periodCount: this.periodCount
+        });
+    }
+
+    _onDynamicToStatic() {
+        this.isDynamic = false;
         this.emit('manifestLoaded', {
             isDynamic: this.isDynamic,
             periodCount: this.periodCount

@@ -1,114 +1,61 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
-    <title>Load with url parameters</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load with URL parameters</title>
 
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
-    <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="../lib/main.css" rel="stylesheet">
-
-    <style>
-        video {
-            width: 640px;
-            height: 360px;
-        }
-    </style>
-
-    <script class="code">
-
-        function getUrlVars() {
-            var vars = {};
-            window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
-                vars[key] = value;
-            });
-            return vars;
-        }
-
-        function init() {
-            var video,
-                player;
-            var urlParameter = getUrlVars();
-            var item = {
-                url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
-                autoplay: true
-            }
-
-            if (urlParameter) {
-                if (urlParameter.hasOwnProperty('url')) {
-                    item.url = urlParameter.url;
-                }
-                if (urlParameter.hasOwnProperty('autoplay')) {
-                    item.autoplay = (urlParameter.autoplay === 'true');
-                }
-            }
-
-            video = document.querySelector('video');
-            player = dashjs.MediaPlayer().create();
-            player.initialize(video, item.url, item.autoplay);
-        }
-    </script>
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
 </head>
 <body>
 
-<main>
-    <div class="container py-4">
-        <header class="pb-3 mb-4 border-bottom">
-            <img class=""
-                 src="../lib/img/dashjs-logo.png"
-                 width="200">
-        </header>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Load with url parameters</h3>
-                    <p>A demo page that uses url query parameters to configure the playback. The supported parameters
-                        are:</p>
-                    <table class="table">
-                        <tr>
-                            <th>Parameter</th>
-                            <th>Description</th>
-                            <th>Default</th>
-                        </tr>
-                        <tr>
-                            <td>autoplay</td>
-                            <td>Enables autoplay. Set to "true" or "false"</td>
-                            <td>"true"</td>
-                        </tr>
-                        <tr>
-                            <td>url</td>
-                            <td>Specify MPD url</td>
-                            <td>https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd</td>
-                        </tr>
-                    </table>
+<script class="code">
+    function getUrlVars() {
+        var vars = {};
+        window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+            vars[key] = value;
+        });
+        return vars;
+    }
 
-                </div>
-            </div>
-            <div class="row margin-top-row">
-                <div class="col-md-8">
-                    <video controls="true"></video>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="code-output"></div>
-            </div>
-        </div>
-        <footer class="pt-3 mt-4 text-muted border-top">
-            &copy; DASH-IF
-        </footer>
-    </div>
-</main>
+    async function init(video, wrapper) {
+        var player;
+        var urlParameter = getUrlVars();
+        var item = {
+            url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+            autoplay: true
+        }
 
+        if (urlParameter) {
+            if (urlParameter.hasOwnProperty('url')) {
+                item.url = urlParameter.url;
+            }
+            if (urlParameter.hasOwnProperty('autoplay')) {
+                item.autoplay = (urlParameter.autoplay === 'true');
+            }
+        }
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        init();
+        player = dashjs.MediaPlayer().create();
+        player.initialize(video, item.url, item.autoplay);
+        await createControlBar(player, video, wrapper);
+    }
+</script>
+
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+
+    initSamplePage({
+        title: 'Load with URL parameters',
+        description: 'A demo page that uses URL query parameters to configure playback. Supported parameters: <strong>url</strong> (MPD URL, default: bbb_30fps) and <strong>autoplay</strong> ("true" or "false", default: "true").',
+        category: 'Getting Started',
+        codeExpanded: true,
+        onInit: (video, container, wrapper) => init(video, wrapper)
     });
 </script>
-<script src="../highlighter.js"></script>
 </body>
 </html>

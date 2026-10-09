@@ -1,80 +1,144 @@
-var head = document.head || document.getElementsByTagName('head')[0];
-var codeOutput = document.getElementById('code-output');
-var style = document.createElement('link');
-style.setAttribute('rel', 'stylesheet');
-style.setAttribute('href', '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/tomorrow.min.css');
-var script = document.createElement('script');
-script.setAttribute('src', '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js');
-
-head.append(style);
-head.append(script);
-
-codeOutput.innerHTML += '<div style="margin-top: 30px; display: block; width: 100%;"><p style=" font-weight: bold; font-size: 1.1em">Source code<button id="clipboard-copy" style="float: right; margin: 10px 10px 0 0">Copy to clipboard</button></p><pre style="border: solid 1px #ddd"><code class="html javascript" id="code"></code></pre></div>';
-
 /**
- * This helper functions checks how many whitespaces preceed the last tag, which should have 0
- * @param html
+ * highlighter.js - Source Code Display for dash.js Samples
+ *
+ * Extracts elements marked with class="code" from the current page,
+ * renders them as syntax-highlighted source code, and provides a
+ * copy-to-clipboard button.
+ *
+ * This script is loaded by sample-template.js or directly by sample pages.
+ * It expects:
+ *   - Elements with class="code" in the DOM
+ *   - A #code-output container (created by sample-template.js or the page)
+ *   - highlight.min.js loaded from lib/highlight/
  */
-function calculateStartingWhitespacesCount(html) {
-    var lines = html.split(/\r?\n/);
-    var lastLine = lines[lines.length - 1];
-    return lastLine.search(/\S|$/);
-}
+(function () {
+    'use strict';
 
-function waitForElement() {
-    if (typeof hljs !== 'undefined'){
-        hljs.initHighlighting();
-    }
-    else {
-        setTimeout(waitForElement, 100);
-    }
-}
+    var codeOutput = document.getElementById('code-output');
+    if (!codeOutput) return;
 
-function copyToClipboard() {
-    var copyText = document.getElementById('code');
-
-    if (document.selection) {
-        var range = document.body.createTextRange();
-        range.moveToElementText(document.getElementById('code'));
-        range.select().createTextRange();
-        document.execCommand("copy");
-
-    } else if (window.getSelection) {
-        var range = document.createRange();
-        range.selectNode(document.getElementById('code'));
-        window.getSelection().addRange(range);
-        document.execCommand("copy");
-    }
-    if (window.getSelection) {
-        window.getSelection().removeAllRanges();
-    } else if (document.selection) {
-        document.selection.empty();
+    // Determine the base path to lib/ relative to this script
+    var scripts = document.getElementsByTagName('script');
+    var basePath = '';
+    for (var i = 0; i < scripts.length; i++) {
+        var src = scripts[i].getAttribute('src') || '';
+        if (src.indexOf('highlighter.js') !== -1) {
+            basePath = src.replace('highlighter.js', '');
+            break;
+        }
     }
 
-    document.getElementById('clipboard-copy').innerText = 'Copied!';
-    setTimeout(function() {
-        document.getElementById('clipboard-copy').innerText = 'Copy to clipboard';
-    }, 2000);
-}
+    // Build the code output UI (collapsed by default via <details>).
+    // Pages can opt in to an expanded section via data-code-expanded on #code-output.
+    var section = document.createElement('details');
+    section.className = 'sample-code-section';
+    if (codeOutput.hasAttribute('data-code-expanded')) {
+        section.setAttribute('open', '');
+    }
+    section.innerHTML =
+        '<summary class="sample-code-header">' +
+        '  <span class="sample-code-title"><i class="bi bi-chevron-right sample-code-chevron"></i> <span class="sample-code-title-text">Source Code</span></span>' +
+        '  <button class="sample-code-copy-btn" id="clipboard-copy">' +
+        '    <i class="bi bi-clipboard"></i> <span>Copy</span>' +
+        '  </button>' +
+        '</summary>' +
+        '<div class="sample-code-body">' +
+        '  <pre><code class="html javascript" id="code"></code></pre>' +
+        '</div>';
+    codeOutput.appendChild(section);
 
-var codeElements = document.getElementsByClassName('code');
-for (var i = 0; i < codeElements.length; i++) {
-    var tag = codeElements[i].cloneNode(true);
-    var classes = tag.className.replace('code', '');
-    if (classes === '') {
-        tag.removeAttribute('class');
-    } else {
-        tag.className = classes;
+    // Extract code from elements with class="code"
+    var codeElements = document.getElementsByClassName('code');
+    var codeEl = document.getElementById('code');
+    var extractedCode = '';
+
+    for (var j = 0; j < codeElements.length; j++) {
+        var el = codeElements[j];
+        // Skip elements that are part of the code output itself
+        if (section.contains(el)) continue;
+
+        var tag = el.cloneNode(true);
+        var classes = tag.className.replace(/\bcode\b/g, '').trim();
+        if (classes === '') {
+            tag.removeAttribute('class');
+        } else {
+            tag.className = classes;
+        }
+
+        // Fix indentation: calculate leading whitespace of the last line
+        var html = tag.outerHTML;
+        var lines = html.split(/\r?\n/);
+        var lastLine = lines[lines.length - 1];
+        var startingWhitespaces = lastLine.search(/\S|$/);
+        if (startingWhitespaces > 0) {
+            var regex = new RegExp('^ {' + startingWhitespaces + '}', 'mg');
+            html = html.replace(regex, '');
+        }
+
+        extractedCode += html + '\n';
     }
 
-    // fix indentation
-    var startingWhitespaces = calculateStartingWhitespacesCount(tag.outerHTML);
-    var regex = new RegExp('^ {' + startingWhitespaces + '}', 'mg');
-    document.getElementById('code').innerText += tag.outerHTML.replace(regex, '') + '\n';
-}
+    codeEl.textContent = extractedCode;
 
-document.getElementById('clipboard-copy').addEventListener('click', copyToClipboard);
+    // Copy to clipboard
+    var copyBtn = document.getElementById('clipboard-copy');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function (event) {
+            // Prevent the click from toggling the surrounding <details> element.
+            event.preventDefault();
+            event.stopPropagation();
+            var text = codeEl.textContent;
 
-waitForElement();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    showCopied();
+                }).catch(function () {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        });
+    }
 
+    function fallbackCopy(text) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showCopied();
+        } catch (e) {
+            // silently fail
+        }
+        document.body.removeChild(textarea);
+    }
 
+    function showCopied() {
+        var span = copyBtn.querySelector('span');
+        var icon = copyBtn.querySelector('i');
+        if (span) span.textContent = 'Copied!';
+        if (icon) {
+            icon.className = 'bi bi-check2';
+        }
+        copyBtn.classList.add('copied');
+        setTimeout(function () {
+            if (span) span.textContent = 'Copy';
+            if (icon) icon.className = 'bi bi-clipboard';
+            copyBtn.classList.remove('copied');
+        }, 2000);
+    }
+
+    // Load highlight.js and apply syntax highlighting
+    var hlScript = document.createElement('script');
+    hlScript.src = basePath + 'lib/highlight/highlight.min.js';
+    hlScript.onload = function () {
+        if (typeof hljs !== 'undefined') {
+            hljs.highlightElement(codeEl);
+        }
+    };
+    document.head.appendChild(hlScript);
+})();

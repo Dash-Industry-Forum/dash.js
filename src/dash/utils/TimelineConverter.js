@@ -180,21 +180,24 @@ function TimelineConverter() {
     }
 
     function _calcTimeshiftBufferForStaticManifest(streams) {
-        // Static Range Finder. We iterate over all periods and return the total duration
+        // Static Range Finder. Account for periods that are not contiguous.
         const range = { start: NaN, end: NaN };
-        let duration = 0;
         let start = NaN;
+        let end = NaN;
         streams.forEach((stream) => {
             const streamInfo = stream.getStreamInfo();
-            duration += streamInfo.duration;
 
             if (isNaN(start) || streamInfo.start < start) {
                 start = streamInfo.start;
             }
+            const streamEnd = streamInfo.start + streamInfo.duration;
+            if (isNaN(end) || streamEnd > end) {
+                end = streamEnd;
+            }
         });
 
         range.start = start;
-        range.end = start + duration;
+        range.end = end;
 
         return range;
     }

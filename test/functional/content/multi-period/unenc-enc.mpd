@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Generated with https://github.com/google/shaka-packager version v2.3.0-5bf8ad5-release-->
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd" xmlns:cenc="urn:mpeg:cenc:2013"
+     profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" minBufferTime="PT2S" type="static"
+     xmlns:dashif="https://dashif.org/"
+     mediaPresentationDuration="PT16S">
+    <Period id="0" duration="PT6S">
+        <BaseURL>https://dash.akamaized.net/dash264/TestCases/5a/nomor/</BaseURL>
+        <AdaptationSet segmentAlignment="true" maxWidth="1280" maxHeight="720" maxFrameRate="24" par="16:9">
+            <Representation id="1" mimeType="video/mp4" codecs="avc1.4d401f" width="1280" height="720" frameRate="24"
+                            sar="1:1" startWithSAP="1" bandwidth="980104">
+                <SegmentTemplate timescale="12288" presentationTimeOffset="1024" duration="24576"
+                                 media="BBB_720_1M_video_$Number$.mp4" startNumber="1"
+                                 initialization="BBB_720_1M_video_init.mp4"/>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet segmentAlignment="true">
+            <Representation id="4" mimeType="audio/mp4" codecs="mp4a.40.29" audioSamplingRate="48000" startWithSAP="1"
+                            bandwidth="33434">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
+                                           value="2"/>
+                <SegmentTemplate timescale="48000" duration="94175" media="BBB_32k_$Number$.mp4" startNumber="1"
+                                 initialization="BBB_32k_init.mp4"/>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+    <Period id="1" duration="PT12S">
+        <BaseURL>https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/</BaseURL>
+        <AdaptationSet id="0" contentType="text" lang="en" subsegmentAlignment="true">
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+            <Representation id="0" bandwidth="256" mimeType="text/vtt">
+                <BaseURL>s-en.webvtt</BaseURL>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet id="4" contentType="video" maxWidth="768" maxHeight="576" frameRate="12800/512"
+                       subsegmentAlignment="true" par="4:3">
+            <ContentProtection value="cenc" schemeIdUri="urn:mpeg:dash:mp4protection:2011"
+                               cenc:default_KID="800aacaa-5229-58ae-8880-62b5695db6bf"/>
+            <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+                <dashif:Laurl>https://cwip-shaka-proxy.appspot.com/no_auth</dashif:Laurl>
+                <cenc:pssh>AAAAPnBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAB4iFnNoYWthX2NlYzJmNjRhYTc4OTBhMTFI49yVmwY=
+                </cenc:pssh>
+            </ContentProtection>
+            <Representation id="4" bandwidth="438388" codecs="avc1.42c01e" mimeType="video/mp4" sar="1:1" width="192"
+                            height="144">
+                <BaseURL>v-0144p-0100k-libx264.mp4</BaseURL>
+                <SegmentBase indexRange="1094-1305" timescale="12800">
+                    <Initialization range="0-1093"/>
+                </SegmentBase>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet id="5" contentType="audio" lang="en" subsegmentAlignment="true">
+            <ContentProtection value="cenc" schemeIdUri="urn:mpeg:dash:mp4protection:2011"
+                               cenc:default_KID="67b30c86-756f-57c5-a0a3-8a23ac8c9178"/>
+            <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+                <cenc:pssh>AAAAPnBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAB4iFnNoYWthX2NlYzJmNjRhYTc4OTBhMTFI49yVmwY=
+                </cenc:pssh>
+            </ContentProtection>
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+            <Representation id="5" bandwidth="135088" codecs="mp4a.40.2" mimeType="audio/mp4" audioSamplingRate="48000">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
+                                           value="2"/>
+                <BaseURL>a-eng-0128k-aac-2c.mp4</BaseURL>
+                <SegmentBase indexRange="1042-1253" timescale="48000">
+                    <Initialization range="0-1041"/>
+                </SegmentBase>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>

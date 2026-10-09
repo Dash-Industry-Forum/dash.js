@@ -578,7 +578,7 @@ function CmcdController() {
         try {
             cmcdReporter.recordResponseReceived(response, { ...eventData, ...additionalData });
         } catch (e) {
-            logger.error(e);
+            logger.warn('Failed to record response received in CMCD reporter.', e);
         }
     }
 

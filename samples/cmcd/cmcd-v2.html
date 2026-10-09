@@ -1,67 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
-    <title>CMCD v2 Reporting</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMCD v2 reporting</title>
 
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
-    <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="../lib/main.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
 
     <style>
-        video {
-            width: 640px;
-            height: 360px;
-        }
-
-        #trace {
-            height: 300px;
-            font-size: 10px;
-        }
-
-        #cmcd-config {
-            height: 300px;
-            font-family: monospace;
-            font-size: 12px;
-        }
-
-        .source-input-group {
-            width: 640px;
-            margin: 0 auto;
-        }
-
         .event-target-item {
-            background-color: #f8f9fa;
+            background: var(--rp-bg-primary);
+            border: 1px solid var(--rp-border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
         }
 
         .event-target-item .form-text {
-            font-size: 12px;
+            font-size: 0.75rem;
         }
 
-        .sample-box {
-            height: 100%;
+        .event-target-item .form-control {
+            background: var(--rp-bg-secondary);
+            border-color: var(--rp-border);
+            color: var(--rp-text);
+            font-size: 0.8rem;
         }
 
-        .video-panel {
-            max-width: 960px;
-            margin: 0 auto;
-        }
-
-        .video-panel video {
-            width: 100%;
-            height: auto;
-            max-width: 640px;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .box-textarea {
-            min-height: 300px;
+        .event-target-item .form-control:focus {
+            border-color: var(--rp-accent);
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
         }
     </style>
 
+    <!-- Internal helpers (not displayed in code output) -->
     <script>
         var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
         var player;
@@ -69,7 +46,7 @@
         var defaultSourceUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
         var defaultEventTargetDefinitions = [
             {
-                title: 'Response received remote reporting',
+                title: 'CMCD v2 reporting',
                 description: 'Sends response-received (rr) events for segment requests.',
                 config: {
                     enabled: false,
@@ -275,7 +252,7 @@
                 var endpointInput = document.createElement('input');
                 var helperText = document.createElement('div');
 
-                wrapper.className = 'event-target-item border rounded-3 p-3 mb-2';
+                wrapper.className = 'event-target-item';
 
                 toggleRow.className = 'form-check form-switch';
                 toggleInput.className = 'form-check-input';
@@ -293,8 +270,9 @@
                 toggleRow.appendChild(toggleInput);
                 toggleRow.appendChild(toggleLabel);
 
-                endpointWrapper.className = 'mt-3';
+                endpointWrapper.className = 'mt-2';
                 endpointLabel.className = 'form-label';
+                endpointLabel.style.fontSize = '0.8rem';
                 endpointLabel.setAttribute('for', 'event-target-url-' + i);
                 endpointLabel.textContent = 'Endpoint';
 
@@ -320,8 +298,10 @@
                 container.appendChild(wrapper);
             }
         }
+    </script>
 
-        function init() {
+    <script class="code">
+        async function init(video, wrapper) {
             var defaultCmcdConfig = getDefaultCmcdConfig();
 
             player = dashjs.MediaPlayer().create();
@@ -334,7 +314,8 @@
 
             applyCmcdConfig(defaultCmcdConfig, { log: false });
             player.setAutoPlay(false);
-            player.attachView(document.querySelector('video'));
+            player.attachView(video);
+            await createControlBar(player, video, wrapper);
         }
 
         function loadSource() {
@@ -502,79 +483,64 @@
 </head>
 <body>
 
-<main>
-    <div class="container py-4">
-        <header class="pb-3 mb-4 border-bottom">
-            <img class=""
-                 src="../lib/img/dashjs-logo.png"
-                 width="200">
-        </header>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>CMCD v2 Reporting</h3>
-                    <p>This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media
-                        Client Data (CMCD - CTA 5004). Please note that in this sample we are also enabling the CMCD v2
-                        event mode next to the common request mode. The predefined event targets are disabled by default
-                        so the sample can be used without a local collector. To demonstrate the event mode, enable the
-                        targets you want to test and point them to a running collector such as the local dummy server in
-                        "samples/simple-express-server". </p>
-                </div>
-            </div>
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+
+    var content = document.createElement('div');
+    content.innerHTML = `
+        <div class="sample-controls" style="display:flex; gap:0.5rem; align-items:center;">
+            <input type="text" class="form-control form-control-sm" id="source-url" placeholder="Enter MPD URL" style="flex:1;">
+            <button class="btn btn-sm btn-primary" onclick="loadSource()">Load</button>
         </div>
-        <div class="row mt-3">
-            <div class="col-md-12">
-                <div class="video-panel p-4 border rounded-3 bg-white shadow-sm">
-                    <div class="input-group source-input-group mb-3">
-                        <input type="text" class="form-control" id="source-url" placeholder="Enter MPD URL">
-                        <button class="btn btn-primary" onclick="loadSource()">Load</button>
+
+        <div class="sample-content">
+            <div class="sample-content-main">
+                <div class="sample-video-wrapper" id="video-wrapper">
+                    <video></video>
+                </div>
+
+                <div class="sample-controls">
+                    <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; display:block;">CMCD Configuration (streaming.cmcd)</label>
+                    <textarea class="sample-log" id="cmcd-config" placeholder="Enter CMCD JSON configuration" style="min-height:200px;"></textarea>
+                    <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+                        <button class="btn btn-sm btn-primary" onclick="applyCmcdSettings()">Apply Settings</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="resetCmcdSettings()">Reset to Default</button>
                     </div>
-                    <video controls></video>
+                </div>
+
+                <div style="margin-top:1rem;">
+                    <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; display:block;">CMCD Data</label>
+                    <textarea class="sample-log" placeholder="Sent CMCD data will be displayed here" id="trace" style="min-height:200px;"></textarea>
                 </div>
             </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col-lg-6 mb-3">
-                <div class="sample-box p-3 border rounded-3 bg-white shadow-sm">
-                    <h5>Predefined CMCD v2 Event Targets</h5>
-                    <p class="text-muted mb-3">Enable only the targets you want to use. Each target keeps the current sample endpoint as its default, but starts disabled to avoid failed localhost requests.</p>
-                    <div id="event-targets-container"></div>
-                    <div class="form-text">Changes here are applied automatically and mirrored into the JSON configuration below. Use <strong>Apply Settings</strong> only after editing the JSON manually.</div>
-                </div>
-            </div>
-            <div class="col-lg-6 mb-3">
-                <div class="sample-box p-3 border rounded-3 bg-white shadow-sm">
-                    <label for="cmcd-config" class="form-label"><strong>CMCD Configuration (streaming.cmcd)</strong></label>
-                    <textarea class="form-control box-textarea" id="cmcd-config" placeholder="Enter CMCD JSON configuration"></textarea>
-                    <div class="mt-2">
-                        <button class="btn btn-primary" onclick="applyCmcdSettings()">Apply Settings</button>
-                        <button class="btn btn-secondary" onclick="resetCmcdSettings()">Reset to Default</button>
+
+            <div class="sample-content-side">
+                <div class="sample-side-panel">
+                    <div class="sample-side-panel-header">CMCD v2 Event Targets</div>
+                    <div class="sample-side-panel-body">
+                        <p style="font-size:0.8rem; color:var(--rp-text-muted); margin-bottom:0.75rem;">
+                            Enable only the targets you want to use. Each target keeps the current sample endpoint as its default,
+                            but starts disabled to avoid failed localhost requests. Changes are applied automatically and mirrored
+                            into the JSON configuration.
+                        </p>
+                        <div id="event-targets-container"></div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-12">
-                <div class="sample-box p-3 border rounded-3 bg-white shadow-sm">
-                    <label for="trace" class="form-label"><strong>CMCD Data</strong></label>
-                    <textarea class="form-control box-textarea" placeholder="Sent CMCD data will be displayed here"
-                              id="trace"></textarea>
-                </div>
-            </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="code-output"></div>
-            </div>
-        </div>
-        <footer class="pt-3 mt-4 text-muted border-top">
-            &copy; DASH-IF
-        </footer>
-    </div>
-</main>
+    `;
 
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        init();
+    initSamplePage({
+        title: 'CMCD v2 reporting',
+        description: 'Shows how to use dash.js to enhance requests to the CDN with Common Media Client Data (CMCD - CTA-5004). In this sample we also enable the CMCD v2 event mode next to the common request mode. The predefined event targets are disabled by default so the sample can be used without a local collector. To demonstrate the event mode, enable the targets you want to test and point them to a running collector such as the local dummy server in <code>samples/simple-express-server</code>.',
+        category: 'CMCD',
+        layout: 'custom',
+        content: content,
+        onInit: (video, container, wrapper) => {
+            video = container.querySelector('video');
+            wrapper = container.querySelector('#video-wrapper');
+            init(video, wrapper);
+        }
     });
 </script>
 </body>

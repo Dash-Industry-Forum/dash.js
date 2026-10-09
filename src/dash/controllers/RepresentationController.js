@@ -45,7 +45,8 @@ function RepresentationController(config) {
     const type = config.type;
     const streamInfo = config.streamInfo;
     const segmentsController = config.segmentsController;
-    const isDynamic = config.isDynamic;
+
+    let isDynamic = config.isDynamic;
 
     let instance,
         voAvailableRepresentations,
@@ -69,6 +70,10 @@ function RepresentationController(config) {
         if (!abrController || !dashMetrics || !playbackController || !timelineConverter) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
+    }
+
+    function setIsDynamic(value) {
+        isDynamic = value;
     }
 
     function getCurrentRepresentation() {
@@ -341,6 +346,7 @@ function RepresentationController(config) {
         getType,
         prepareQualityChange,
         reset,
+        setIsDynamic,
         updateData,
     };
 

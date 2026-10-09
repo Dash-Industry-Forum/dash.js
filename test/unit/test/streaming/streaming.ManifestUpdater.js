@@ -2,6 +2,8 @@ import ManifestUpdater from './../../../../src/streaming/ManifestUpdater.js';
 import Events from '../../../../src/core/events/Events.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Errors from '../../../../src/core/errors/Errors.js';
+import Settings from '../../../../src/core/Settings.js';
+import DashConstants from '../../../../src/dash/constants/DashConstants.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import ManifestModelMock from '../../mocks/ManifestModelMock.js';
 import ManifestLoaderMock from '../../mocks/ManifestLoaderMock.js';
@@ -24,6 +26,8 @@ describe('ManifestUpdater', function () {
     const errHandlerMock = new ErrorHandlerMock();
     const contentSteeringControllerMock = new ContentSteeringControllerMock();
 
+    const settings = Settings(context).getInstance();
+
     const manifestErrorMockText = `Mock Failed detecting manifest type or manifest type unsupported`;
 
     manifestUpdater.setConfig({
@@ -31,7 +35,8 @@ describe('ManifestUpdater', function () {
         manifestModel: manifestModelMock,
         manifestLoader: manifestLoaderMock,
         errHandler: errHandlerMock,
-        contentSteeringController: contentSteeringControllerMock
+        contentSteeringController: contentSteeringControllerMock,
+        settings: settings
     });
 
     manifestUpdater.initialize();
@@ -184,6 +189,79 @@ describe('ManifestUpdater', function () {
         applyPatchStub.restore();
         publishTimeStub.restore();
         loaderStub.restore();
+    });
+
+    describe('dynamic to static transition', function () {
+
+        afterEach(function () {
+            manifestModelMock.setValue(null);
+            settings.reset();
+        });
+
+        it('should trigger DYNAMIC_TO_STATIC and apply the static manifest when a static manifest follows a dynamic one', function () {
+            manifestModelMock.setValue({ type: DashConstants.DYNAMIC, loadedTime: new Date() });
+
+            const dynamicToStaticSpy = sinon.spy();
+            const manifestUpdatedSpy = sinon.spy();
+            eventBus.on(Events.DYNAMIC_TO_STATIC, dynamicToStaticSpy);
+            eventBus.on(Events.MANIFEST_UPDATED, manifestUpdatedSpy);
+
+            const staticManifest = { type: DashConstants.STATIC, loadedTime: new Date() };
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: staticManifest });
+
+            expect(dynamicToStaticSpy.calledOnce).to.be.true;
+            expect(manifestModelMock.getValue()).to.equal(staticManifest);
+            expect(manifestUpdatedSpy.calledOnce).to.be.true;
+            expect(manifestUpdatedSpy.firstCall.args[0].manifest).to.equal(staticManifest);
+
+            eventBus.off(Events.DYNAMIC_TO_STATIC, dynamicToStaticSpy);
+            eventBus.off(Events.MANIFEST_UPDATED, manifestUpdatedSpy);
+        });
+
+        it('should not trigger DYNAMIC_TO_STATIC again on subsequent static updates', function () {
+            manifestModelMock.setValue({ type: DashConstants.DYNAMIC, loadedTime: new Date() });
+
+            const dynamicToStaticSpy = sinon.spy();
+            const manifestUpdatedSpy = sinon.spy();
+            eventBus.on(Events.DYNAMIC_TO_STATIC, dynamicToStaticSpy);
+            eventBus.on(Events.MANIFEST_UPDATED, manifestUpdatedSpy);
+
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: { type: DashConstants.STATIC, loadedTime: new Date() }
+            });
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: { type: DashConstants.STATIC, loadedTime: new Date() }
+            });
+
+            expect(dynamicToStaticSpy.calledOnce).to.be.true;
+            expect(manifestUpdatedSpy.calledTwice).to.be.true;
+
+            eventBus.off(Events.DYNAMIC_TO_STATIC, dynamicToStaticSpy);
+            eventBus.off(Events.MANIFEST_UPDATED, manifestUpdatedSpy);
+        });
+
+        it('should ignore the static manifest when ignoreFinalStaticManifestOnDynamicToStaticTransition is enabled', function () {
+            settings.update({ streaming: { ignoreFinalStaticManifestOnDynamicToStaticTransition: true } });
+
+            const dynamicManifest = { type: DashConstants.DYNAMIC, loadedTime: new Date() };
+            manifestModelMock.setValue(dynamicManifest);
+
+            const dynamicToStaticSpy = sinon.spy();
+            const manifestUpdatedSpy = sinon.spy();
+            eventBus.on(Events.DYNAMIC_TO_STATIC, dynamicToStaticSpy);
+            eventBus.on(Events.MANIFEST_UPDATED, manifestUpdatedSpy);
+
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: { type: DashConstants.STATIC, loadedTime: new Date() }
+            });
+
+            expect(dynamicToStaticSpy.calledOnce).to.be.true;
+            expect(manifestModelMock.getValue()).to.equal(dynamicManifest);
+            expect(manifestUpdatedSpy.called).to.be.false;
+
+            eventBus.off(Events.DYNAMIC_TO_STATIC, dynamicToStaticSpy);
+            eventBus.off(Events.MANIFEST_UPDATED, manifestUpdatedSpy);
+        });
     });
 
     describe('refresh manifest location', function () {

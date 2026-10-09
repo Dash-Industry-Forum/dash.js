@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {MediaPlayer} from './index_mediaplayerOnly.js';
+import dashjs, {MediaPlayer} from './index_mediaplayerOnly.js';
 import MetricsReporting from './src/streaming/metrics/MetricsReporting.js';
 import Protection from './src/streaming/protection/Protection.js';
 import MediaPlayerFactory from './src/streaming/MediaPlayerFactory.js';

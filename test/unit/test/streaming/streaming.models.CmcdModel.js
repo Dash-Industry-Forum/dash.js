@@ -105,6 +105,39 @@ describe('CmcdModel', function () {
             expect(data.d).to.equal(4000); // duration in ms
         });
 
+        it('should rebuild the top-bitrate list once when tb and tpb share the media info', function () {
+            const mediaInfo = { type: Constants.VIDEO };
+            let rebuilds = 0;
+            abrControllerMock.getPossibleVoRepresentationsFilteredBySettings = () => {
+                rebuilds++;
+                return [{ bitrateInKbit: 2000 }];
+            };
+            // A video stream processor whose media info is the same object the request carries, so
+            // tb (request media info) and tpb (processor media info) resolve the same list.
+            const videoSp = {
+                getType: () => Constants.VIDEO,
+                getMediaInfo: () => mediaInfo,
+                probeNextRequest: () => undefined
+            };
+            playbackControllerMock.getStreamController().getActiveStream().getStreamProcessors = () => [videoSp];
+            cmcdModel.reset(); // repopulates streamProcessors from the configured playback controller
+
+            const request = {
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: Constants.VIDEO,
+                bandwidth: 1000000,
+                duration: 4,
+                url: 'http://example.com/seg.m4s',
+                representation: { mediaInfo }
+            };
+
+            const data = cmcdModel.deriveCmcdDataForRequest(request);
+            expect(data).to.exist;
+            expect(data).to.have.property('tb');
+            expect(data).to.have.property('tpb');
+            expect(rebuilds).to.equal(1);
+        });
+
         it('should return CMCD data for init segment requests', function () {
             const request = {
                 type: HTTPRequest.INIT_SEGMENT_TYPE,
@@ -180,12 +213,42 @@ describe('CmcdModel', function () {
     });
 
     describe('calculateMsd', function () {
-        it('should return MSD data when playback has started', function () {
+        let clock;
+
+        beforeEach(function () {
+            clock = sinon.useFakeTimers();
+        });
+
+        afterEach(function () {
+            clock.restore();
+        });
+
+        it('should return the time between playback start and the playing state', function () {
             cmcdModel.onPlaybackStarted();
+            clock.tick(500);
             cmcdModel.onPlaybackPlaying();
 
             const msdData = cmcdModel.calculateMsd();
-            expect(msdData).to.have.property('msd').that.is.a('number');
+            expect(msdData.msd).to.equal(500);
+        });
+
+        it('should freeze MSD at the first playing transition', function () {
+            cmcdModel.onPlaybackStarted();
+            clock.tick(500);
+            cmcdModel.onPlaybackPlaying();
+
+            // Later reports and playing transitions must not change the value
+            clock.tick(1000);
+            cmcdModel.onPlaybackPlaying();
+            const msdData = cmcdModel.calculateMsd();
+            expect(msdData.msd).to.equal(500);
+        });
+
+        it('should return empty object before the playing state is reached', function () {
+            cmcdModel.onPlaybackStarted();
+
+            const msdData = cmcdModel.calculateMsd();
+            expect(Object.keys(msdData)).to.have.length(0);
         });
 
         it('should return empty object when playback has not started', function () {

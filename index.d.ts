@@ -1098,6 +1098,8 @@ export interface DashAdapter {
 
     getEventsFor(info: object, voRepresentation: object): Array<Event>;
 
+    getFragmentDurationForLiveDelayCalculation(streamInfo: object): number;
+
     getFramerate(representation: object): number;
 
     getIndexForRepresentation(representationId: string, periodIdx: number): number;
@@ -1672,6 +1674,7 @@ export class MediaPlayerSettingClass {
     };
     streaming?: {
         abandonLoadTimeout?: number,
+        seekDurationBackoff?: number,
         wallclockTimeUpdateInterval?: number,
         manifestUpdateRetryInterval?: number,
         liveUpdateTimeThresholdInMilliseconds?: number,
@@ -1680,6 +1683,7 @@ export class MediaPlayerSettingClass {
         applyServiceDescription?: boolean,
         applyProducerReferenceTime?: boolean,
         applyContentSteering?: boolean,
+        ignoreFinalStaticManifestOnDynamicToStaticTransition?: boolean,
         enableManifestDurationMismatchFix?: boolean,
         parseInbandPrft?: boolean,
         enableManifestTimescaleMismatchFix?: boolean,
@@ -2017,6 +2021,8 @@ export interface MediaPlayerClass {
     initialize(view?: HTMLMediaElement, source?: string, AutoPlay?: boolean, startTime?: number | string): void;
 
     on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
+
+    on(type: BaseUrlsUpdatedEvent['type'], listener: (e: BaseUrlsUpdatedEvent) => void, scope?: object): void;
 
     on(type: BufferEvent['type'], listener: (e: BufferEvent) => void, scope?: object): void;
 
@@ -2494,6 +2500,11 @@ export interface AstInFutureEvent extends MediaPlayerEvent {
     type: MediaPlayerEvents['AST_IN_FUTURE'];
 }
 
+export interface BaseUrlsUpdatedEvent extends MediaPlayerEvent {
+    baseUrls: BaseURL[];
+    type: MediaPlayerEvents['BASE_URLS_UPDATED'];
+}
+
 export interface BufferEvent extends MediaPlayerEvent {
     mediaType: MediaType;
     type: MediaPlayerEvents['BUFFER_EMPTY' | 'BUFFER_LOADED'];
@@ -2869,15 +2880,19 @@ export interface CueExitEvent extends MediaPlayerEvent {
 
 export interface AdaptationSetRemovedNoCapabilitiesEvent extends MediaPlayerEvent {
     adaptationSet: object;
+    remainingAdaptationSets: object[];
     type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
 }
 
 export interface MediaSettings {
-    accessibility?: any;
-    audioChannelConfiguration?: any[];
-    lang?: string;
-    role?: string;
-    viewpoint?: any;
+    accessibility?: { schemeIdUri?: string, value?: string } | string;
+    audioChannelConfiguration?: { schemeIdUri?: string, value?: string } | string;
+    codec?: string;
+    id?: string | number,
+    index?: number;
+    lang?: string | RegExp;
+    role?: { schemeIdUri?: string, value?: string } | string;
+    viewpoint?: { schemeIdUri?: string, value?: string } | string;
 }
 
 export class serviceDescriptions {

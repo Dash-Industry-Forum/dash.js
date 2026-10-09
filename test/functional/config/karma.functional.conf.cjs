@@ -52,6 +52,24 @@ module.exports = async function (config) {
             { pattern: 'test/functional/content/**/*.mpd', watched: false, included: false, served: true }
         ].concat(includedTestfiles),
 
+        customHeaders: [
+            {
+                match: 'test/functional/content/.*\\.mpd$',
+                name: 'Access-Control-Allow-Origin',
+                value: '*'
+            },
+            {
+                match: 'test/functional/content/.*\\.mpd$',
+                name: 'Access-Control-Allow-Methods',
+                value: 'GET, OPTIONS'
+            },
+            {
+                match: 'test/functional/content/.*\\.mpd$',
+                name: 'Access-Control-Allow-Headers',
+                value: 'Origin, Accept, Content-Type, Range'
+            }
+        ],
+
 
         // list of files / patterns to exclude
         exclude: ['test/functional/test/common/*.js'].concat(excludedTestfiles),

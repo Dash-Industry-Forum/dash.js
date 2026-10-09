@@ -1,9 +1,0 @@
-samples
-docs
-build/temp
-build/jsdoc
-test
-.travis.yml
-mochahook.js
-reports
-.idea

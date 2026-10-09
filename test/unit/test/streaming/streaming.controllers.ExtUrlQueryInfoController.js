@@ -1,5 +1,6 @@
 import {expect} from 'chai';
 import ExtUrlQueryInfoController from '../../../../src/streaming/controllers/ExtUrlQueryInfoController.js';
+import DashManifestModel from '../../../../src/dash/models/DashManifestModel.js';
 
 describe('ExtUrlQueryInfoController', () => {
 
@@ -519,6 +520,49 @@ describe('ExtUrlQueryInfoController', () => {
             expect(result).to.have.deep.members(expectedResult);
         });
 
+    });
+
+    it('should not duplicate adaptation query parameters after combined property aggregation', () => {
+        const queryProperty = {
+            schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
+            ExtUrlQueryInfo: {
+                queryTemplate: '$querypart$',
+                queryString: 'token=abc',
+                includeInRequests: 'segment'
+            }
+        };
+        const representationProperty = {
+            schemeIdUri: 'urn:test:ordinary',
+            value: 'representation'
+        };
+        const representation = {
+            SupplementalProperty: [representationProperty]
+        };
+        const adaptation = {
+            SupplementalProperty: [queryProperty],
+            Representation: [representation]
+        };
+        const manifest = {
+            url: 'https://example.com/manifest.mpd',
+            Period: [{AdaptationSet: [adaptation]}]
+        };
+        const request = {
+            url: 'https://example.com/segment.m4s',
+            type: 'MediaSegment',
+            representation: {
+                index: 0,
+                adaptation: {
+                    index: 0,
+                    period: {index: 0}
+                }
+            }
+        };
+
+        DashManifestModel({}).getInstance().getCombinedSupplementalPropertiesForAdaptationSet(adaptation);
+        extUrlQueryInfoController.createFinalQueryStrings(manifest);
+
+        expect(extUrlQueryInfoController.getFinalQueryString(request)).to.deep.equal([{key: 'token', value: 'abc'}]);
+        expect(representation.SupplementalProperty).to.deep.equal([representationProperty]);
     });
 
     

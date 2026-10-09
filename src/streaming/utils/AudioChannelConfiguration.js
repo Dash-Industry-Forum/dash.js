@@ -127,7 +127,9 @@ function getNChanFromAudioChannelConfig(audioChannelConfiguration, includeLFE = 
 
     if (scheme === 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011' || scheme === 'urn:mpeg:mpegB:cicp:ChannelConfiguration') {
         // see ISO/IEC 23091-3
-        nChan = _mapping_CICP[value] && (_mapping_CICP[value].channels + (includeLFE ? _mapping_CICP[value].lfe : 0));
+        const numericValue = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/.test(value) ? Number(value) : NaN;
+        const channels = _mapping_CICP[numericValue];
+        nChan = channels && (channels.channels + (includeLFE ? channels.lfe : 0));
     } else if (scheme === 'tag:dolby.com,2014:dash:audio_channel_configuration:2011') {
         nChan = _getNChanDolby2011(value, includeLFE);
     } else if (scheme === 'tag:dolby.com,2015:dash:audio_channel_configuration:2015') {
