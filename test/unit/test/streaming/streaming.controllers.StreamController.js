@@ -222,12 +222,19 @@ describe('StreamController', function () {
             let getStreamsInfoStub;
             let getIsDynamicStub;
 
-            let staticStreamInfo = { manifestInfo: { isDynamic: false }, start: 10, duration: 600, id: '1' };
+            let staticStreamInfo = { 
+                manifestInfo: { isDynamic: false },
+                start: 10,
+                duration: 600,
+                id: '1',
+                isResolved: true
+            };
             let dynamicStreamInfo = {
                 manifestInfo: { isDynamic: true, dvrWindowSize: 30, minBufferTime: 4 },
                 start: 10,
                 duration: Infinity,
-                id: '1'
+                id: '1',
+                isResolved: true
             };
             let dvrWindowRange = { start: 70, end: 100 };
             let liveStartTime = 85;
@@ -446,7 +453,8 @@ describe('StreamController', function () {
                         manifestInfo: { isDynamic: true, dvrWindowSize: 30, minBufferTime: 4 },
                         start: 10,
                         duration: 600,
-                        id: '1'
+                        id: '1',
+                        isResolved: true
                     }]);
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
                 });
