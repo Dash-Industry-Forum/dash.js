@@ -8,6 +8,7 @@ import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
+import CmcdConfigAccessor from '../../../../src/streaming/cmcd/config/CmcdConfigAccessor.js';
 import {decodeCmcd} from '@svta/cml-cmcd';
 import StreamMock from '../../mocks/StreamMock.js';
 import {expect} from 'chai';
@@ -1764,6 +1765,111 @@ describe('CmcdController', function () {
             }));
 
             expect(result.url).to.not.include('CMCD=');
+        });
+    });
+
+    describe('Reporter rebuild on manifest refresh', () => {
+        let internalServiceDescriptionControllerMock;
+        let urlLoaderMock;
+
+        const segmentRequest = {
+            url: 'http://example.com/segment.m4s',
+            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+            mediaType: 'video',
+            quality: 0,
+            representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+            duration: 4
+        };
+
+        beforeEach(function () {
+            internalServiceDescriptionControllerMock = new ServiceDescriptionControllerMock();
+            urlLoaderMock = { load: sinon.spy() };
+        });
+
+        afterEach(function () {
+            // Manifest params are cached in the accessor and would leak into later tests
+            CmcdConfigAccessor(context).getInstance().reset();
+        });
+
+        function setup(cmcdParameters, cmcdSettings = {}) {
+            internalServiceDescriptionControllerMock.applyServiceDescription({ clientDataReporting: { cmcdParameters } });
+            cmcdController.reset();
+            settings.update({ streaming: { cmcd: cmcdSettings } });
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: internalServiceDescriptionControllerMock,
+                urlLoader: urlLoaderMock
+            });
+            cmcdController.initialize();
+        }
+
+        function refreshManifest() {
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'DASH', data: { type: 'dynamic' } });
+        }
+
+        function sendSegmentRequest() {
+            const result = cmcdController.getCmcdRequestInterceptors()[0]({
+                url: segmentRequest.url,
+                headers: {},
+                customData: { request: { ...segmentRequest } }
+            });
+            return decodeCmcd(new URL(result.url).searchParams.get('CMCD'));
+        }
+
+        it('should keep counting sn when a manifest refresh does not change the CMCD config', function () {
+            setup({ version: '2', keys: 'sid sn', includeInRequests: 'segment' });
+
+            refreshManifest();
+            const first = sendSegmentRequest();
+            refreshManifest();
+            const second = sendSegmentRequest();
+
+            expect(second.sid).to.equal(first.sid);
+            expect(second.sn).to.equal(first.sn + 1);
+        });
+
+        it('should rebuild the reporter when a manifest refresh changes the CMCD config', function () {
+            setup({ version: '2', keys: 'cid sid', contentID: 'content-a', includeInRequests: 'segment' });
+
+            refreshManifest();
+            expect(sendSegmentRequest().cid).to.equal('content-a');
+
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', keys: 'cid sid', contentID: 'content-b', includeInRequests: 'segment' } }
+            });
+            refreshManifest();
+            expect(sendSegmentRequest().cid).to.equal('content-b');
+        });
+
+        it('should keep buffered error codes for an event target across a manifest refresh', function () {
+            setup({ version: '2' }, {
+                eventTargets: [{
+                    url: 'https://cmcd.response.collector/api',
+                    enabled: true,
+                    includeInRequests: ['segment'],
+                    enabledKeys: ['rc', 'ec'],
+                    events: ['rr']
+                }]
+            });
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, {
+                error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+            });
+            refreshManifest();
+            cmcdController.getCmcdResponseReceivedInterceptors()[0]({
+                status: 200,
+                request: {
+                    url: 'http://test.url/video.m4s',
+                    customData: { request: { type: HTTPRequest.MEDIA_SEGMENT_TYPE, url: 'http://test.url/video.m4s' } }
+                }
+            });
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const report = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+            expect(report.ec).to.deep.equal(['123']);
         });
     });
 });
