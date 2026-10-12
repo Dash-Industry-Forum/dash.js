@@ -438,6 +438,7 @@ function CmcdController() {
 
         _rebuildReporterIfNeeded();
 
+        let applied = false;
         try {
             const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
 
@@ -451,13 +452,14 @@ function CmcdController() {
             request.url = decorated.url;
             request.headers = decorated.headers;
             request.cmcd = decorated.customData?.cmcd || {};
+            // Set before the event: a throwing listener must not drop the decoration and its buffered ec
+            applied = true;
 
             _triggerCmcdDataGeneratedEvent(request)
-            return true;
         } catch (e) {
             logger.warn(e);
-            return false;
         }
+        return applied;
     }
 
     function _triggerCmcdDataGeneratedEvent(request) {

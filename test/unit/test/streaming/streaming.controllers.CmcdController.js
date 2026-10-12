@@ -3,6 +3,7 @@ import Settings from '../../../../src/core/Settings.js';
 import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
+import MetricsReportingEvents from '../../../../src/streaming/metrics/MetricsReportingEvents.js';
 import AbrControllerMock from '../../mocks/AbrControllerMock.js';
 import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
@@ -1418,6 +1419,21 @@ describe('CmcdController', function () {
 
                 const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
                 expect(getCmcdFromUrl(result.url)).to.not.have.property('ec');
+            });
+
+            it('should keep the decoration and error codes if a CMCD_DATA_GENERATED listener throws', function () {
+                const throwingListener = () => {
+                    throw new Error('listener error');
+                };
+                eventBus.on(MetricsReportingEvents.CMCD_DATA_GENERATED, throwingListener);
+                triggerError(123);
+
+                try {
+                    const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                    expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123']);
+                } finally {
+                    eventBus.off(MetricsReportingEvents.CMCD_DATA_GENERATED, throwingListener);
+                }
             });
 
             it('should not decorate a license request that is not included in the request filter', function () {
