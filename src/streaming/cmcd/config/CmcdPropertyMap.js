@@ -197,6 +197,22 @@ const CmcdPropertyMap = {
     },
 
     /**
+     * Maximum number of error codes (ec) buffered per report destination
+     * Priority: settings > default (10)
+     */
+    maxBufferedErrorCodes: {
+        version: [1, 2],
+        sources: [
+            {
+                path: 'settings.streaming.cmcd.maxBufferedErrorCodes',
+                priority: 1,
+                type: 'number',
+                default: 10
+            }
+        ]
+    },
+
+    /**
      * Global enabled CMCD keys
      * Priority: manifest > settings > default (all keys)
      *

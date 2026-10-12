@@ -894,6 +894,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "CMCD v2 error codes",
+                "description": "Shows how dash.js buffers player error codes (ec) per CMCD v2 report destination and reports each code once with the next report.",
+                "href": "cmcd/cmcd-v2-error-codes.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },

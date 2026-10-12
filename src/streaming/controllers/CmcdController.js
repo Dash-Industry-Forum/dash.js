@@ -54,10 +54,13 @@ function CmcdController() {
         cmcdReporter,
         dashMetrics,
         errHandler,
+        eventTargetErrorCodes,
         instance,
         logger,
         mediaPlayerModel,
+        reporterConfigKey,
         reporterNeedsRebuild,
+        requestErrorCodes,
         urlLoader;
 
 
@@ -134,6 +137,8 @@ function CmcdController() {
 
     function _resetInitialSettings() {
         reporterNeedsRebuild = false;
+        requestErrorCodes = [];
+        eventTargetErrorCodes = [];
     }
 
     function _initializeEventBus(autoPlay) {
@@ -170,7 +175,31 @@ function CmcdController() {
         triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE, { sta: state });
     }
 
-    function _createCmcdReporter() {
+    function _createCmcdReporter(cmcdConfig = _getReporterConfig()) {
+        reporterConfigKey = JSON.stringify(cmcdConfig);
+
+        // Error codes not yet reported to the previous event targets are dropped on a rebuild
+        eventTargetErrorCodes = [];
+        const eventTargets = cmcdConfig.eventTargets.map((target) => {
+            const errorCodes = [];
+            eventTargetErrorCodes.push(errorCodes);
+            return { ...target, transform: (data) => _attachErrorCodes(errorCodes, data) };
+        });
+
+        return new CmcdReporter({
+            ...cmcdConfig,
+            // Every decorated request carries the buffered error codes: requests that pass the request filter and license requests
+            transform: (data) => _attachErrorCodes(requestErrorCodes, data),
+            eventTargets,
+        }, _customRequester);
+    }
+
+    /**
+     * Returns the reporter configuration as plain data, so two configurations can be compared.
+     * @return {object}
+     * @private
+     */
+    function _getReporterConfig() {
         const cmcdConfig = {
             version: cmcdConfigAccessor.getVersion(),
             transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS ? CMCD_HEADERS : CMCD_QUERY,
@@ -189,7 +218,7 @@ function CmcdController() {
             cmcdConfig.cid = cid;
         }
 
-        return new CmcdReporter(cmcdConfig, _customRequester);
+        return cmcdConfig;
     }
 
     function _buildReporterTargets() {
@@ -211,6 +240,32 @@ function CmcdController() {
 
             return result;
         }, []);
+    }
+
+    /**
+     * Per the CMCD v2 specification, error codes are buffered per report destination and reported
+     * as an inner list of strings with the next report to that destination, e.g. ec=("16" "27").
+     * Codes a destination does not report (e.g. ec not in its enabled keys) are dropped with that report.
+     * @param {string[]} errorCodes - The buffer of the report destination, emptied by this call
+     * @param {object} data - The report data
+     * @return {object}
+     * @private
+     */
+    function _attachErrorCodes(errorCodes, data) {
+        // Response reports copy the request report's ec, which belongs to the request destination
+        delete data.ec;
+        if (errorCodes.length > 0) {
+            data.ec = errorCodes.splice(0);
+        }
+        return data;
+    }
+
+    // Bounds the buffer of a destination that never reports again (e.g. HTTP 410 or no matching request type)
+    function _bufferErrorCode(errorCodes, code) {
+        errorCodes.push(code);
+        if (errorCodes.length > cmcdConfigAccessor.get('maxBufferedErrorCodes')) {
+            errorCodes.shift();
+        }
     }
 
     function _customRequester(request) {
@@ -247,13 +302,21 @@ function CmcdController() {
         if (errorData.error?.data?.request?.type === HTTPRequest.CMCD_EVENT) {
             return;
         }
-        // Update CmcdReporter with the error code
-        if (cmcdReporter) {
-            const errorCode = errorData.error?.code || errorData.error?.data?.code;
-            if (errorCode) {
-                // ec is a list of strings in CMCD v2. cmcd 2.8 drops a bare number
-                cmcdReporter.update({ ec: [String(errorCode)] });
+        if (!cmcdReporter) {
+            return;
+        }
+
+        // A pending rebuild recreates the event target buffers, so run it before buffering
+        _rebuildReporterIfNeeded();
+
+        const errorCode = errorData.error?.code || errorData.error?.data?.code;
+        if (errorCode) {
+            const code = String(errorCode);
+            // Without request mode nothing would ever flush the request buffer
+            if (isCmcdEnabled()) {
+                _bufferErrorCode(requestErrorCodes, code);
             }
+            eventTargetErrorCodes.forEach((errorCodes) => _bufferErrorCode(errorCodes, code));
         }
 
         triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.ERROR);
@@ -275,11 +338,18 @@ function CmcdController() {
             return;
         }
 
-        // Reset flag only after confirming we will rebuild
+        // Reset flag only once the manifest params are available
         reporterNeedsRebuild = false;
 
+        // Most manifest refreshes do not change the CMCD config. Rebuilding would restart sn
+        // and drop the reporter state (e.g. msd sent once) and the buffered error codes.
+        const cmcdConfig = _getReporterConfig();
+        if (JSON.stringify(cmcdConfig) === reporterConfigKey) {
+            return;
+        }
+
         cmcdReporter.stop(true);
-        cmcdReporter = _createCmcdReporter();
+        cmcdReporter = _createCmcdReporter(cmcdConfig);
         cmcdReporter.start();
     }
 

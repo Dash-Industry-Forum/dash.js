@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMCD v2 error codes</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+
+    <script class="code">
+        var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
+        var EVENT_TARGET_URL = 'http://localhost:3333/cmcd/event-mode';
+        var SOURCE_URL = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        var player;
+        var failNextVideoSegment = false;
+        var forcedError = false;
+
+        function getCmcdSettings(eventTargetEnabled) {
+            return {
+                version: 2,
+                enabled: true,
+                mode: 'query',
+                enabledKeys: ['ec', 'ot', 'sid', 'sn', 'v'],
+                includeInRequests: ['segment'],
+                eventTargets: [{
+                    enabled: eventTargetEnabled,
+                    url: EVENT_TARGET_URL,
+                    enabledKeys: ['e', 'ec', 'sn', 'url'],
+                    includeInRequests: ['segment'],
+                    events: ['e', 'rr']
+                }]
+            };
+        }
+
+        function init(video, wrapper) {
+            player = dashjs.MediaPlayer().create();
+            player.updateSettings({
+                streaming: {
+                    /* Without retries, a single failed segment request raises the error right away */
+                    retryAttempts: { MediaSegment: 0 },
+                    /* A small buffer target keeps segment requests flowing, so the next report follows the error quickly */
+                    buffer: { bufferTimeDefault: 8, bufferTimeAtTopQuality: 8, bufferTimeAtTopQualityLongForm: 8 },
+                    cmcd: getCmcdSettings(false)
+                }
+            });
+
+            /* The CMCD request interceptor runs first, so this interceptor sees the CMCD-decorated request */
+            player.addRequestInterceptor(function (request) {
+                var dashRequest = request.customData.request;
+
+                if (dashRequest.type === 'CmcdEvent') {
+                    logEventReport(dashRequest.body);
+                } else if (failNextVideoSegment && dashRequest.type === 'MediaSegment' && dashRequest.mediaType === 'video') {
+                    failNextVideoSegment = false;
+                    forcedError = true;
+                    /* Send this request to an unreachable host to make it fail */
+                    request.url = 'http://127.0.0.1:1/unreachable.m4s';
+                    log('>>> Forcing a download error for the next video segment');
+                }
+                return Promise.resolve(request);
+            });
+
+            player.on(CMCD_DATA_GENERATED, function (e) {
+                var hasEc = e.cmcdData && e.cmcdData.ec;
+                if (hasEc || document.getElementById('log-all').checked) {
+                    log('[request] ' + e.url.split('/').pop().split('?')[0] + '  CMCD=' + decodeURIComponent(e.cmcdString) + (hasEc ? '   <-- ec' : ''));
+                }
+            });
+
+            player.on(dashjs.MediaPlayer.events.ERROR, function (e) {
+                log('[player error] code ' + e.error.code + ': ' + e.error.message);
+                if (forcedError && e.error.code === 27) {
+                    forcedError = false;
+                    /* Without BaseURL failover dash.js does not request the failed segment again. Seeking past the buffered range restarts the scheduling. */
+                    log('>>> Seeking past the buffered range to resume segment requests');
+                    player.seek(player.time() + 20);
+                }
+            });
+
+            player.initialize(video, SOURCE_URL, true);
+            createControlBar(player, video, wrapper);
+        }
+
+        function logEventReport(body) {
+            body.split('\n').forEach(function (line) {
+                var decoded = decodeURIComponent(line);
+                var hasEc = decoded.indexOf('ec=') !== -1;
+                if (hasEc || document.getElementById('log-all').checked) {
+                    log('[event]   ' + decoded + (hasEc ? '   <-- ec' : ''));
+                }
+            });
+        }
+
+        function triggerSegmentError() {
+            failNextVideoSegment = true;
+        }
+
+        function toggleEventTarget(checkbox) {
+            /* The CMCD reporter is created when a source is attached, so reload the source to apply the change */
+            player.updateSettings({ streaming: { cmcd: getCmcdSettings(checkbox.checked) } });
+            player.attachSource(SOURCE_URL);
+            log('Event target ' + (checkbox.checked ? 'enabled' : 'disabled') + ': ' + EVENT_TARGET_URL + ' (source reloaded)');
+        }
+
+        function log(msg) {
+            var trace = document.getElementById('trace');
+            trace.value += msg + '\n';
+            trace.scrollTop = trace.scrollHeight;
+        }
+    </script>
+</head>
+<body>
+
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+
+    window.createControlBar = createControlBar;
+
+    var content = document.createElement('div');
+    content.innerHTML = `
+        <div class="sample-content">
+            <div class="sample-content-main">
+                <div class="sample-video-wrapper" id="video-wrapper">
+                    <video></video>
+                </div>
+
+                <div class="sample-controls" style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-danger" id="trigger-error" onclick="triggerSegmentError()">Fail next video segment</button>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="event-target" onchange="toggleEventTarget(this)">
+                        <label class="form-check-label" for="event-target">Event target (e, rr)</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="log-all">
+                        <label class="form-check-label" for="log-all">Log reports without ec</label>
+                    </div>
+                    <div class="form-text" style="flex-basis:100%; margin-top:0;">
+                        By default the log only shows reports that carry <code>ec</code>, so you can see that each code is sent only once.
+                        Enable "Log reports without ec" to also log all other request and event reports. This shows that the reports after the error no longer carry <code>ec</code>.
+                        The switch only affects reports sent after it is changed.
+                    </div>
+                </div>
+
+                <div style="margin-top:1rem;">
+                    <label style="font-weight:600; font-size:0.85rem; margin-bottom:0.4rem; display:block;">CMCD reports</label>
+                    <textarea class="sample-log" id="trace" readonly style="min-height:300px;"></textarea>
+                </div>
+            </div>
+        </div>
+    `;
+
+    initSamplePage({
+        title: 'CMCD v2 error codes',
+        description: 'Shows how dash.js reports player error codes (<code>ec</code>) with CMCD v2. Click "Fail next video segment" to force a download error (code 27). ' +
+            'Per CTA-5004-B, the code is buffered for each report destination. It is sent once, as a list of strings (<code>ec=("27")</code>), with the next report to that destination. ' +
+            'The request mode attaches it to the next segment request. The event target reports it in the error event (<code>e="e"</code>). ' +
+            'To use the event target, start the collector in <code>samples/simple-express-server</code> (<code>npm start</code>, port 3333).',
+        category: 'CMCD',
+        layout: 'custom',
+        content: content,
+        onInit: (video, container, wrapper) => {
+            video = container.querySelector('video');
+            wrapper = container.querySelector('#video-wrapper');
+            init(video, wrapper);
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "testfiles": {
+    "included": [
+      "feature-support/cmcd-v2"
+    ],
+    "excluded": []
+  },
+  "testvectors": [
+    {
+      "name": "BBB 30fps VoD CMCD v2",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+      "includedTestfiles": [
+        "feature-support/cmcd-v2"
+      ]
+    }
+  ]
+}
