@@ -817,7 +817,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid'],
                             events: ['rr']
                         }]
@@ -911,8 +911,7 @@ describe('CmcdController', function () {
             });
 
             it('should send response reports for every request type if the target has no responseReceivedTypes', () => {
-                // includeInRequests of the target must not filter rr reports
-                initializeWithTarget({ includeInRequests: ['segment'] });
+                initializeWithTarget({});
 
                 const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
                 interceptor(createResponse(HTTPRequest.MPD_TYPE, 'http://test.url/manifest.mpd'));
@@ -948,7 +947,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['rc', 'ec'],
                             events: ['rr']
                         }]
@@ -988,7 +987,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['e', 'rc', 'ec'],
                             events: ['rr']
                         }]
@@ -1023,7 +1022,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['cmsdd', 'cmsds'],
                             events: ['rr']
                         }]
@@ -1074,7 +1073,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: false,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -1109,7 +1108,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -1144,7 +1143,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['rc', 'e', 'd'],
                             events: ['rr']
                         }]
@@ -1198,7 +1197,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['sn'],
                             events: ['rr']
                         }]
@@ -2063,7 +2062,7 @@ describe('CmcdController', function () {
                 eventTargets: [{
                     url: 'https://cmcd.response.collector/api',
                     enabled: true,
-                    includeInRequests: ['segment'],
+                    responseReceivedTypes: ['segment'],
                     enabledKeys: ['rc', 'ec'],
                     events: ['rr']
                 }]

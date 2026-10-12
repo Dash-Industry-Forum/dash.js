@@ -417,27 +417,6 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target includeInRequests filter
-     * Note: This is target-specific, requires context
-     */
-    targetIncludeInRequests: {
-        version: [2],
-        sources: [
-            {
-                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeInRequests',
-                priority: 1,
-                type: 'array'
-            },
-            {
-                path: 'settings.streaming.cmcd.includeInRequests',
-                priority: 2,
-                type: 'array',
-                default: ['segment', 'mpd', 'license']
-            }
-        ]
-    },
-
-    /**
      * V2: Target filter for response received (rr) reports
      * Note: This is target-specific, requires context. No default: rr is reported for every request type.
      */

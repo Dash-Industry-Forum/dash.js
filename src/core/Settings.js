@@ -1016,8 +1016,6 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {Array.<string>} [includeInRequests]
- * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
  * @property {Array.<string>} [responseReceivedTypes]
  * Types of requests whose responses trigger a response received (rr) report (e.g., 'mpd', 'segment').
  * If not specified, rr is reported for every request type.

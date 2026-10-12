@@ -1973,7 +1973,6 @@ export class MediaPlayerSettingClass {
                 events?: Array<string>,
                 interval?: number,
                 enabledKeys?: Array<string>,
-                includeInRequests?: Array<string>,
                 responseReceivedTypes?: Array<string>,
                 batchSize?: number
             }>,

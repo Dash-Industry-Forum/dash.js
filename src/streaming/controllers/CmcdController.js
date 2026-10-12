@@ -486,7 +486,7 @@ function CmcdController() {
 
     function isCmcdEnabled(targetIndex = null) {
         if (targetIndex !== null) {
-            return _targetCanBeEnabled(targetIndex) && _checkTargetIncludeInRequests(targetIndex);
+            return _targetCanBeEnabled(targetIndex);
         } else {
             return _canBeEnabled() && _checkIncludeInRequests();
         }
@@ -545,29 +545,6 @@ function CmcdController() {
         }
 
         return (enabled && url);
-    }
-
-    function _checkTargetIncludeInRequests(targetIndex) {
-        const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
-        let enabledRequests = targetAccessor.get('targetIncludeInRequests');
-
-        if (!enabledRequests) {
-            return true;
-        }
-
-        const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
-        const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
-
-        if (invalidRequests.length === enabledRequests.length) {
-            logger.error(`None of the request types are supported.`);
-            return false;
-        }
-
-        invalidRequests.forEach((k) => {
-            logger.warn(`request type ${k} is not supported.`);
-        });
-
-        return true;
     }
 
     function _onPlaybackRateChanged(data) {
