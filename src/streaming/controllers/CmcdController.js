@@ -166,11 +166,8 @@ function CmcdController() {
     }
 
     function _onPlaybackStateChange(state) {
-        // Update CmcdReporter with the new player state
-        if (cmcdReporter) {
-            cmcdReporter.update({ sta: state });
-        }
-        triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
+        // update({ sta }) before recordEvent() would send the ps report without the event-mode data
+        triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE, { sta: state });
     }
 
     function _createCmcdReporter() {
@@ -254,7 +251,8 @@ function CmcdController() {
         if (cmcdReporter) {
             const errorCode = errorData.error?.code || errorData.error?.data?.code;
             if (errorCode) {
-                cmcdReporter.update({ ec: errorCode });
+                // ec is a list of strings in CMCD v2. cmcd 2.8 drops a bare number
+                cmcdReporter.update({ ec: [String(errorCode)] });
             }
         }
 
@@ -288,15 +286,16 @@ function CmcdController() {
     /**
      * The handler that is triggered for CMCD event mode events (e.g., play, pause, error). Note that response recevived (rr) events are handled by getCmcdResponseReceivedInterceptors.
      * @param event
+     * @param {object} [additionalData] - Keys to send with the event in addition to the event-mode data
      */
-    function triggerCmcdEventMode(event) {
+    function triggerCmcdEventMode(event, additionalData = {}) {
         if (!cmcdReporter) {
             return;
         }
 
         _rebuildReporterIfNeeded();
 
-        const cmcdData = cmcdModel.getEventModeData();
+        const cmcdData = { ...cmcdModel.getEventModeData(), ...additionalData };
 
         // Route media start delay (MSD) through update() for the reporter's internal send-once tracking
         const msdData = cmcdModel.calculateMsd();
