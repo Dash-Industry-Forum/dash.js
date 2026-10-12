@@ -240,7 +240,11 @@ function CmcdController() {
      * @private
      */
     function _getValidatedCustomKeys() {
-        const customKeys = cmcdConfigAccessor.get('customKeys') || [];
+        const customKeys = cmcdConfigAccessor.get('customKeys') ?? [];
+        if (!Array.isArray(customKeys)) {
+            logger.warn('Ignoring CMCD customKeys setting: expected an array of { key, value } entries');
+            return {};
+        }
 
         return customKeys.reduce((result, entry) => {
             if (entry && typeof entry.key === 'string' && isCmcdCustomKey(entry.key) && entry.value !== undefined) {

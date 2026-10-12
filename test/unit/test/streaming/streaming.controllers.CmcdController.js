@@ -1445,6 +1445,15 @@ describe('CmcdController', function () {
             });
         });
 
+        ['org.svta-p-n', 5].forEach((customKeys) => {
+            it(`should ignore a non-array customKeys setting (${JSON.stringify(customKeys)})`, function () {
+                settings.update({ streaming: { cmcd: { enabled: false, customKeys } } });
+                cmcdController.reset();
+
+                expect(() => cmcdController.initialize()).to.not.throw();
+            });
+        });
+
         it('should report only custom keys when enabledKeys is empty', function () {
             settings.update({
                 streaming: {
