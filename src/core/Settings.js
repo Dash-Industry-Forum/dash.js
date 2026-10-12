@@ -991,9 +991,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If not specified this value defaults to 1.
  * @property {Array.<CmcdEventTarget>} [eventTargets]
  * List of CMCD reporting targets.
- * @property {Array.<object>} [customKeys=[]]
- * Custom CMCD keys to include in reports as persistent session data. Each entry is an object with a
- * "key" and a "value" property, e.g. [{ key: 'org.svta-p-n', value: 'dash.js' }].
+ * @property {Array.<CmcdCustomKey>} [customKeys=[]]
+ * Custom CMCD keys to include in reports as persistent session data, e.g. [{ key: 'org.svta-p-n', value: 'dash.js' }].
  *
  * Per the CMCD specification, custom keys must carry a hyphenated prefix (reverse-DNS syntax recommended)
  * to avoid namespace collisions, e.g. 'com.example-mykey'. Keys without a valid prefix are ignored.
@@ -1019,6 +1018,14 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
  * @property {number} [batchSize]
  * The batch size for the CMCD reporting.
+ */
+
+/**
+ * @typedef {Object} CmcdCustomKey
+ * @property {string} key
+ * The custom key name. Must carry a hyphenated prefix, e.g. 'com.example-mykey'.
+ * @property {string|number|boolean} value
+ * The value reported for the custom key.
  */
 
 /**
