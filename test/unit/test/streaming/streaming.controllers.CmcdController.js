@@ -1334,16 +1334,16 @@ describe('CmcdController', function () {
                 expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['2', '3']);
             });
 
-            it('should not hand buffered error codes to license requests outside the request filter', function () {
+            it('should attach buffered error codes to the next license request', function () {
                 triggerError(123);
 
                 // ProtectionController decorates license requests directly, without the request filter
                 const licenseRequest = { url: 'http://example.com/license', type: HTTPRequest.LICENSE, headers: {} };
                 cmcdController.applyCmcdToRequest(licenseRequest);
-                expect(getCmcdFromUrl(licenseRequest.url)).to.not.have.property('ec');
+                expect(getCmcdFromUrl(licenseRequest.url).ec).to.deep.equal(['123']);
 
                 const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
-                expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123']);
+                expect(getCmcdFromUrl(result.url)).to.not.have.property('ec');
             });
         });
 

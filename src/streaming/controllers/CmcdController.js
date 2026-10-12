@@ -188,8 +188,8 @@ function CmcdController() {
 
         return new CmcdReporter({
             ...cmcdConfig,
-            // Only requests of the configured request types carry the buffered error codes
-            transform: (data, request) => cmcdModel.isIncludedInRequestFilter(request.type) ? _attachErrorCodes(requestErrorCodes, data) : data,
+            // Every decorated request carries the buffered error codes: requests that pass the request filter and license requests
+            transform: (data) => _attachErrorCodes(requestErrorCodes, data),
             eventTargets,
         }, _customRequester);
     }
