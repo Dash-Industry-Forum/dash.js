@@ -54,10 +54,12 @@ function CmcdController() {
         cmcdReporter,
         dashMetrics,
         errHandler,
+        eventTargetErrorCodes,
         instance,
         logger,
         mediaPlayerModel,
         reporterNeedsRebuild,
+        requestErrorCodes,
         urlLoader;
 
 
@@ -134,6 +136,8 @@ function CmcdController() {
 
     function _resetInitialSettings() {
         reporterNeedsRebuild = false;
+        requestErrorCodes = [];
+        eventTargetErrorCodes = [];
     }
 
     function _initializeEventBus(autoPlay) {
@@ -175,6 +179,8 @@ function CmcdController() {
             version: cmcdConfigAccessor.getVersion(),
             transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS ? CMCD_HEADERS : CMCD_QUERY,
             enabledKeys: cmcdConfigAccessor.get('keys'),
+            // Only requests of the configured request types carry the buffered error codes
+            transform: (data, request) => cmcdModel.isIncludedInRequestFilter(request.type) ? _attachErrorCodes(requestErrorCodes, data) : data,
             eventTargets: _buildReporterTargets(),
         };
 
@@ -194,6 +200,8 @@ function CmcdController() {
 
     function _buildReporterTargets() {
         const targets = cmcdConfigAccessor.getEventTargets();
+        // Error codes not yet reported to the previous targets are dropped on a rebuild
+        eventTargetErrorCodes = [];
 
         return targets.reduce((result, _target, index) => {
             if (!isCmcdEnabled(index)) {
@@ -201,7 +209,10 @@ function CmcdController() {
             }
 
             const accessor = cmcdConfigAccessor.getEventTarget(index);
+            const errorCodes = [];
+            eventTargetErrorCodes.push(errorCodes);
             result.push({
+                transform: (data) => _attachErrorCodes(errorCodes, data),
                 url: accessor.get('targetUrl'),
                 events: accessor.get('targetEvents'),
                 interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
@@ -211,6 +222,24 @@ function CmcdController() {
 
             return result;
         }, []);
+    }
+
+    /**
+     * Per the CMCD v2 specification, error codes are buffered per report destination and reported
+     * as an inner list of strings with the next report to that destination, e.g. ec=("16" "27").
+     * Codes a destination does not report (e.g. ec not in its enabled keys) are dropped with that report.
+     * @param {string[]} errorCodes - The buffer of the report destination, emptied by this call
+     * @param {object} data - The report data
+     * @return {object}
+     * @private
+     */
+    function _attachErrorCodes(errorCodes, data) {
+        // Response reports copy the request report's ec, which belongs to the request destination
+        delete data.ec;
+        if (errorCodes.length > 0) {
+            data.ec = errorCodes.splice(0);
+        }
+        return data;
     }
 
     function _customRequester(request) {
@@ -247,13 +276,21 @@ function CmcdController() {
         if (errorData.error?.data?.request?.type === HTTPRequest.CMCD_EVENT) {
             return;
         }
-        // Update CmcdReporter with the error code
-        if (cmcdReporter) {
-            const errorCode = errorData.error?.code || errorData.error?.data?.code;
-            if (errorCode) {
-                // ec is a list of strings in CMCD v2. cmcd 2.8 drops a bare number
-                cmcdReporter.update({ ec: [String(errorCode)] });
+        if (!cmcdReporter) {
+            return;
+        }
+
+        // A pending rebuild recreates the event target buffers, so run it before buffering
+        _rebuildReporterIfNeeded();
+
+        const errorCode = errorData.error?.code || errorData.error?.data?.code;
+        if (errorCode) {
+            const code = String(errorCode);
+            // Without request mode nothing would ever flush the request buffer
+            if (isCmcdEnabled()) {
+                requestErrorCodes.push(code);
             }
+            eventTargetErrorCodes.forEach((errorCodes) => errorCodes.push(code));
         }
 
         triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.ERROR);
