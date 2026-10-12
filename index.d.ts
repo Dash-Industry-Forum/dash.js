@@ -1974,6 +1974,7 @@ export class MediaPlayerSettingClass {
                 interval?: number,
                 enabledKeys?: Array<string>,
                 includeInRequests?: Array<string>,
+                responseReceivedTypes?: Array<string>,
                 batchSize?: number
             }>,
             customKeys?: Array<{

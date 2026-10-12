@@ -865,6 +865,81 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('ttlb');
         });
 
+        describe('responseReceivedTypes filter for response reports', () => {
+            const createResponse = (type, url) => ({
+                status: 200,
+                request: {
+                    url,
+                    customData: { request: { type, url } }
+                }
+            });
+
+            const initializeWithTarget = (target) => {
+                settings.update({
+                    streaming: {
+                        cmcd: {
+                            version: 2,
+                            eventTargets: [{
+                                url: 'https://cmcd.response.collector/api',
+                                enabled: true,
+                                enabledKeys: ['rc', 'url', 'ec'],
+                                events: ['rr'],
+                                ...target
+                            }]
+                        }
+                    }
+                });
+                cmcdController.initialize();
+            };
+
+            it('should not send a response report for a request type the target does not include', () => {
+                initializeWithTarget({ responseReceivedTypes: ['segment'] });
+
+                cmcdController.getCmcdResponseReceivedInterceptors()[0](createResponse(HTTPRequest.MPD_TYPE, 'http://test.url/manifest.mpd'));
+
+                expect(urlLoaderMock.load.called).to.be.false;
+            });
+
+            it('should send a response report for a request type the target includes', () => {
+                initializeWithTarget({ responseReceivedTypes: ['mpd'] });
+
+                cmcdController.getCmcdResponseReceivedInterceptors()[0](createResponse(HTTPRequest.MPD_TYPE, 'http://test.url/manifest.mpd'));
+
+                expect(urlLoaderMock.load.calledOnce).to.be.true;
+                const report = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+                expect(report).to.have.property('url', 'http://test.url/manifest.mpd');
+            });
+
+            it('should send response reports for every request type if the target has no responseReceivedTypes', () => {
+                // includeInRequests of the target must not filter rr reports
+                initializeWithTarget({ includeInRequests: ['segment'] });
+
+                const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
+                interceptor(createResponse(HTTPRequest.MPD_TYPE, 'http://test.url/manifest.mpd'));
+                interceptor(createResponse(HTTPRequest.CONTENT_STEERING_TYPE, 'http://test.url/steering'));
+                interceptor(createResponse(HTTPRequest.MEDIA_SEGMENT_TYPE, 'http://test.url/video.m4s'));
+
+                expect(urlLoaderMock.load.calledThrice).to.be.true;
+            });
+
+            it('should keep buffered error codes (ec) for the next report when a response report is filtered', () => {
+                initializeWithTarget({ responseReceivedTypes: ['segment'] });
+
+                eventBus.trigger(MediaPlayerEvents.ERROR, {
+                    error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+                });
+
+                const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
+                interceptor(createResponse(HTTPRequest.MPD_TYPE, 'http://test.url/manifest.mpd'));
+                interceptor(createResponse(HTTPRequest.MEDIA_SEGMENT_TYPE, 'http://test.url/video.m4s'));
+
+                expect(urlLoaderMock.load.calledOnce).to.be.true;
+                const report = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+                expect(report).to.have.property('url', 'http://test.url/video.m4s');
+                expect(report.ec).to.deep.equal(['123']);
+            });
+        });
+
         it('should attach buffered error codes (ec) to the next response report only', () => {
             settings.update({
                 streaming: {

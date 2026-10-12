@@ -435,6 +435,21 @@ const CmcdPropertyMap = {
                 default: ['segment', 'mpd']
             }
         ]
+    },
+
+    /**
+     * V2: Target filter for response received (rr) reports
+     * Note: This is target-specific, requires context. No default: rr is reported for every request type.
+     */
+    targetResponseReceivedTypes: {
+        version: [2],
+        sources: [
+            {
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].responseReceivedTypes',
+                priority: 1,
+                type: 'array'
+            }
+        ]
     }
 };
 

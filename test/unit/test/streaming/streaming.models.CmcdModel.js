@@ -210,6 +210,11 @@ describe('CmcdModel', function () {
             const isIncluded = cmcdModel.isIncludedInRequestFilter(HTTPRequest.MEDIA_SEGMENT_TYPE);
             expect(isIncluded).to.be.false;
         });
+
+        it('should return true for license requests if license is included', function () {
+            expect(cmcdModel.isIncludedInRequestFilter(HTTPRequest.LICENSE, ['license'])).to.be.true;
+            expect(cmcdModel.isIncludedInRequestFilter(HTTPRequest.LICENSE)).to.be.false;
+        });
     });
 
     describe('calculateMsd', function () {

@@ -52,6 +52,7 @@ const REQUEST_TYPE_TO_CMCD_FILTER = {
     [HTTPRequest.MPD_TYPE]: 'mpd',
     [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
     [HTTPRequest.OTHER_TYPE]: 'other',
+    [HTTPRequest.LICENSE]: 'license',
 };
 
 function CmcdModel() {

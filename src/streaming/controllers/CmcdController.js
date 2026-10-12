@@ -182,10 +182,19 @@ function CmcdController() {
 
         // Error codes not yet reported to the previous event targets are dropped on a rebuild
         eventTargetErrorCodes = [];
-        const eventTargets = cmcdConfig.eventTargets.map((target) => {
+        const eventTargets = cmcdConfig.eventTargets.map(({ responseReceivedTypes, ...target }) => {
             const errorCodes = [];
             eventTargetErrorCodes.push(errorCodes);
-            return { ...target, transform: (data) => _attachErrorCodes(errorCodes, data) };
+            return {
+                ...target,
+                transform: (data, request) => {
+                    // Only rr reports carry the request. Filter before attaching ec, so a dropped report keeps the buffered codes
+                    if (request && responseReceivedTypes && !cmcdModel.isIncludedInRequestFilter(request.customData?.request?.type, responseReceivedTypes)) {
+                        return null;
+                    }
+                    return _attachErrorCodes(errorCodes, data);
+                },
+            };
         });
 
         const reporter = new CmcdReporter({
@@ -271,6 +280,7 @@ function CmcdController() {
                 interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
                 batchSize: accessor.get('targetBatchSize') || 1,
                 enabledKeys: accessor.get('targetKeys'),
+                responseReceivedTypes: accessor.get('targetResponseReceivedTypes'),
             });
 
             return result;
