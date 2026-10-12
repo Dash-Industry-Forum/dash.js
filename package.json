@@ -100,7 +100,7 @@
     "typescript": "^5.9.3",
     "vitepress": "^1.6.4",
     "vitepress-plugin-mermaid": "^2.0.17",
-    "webpack": "5.94.0",
+    "webpack": "^5.111.1",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.2",
     "webpack-merge": "^6.0.1",
@@ -140,5 +140,19 @@
     "MSE",
     "EME",
     "Smooth Streaming"
-  ]
+  ],
+  "overrides": {
+    "mocha": {
+      "serialize-javascript": "^7.0.5"
+    },
+    "sockjs": {
+      "uuid": "^11.1.1"
+    },
+    "mermaid": {
+      "katex": "^0.18.2"
+    },
+    "vitepress": {
+      "vite": "^6.4.3"
+    }
+  }
 }
