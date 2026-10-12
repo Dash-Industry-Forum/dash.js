@@ -54,6 +54,7 @@ function TextController(config) {
     const baseURLController = config.baseURLController;
     const videoModel = config.videoModel;
     const settings = config.settings;
+    const timelineConverter = config.timelineConverter;
 
     let instance,
         streamData,
@@ -122,7 +123,8 @@ function TextController(config) {
             vttCustomRenderingParser,
             ttmlParser,
             streamInfo,
-            settings
+            settings,
+            timelineConverter
         });
         textSourceBuffer.initialize();
         textSourceBuffers[streamId] = textSourceBuffer;

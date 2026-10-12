@@ -1,5 +1,6 @@
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
+import CmcdController from '../../../../src/streaming/controllers/CmcdController.js';
 
 
 import chai from 'chai';
@@ -8,6 +9,8 @@ const expect = chai.expect;
 
 describe('CustomParametersModel', function () {
     const context = {};
+    const cmcdController = CmcdController(context).getInstance();
+    const noInitialCallbacks = () => [];
 
     let customParametersModel = CustomParametersModel(context).getInstance();
 
@@ -58,137 +61,66 @@ describe('CustomParametersModel', function () {
         expect(customInitialTrackSelectionFunction).to.be.null;
     })
 
-    it('Should add license request filters', () => {
-        const foo = () => {
-            return;
-        };
-        const bar = () => {
-            return;
-        }
-        customParametersModel.registerLicenseRequestFilter(foo);
-        let licenseResponseFilters = customParametersModel.getLicenseRequestFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
+    describe('callback registries', () => {
+        const registryContracts = [
+            { name: 'request interceptors', add: 'addRequestInterceptor', remove: 'removeRequestInterceptor', get: 'getRequestInterceptors', getInitialCallbacks: () => cmcdController.getCmcdRequestInterceptors() },
+            { name: 'response interceptors', add: 'addResponseInterceptor', remove: 'removeResponseInterceptor', get: 'getResponseInterceptors', getInitialCallbacks: () => cmcdController.getCmcdResponseReceivedInterceptors() },
+            { name: 'license request filters', add: 'registerLicenseRequestFilter', remove: 'unregisterLicenseRequestFilter', get: 'getLicenseRequestFilters', getInitialCallbacks: noInitialCallbacks },
+            { name: 'license response filters', add: 'registerLicenseResponseFilter', remove: 'unregisterLicenseResponseFilter', get: 'getLicenseResponseFilters', getInitialCallbacks: noInitialCallbacks },
+            { name: 'certificate request filters', add: 'registerCertificateRequestFilter', remove: 'unregisterCertificateRequestFilter', get: 'getCertificateRequestFilters', getInitialCallbacks: noInitialCallbacks },
+            { name: 'certificate response filters', add: 'registerCertificateResponseFilter', remove: 'unregisterCertificateResponseFilter', get: 'getCertificateResponseFilters', getInitialCallbacks: noInitialCallbacks },
+            { name: 'custom capabilities filters', add: 'registerCustomCapabilitiesFilter', remove: 'unregisterCustomCapabilitiesFilter', get: 'getCustomCapabilitiesFilters', getInitialCallbacks: noInitialCallbacks }
+        ];
 
-        customParametersModel.registerLicenseRequestFilter(bar);
-        licenseResponseFilters = customParametersModel.getLicenseRequestFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(2);
-    })
+        registryContracts.forEach(({ name, add, remove, get, getInitialCallbacks }) => {
+            it(`should preserve ${name} order, removal and live-array identity`, () => {
+                const firstCallback = () => {};
+                const secondCallback = () => {};
+                const unknownCallback = () => {};
+                const callbacks = customParametersModel[get]();
+                const initialCallbacks = callbacks.slice();
+                expect(initialCallbacks).to.deep.equal(getInitialCallbacks());
 
-    it('Should remove license request filters', () => {
-        const foo = () => {
-            return;
-        };
-        const bar = () => {
-            return;
-        }
-        customParametersModel.registerLicenseRequestFilter(foo);
-        let licenseResponseFilters = customParametersModel.getLicenseRequestFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
+                customParametersModel[add](firstCallback);
+                customParametersModel[add](secondCallback);
+                customParametersModel[add](firstCallback);
 
-        customParametersModel.registerLicenseRequestFilter(bar);
-        licenseResponseFilters = customParametersModel.getLicenseRequestFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(2);
+                expect(customParametersModel[get]()).to.equal(callbacks);
+                expect(callbacks).to.deep.equal([...initialCallbacks, firstCallback, secondCallback, firstCallback]);
 
-        customParametersModel.unregisterLicenseRequestFilter(foo);
-        licenseResponseFilters = customParametersModel.getLicenseRequestFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
+                customParametersModel.resetPlaybackSessionSpecificSettings();
+                expect(customParametersModel[get]()).to.equal(callbacks);
+                expect(callbacks).to.deep.equal([...initialCallbacks, firstCallback, secondCallback, firstCallback]);
 
-        customParametersModel.unregisterLicenseRequestFilter(foo);
-        licenseResponseFilters = customParametersModel.getLicenseRequestFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
+                customParametersModel[remove](unknownCallback);
+                expect(callbacks).to.deep.equal([...initialCallbacks, firstCallback, secondCallback, firstCallback]);
 
-        customParametersModel.unregisterLicenseRequestFilter(bar);
-        licenseResponseFilters = customParametersModel.getLicenseRequestFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(0);
-    })
+                customParametersModel[remove](firstCallback);
+                expect(callbacks).to.deep.equal([...initialCallbacks, secondCallback, firstCallback]);
+            });
+        });
 
-    it('Should add license response filters', () => {
-        const foo = () => {
-            return;
-        };
-        const bar = () => {
-            return;
-        }
-        customParametersModel.registerLicenseResponseFilter(foo);
-        let licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
+        it('should keep registries isolated and restore their defaults on reset', () => {
+            const registrations = registryContracts.map(({ add, get, getInitialCallbacks }) => {
+                const callback = () => {};
+                const callbacks = customParametersModel[get]();
+                customParametersModel[add](callback);
+                return { callback, callbacks, get, getInitialCallbacks };
+            });
 
-        customParametersModel.registerLicenseResponseFilter(bar);
-        licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(2);
-    })
+            registrations.forEach(({ callback, get, getInitialCallbacks }) => {
+                expect(customParametersModel[get]()).to.deep.equal([...getInitialCallbacks(), callback]);
+            });
 
-    it('Should remove license response filters', () => {
-        const foo = () => {
-            return;
-        };
-        const bar = () => {
-            return;
-        }
-        customParametersModel.registerLicenseResponseFilter(foo);
-        let licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
+            customParametersModel.reset();
 
-        customParametersModel.registerLicenseResponseFilter(bar);
-        licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(2);
-
-        customParametersModel.unregisterLicenseResponseFilter(foo);
-        licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
-
-        customParametersModel.unregisterLicenseResponseFilter(foo);
-        licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
-
-        customParametersModel.unregisterLicenseResponseFilter(bar);
-        licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(0);
-    })
-
-    it('Should add custom capabilities filters', () => {
-        const foo = () => {
-            return;
-        };
-        const bar = () => {
-            return;
-        }
-        customParametersModel.registerCustomCapabilitiesFilter(foo);
-        let licenseResponseFilters = customParametersModel.getCustomCapabilitiesFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
-
-        customParametersModel.registerCustomCapabilitiesFilter(bar);
-        licenseResponseFilters = customParametersModel.getCustomCapabilitiesFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(2);
-    })
-
-    it('Should remove custom capability filters', () => {
-        const foo = () => {
-            return;
-        };
-        const bar = () => {
-            return;
-        }
-        customParametersModel.registerCustomCapabilitiesFilter(foo);
-        let licenseResponseFilters = customParametersModel.getCustomCapabilitiesFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
-
-        customParametersModel.registerCustomCapabilitiesFilter(bar);
-        licenseResponseFilters = customParametersModel.getCustomCapabilitiesFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(2);
-
-        customParametersModel.unregisterCustomCapabilitiesFilter(foo);
-        licenseResponseFilters = customParametersModel.getCustomCapabilitiesFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
-
-        customParametersModel.unregisterCustomCapabilitiesFilter(foo);
-        licenseResponseFilters = customParametersModel.getCustomCapabilitiesFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(1);
-
-        customParametersModel.unregisterCustomCapabilitiesFilter(bar);
-        licenseResponseFilters = customParametersModel.getCustomCapabilitiesFilters();
-        expect(licenseResponseFilters).to.have.lengthOf(0);
-    })
+            registrations.forEach(({ callback, callbacks, get, getInitialCallbacks }) => {
+                expect(customParametersModel[get]()).to.not.equal(callbacks);
+                expect(customParametersModel[get]()).to.deep.equal(getInitialCallbacks());
+                expect(callbacks).to.include(callback);
+            });
+        });
+    });
 
     it('should manage custom ABR rules', function () {
         let customRules = customParametersModel.getAbrCustomRules();

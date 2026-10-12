@@ -5,6 +5,8 @@ import {
     checkIsProgressing,
     checkNoCriticalErrors,
     initializeDashJsAdapter,
+    initializeDashJsAdapterWithoutAttachSource,
+    playForDuration,
 } from '../common/common.js';
 import { expect } from 'chai';
 import CmcdRequestCollector from '../../helpers/CmcdRequestCollector.js';
@@ -288,6 +290,129 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 const allEvents = events.flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || []);
                 const rrEvents = allEvents.filter((d) => d.e === 'rr');
                 expect(rrEvents.length).to.be.at.least(1);
+            });
+        });
+
+        describe('Player error codes (ec)', () => {
+            const DOWNLOAD_ERROR_ID_CONTENT_CODE = 27;
+            let playerAdapter;
+            let collector;
+            let failNextVideoSegment = false;
+            let errorCodes = [];
+
+            function getEventReports() {
+                return collector.getRequests('event').flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || []);
+            }
+
+            function getRequestReports() {
+                return collector.getRequests().filter((r) => r.reportingMode === 'query').map((r) => validateCmcdRequest(r.httpRequest, { version: 2 }).data);
+            }
+
+            before(function () {
+                this.timeout(60000);
+                const targetUrl = `${EVENT_TARGET_BASE}/ec`;
+                collector = new CmcdRequestCollector();
+                collector.attach({ eventTargetUrls: [targetUrl] });
+                const settings = {
+                    streaming: {
+                        // Without retries a single failed segment request raises the error right away
+                        retryAttempts: { MediaSegment: 0 },
+                        // A small buffer target keeps segment requests flowing after the error
+                        buffer: { bufferTimeDefault: 8, bufferTimeAtTopQuality: 8, bufferTimeAtTopQualityLongForm: 8 },
+                        cmcd: {
+                            ...DEFAULT_CMCD_V2_CONFIG,
+                            mode: 'query',
+                            enabledKeys: [...DEFAULT_CMCD_V2_CONFIG.enabledKeys, 'ec'],
+                            eventTargets: [
+                                {
+                                    enabled: true,
+                                    url: targetUrl,
+                                    enabledKeys: ['e', 'ec', 'sn', 'url'],
+                                    includeInRequests: ['segment'],
+                                    events: ['e', 'rr'],
+                                },
+                            ],
+                        },
+                    },
+                };
+                playerAdapter = initializeDashJsAdapterWithoutAttachSource(item, settings);
+                playerAdapter.player.on('error', (e) => errorCodes.push(e.error.code));
+                // Runs after the CMCD request interceptor, so the failing request was already reported
+                playerAdapter.player.addRequestInterceptor((request) => {
+                    const dashRequest = request.customData.request;
+                    if (failNextVideoSegment && dashRequest.type === 'MediaSegment' && dashRequest.mediaType === 'video') {
+                        failNextVideoSegment = false;
+                        request.url = 'http://127.0.0.1:1/unreachable.m4s';
+                    }
+                    return Promise.resolve(request);
+                });
+                playerAdapter.attachSource(mpd);
+            });
+
+            after(() => {
+                collector.detach();
+                if (playerAdapter) {
+                    playerAdapter.destroy();
+                }
+            });
+
+            it('Checking playing state', async () => {
+                await checkIsPlaying(playerAdapter, true);
+            });
+
+            it('Checking progressing state', async () => {
+                // Fail a segment mid-stream, not the first one
+                await checkIsProgressing(playerAdapter);
+            });
+
+            it('No reports carry ec before an error occurred', async () => {
+                await collector.waitForRequests('segment', 3, TIMEOUTS.REQUEST_COLLECTION);
+
+                expect(getRequestReports().filter((d) => d.ec !== undefined)).to.be.empty;
+                expect(getEventReports().filter((d) => d.ec !== undefined)).to.be.empty;
+            });
+
+            it('A failed segment request raises a download error', async function () {
+                this.timeout(30000);
+                errorCodes = [];
+                failNextVideoSegment = true;
+
+                const deadline = Date.now() + TIMEOUTS.REQUEST_COLLECTION;
+                while (!errorCodes.includes(DOWNLOAD_ERROR_ID_CONTENT_CODE) && Date.now() < deadline) {
+                    await playForDuration(200);
+                }
+                expect(errorCodes).to.include(DOWNLOAD_ERROR_ID_CONTENT_CODE);
+
+                // Without BaseURL failover dash.js does not request the failed segment again. Seeking past the buffered range restarts the scheduling.
+                playerAdapter.seek(playerAdapter.getCurrentTime() + 20);
+
+                // Collect the reports that follow the error
+                const segmentCount = collector.getRequests('segment').length;
+                await collector.waitForRequests('segment', segmentCount + 3, TIMEOUTS.REQUEST_COLLECTION);
+            });
+
+            it('Exactly one request report carries the error code as an inner list of strings', () => {
+                const withEc = getRequestReports().filter((d) => d.ec !== undefined);
+
+                expect(withEc).to.have.lengthOf(1);
+                expect(withEc[0].ec).to.deep.equal([String(DOWNLOAD_ERROR_ID_CONTENT_CODE)]);
+            });
+
+            it('Exactly one event report carries the error code, the error event', () => {
+                const withEc = getEventReports().filter((d) => d.ec !== undefined);
+
+                expect(withEc).to.have.lengthOf(1);
+                expect(withEc[0].e).to.equal('e');
+                expect(withEc[0].ec).to.deep.equal([String(DOWNLOAD_ERROR_ID_CONTENT_CODE)]);
+            });
+
+            it('Event reports after the error event do not repeat ec', () => {
+                const reports = getEventReports();
+                const errorIndex = reports.findIndex((d) => d.e === 'e');
+                const later = reports.slice(errorIndex + 1);
+
+                expect(later.filter((d) => d.e === 'rr')).to.not.be.empty;
+                later.forEach((d) => expect(d).to.not.have.property('ec'));
             });
         });
 
