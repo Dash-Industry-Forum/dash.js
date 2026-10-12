@@ -39,12 +39,6 @@
 import FactoryMaker from '../../../../core/FactoryMaker.js';
 import Debug from '../../../../core/Debug.js';
 
-const WEIGHT_SELECTION_MODES = {
-    MANUAL: 'manual_weight_selection',
-    RANDOM: 'random_weight_selection',
-    DYNAMIC: 'dynamic_weight_selection'
-};
-
 function LearningAbrController() {
     const context = this.context;
 
@@ -55,8 +49,7 @@ function LearningAbrController() {
         latencyNormalizationFactor,
         minBitrate,
         weights,
-        sortedCenters,
-        weightSelectionMode;
+        sortedCenters;
 
     /**
      * Setup the class
@@ -84,7 +77,6 @@ function LearningAbrController() {
         minBitrate = 0;
         weights = null;
         sortedCenters = null;
-        weightSelectionMode = WEIGHT_SELECTION_MODES.DYNAMIC;
     }
 
     /**
@@ -251,20 +243,7 @@ function LearningAbrController() {
             return _getDownShiftNeuron(currentNeuron, currentThroughput).representation;
         }
 
-        switch (weightSelectionMode) {
-            case WEIGHT_SELECTION_MODES.MANUAL:
-                _manualWeightSelection();
-                break;
-            case WEIGHT_SELECTION_MODES.RANDOM:
-                _randomWeightSelection();
-                break;
-            case WEIGHT_SELECTION_MODES.DYNAMIC:
-                _dynamicWeightSelection(dynamicWeightsSelector, currentLatency, currentBufferLevel, rebuffer, currentThroughput, playbackRate);
-                break;
-            default:
-                _dynamicWeightSelection(dynamicWeightsSelector, currentLatency, currentBufferLevel, rebuffer, currentThroughput, playbackRate);
-
-        }
+        _dynamicWeightSelection(dynamicWeightsSelector, currentLatency, currentBufferLevel, rebuffer, currentThroughput, playbackRate);
 
         let minDistance = null;
         let targetRepresentation = null;
@@ -313,27 +292,6 @@ function LearningAbrController() {
     }
 
     /**
-     * Option 1: Manual weights
-     * @private
-     */
-    function _manualWeightSelection() {
-        let throughputWeight = 0.4;
-        let latencyWeight = 0.4;
-        let bufferWeight = 0.4;
-        let switchWeight = 0.4;
-
-        weights = [throughputWeight, latencyWeight, bufferWeight, switchWeight]; // throughput, latency, buffer, switch
-    }
-
-    /**
-     * Option 2: Random (Xavier) weights
-     * @private
-     */
-    function _randomWeightSelection() {
-        weights = _getXavierWeights(somBitrateNeurons.length, 4);
-    }
-
-    /**
      * Dynamic Weight Selector weights
      * @param {object} dynamicWeightsSelector
      * @param {array} somElements
@@ -353,26 +311,6 @@ function LearningAbrController() {
         if (weightVector !== null && weightVector !== -1) { // null: something went wrong, -1: constraints not met
             weights = weightVector;
         }
-    }
-
-    /**
-     *
-     * @param {number }neuronCount
-     * @param {number }weightCount
-     * @return {array}
-     * @private
-     */
-    function _getXavierWeights(neuronCount, weightCount) {
-        let W = [];
-        let upperBound = Math.sqrt((2 / neuronCount));
-
-        for (let i = 0; i < weightCount; i++) {
-            W.push(Math.random() * upperBound);
-        }
-
-        weights = W;
-
-        return weights;
     }
 
     /**
