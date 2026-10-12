@@ -66,7 +66,7 @@ function StreamController() {
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
-        pendingDynamicToStaticUpdate, switchSeekTime, switchTargetStream;
+        pendingDynamicToStaticUpdate, switchSeekTime;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -268,10 +268,11 @@ function StreamController() {
                     return new Promise((resolve, reject) => {
                         if (!activeStream) {
                             _initializeForFirstStream(streamsInfo, resolve, reject);
-                        } else if (switchSeekTime !== null && switchTargetStream !== null) {
+                        } else if (switchSeekTime !== null) {
                             // On-going stream switching on a remote period (onRequest)
-                            _switchStream(switchTargetStream, activeStream, switchSeekTime);
-                            switchTargetStream = switchSeekTime = null;
+                            const targetStream = getStreamForTime(switchSeekTime);
+                            _switchStream(targetStream, activeStream, switchSeekTime);
+                            switchSeekTime = null;
                             resolve();
                         } else {
                             resolve();
@@ -479,7 +480,6 @@ function StreamController() {
             const targetStreamInfo = targetStream.getStreamInfo();
             if (!targetStreamInfo.isResolved) {
                 switchSeekTime = seekTime;
-                switchTargetStream = targetStream;
                 manifestLoader.resolvePeriod(targetStreamInfo.id);
                 return;
             }
@@ -1768,7 +1768,6 @@ function StreamController() {
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
         switchSeekTime = null;
-        switchTargetStream = null;
         errorInformation = {
             counts: {
                 mediaErrorDecode: 0
