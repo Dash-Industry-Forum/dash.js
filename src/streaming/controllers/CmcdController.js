@@ -178,6 +178,7 @@ function CmcdController() {
 
     function _createCmcdReporter(cmcdConfig = _getReporterConfig()) {
         reporterConfigKey = JSON.stringify(cmcdConfig);
+        const { customKeys, ...reporterConfig } = cmcdConfig;
 
         // Error codes not yet reported to the previous event targets are dropped on a rebuild
         eventTargetErrorCodes = [];
@@ -188,14 +189,13 @@ function CmcdController() {
         });
 
         const reporter = new CmcdReporter({
-            ...cmcdConfig,
+            ...reporterConfig,
             // Every decorated request carries the buffered error codes: requests that pass the request filter and license requests
             transform: (data) => _attachErrorCodes(requestErrorCodes, data),
             eventTargets,
         }, _customRequester);
 
         // Custom keys are persistent session data and included in all reports
-        const customKeys = _getValidatedCustomKeys();
         if (Object.keys(customKeys).length > 0) {
             reporter.update(customKeys);
         }
@@ -216,6 +216,7 @@ function CmcdController() {
             // Configured custom keys are enabled implicitly, otherwise the reporter's key filter would drop them
             enabledKeys: [...cmcdConfigAccessor.get('keys'), ...Object.keys(customKeys)],
             eventTargets: _buildReporterTargets(),
+            customKeys,
         };
 
         // Only pass sid/cid if they have actual values, so CmcdReporter
