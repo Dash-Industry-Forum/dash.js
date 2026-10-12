@@ -3,6 +3,7 @@ import Settings from '../../../../src/core/Settings.js';
 import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
+import MetricsReportingEvents from '../../../../src/streaming/metrics/MetricsReportingEvents.js';
 import AbrControllerMock from '../../mocks/AbrControllerMock.js';
 import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
@@ -817,7 +818,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid'],
                             events: ['rr']
                         }]
@@ -865,6 +866,80 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('ttlb');
         });
 
+        describe('responseReceivedTypes filter for response reports', () => {
+            const createResponse = (type, url) => ({
+                status: 200,
+                request: {
+                    url,
+                    customData: { request: { type, url } }
+                }
+            });
+
+            const initializeWithTarget = (target) => {
+                settings.update({
+                    streaming: {
+                        cmcd: {
+                            version: 2,
+                            eventTargets: [{
+                                url: 'https://cmcd.response.collector/api',
+                                enabled: true,
+                                enabledKeys: ['rc', 'url', 'ec'],
+                                events: ['rr'],
+                                ...target
+                            }]
+                        }
+                    }
+                });
+                cmcdController.initialize();
+            };
+
+            it('should not send a response report for a request type the target does not include', () => {
+                initializeWithTarget({ responseReceivedTypes: ['segment'] });
+
+                cmcdController.getCmcdResponseReceivedInterceptors()[0](createResponse(HTTPRequest.MPD_TYPE, 'http://test.url/manifest.mpd'));
+
+                expect(urlLoaderMock.load.called).to.be.false;
+            });
+
+            it('should send a response report for a request type the target includes', () => {
+                initializeWithTarget({ responseReceivedTypes: ['mpd'] });
+
+                cmcdController.getCmcdResponseReceivedInterceptors()[0](createResponse(HTTPRequest.MPD_TYPE, 'http://test.url/manifest.mpd'));
+
+                expect(urlLoaderMock.load.calledOnce).to.be.true;
+                const report = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+                expect(report).to.have.property('url', 'http://test.url/manifest.mpd');
+            });
+
+            it('should send response reports for every request type if the target has no responseReceivedTypes', () => {
+                initializeWithTarget({});
+
+                const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
+                interceptor(createResponse(HTTPRequest.MPD_TYPE, 'http://test.url/manifest.mpd'));
+                interceptor(createResponse(HTTPRequest.CONTENT_STEERING_TYPE, 'http://test.url/steering'));
+                interceptor(createResponse(HTTPRequest.MEDIA_SEGMENT_TYPE, 'http://test.url/video.m4s'));
+
+                expect(urlLoaderMock.load.calledThrice).to.be.true;
+            });
+
+            it('should keep buffered error codes (ec) for the next report when a response report is filtered', () => {
+                initializeWithTarget({ responseReceivedTypes: ['segment'] });
+
+                eventBus.trigger(MediaPlayerEvents.ERROR, {
+                    error: { code: 123, data: { request: { type: 'someOtherRequestType' } } }
+                });
+
+                const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
+                interceptor(createResponse(HTTPRequest.MPD_TYPE, 'http://test.url/manifest.mpd'));
+                interceptor(createResponse(HTTPRequest.MEDIA_SEGMENT_TYPE, 'http://test.url/video.m4s'));
+
+                expect(urlLoaderMock.load.calledOnce).to.be.true;
+                const report = decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body));
+                expect(report).to.have.property('url', 'http://test.url/video.m4s');
+                expect(report.ec).to.deep.equal(['123']);
+            });
+        });
+
         it('should attach buffered error codes (ec) to the next response report only', () => {
             settings.update({
                 streaming: {
@@ -873,7 +948,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['rc', 'ec'],
                             events: ['rr']
                         }]
@@ -913,7 +988,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['e', 'rc', 'ec'],
                             events: ['rr']
                         }]
@@ -948,7 +1023,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['cmsdd', 'cmsds'],
                             events: ['rr']
                         }]
@@ -999,7 +1074,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: false,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -1034,7 +1109,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -1069,7 +1144,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['rc', 'e', 'd'],
                             events: ['rr']
                         }]
@@ -1123,7 +1198,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            responseReceivedTypes: ['segment'],
                             enabledKeys: ['sn'],
                             events: ['rr']
                         }]
@@ -1337,13 +1412,40 @@ describe('CmcdController', function () {
             it('should attach buffered error codes to the next license request', function () {
                 triggerError(123);
 
-                // ProtectionController decorates license requests directly, without the request filter
+                // ProtectionController decorates license requests directly, without the request interceptors
                 const licenseRequest = { url: 'http://example.com/license', type: HTTPRequest.LICENSE, headers: {} };
                 cmcdController.applyCmcdToRequest(licenseRequest);
                 expect(getCmcdFromUrl(licenseRequest.url).ec).to.deep.equal(['123']);
 
                 const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
                 expect(getCmcdFromUrl(result.url)).to.not.have.property('ec');
+            });
+
+            it('should keep the decoration and error codes if a CMCD_DATA_GENERATED listener throws', function () {
+                const throwingListener = () => {
+                    throw new Error('listener error');
+                };
+                eventBus.on(MetricsReportingEvents.CMCD_DATA_GENERATED, throwingListener);
+                triggerError(123);
+
+                try {
+                    const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                    expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123']);
+                } finally {
+                    eventBus.off(MetricsReportingEvents.CMCD_DATA_GENERATED, throwingListener);
+                }
+            });
+
+            it('should not decorate a license request that is not included in the request filter', function () {
+                settings.update({ streaming: { cmcd: { includeInRequests: ['segment'] } } });
+                triggerError(123);
+
+                const licenseRequest = { url: 'http://example.com/license', type: HTTPRequest.LICENSE, headers: {} };
+                cmcdController.applyCmcdToRequest(licenseRequest);
+                expect(licenseRequest.url).to.equal('http://example.com/license');
+
+                const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123']);
             });
         });
 
@@ -1976,7 +2078,7 @@ describe('CmcdController', function () {
                 eventTargets: [{
                     url: 'https://cmcd.response.collector/api',
                     enabled: true,
-                    includeInRequests: ['segment'],
+                    responseReceivedTypes: ['segment'],
                     enabledKeys: ['rc', 'ec'],
                     events: ['rr']
                 }]

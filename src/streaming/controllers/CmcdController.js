@@ -182,15 +182,24 @@ function CmcdController() {
 
         // Error codes not yet reported to the previous event targets are dropped on a rebuild
         eventTargetErrorCodes = [];
-        const eventTargets = cmcdConfig.eventTargets.map((target) => {
+        const eventTargets = cmcdConfig.eventTargets.map(({ responseReceivedTypes, ...target }) => {
             const errorCodes = [];
             eventTargetErrorCodes.push(errorCodes);
-            return { ...target, transform: (data) => _attachErrorCodes(errorCodes, data) };
+            return {
+                ...target,
+                transform: (data, request) => {
+                    // Only rr reports carry the request. Filter before attaching ec, so a dropped report keeps the buffered codes
+                    if (request && responseReceivedTypes && !cmcdModel.isIncludedInRequestFilter(request.customData?.request?.type, responseReceivedTypes)) {
+                        return null;
+                    }
+                    return _attachErrorCodes(errorCodes, data);
+                },
+            };
         });
 
         const reporter = new CmcdReporter({
             ...reporterConfig,
-            // Every decorated request carries the buffered error codes: requests that pass the request filter and license requests
+            // Every decorated request carries the buffered error codes, i.e. every request that passes the request filter
             transform: (data) => _attachErrorCodes(requestErrorCodes, data),
             eventTargets,
         }, _customRequester);
@@ -271,6 +280,7 @@ function CmcdController() {
                 interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
                 batchSize: accessor.get('targetBatchSize') || 1,
                 enabledKeys: accessor.get('targetKeys'),
+                responseReceivedTypes: accessor.get('targetResponseReceivedTypes'),
             });
 
             return result;
@@ -419,14 +429,16 @@ function CmcdController() {
      *
      * @param {object} request - The request object with at least { url, type }.
      *                           Will be mutated with CMCD-decorated url/headers.
+     * @return {boolean} True if the request was decorated
      */
     function applyCmcdToRequest(request) {
-        if (!cmcdReporter || !isCmcdEnabled()) {
-            return;
+        if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(request.type)) {
+            return false;
         }
 
         _rebuildReporterIfNeeded();
 
+        let applied = false;
         try {
             const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
 
@@ -440,13 +452,14 @@ function CmcdController() {
             request.url = decorated.url;
             request.headers = decorated.headers;
             request.cmcd = decorated.customData?.cmcd || {};
+            // Set before the event: a throwing listener must not drop the decoration and its buffered ec
+            applied = true;
 
             _triggerCmcdDataGeneratedEvent(request)
-
         } catch (e) {
             logger.warn(e);
-            return null;
         }
+        return applied;
     }
 
     function _triggerCmcdDataGeneratedEvent(request) {
@@ -475,7 +488,7 @@ function CmcdController() {
 
     function isCmcdEnabled(targetIndex = null) {
         if (targetIndex !== null) {
-            return _targetCanBeEnabled(targetIndex) && _checkTargetIncludeInRequests(targetIndex);
+            return _targetCanBeEnabled(targetIndex);
         } else {
             return _canBeEnabled() && _checkIncludeInRequests();
         }
@@ -536,29 +549,6 @@ function CmcdController() {
         return (enabled && url);
     }
 
-    function _checkTargetIncludeInRequests(targetIndex) {
-        const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
-        let enabledRequests = targetAccessor.get('targetIncludeInRequests');
-
-        if (!enabledRequests) {
-            return true;
-        }
-
-        const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
-        const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
-
-        if (invalidRequests.length === enabledRequests.length) {
-            logger.error(`None of the request types are supported.`);
-            return false;
-        }
-
-        invalidRequests.forEach((k) => {
-            logger.warn(`request type ${k} is not supported.`);
-        });
-
-        return true;
-    }
-
     function _onPlaybackRateChanged(data) {
         const prData = cmcdModel.onPlaybackRateChanged(data);
         if (cmcdReporter && prData) {
@@ -609,16 +599,12 @@ function CmcdController() {
     }
 
     function _cmcdRequestModeInterceptor(commonMediaRequest) {
-        const requestType = commonMediaRequest.customData.request.type;
+        const request = commonMediaRequest.customData.request;
 
-        if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(requestType)) {
-            commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
+        if (!applyCmcdToRequest(request)) {
+            commonMediaRequest.cmcd = request.cmcd;
             return commonMediaRequest;
         }
-
-        let request = commonMediaRequest.customData.request;
-
-        applyCmcdToRequest(request)
 
         commonMediaRequest = {
             ...commonMediaRequest,

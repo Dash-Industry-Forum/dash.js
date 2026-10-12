@@ -262,7 +262,7 @@ const CmcdPropertyMap = {
 
     /**
      * Request types to include CMCD data in
-     * Priority: manifest > settings > default (['segment', 'mpd'])
+     * Priority: manifest > settings > default (['segment', 'mpd', 'license'])
      */
     includeInRequests: {
         version: [1, 2],
@@ -283,7 +283,7 @@ const CmcdPropertyMap = {
                 path: 'settings.streaming.cmcd.includeInRequests',
                 priority: 2,
                 type: 'array',
-                default: ['segment', 'mpd']
+                default: ['segment', 'mpd', 'license']
             }
         ]
     },
@@ -417,22 +417,16 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target includeInRequests filter
-     * Note: This is target-specific, requires context
+     * V2: Target filter for response received (rr) reports
+     * Note: This is target-specific, requires context. No default: rr is reported for every request type.
      */
-    targetIncludeInRequests: {
+    targetResponseReceivedTypes: {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeInRequests',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].responseReceivedTypes',
                 priority: 1,
                 type: 'array'
-            },
-            {
-                path: 'settings.streaming.cmcd.includeInRequests',
-                priority: 2,
-                type: 'array',
-                default: ['segment', 'mpd']
             }
         ]
     }
