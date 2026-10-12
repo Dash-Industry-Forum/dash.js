@@ -80,6 +80,9 @@ player.updateSettings({
 })
 ````
 
+To report only custom keys in requests, set `enabledKeys: []` (version 2 requests still carry `v=2`). To disable CMCD in requests altogether, set
+`enabled: false` instead.
+
 Note: event and response reporting targets (see below) filter keys by their own `enabledKeys` list. To include custom
 keys in reports sent to a target, add the custom key names to that target's `enabledKeys`.
 
