@@ -199,7 +199,7 @@ function CmcdController() {
 
         const reporter = new CmcdReporter({
             ...reporterConfig,
-            // Every decorated request carries the buffered error codes: requests that pass the request filter and license requests
+            // Every decorated request carries the buffered error codes, i.e. every request that passes the request filter
             transform: (data) => _attachErrorCodes(requestErrorCodes, data),
             eventTargets,
         }, _customRequester);
@@ -431,7 +431,7 @@ function CmcdController() {
      *                           Will be mutated with CMCD-decorated url/headers.
      */
     function applyCmcdToRequest(request) {
-        if (!cmcdReporter || !isCmcdEnabled()) {
+        if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(request.type)) {
             return;
         }
 

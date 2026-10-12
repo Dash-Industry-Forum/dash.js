@@ -338,7 +338,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                maxBufferedErrorCodes: 10,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
- *                includeInRequests: ['segment', 'mpd'],
+ *                includeInRequests: ['segment', 'mpd', 'license'],
  *                version: 1,
  *                eventTargets: [],
  *                customKeys: []
@@ -984,7 +984,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {Array.<string>} [includeInRequests]
  * Specifies which HTTP GET requests shall carry parameters.
  *
- * If not specified this value defaults to ['segment', 'mpd].
+ * Possible values are 'segment', 'mpd', 'xlink', 'steering', 'other' and 'license'.
+ *
+ * If not specified this value defaults to ['segment', 'mpd', 'license'].
  * @property {number} [version=1]
  * The version of the CMCD to use.
  *
@@ -1554,7 +1556,7 @@ function Settings() {
                 maxBufferedErrorCodes: 10,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_KEYS,
-                includeInRequests: ['segment', 'mpd'],
+                includeInRequests: ['segment', 'mpd', 'license'],
                 version: 1,
                 eventTargets: [],
                 customKeys: []

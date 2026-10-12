@@ -262,7 +262,7 @@ const CmcdPropertyMap = {
 
     /**
      * Request types to include CMCD data in
-     * Priority: manifest > settings > default (['segment', 'mpd'])
+     * Priority: manifest > settings > default (['segment', 'mpd', 'license'])
      */
     includeInRequests: {
         version: [1, 2],
@@ -283,7 +283,7 @@ const CmcdPropertyMap = {
                 path: 'settings.streaming.cmcd.includeInRequests',
                 priority: 2,
                 type: 'array',
-                default: ['segment', 'mpd']
+                default: ['segment', 'mpd', 'license']
             }
         ]
     },
@@ -432,7 +432,7 @@ const CmcdPropertyMap = {
                 path: 'settings.streaming.cmcd.includeInRequests',
                 priority: 2,
                 type: 'array',
-                default: ['segment', 'mpd']
+                default: ['segment', 'mpd', 'license']
             }
         ]
     },
