@@ -39,6 +39,8 @@ function formatIssues(result) {
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
+    // The rr url carries the CMCD query of the request, so compare without the query
+    const isManifestUrl = (url) => typeof url === 'string' && url.split('?')[0] === mpd.split('?')[0];
 
     // ─── CMCD Query Mode ────────────────────────────────────────────────
 
@@ -259,7 +261,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                                     enabled: true,
                                     url: targetUrl,
                                     enabledKeys: ['url', 'rc', 'msd', 'e', 'ts', 'sn'],
-                                    includeInRequests: ['mpd', 'segment'],
+                                    responseReceivedTypes: ['mpd', 'segment'],
                                     events: ['rr'],
                                 },
                             ],
@@ -290,6 +292,59 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 const allEvents = events.flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || []);
                 const rrEvents = allEvents.filter((d) => d.e === 'rr');
                 expect(rrEvents.length).to.be.at.least(1);
+                expect(rrEvents.some((d) => isManifestUrl(d.url)), 'rr event for the manifest').to.be.true;
+            });
+        });
+
+        describe('Response-received filter (responseReceivedTypes)', () => {
+            let playerAdapter;
+            let collector;
+
+            before(function () {
+                this.timeout(60000);
+                const targetUrl = `${EVENT_TARGET_BASE}/rr-filter`;
+                collector = new CmcdRequestCollector();
+                collector.attach({ eventTargetUrls: [targetUrl] });
+                const settings = {
+                    streaming: {
+                        cmcd: {
+                            ...DEFAULT_CMCD_V2_CONFIG,
+                            mode: 'query',
+                            eventTargets: [
+                                {
+                                    enabled: true,
+                                    url: targetUrl,
+                                    enabledKeys: ['url', 'rc', 'e', 'ts', 'sn'],
+                                    responseReceivedTypes: ['segment'],
+                                    events: ['rr'],
+                                },
+                            ],
+                        },
+                    },
+                };
+                playerAdapter = initializeDashJsAdapter(item, mpd, settings);
+            });
+
+            after(() => {
+                collector.detach();
+                if (playerAdapter) {
+                    playerAdapter.destroy();
+                }
+            });
+
+            it('Checking playing state', async () => {
+                await checkIsPlaying(playerAdapter, true);
+            });
+
+            it('Only segment responses trigger rr events', async function () {
+                this.timeout(30000);
+                await collector.waitForRequests('event', 2, TIMEOUTS.REQUEST_COLLECTION);
+
+                const rrEvents = collector.getRequests('event')
+                    .flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || [])
+                    .filter((d) => d.e === 'rr');
+                expect(rrEvents.length).to.be.at.least(1);
+                expect(rrEvents.filter((d) => isManifestUrl(d.url)), 'rr events for the manifest').to.be.empty;
             });
         });
 
@@ -328,7 +383,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                                     enabled: true,
                                     url: targetUrl,
                                     enabledKeys: ['e', 'ec', 'sn', 'url'],
-                                    includeInRequests: ['segment'],
+                                    responseReceivedTypes: ['segment'],
                                     events: ['e', 'rr'],
                                 },
                             ],
@@ -550,7 +605,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                                     url: targetUrl,
                                     enabledKeys: ['e', 'ts', 'sn', 'sta', 'url', 'rc'],
                                     events: ['ps', 'rr'],
-                                    includeInRequests: ['mpd', 'segment'],
+                                    responseReceivedTypes: ['mpd', 'segment'],
                                 },
                             ],
                         },
