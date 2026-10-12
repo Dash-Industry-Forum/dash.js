@@ -260,6 +260,14 @@ function CmcdController() {
         return data;
     }
 
+    // Bounds the buffer of a destination that never reports again (e.g. HTTP 410 or no matching request type)
+    function _bufferErrorCode(errorCodes, code) {
+        errorCodes.push(code);
+        if (errorCodes.length > cmcdConfigAccessor.get('maxBufferedErrorCodes')) {
+            errorCodes.shift();
+        }
+    }
+
     function _customRequester(request) {
         return new Promise((resolve) => {
             const httpRequest = new CmcdReportRequest();
@@ -306,9 +314,9 @@ function CmcdController() {
             const code = String(errorCode);
             // Without request mode nothing would ever flush the request buffer
             if (isCmcdEnabled()) {
-                requestErrorCodes.push(code);
+                _bufferErrorCode(requestErrorCodes, code);
             }
-            eventTargetErrorCodes.forEach((errorCodes) => errorCodes.push(code));
+            eventTargetErrorCodes.forEach((errorCodes) => _bufferErrorCode(errorCodes, code));
         }
 
         triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.ERROR);

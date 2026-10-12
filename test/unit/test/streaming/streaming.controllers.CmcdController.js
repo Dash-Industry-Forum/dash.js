@@ -1315,6 +1315,25 @@ describe('CmcdController', function () {
                 expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123', '456']);
             });
 
+            it('should keep only the most recent error codes', function () {
+                for (let code = 1; code <= 12; code++) {
+                    triggerError(code);
+                }
+
+                const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
+            });
+
+            it('should keep only as many error codes as set in maxBufferedErrorCodes', function () {
+                settings.update({ streaming: { cmcd: { maxBufferedErrorCodes: 2 } } });
+                triggerError(1);
+                triggerError(2);
+                triggerError(3);
+
+                const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['2', '3']);
+            });
+
             it('should not hand buffered error codes to license requests outside the request filter', function () {
                 triggerError(123);
 

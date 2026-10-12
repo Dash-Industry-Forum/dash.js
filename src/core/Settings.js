@@ -335,6 +335,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                cid: null,
  *                rtp: null,
  *                rtpSafetyFactor: 5,
+ *                maxBufferedErrorCodes: 10,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *                includeInRequests: ['segment', 'mpd'],
@@ -968,6 +969,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
+ * @property {number} [maxBufferedErrorCodes=10]
+ * The maximum number of error codes (ec) buffered per CMCD v2 report destination until its next report.
+ * When the limit is reached, the oldest code is dropped. This bounds the buffer of a destination that does not report again.
+ *
+ * If not specified this value defaults to 10.
  * @property {number} [mode="query"]
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
@@ -1524,6 +1530,7 @@ function Settings() {
                 cid: null,
                 rtp: null,
                 rtpSafetyFactor: 5,
+                maxBufferedErrorCodes: 10,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_KEYS,
                 includeInRequests: ['segment', 'mpd'],
