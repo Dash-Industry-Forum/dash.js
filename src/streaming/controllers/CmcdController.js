@@ -429,10 +429,11 @@ function CmcdController() {
      *
      * @param {object} request - The request object with at least { url, type }.
      *                           Will be mutated with CMCD-decorated url/headers.
+     * @return {boolean} True if the request was decorated
      */
     function applyCmcdToRequest(request) {
         if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(request.type)) {
-            return;
+            return false;
         }
 
         _rebuildReporterIfNeeded();
@@ -452,10 +453,10 @@ function CmcdController() {
             request.cmcd = decorated.customData?.cmcd || {};
 
             _triggerCmcdDataGeneratedEvent(request)
-
+            return true;
         } catch (e) {
             logger.warn(e);
-            return null;
+            return false;
         }
     }
 
@@ -619,16 +620,12 @@ function CmcdController() {
     }
 
     function _cmcdRequestModeInterceptor(commonMediaRequest) {
-        const requestType = commonMediaRequest.customData.request.type;
+        const request = commonMediaRequest.customData.request;
 
-        if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(requestType)) {
-            commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
+        if (!applyCmcdToRequest(request)) {
+            commonMediaRequest.cmcd = request.cmcd;
             return commonMediaRequest;
         }
-
-        let request = commonMediaRequest.customData.request;
-
-        applyCmcdToRequest(request)
 
         commonMediaRequest = {
             ...commonMediaRequest,
