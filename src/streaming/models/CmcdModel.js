@@ -751,25 +751,22 @@ function CmcdModel() {
         _topBitrateCache = new Map();
         try {
             _updateLastMediaTypeRequest(request.type, request.mediaType);
-            let cmcdData = {};
 
-            if (isIncludedInRequestFilter(request.type)) {
-                if (request.type === HTTPRequest.MPD_TYPE) {
-                    return _calculateCmcdDataForRequestForMpd(request);
-                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                    _initForMediaType(request.mediaType);
-                    return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
-                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-                    return _calculateCmcdDataForRequestForInitSegment(request);
-                } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
-                    return _calculateCmcdDataForRequestForOther(request);
-                } else if (request.type === HTTPRequest.LICENSE) {
-                    return _calculateCmcdDataForRequestForLicense(request);
-                } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
-                    return _calculateCmcdDataForRequestForSteering(request);
-                }
+            if (request.type === HTTPRequest.MPD_TYPE) {
+                return _calculateCmcdDataForRequestForMpd(request);
+            } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                _initForMediaType(request.mediaType);
+                return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
+            } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                return _calculateCmcdDataForRequestForInitSegment(request);
+            } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
+                return _calculateCmcdDataForRequestForOther(request);
+            } else if (request.type === HTTPRequest.LICENSE) {
+                return _calculateCmcdDataForRequestForLicense(request);
+            } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
+                return _calculateCmcdDataForRequestForSteering(request);
             }
-            return cmcdData;
+            return {};
         } catch (e) {
             return null;
         } finally {
