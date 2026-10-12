@@ -39,6 +39,7 @@ import {
     CmcdReporter,
     CMCD_QUERY,
     CMCD_HEADERS,
+    isCmcdCustomKey,
 } from '@svta/cml-cmcd';
 import Debug from '../../core/Debug.js';
 
@@ -177,6 +178,7 @@ function CmcdController() {
 
     function _createCmcdReporter(cmcdConfig = _getReporterConfig()) {
         reporterConfigKey = JSON.stringify(cmcdConfig);
+        const { customKeys, ...reporterConfig } = cmcdConfig;
 
         // Error codes not yet reported to the previous event targets are dropped on a rebuild
         eventTargetErrorCodes = [];
@@ -186,12 +188,19 @@ function CmcdController() {
             return { ...target, transform: (data) => _attachErrorCodes(errorCodes, data) };
         });
 
-        return new CmcdReporter({
-            ...cmcdConfig,
+        const reporter = new CmcdReporter({
+            ...reporterConfig,
             // Every decorated request carries the buffered error codes: requests that pass the request filter and license requests
             transform: (data) => _attachErrorCodes(requestErrorCodes, data),
             eventTargets,
         }, _customRequester);
+
+        // Custom keys are persistent session data and included in all reports
+        if (Object.keys(customKeys).length > 0) {
+            reporter.update(customKeys);
+        }
+
+        return reporter;
     }
 
     /**
@@ -200,11 +209,14 @@ function CmcdController() {
      * @private
      */
     function _getReporterConfig() {
+        const customKeys = _getValidatedCustomKeys();
         const cmcdConfig = {
             version: cmcdConfigAccessor.getVersion(),
             transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS ? CMCD_HEADERS : CMCD_QUERY,
-            enabledKeys: cmcdConfigAccessor.get('keys'),
+            // Configured custom keys are enabled implicitly, otherwise the reporter's key filter would drop them
+            enabledKeys: [...cmcdConfigAccessor.get('keys'), ...Object.keys(customKeys)],
             eventTargets: _buildReporterTargets(),
+            customKeys,
         };
 
         // Only pass sid/cid if they have actual values, so CmcdReporter
@@ -219,6 +231,29 @@ function CmcdController() {
         }
 
         return cmcdConfig;
+    }
+
+    /**
+     * Returns the configured custom CMCD keys as a data object, dropping entries whose key
+     * lacks the hyphenated prefix required by the CMCD specification (e.g. 'com.example-mykey').
+     * @returns {object}
+     * @private
+     */
+    function _getValidatedCustomKeys() {
+        const customKeys = cmcdConfigAccessor.get('customKeys') ?? [];
+        if (!Array.isArray(customKeys)) {
+            logger.warn('Ignoring CMCD customKeys setting: expected an array of { key, value } entries');
+            return {};
+        }
+
+        return customKeys.reduce((result, entry) => {
+            if (entry && typeof entry.key === 'string' && isCmcdCustomKey(entry.key) && entry.value !== undefined) {
+                result[entry.key] = entry.value;
+            } else {
+                logger.warn(`Ignoring CMCD custom key entry "${entry ? entry.key : entry}": entries require a value and a key with a hyphenated prefix, e.g. "com.example-mykey"`);
+            }
+            return result;
+        }, {});
     }
 
     function _buildReporterTargets() {

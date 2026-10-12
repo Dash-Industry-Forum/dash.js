@@ -1399,6 +1399,97 @@ describe('CmcdController', function () {
             expect(result.headers).to.have.property('CMCD-Object');
         });
 
+        [1, 2].forEach((version) => {
+            it(`should include configured custom keys in v${version} requests and ignore invalid entries`, function () {
+                settings.update({
+                    streaming: {
+                        cmcd: {
+                            enabled: true,
+                            version,
+                            customKeys: [
+                                { key: 'org.svta-p-n', value: 'dash.js' },
+                                { key: 'org.svta-p-v', value: '5.2.2' },
+                                { key: 'invalidkey', value: 'should-be-ignored' },
+                                { key: 'com.example-novalue' },
+                                { key: 42, value: 'non-string-key' }
+                            ]
+                        }
+                    }
+                });
+                cmcdController.reset();
+                cmcdController.initialize();
+                cmcdController.setConfig({
+                    abrController: abrControllerMock,
+                    dashMetrics: dashMetricsMock,
+                    playbackController: playbackControllerMock,
+                    throughputController: throughputControllerMock,
+                    serviceDescriptionController: serviceDescriptionControllerMock
+                });
+
+                const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+                const result = interceptor(createCommonMediaRequest({
+                    url: 'http://example.com/segment.m4s',
+                    type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                    mediaType: 'video',
+                    quality: 0,
+                    representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                    duration: 4
+                }));
+
+                const metrics = getCmcdFromUrl(result.url);
+                expect(metrics).to.have.property('org.svta-p-n', 'dash.js');
+                expect(metrics).to.have.property('org.svta-p-v', '5.2.2');
+                expect(metrics).to.not.have.property('invalidkey');
+                expect(metrics).to.not.have.property('com.example-novalue');
+                expect(metrics).to.not.have.property('42');
+            });
+        });
+
+        ['org.svta-p-n', 5].forEach((customKeys) => {
+            it(`should ignore a non-array customKeys setting (${JSON.stringify(customKeys)})`, function () {
+                settings.update({ streaming: { cmcd: { enabled: false, customKeys } } });
+                cmcdController.reset();
+
+                expect(() => cmcdController.initialize()).to.not.throw();
+            });
+        });
+
+        it('should report only custom keys when enabledKeys is empty', function () {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        enabled: true,
+                        version: 2,
+                        enabledKeys: [],
+                        customKeys: [{ key: 'org.svta-p-n', value: 'dash.js' }]
+                    }
+                }
+            });
+            cmcdController.reset();
+            cmcdController.initialize();
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock
+            });
+
+            const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+            const result = interceptor(createCommonMediaRequest({
+                url: 'http://example.com/segment.m4s',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                quality: 0,
+                representation: { mediaInfo: { bitrateList: [{ bandwidth: 10000 }] } },
+                duration: 4
+            }));
+
+            const metrics = getCmcdFromUrl(result.url);
+            // CML always reports v in v2
+            expect(metrics).to.deep.equal({ 'org.svta-p-n': 'dash.js', v: 2 });
+        });
+
         it('should filter keys based on enabledKeys configuration', function () {
             settings.update({ streaming: { cmcd: { enabled: true, version: 2, enabledKeys: ['ot', 'br'] } } });
             cmcdController.reset();
@@ -1861,6 +1952,23 @@ describe('CmcdController', function () {
             });
             refreshManifest();
             expect(sendSegmentRequest().cid).to.equal('content-b');
+        });
+
+        it('should keep custom keys when a manifest refresh rebuilds the reporter', function () {
+            setup({ version: '2', keys: 'cid sid', contentID: 'content-a', includeInRequests: 'segment' }, {
+                customKeys: [{ key: 'org.svta-p-n', value: 'dash.js' }]
+            });
+
+            refreshManifest();
+            expect(sendSegmentRequest()['org.svta-p-n']).to.equal('dash.js');
+
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters: { version: '2', keys: 'cid sid', contentID: 'content-b', includeInRequests: 'segment' } }
+            });
+            refreshManifest();
+            const report = sendSegmentRequest();
+            expect(report.cid).to.equal('content-b');
+            expect(report['org.svta-p-n']).to.equal('dash.js');
         });
 
         it('should keep buffered error codes for an event target across a manifest refresh', function () {

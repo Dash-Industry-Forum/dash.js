@@ -905,6 +905,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "CMCD custom keys",
+                "description": "Shows how to add custom keys, such as the player name and version from the SVTA CMCD custom keys registry, to CMCD reports.",
+                "href": "cmcd/cmcd-custom-keys.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
