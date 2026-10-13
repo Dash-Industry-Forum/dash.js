@@ -90,7 +90,6 @@ function StreamProcessor(config) {
         mediaInfoArr,
         pendingSwitchToVoRepresentation,
         qualityChangeInProgress,
-        qualityChangePreparationId,
         representationController,
         scheduleController,
         segmentsController,
@@ -217,9 +216,6 @@ function StreamProcessor(config) {
         shouldUseExplicitTimeForRequest = false;
         shouldRepeatRequest = false;
         qualityChangeInProgress = false;
-        // Invalidates a quality switch preparation that is still waiting for its segment list.
-        // Its continuation must not run against the controllers reset() is about to clear.
-        qualityChangePreparationId = (qualityChangePreparationId || 0) + 1;
         enhancementStreamProcessor = null;
         trackSwitchInProgress = false;
         _resetPendingSwitchToRepresentation();
@@ -839,27 +835,29 @@ function StreamProcessor(config) {
         const newRepresentation = e.newRepresentation;
 
         qualityChangeInProgress = true;
-        const preparationId = ++qualityChangePreparationId;
 
         // Stop scheduling until we are done with preparing the quality switch
         clearScheduleTimer();
 
-        // Update selected Representation in RepresentationController. For SegmentBase this may
-        // first have to resolve the segment list that was skipped at startup.
-        representationController.prepareQualityChange(newRepresentation)
-            .then(() => {
-                if (!_isCurrentQualityChangePreparation(preparationId)) {
-                    return;
-                }
-                _handleDifferentSwitchTypes(e);
-            });
+        // Update selected Representation in RepresentationController. For SegmentBase this may first load the segment list.
+        const segmentListPromise = representationController.prepareQualityChange(newRepresentation);
+        if (!segmentListPromise) {
+            _handleDifferentSwitchTypes(e);
+            return;
+        }
+        segmentListPromise.then(() => {
+            // Reset or superseded by a newer switch while the segment list was loading
+            if (representationController?.getCurrentRepresentation()?.id !== newRepresentation.id) {
+                return;
+            }
+            _handleDifferentSwitchTypes(e);
+        });
     }
 
     function _prepareAdaptationSwitchQualityChange(e) {
         const newRepresentation = e.newRepresentation;
 
         qualityChangeInProgress = true;
-        const preparationId = ++qualityChangePreparationId;
 
         // Stop scheduling until we are done with preparing the quality switch
         clearScheduleTimer();
@@ -872,23 +870,8 @@ function StreamProcessor(config) {
         const mediaInfoSelectionInput = new MediaInfoSelectionInput({ newMediaInfo, newRepresentation })
         selectMediaInfo(mediaInfoSelectionInput)
             .then(() => {
-                if (!_isCurrentQualityChangePreparation(preparationId)) {
-                    return;
-                }
                 _handleDifferentSwitchTypes(e);
             })
-    }
-
-    /**
-     * A preparation stops being current once the processor is reset or a newer quality switch
-     * supersedes it. Its segment list can still arrive afterwards, and acting on it then would
-     * either touch cleared controllers or apply a switch that is no longer wanted.
-     * @param {number} preparationId
-     * @return {boolean}
-     * @private
-     */
-    function _isCurrentQualityChangePreparation(preparationId) {
-        return preparationId === qualityChangePreparationId;
     }
 
     function _handleDifferentSwitchTypes(e) {

@@ -313,16 +313,19 @@ function RepresentationController(config) {
      * We get the new selected Representation which will not hold the ranges and the segment references in case of SegmentBase.
      * In any case use the id to find the right Representation instance in our array of Representations.
      * @param newRep
-     * @return {Promise} resolves once the segment list of the new Representation is available
+     * @return {Promise|null} resolves once the segment list of the new Representation is available, null if nothing has to be loaded
      */
     function prepareQualityChange(newRep) {
         const rep = getRepresentationById(newRep.id);
         if (!rep) {
-            return Promise.resolve();
+            return null;
         }
 
         _setCurrentVoRepresentation(rep);
-        // Only fetches for a SegmentBase Representation whose segment list was skipped at startup.
+        // Only SegmentBase Representations skipped at startup still need their segment list
+        if (rep.hasSegments() || rep.segments) {
+            return null;
+        }
         return _updateRepresentation(rep, true);
     }
 
