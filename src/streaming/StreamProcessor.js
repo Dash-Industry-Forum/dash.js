@@ -440,6 +440,12 @@ function StreamProcessor(config) {
             return;
         }
 
+        // Poll until the segment list is there, also when called from the fragment loading error path
+        if (_loadSegmentListIfMissing()) {
+            _noValidRequest();
+            return;
+        }
+
         let request = _getFragmentRequest();
         if (request) {
             shouldUseExplicitTimeForRequest = false;
@@ -550,7 +556,21 @@ function StreamProcessor(config) {
         }
     }
 
+    /**
+     * SegmentBase: the segment list of a Representation is only loaded once we need its media segments.
+     * @return {boolean} true while the segment list of the current Representation is not available
+     * @private
+     */
+    function _loadSegmentListIfMissing() {
+        return !!representationController.loadSegmentList(representationController.getCurrentRepresentation());
+    }
+
     function checkAndHandleCompletedBuffering() {
+        // Without a segment list the last segment can not have been requested
+        if (_loadSegmentListIfMissing()) {
+            return false;
+        }
+
         const representation = representationController.getCurrentRepresentation();
         const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
 

@@ -267,6 +267,33 @@ describe('RepresentationController', function () {
                 });
         });
 
+        it('should load a failing segment list only once and exclude the Representation from ABR', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+            const excluded = [];
+            const originalExcludeRepresentation = abrControllerMock.excludeRepresentation;
+            const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
+            abrControllerMock.excludeRepresentation = (rep) => excluded.push(rep.id);
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    // The sidx request failed, nothing is stored on the Representation
+                    segmentsControllerMock.updateSegmentData = () => Promise.resolve({ error: 'sidx request failed' });
+                    return lazyRepresentationController.loadSegmentList(repB);
+                })
+                .then(function () {
+                    // A second request for the same Representation reuses the failed load
+                    return lazyRepresentationController.loadSegmentList(repB);
+                })
+                .then(function () {
+                    expect(excluded).to.deep.equal([repB.id]);
+                })
+                .finally(function () {
+                    abrControllerMock.excludeRepresentation = originalExcludeRepresentation;
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
+                });
+        });
+
         it('should share one segment list request between concurrent loads of the same Representation', function () {
             const [repA, repB] = segmentBaseRepresentations;
             let releaseSegmentData;

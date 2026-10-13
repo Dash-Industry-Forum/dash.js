@@ -83,6 +83,9 @@ function AbrControllerMock () {
     this.handleNewMediaInfo = function (/*mediaInfo*/) {
     };
 
+    this.excludeRepresentation = function (/*representation*/) {
+    };
+
     this.unRegisterStreamType = function (/*type*/) {
     };
 

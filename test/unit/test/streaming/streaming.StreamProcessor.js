@@ -60,7 +60,7 @@ describe('StreamProcessor', function () {
 
     });
 
-    describe('Scheduling while a quality switch is being prepared', function () {
+    describe('SegmentBase segment lists', function () {
         const testType = 'video';
 
         let segmentListRequestedFor;
@@ -98,12 +98,14 @@ describe('StreamProcessor', function () {
         let scheduleController;
         let startScheduleTimerCalls;
         let ongoingRequests;
+        let executedRequests;
         let representations;
         let mediaInfo;
 
         beforeEach(function () {
             segmentListRequestedFor = [];
             ongoingRequests = [];
+            executedRequests = [];
             representations = [0, 1].map(function (index) {
                 return voHelper.createSegmentBaseRepresentation(testType, index);
             });
@@ -141,6 +143,9 @@ describe('StreamProcessor', function () {
                     getRequests: function () {
                         return ongoingRequests;
                     },
+                    executeRequest: function (request) {
+                        executedRequests.push(request);
+                    },
                     syncExecutedRequestsWithBufferedRange: function () {
                     }
                 },
@@ -149,6 +154,9 @@ describe('StreamProcessor', function () {
                 mediaPlayerModel: Object.assign(new MediaPlayerModelMock(), {
                     getFastSwitchEnabled: function () {
                         return false;
+                    },
+                    getScheduleTimeout: function () {
+                        return 500;
                     }
                 }),
                 playbackController: new PlaybackControllerMock(),
@@ -212,6 +220,23 @@ describe('StreamProcessor', function () {
             // Loading the segment list is left to the ScheduleController
             expect(streamProcessor.getRepresentationController().getCurrentRepresentation()).to.equal(representations[1]);
             expect(segmentListRequestedFor).to.deep.equal([representations[0].id]);
+        });
+
+        it('should load the segment list and poll instead of requesting a media segment while it is missing', function () {
+            switchQuality(representations[1], representations[0]);
+            startScheduleTimerCalls = 0;
+
+            eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {}, { streamId: 'streamId', mediaType: testType });
+
+            expect(segmentListRequestedFor).to.deep.equal([representations[0].id, representations[1].id]);
+            expect(executedRequests).to.be.empty;
+            expect(startScheduleTimerCalls).to.equal(1);
+        });
+
+        it('should not report buffering as completed while the segment list is missing', function () {
+            switchQuality(representations[1], representations[0]);
+
+            expect(streamProcessor.checkAndHandleCompletedBuffering()).to.be.false;
         });
 
         it('should restart scheduling on quota recovery while a default switch waits for an ongoing request', function () {

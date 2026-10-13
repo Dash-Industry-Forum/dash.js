@@ -336,14 +336,20 @@ function RepresentationController(config) {
      * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded
      */
     function loadSegmentList(newRep) {
-        const rep = getRepresentationById(newRep.id);
+        const rep = newRep ? getRepresentationById(newRep.id) : null;
         if (!hasSegmentData || !rep || rep.hasSegments() || rep.segments) {
             return null;
         }
+        // Loaded once: a failed load stays cached, the Representation is excluded from ABR instead of retried
         if (!segmentListLoads.has(rep)) {
             const load = _updateRepresentation(rep, true)
-                .then(() => rep)
-                .finally(() => segmentListLoads.delete(rep));
+                .catch(() => {})
+                .then(() => {
+                    if (!rep.segments) {
+                        abrController.excludeRepresentation(rep);
+                    }
+                    return rep;
+                });
             segmentListLoads.set(rep, load);
         }
         return segmentListLoads.get(rep);

@@ -7,10 +7,6 @@ function RepresentationControllerMock () {
 
     this.updateRepresentation = function () {};
 
-    this.loadSegmentList = function () {
-        return null;
-    };
-
 }
 
 export default RepresentationControllerMock;

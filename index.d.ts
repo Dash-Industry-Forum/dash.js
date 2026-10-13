@@ -3164,6 +3164,8 @@ export interface AbrController {
 
     clearDataForStream(streamId: string): void;
 
+    excludeRepresentation(representation: Representation): void;
+
     getAbandonmentStateFor(streamId: string, type: string): any | null;
 
     getInitialBitrateFor(type: string): number;
