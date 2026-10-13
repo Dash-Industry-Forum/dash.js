@@ -343,6 +343,65 @@ describe('StreamProcessor', function () {
             });
         });
 
+        it('should not run a queued switch once a newer switch is loading its segment list', function () {
+            // Switch to a Representation whose segment list is already there. A segment is still
+            // loading, so the switch is queued until that segment has been appended.
+            ongoingRequests = [{}];
+            streamProcessor.prepareQualityChange({
+                newRepresentation: representations[0],
+                oldRepresentation: representations[1]
+            });
+
+            // A newer switch to a Representation whose segment list still has to be loaded.
+            holdSegmentList = true;
+            streamProcessor.prepareQualityChange({
+                newRepresentation: representations[1],
+                oldRepresentation: representations[0]
+            });
+
+            // The segment the first switch was waiting for finishes appending.
+            ongoingRequests = [];
+            eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, {
+                streamId: 'streamId',
+                mediaType: testType,
+                representationId: representations[0].id
+            }, { streamId: 'streamId', mediaType: testType });
+
+            return new Promise(function (resolve) {
+                setTimeout(resolve, specHelper.getExecutionDelay());
+            }).then(function () {
+                expect(startScheduleTimerCalls, 'canceled switch must not restart scheduling').to.equal(0);
+            });
+        });
+
+        it('should not let a superseded preparation restart scheduling while a newer switch loads its segment list', function () {
+            // Hold the buffer preparation of the first switch so it completes after the newer switch started.
+            let releaseBufferPreparation;
+            streamProcessor.getBufferController().prepareForDefaultQualitySwitch = function () {
+                return new Promise(function (resolve) {
+                    releaseBufferPreparation = resolve;
+                });
+            };
+            streamProcessor.prepareQualityChange({
+                newRepresentation: representations[0],
+                oldRepresentation: representations[1]
+            });
+
+            holdSegmentList = true;
+            streamProcessor.prepareQualityChange({
+                newRepresentation: representations[1],
+                oldRepresentation: representations[0]
+            });
+
+            releaseBufferPreparation();
+
+            return new Promise(function (resolve) {
+                setTimeout(resolve, specHelper.getExecutionDelay());
+            }).then(function () {
+                expect(startScheduleTimerCalls, 'superseded preparation must not restart scheduling').to.equal(0);
+            });
+        });
+
         it('should resume scheduling once the segment list has been resolved', function () {
             holdSegmentList = true;
             streamProcessor.prepareQualityChange({

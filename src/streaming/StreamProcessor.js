@@ -825,6 +825,7 @@ function StreamProcessor(config) {
 
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
             logger.warn(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.newRepresentation.id} for ${type}`);
+            _resetPendingSwitchToRepresentation();
         }
 
         if (e.isAdaptationSetSwitch) {
@@ -948,6 +949,10 @@ function StreamProcessor(config) {
     }
 
     function _replacementQualitySwitchPreparationDone() {
+        // A preparation that was superseded by a switch still loading its segment list must not restart scheduling
+        if (segmentListLoadInProgress) {
+            return;
+        }
         _bufferClearedForReplacement();
         _resetPendingSwitchToRepresentation();
         qualityChangeInProgress = false;
@@ -964,6 +969,10 @@ function StreamProcessor(config) {
     }
 
     function _abandonQualitySwitchPreparationDone() {
+        // A preparation that was superseded by a switch still loading its segment list must not restart scheduling
+        if (segmentListLoadInProgress) {
+            return;
+        }
         fragmentModel.abortRequests();
         shouldRepeatRequest = true;
         scheduleController.setShouldCheckPlaybackQuality(false);
@@ -1014,6 +1023,10 @@ function StreamProcessor(config) {
     }
 
     function _fastQualitySwitchPreparationDone(time, safeBufferLevel) {
+        // A preparation that was superseded by a switch still loading its segment list must not restart scheduling
+        if (segmentListLoadInProgress) {
+            return;
+        }
         // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
         // Everything that is already in the buffer queue is ok
@@ -1046,6 +1059,10 @@ function StreamProcessor(config) {
     }
 
     function _defaultQualitySwitchPreparationDone() {
+        // A preparation that was superseded by a switch still loading its segment list must not restart scheduling
+        if (segmentListLoadInProgress) {
+            return;
+        }
         scheduleController.setShouldCheckPlaybackQuality(false);
         if (currentMediaInfo.segmentAlignment || currentMediaInfo.subSegmentAlignment) {
             scheduleController.startScheduleTimer();
