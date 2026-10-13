@@ -539,4 +539,31 @@ describe('BufferController', function () {
         });
     });
 
+    describe('Methods without a sourceBufferSink', function () {
+        const oldRepresentation = { mimeType: 'video/mp4', codecFamily: 'avc1', codecs: 'avc1.64001f' };
+        const newRepresentation = { mimeType: 'video/webm', codecFamily: 'vp09', codecs: 'vp09.00.10.08' };
+
+        it('prepareForPlaybackSeek should resolve when no sourceBufferSink exists', function () {
+            expect(bufferController.getBuffer()).to.be.undefined;
+            return bufferController.prepareForPlaybackSeek();
+        });
+
+        it('prepareForForceReplacementQualitySwitch should resolve when no sourceBufferSink exists', function () {
+            return bufferController.prepareForForceReplacementQualitySwitch(newRepresentation, oldRepresentation);
+        });
+
+        it('prepareForReplacementTrackSwitch should resolve when no sourceBufferSink exists', function () {
+            return bufferController.prepareForReplacementTrackSwitch(newRepresentation, oldRepresentation);
+        });
+
+        it('prepareForDefaultQualitySwitch should not reject when no sourceBufferSink exists', function () {
+            return bufferController.prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation)
+                .then((results) => {
+                    results.forEach((result) => {
+                        expect(result.status).to.equal('fulfilled');
+                    });
+                });
+        });
+    });
+
 });
