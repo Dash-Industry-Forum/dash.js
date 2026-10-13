@@ -348,6 +348,8 @@ export interface RepresentationController {
 
     getRepresentationForQuality(quality: number): object | null;
 
+    loadSegmentList(newRep: Representation): Promise<Representation> | null;
+
     prepareQualityChange(newRep: Representation): void;
 
     reset(): void;
@@ -3163,6 +3165,8 @@ export interface AbrController {
     checkPlaybackQuality(type: string, streamId: string | number): boolean;
 
     clearDataForStream(streamId: string): void;
+
+    excludeRepresentation(representation: Representation): void;
 
     getAbandonmentStateFor(streamId: string, type: string): any | null;
 

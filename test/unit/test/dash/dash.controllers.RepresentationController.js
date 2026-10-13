@@ -133,4 +133,200 @@ describe('RepresentationController', function () {
             });
         });
     });
+
+    describe('SegmentBase segment lists are loaded lazily', function () {
+        let segmentBaseRepresentations;
+        let segmentDataLoadedFor;
+        let lazyRepresentationController;
+
+        // Mirrors SegmentsController.updateSegmentData: the list is fetched once per Representation
+        // and populated the way _onSegmentDataUpdated does for a real response.
+        const segmentsControllerMock = Object.assign(new SegmentsControllerMock(), {
+            updateSegmentData(representation, hasSegments) {
+                if (!hasSegments && !representation.segments) {
+                    segmentDataLoadedFor.push(representation.id);
+                    representation.segments = [{ index: 0 }];
+                }
+                return Promise.resolve();
+            }
+        });
+
+        beforeEach(function () {
+            segmentDataLoadedFor = [];
+            segmentBaseRepresentations = [0, 1, 2].map((index) => voHelper.createSegmentBaseRepresentation(testType, index));
+            lazyRepresentationController = RepresentationController(context).create({
+                streamInfo: streamProcessor.getStreamInfo(),
+                abrController: abrControllerMock,
+                segmentsController: segmentsControllerMock,
+                timelineConverter: timelineConverter,
+                playbackController: playbackControllerMock,
+                dashMetrics: dashMetricsMock,
+                type: testType,
+                events: Events,
+                eventBus: eventBus,
+                dashConstants: DashConstants,
+                adapter: adapterMock
+            });
+        });
+
+        afterEach(function () {
+            lazyRepresentationController.reset();
+            lazyRepresentationController = null;
+        });
+
+        it('should only load the segment list of the selected Representation at startup', function () {
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, segmentBaseRepresentations[0].id)
+                .then(function () {
+                    expect(segmentDataLoadedFor).to.deep.equal([segmentBaseRepresentations[0].id]);
+                });
+        });
+
+        it('should not load a segment list for non-fragmented text', function () {
+            const textRepresentationController = RepresentationController(context).create({
+                streamInfo: streamProcessor.getStreamInfo(),
+                abrController: abrControllerMock,
+                segmentsController: segmentsControllerMock,
+                timelineConverter: timelineConverter,
+                playbackController: playbackControllerMock,
+                dashMetrics: dashMetricsMock,
+                type: 'text',
+                events: Events,
+                eventBus: eventBus,
+                dashConstants: DashConstants,
+                adapter: adapterMock
+            });
+            // A single WebVTT file only referenced by a BaseURL
+            const textRepresentation = voHelper.createRepresentation('text', 0);
+            textRepresentation.segmentInfoType = DashConstants.BASE_URL;
+
+            return textRepresentationController
+                .updateData([textRepresentation], false, textRepresentation.id)
+                .then(function () {
+                    expect(textRepresentationController.loadSegmentList(textRepresentation)).to.be.null;
+                    expect(segmentDataLoadedFor).to.be.empty;
+                })
+                .finally(function () {
+                    textRepresentationController.reset();
+                });
+        });
+
+        it('should also load the segment list of the dependent Representation of the selected one at startup', function () {
+            const [base, , enhancement] = segmentBaseRepresentations;
+            enhancement.dependentRepresentation = base;
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, enhancement.id)
+                .then(function () {
+                    expect(segmentDataLoadedFor).to.have.members([base.id, enhancement.id]);
+                });
+        });
+
+        it('should load the segment list of each Representation only once across repeated quality switches', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+
+            function switchTo(rep) {
+                return Promise.resolve(lazyRepresentationController.loadSegmentList(rep))
+                    .then(function () {
+                        lazyRepresentationController.prepareQualityChange(rep);
+                    });
+            }
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    return switchTo(repB);
+                })
+                .then(function () {
+                    return switchTo(repA);
+                })
+                .then(function () {
+                    return switchTo(repB);
+                })
+                .then(function () {
+                    // A is loaded at startup, B on the first switch to it. Switching back must
+                    // reuse both lists rather than fetching and rebuilding them again.
+                    expect(segmentDataLoadedFor).to.deep.equal([repA.id, repB.id]);
+                    expect(lazyRepresentationController.getCurrentRepresentation().id).to.equal(repB.id);
+                });
+        });
+
+        it('should keep the current Representation while the segment list of another one loads', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    const load = lazyRepresentationController.loadSegmentList(repB);
+                    expect(lazyRepresentationController.getCurrentRepresentation().id).to.equal(repA.id);
+                    return load;
+                })
+                .then(function (loadedRep) {
+                    expect(loadedRep).to.equal(repB);
+                    expect(repB.segments).to.not.be.empty;
+                });
+        });
+
+        it('should load a failing segment list only once and exclude the Representation from ABR', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+            const excluded = [];
+            const originalExcludeRepresentation = abrControllerMock.excludeRepresentation;
+            const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
+            abrControllerMock.excludeRepresentation = (rep) => excluded.push(rep.id);
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    // The sidx request failed, nothing is stored on the Representation
+                    segmentsControllerMock.updateSegmentData = () => Promise.resolve({ error: 'sidx request failed' });
+                    return lazyRepresentationController.loadSegmentList(repB);
+                })
+                .then(function () {
+                    // A second request for the same Representation reuses the failed load
+                    return lazyRepresentationController.loadSegmentList(repB);
+                })
+                .then(function () {
+                    expect(excluded).to.deep.equal([repB.id]);
+                })
+                .finally(function () {
+                    abrControllerMock.excludeRepresentation = originalExcludeRepresentation;
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
+                });
+        });
+
+        it('should share one segment list request between concurrent loads of the same Representation', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+            let releaseSegmentData;
+            const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    // Hold the request so the second call arrives while the first one is in flight.
+                    segmentsControllerMock.updateSegmentData = function (representation) {
+                        segmentDataLoadedFor.push(representation.id);
+                        return new Promise(function (resolve) {
+                            releaseSegmentData = function () {
+                                representation.segments = [{ index: 0 }];
+                                resolve();
+                            };
+                        });
+                    };
+
+                    const first = lazyRepresentationController.loadSegmentList(repB);
+                    const second = lazyRepresentationController.loadSegmentList(repB);
+                    expect(second).to.equal(first);
+
+                    releaseSegmentData();
+                    return first;
+                })
+                .then(function () {
+                    expect(segmentDataLoadedFor).to.deep.equal([repA.id, repB.id]);
+                    expect(lazyRepresentationController.loadSegmentList(repB)).to.be.null;
+                })
+                .finally(function () {
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
+                });
+        });
+    });
 });

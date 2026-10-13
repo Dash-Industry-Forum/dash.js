@@ -63,6 +63,7 @@ function AbrController() {
         dashMetrics,
         domStorage,
         droppedFramesHistory,
+        excludedRepresentationIds,
         instance,
         logger,
         mediaPlayerModel,
@@ -149,6 +150,7 @@ function AbrController() {
 
     function resetInitialSettings() {
         abandonmentStateDict = {};
+        excludedRepresentationIds = {};
         streamProcessorDict = {};
         queuedManualQualitySwitches = new Map();
 
@@ -270,10 +272,24 @@ function AbrController() {
     function getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos = true) {
         let voRepresentations = _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
 
+        // Drop excluded Representations first, so the settings filters fall back to the remaining ones
+        voRepresentations = _filterExcluded(voRepresentations);
+
         // Filter the list of options based on the provided settings
         voRepresentations = _filterByAllowedSettings(voRepresentations)
 
         return voRepresentations;
+    }
+
+    function _filterExcluded(voRepresentations) {
+        const filteredRepresentations = voRepresentations.filter((rep) => !excludedRepresentationIds[rep.mediaInfo.streamInfo.id]?.has(rep.id));
+
+        // Like the settings filters, never return an empty list
+        if (filteredRepresentations.length === 0) {
+            return voRepresentations;
+        }
+
+        return filteredRepresentations;
     }
 
     function _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos) {
@@ -731,6 +747,31 @@ function AbrController() {
     }
 
     /**
+     * Excludes a Representation from all further quality decisions, e.g. because its segment list could not be loaded,
+     * and switches to the best remaining Representation at or below its bitrate.
+     * @param {object} representation
+     */
+    function excludeRepresentation(representation) {
+        const mediaInfo = representation.mediaInfo;
+        const streamId = mediaInfo.streamInfo.id;
+        if (!excludedRepresentationIds[streamId]) {
+            excludedRepresentationIds[streamId] = new Set();
+        }
+        excludedRepresentationIds[streamId].add(representation.id);
+
+        // Rules like BOLA cache the list of possible Representations, make them rebuild it without the excluded one
+        handleNewMediaInfo(mediaInfo);
+
+        const fallbackRepresentation = getOptimalRepresentationForBitrate(mediaInfo, representation.bitrateInKbit);
+        if (!fallbackRepresentation || fallbackRepresentation.id === representation.id) {
+            logger.error(`Excluded representation ${representation.id} for ${mediaInfo.type}, no other representation left to switch to`);
+            return;
+        }
+        logger.warn(`Excluded representation ${representation.id} for ${mediaInfo.type}, switching to representation ${fallbackRepresentation.id}`);
+        setPlaybackQuality(mediaInfo.type, mediaInfo.streamInfo, fallbackRepresentation, { message: `[AbrController]: Representation ${representation.id} is excluded` });
+    }
+
+    /**
      * This function is called by the scheduleControllers to check if the quality should be changed.
      * Consider this the main entry point for the ABR decision logic
      * @param {string} type
@@ -1050,6 +1091,7 @@ function AbrController() {
         if (abandonmentStateDict[streamId]) {
             delete abandonmentStateDict[streamId];
         }
+        delete excludedRepresentationIds[streamId];
 
         abrRulesCollection.clearDataForStream(streamId);
     }
@@ -1063,6 +1105,7 @@ function AbrController() {
         canPerformQualitySwitch,
         checkPlaybackQuality,
         clearDataForStream,
+        excludeRepresentation,
         getAbandonmentStateFor,
         getInitialBitrateFor,
         getOptimalRepresentationForBitrate,

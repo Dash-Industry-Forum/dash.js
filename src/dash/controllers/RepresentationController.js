@@ -50,7 +50,9 @@ function RepresentationController(config) {
 
     let instance,
         voAvailableRepresentations,
-        currentVoRepresentation;
+        currentVoRepresentation,
+        hasSegmentData,
+        segmentListLoads;
 
     function setup() {
         resetInitialSettings();
@@ -112,6 +114,8 @@ function RepresentationController(config) {
     function resetInitialSettings() {
         currentVoRepresentation = null;
         voAvailableRepresentations = [];
+        hasSegmentData = false;
+        segmentListLoads = new WeakMap();
     }
 
     function reset() {
@@ -126,16 +130,21 @@ function RepresentationController(config) {
             const selectedRepresentation = getRepresentationById(selectedRepresentationId);
             _setCurrentVoRepresentation(selectedRepresentation);
 
-            if (type !== Constants.VIDEO && type !== Constants.ENHANCEMENT && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
+            // Non-fragmented text (e.g. a single WebVTT file) has no segment data to load
+            hasSegmentData = type === Constants.VIDEO || type === Constants.ENHANCEMENT || type === Constants.AUDIO || (type === Constants.TEXT && isFragmented);
+            if (!hasSegmentData) {
                 _endDataUpdate();
                 resolve();
                 return;
             }
 
+            // The dependent Representation is scheduled on as well (e.g. the base layer of an enhancement Representation)
+            const dependentRepresentationId = selectedRepresentation?.dependentRepresentation?.id;
             const promises = [];
             for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
                 const currentRep = voAvailableRepresentations[i];
-                promises.push(_updateRepresentation(currentRep));
+                const isSelected = currentRep.id === selectedRepresentationId || currentRep.id === dependentRepresentationId;
+                promises.push(_updateRepresentation(currentRep, isSelected));
             }
 
             Promise.all(promises)
@@ -159,7 +168,7 @@ function RepresentationController(config) {
         _endDataUpdate();
     }
 
-    function _updateRepresentation(currentRep) {
+    function _updateRepresentation(currentRep, isSelected) {
         return new Promise((resolve, reject) => {
             const hasInitialization = currentRep.hasInitialization();
             const hasSegments = currentRep.hasSegments();
@@ -169,7 +178,9 @@ function RepresentationController(config) {
             const promises = [];
 
             promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
-            promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
+            // For SegmentBase streams the segment list is only fetched for the Representation we
+            // are about to play. The others are loaded by the ScheduleController via loadSegmentList() once scheduled on.
+            promises.push(isSelected ? segmentsController.updateSegmentData(currentRep, hasSegments) : Promise.resolve());
 
             Promise.all(promises)
                 .then((data) => {
@@ -312,13 +323,36 @@ function RepresentationController(config) {
      * @param newRep
      */
     function prepareQualityChange(newRep) {
-        const voRepresentations = voAvailableRepresentations.filter((rep) => {
-            return rep.id === newRep.id;
-        })
-
-        if (voRepresentations.length > 0) {
-            _setCurrentVoRepresentation(voRepresentations[0]);
+        const rep = getRepresentationById(newRep.id);
+        if (rep) {
+            _setCurrentVoRepresentation(rep);
         }
+    }
+
+    /**
+     * Loads the segment list of a SegmentBase Representation that was skipped in updateData().
+     * Concurrent calls for the same Representation share one request.
+     * @param newRep
+     * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded
+     */
+    function loadSegmentList(newRep) {
+        const rep = newRep ? getRepresentationById(newRep.id) : null;
+        if (!hasSegmentData || !rep || rep.hasSegments() || rep.segments) {
+            return null;
+        }
+        // Loaded once: a failed load stays cached, the Representation is excluded from ABR instead of retried
+        if (!segmentListLoads.has(rep)) {
+            const load = _updateRepresentation(rep, true)
+                .catch(() => {})
+                .then(() => {
+                    if (!rep.segments) {
+                        abrController.excludeRepresentation(rep);
+                    }
+                    return rep;
+                });
+            segmentListLoads.set(rep, load);
+        }
+        return segmentListLoads.get(rep);
     }
 
     function _setCurrentVoRepresentation(value) {
@@ -344,6 +378,7 @@ function RepresentationController(config) {
         getRepresentationById,
         getStreamId,
         getType,
+        loadSegmentList,
         prepareQualityChange,
         reset,
         setIsDynamic,
