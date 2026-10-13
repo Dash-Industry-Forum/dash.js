@@ -50,7 +50,8 @@ function RepresentationController(config) {
 
     let instance,
         voAvailableRepresentations,
-        currentVoRepresentation;
+        currentVoRepresentation,
+        segmentListLoads;
 
     function setup() {
         resetInitialSettings();
@@ -112,6 +113,7 @@ function RepresentationController(config) {
     function resetInitialSettings() {
         currentVoRepresentation = null;
         voAvailableRepresentations = [];
+        segmentListLoads = new WeakMap();
     }
 
     function reset() {
@@ -171,7 +173,7 @@ function RepresentationController(config) {
 
             promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
             // For SegmentBase streams the segment list is only fetched for the Representation we
-            // are about to play. The others are resolved lazily in prepareQualityChange().
+            // are about to play. The others are resolved lazily in loadSegmentList().
             promises.push(isSelected ? segmentsController.updateSegmentData(currentRep, hasSegments) : Promise.resolve());
 
             Promise.all(promises)
@@ -313,20 +315,32 @@ function RepresentationController(config) {
      * We get the new selected Representation which will not hold the ranges and the segment references in case of SegmentBase.
      * In any case use the id to find the right Representation instance in our array of Representations.
      * @param newRep
-     * @return {Promise|null} resolves once the segment list of the new Representation is available, null if nothing has to be loaded
      */
     function prepareQualityChange(newRep) {
         const rep = getRepresentationById(newRep.id);
-        if (!rep) {
-            return null;
+        if (rep) {
+            _setCurrentVoRepresentation(rep);
         }
+    }
 
-        _setCurrentVoRepresentation(rep);
-        // Only SegmentBase Representations skipped at startup still need their segment list
-        if (rep.hasSegments() || rep.segments) {
+    /**
+     * Loads the segment list of a SegmentBase Representation that was skipped in updateData().
+     * Concurrent calls for the same Representation share one request.
+     * @param newRep
+     * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded
+     */
+    function loadSegmentList(newRep) {
+        const rep = getRepresentationById(newRep.id);
+        if (!rep || rep.hasSegments() || rep.segments) {
             return null;
         }
-        return _updateRepresentation(rep, true);
+        if (!segmentListLoads.has(rep)) {
+            const load = _updateRepresentation(rep, true)
+                .then(() => rep)
+                .finally(() => segmentListLoads.delete(rep));
+            segmentListLoads.set(rep, load);
+        }
+        return segmentListLoads.get(rep);
     }
 
     function _setCurrentVoRepresentation(value) {
@@ -352,6 +366,7 @@ function RepresentationController(config) {
         getRepresentationById,
         getStreamId,
         getType,
+        loadSegmentList,
         prepareQualityChange,
         reset,
         setIsDynamic,

@@ -185,22 +185,80 @@ describe('RepresentationController', function () {
         it('should load the segment list of each Representation only once across repeated quality switches', function () {
             const [repA, repB] = segmentBaseRepresentations;
 
+            function switchTo(rep) {
+                return Promise.resolve(lazyRepresentationController.loadSegmentList(rep))
+                    .then(function () {
+                        lazyRepresentationController.prepareQualityChange(rep);
+                    });
+            }
+
             return lazyRepresentationController
                 .updateData(segmentBaseRepresentations, true, repA.id)
                 .then(function () {
-                    return lazyRepresentationController.prepareQualityChange(repB);
+                    return switchTo(repB);
                 })
                 .then(function () {
-                    return lazyRepresentationController.prepareQualityChange(repA);
+                    return switchTo(repA);
                 })
                 .then(function () {
-                    return lazyRepresentationController.prepareQualityChange(repB);
+                    return switchTo(repB);
                 })
                 .then(function () {
                     // A is loaded at startup, B on the first switch to it. Switching back must
                     // reuse both lists rather than fetching and rebuilding them again.
                     expect(segmentDataLoadedFor).to.deep.equal([repA.id, repB.id]);
                     expect(lazyRepresentationController.getCurrentRepresentation().id).to.equal(repB.id);
+                });
+        });
+
+        it('should keep the current Representation while the segment list of another one loads', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    const load = lazyRepresentationController.loadSegmentList(repB);
+                    expect(lazyRepresentationController.getCurrentRepresentation().id).to.equal(repA.id);
+                    return load;
+                })
+                .then(function (loadedRep) {
+                    expect(loadedRep).to.equal(repB);
+                    expect(repB.segments).to.not.be.empty;
+                });
+        });
+
+        it('should share one segment list request between concurrent loads of the same Representation', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+            let releaseSegmentData;
+            const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    // Hold the request so the second call arrives while the first one is in flight.
+                    segmentsControllerMock.updateSegmentData = function (representation) {
+                        segmentDataLoadedFor.push(representation.id);
+                        return new Promise(function (resolve) {
+                            releaseSegmentData = function () {
+                                representation.segments = [{ index: 0 }];
+                                resolve();
+                            };
+                        });
+                    };
+
+                    const first = lazyRepresentationController.loadSegmentList(repB);
+                    const second = lazyRepresentationController.loadSegmentList(repB);
+                    expect(second).to.equal(first);
+
+                    releaseSegmentData();
+                    return first;
+                })
+                .then(function () {
+                    expect(segmentDataLoadedFor).to.deep.equal([repA.id, repB.id]);
+                    expect(lazyRepresentationController.loadSegmentList(repB)).to.be.null;
+                })
+                .finally(function () {
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
                 });
         });
     });

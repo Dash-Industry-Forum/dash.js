@@ -74,6 +74,7 @@ describe('StreamProcessor', function () {
 
         // RepresentationController only stores a non-empty segment list on the Representation.
         const segmentList = { segments: [{ duration: 2, timescale: 1, startTime: 0, media: 'segment.mp4', mediaRange: '0-999' }] };
+        let segmentListResponse;
 
         const segmentBaseControllerMock = {
             getSegmentBaseInitSegment: function () {
@@ -81,12 +82,13 @@ describe('StreamProcessor', function () {
             },
             getSegmentList: function (e) {
                 segmentListRequestedFor.push(e.representation.id);
+                const response = segmentListResponse;
                 if (!holdSegmentList) {
-                    return Promise.resolve(segmentList);
+                    return Promise.resolve(response);
                 }
                 return new Promise(function (resolve) {
                     pendingSegmentListResolvers.push(function () {
-                        resolve(segmentList);
+                        resolve(response);
                     });
                 });
             }
@@ -100,9 +102,41 @@ describe('StreamProcessor', function () {
             });
         }
 
+        function wait() {
+            return new Promise(function (resolve) {
+                setTimeout(resolve, specHelper.getExecutionDelay());
+            });
+        }
+
+        function switchQuality(newRepresentation, oldRepresentation) {
+            streamProcessor.prepareQualityChange({ newRepresentation, oldRepresentation });
+        }
+
+        function appendFragment() {
+            eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, {
+                streamId: 'streamId',
+                mediaType: testType,
+                representationId: representations[0].id
+            }, { streamId: 'streamId', mediaType: testType });
+        }
+
+        // Buffer pruning after a QuotaExceededError reports it has room again.
+        function recoverFromQuotaExceeded() {
+            eventBus.trigger(Events.BUFFER_CLEARED, {
+                streamId: 'streamId',
+                mediaType: testType,
+                from: 0,
+                to: 10,
+                hasEnoughSpaceToAppend: true,
+                quotaExceeded: true
+            }, { streamId: 'streamId', mediaType: testType });
+        }
+
         let streamProcessor;
         let scheduleController;
         let startScheduleTimerCalls;
+        // Current Representation each time scheduling was (re)started
+        let scheduledOn;
         let getRequestsCalls;
         let ongoingRequests;
         let representations;
@@ -110,6 +144,7 @@ describe('StreamProcessor', function () {
 
         beforeEach(function () {
             holdSegmentList = false;
+            segmentListResponse = segmentList;
             pendingSegmentListResolvers = [];
             segmentListRequestedFor = [];
             getRequestsCalls = 0;
@@ -189,8 +224,10 @@ describe('StreamProcessor', function () {
 
             scheduleController = streamProcessor.getScheduleController();
             startScheduleTimerCalls = 0;
+            scheduledOn = [];
             scheduleController.startScheduleTimer = function () {
                 startScheduleTimerCalls++;
+                scheduledOn.push(streamProcessor.getRepresentationController().getCurrentRepresentation());
             };
 
             // Seed the processor the way playback does, rather than poking the
@@ -199,6 +236,7 @@ describe('StreamProcessor', function () {
             return streamProcessor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: mediaInfo }))
                 .then(function () {
                     startScheduleTimerCalls = 0;
+                    scheduledOn = [];
                 });
         });
 
@@ -218,25 +256,40 @@ describe('StreamProcessor', function () {
             expect(segmentListRequestedFor).to.deep.equal([representations[0].id]);
         });
 
-        it('should not restart scheduling when an earlier fragment finishes appending while the switch is still being prepared', function () {
-            // Switch to a Representation whose segment list still has to be loaded. The mock
-            // leaves that load pending, so preparation cannot complete.
+        it('should keep scheduling the current Representation while the segment list of the new one loads', function () {
             holdSegmentList = true;
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[1],
-                oldRepresentation: representations[0]
+            switchQuality(representations[1], representations[0]);
+
+            expect(streamProcessor.getRepresentationController().getCurrentRepresentation()).to.equal(representations[0]);
+
+            appendFragment();
+            recoverFromQuotaExceeded();
+
+            expect(startScheduleTimerCalls).to.equal(2);
+            expect(scheduledOn).to.deep.equal([representations[0], representations[0]]);
+        });
+
+        it('should switch once the segment list of the new Representation has been loaded', function () {
+            holdSegmentList = true;
+            switchQuality(representations[1], representations[0]);
+            releaseHeldSegmentLists();
+
+            return wait().then(function () {
+                expect(streamProcessor.getRepresentationController().getCurrentRepresentation()).to.equal(representations[1]);
+                expect(scheduledOn).to.deep.equal([representations[1]]);
             });
+        });
 
-            // A fragment that was already in flight finishes appending.
-            eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, {
-                streamId: 'streamId',
-                mediaType: testType,
-                representationId: representations[0].id
-            }, { streamId: 'streamId', mediaType: testType });
+        it('should ignore a segment list that arrives after a newer switch', function () {
+            holdSegmentList = true;
+            switchQuality(representations[1], representations[0]);
+            // The newer switch targets a Representation whose segment list is already there.
+            switchQuality(representations[0], representations[0]);
+            releaseHeldSegmentLists();
 
-            // Scheduling must stay paused: the current Representation has already changed but its
-            // segments are not available yet, which would otherwise look like end of stream.
-            expect(startScheduleTimerCalls).to.equal(0);
+            return wait().then(function () {
+                expect(streamProcessor.getRepresentationController().getCurrentRepresentation()).to.equal(representations[0]);
+            });
         });
 
         it('should ignore a segment list that arrives after the processor was reset', function () {
@@ -244,82 +297,24 @@ describe('StreamProcessor', function () {
             // period or stream switch, resets the processors while the request stays in flight, so
             // the segment list can still arrive after everything has been torn down.
             holdSegmentList = true;
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[1],
-                oldRepresentation: representations[0]
-            });
+            switchQuality(representations[1], representations[0]);
 
             streamProcessor.reset();
             streamProcessor = null;
 
-            // The preparation reaches fragmentModel.getRequests() just before it would touch the
+            // The switch reaches fragmentModel.getRequests() just before it would touch the
             // controllers reset() has cleared, so no call here means the continuation stopped.
             getRequestsCalls = 0;
-            holdSegmentList = false;
             releaseHeldSegmentLists();
 
-            return new Promise(function (resolve) {
-                setTimeout(resolve, specHelper.getExecutionDelay());
-            }).then(function () {
-                expect(getRequestsCalls, 'obsolete preparation must not continue after reset').to.equal(0);
+            return wait().then(function () {
+                expect(getRequestsCalls, 'obsolete switch must not continue after reset').to.equal(0);
             });
         });
 
-        it('should not restart scheduling on quota recovery while the switch is still being prepared', function () {
+        it('should switch to the replaced Representation when an MPD update arrives while loading', function () {
             holdSegmentList = true;
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[1],
-                oldRepresentation: representations[0]
-            });
-
-            // Buffer pruning after a QuotaExceededError reports it has room again.
-            eventBus.trigger(Events.BUFFER_CLEARED, {
-                streamId: 'streamId',
-                mediaType: testType,
-                from: 0,
-                to: 10,
-                hasEnoughSpaceToAppend: true,
-                quotaExceeded: true
-            }, { streamId: 'streamId', mediaType: testType });
-
-            expect(startScheduleTimerCalls).to.equal(0);
-        });
-
-        it('should restart scheduling on quota recovery while a default switch waits for an ongoing request', function () {
-            // Switch to a Representation whose segment list is already there. A segment is still
-            // loading, so the switch is queued until that segment has been appended.
-            ongoingRequests = [{}];
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[0],
-                oldRepresentation: representations[1]
-            });
-
-            // The append of that segment failed with a QuotaExceededError, so BYTES_APPENDED never
-            // fires. Quota recovery is the only thing left to restart scheduling.
-            eventBus.trigger(Events.BUFFER_CLEARED, {
-                streamId: 'streamId',
-                mediaType: testType,
-                from: 0,
-                to: 10,
-                hasEnoughSpaceToAppend: true,
-                quotaExceeded: true
-            }, { streamId: 'streamId', mediaType: testType });
-
-            expect(startScheduleTimerCalls).to.equal(1);
-        });
-
-        it('should not resume scheduling on a replaced Representation that has no segment list yet', function () {
-            const representationController = streamProcessor.getRepresentationController();
-            const currentHasSegmentsOnRestart = [];
-            scheduleController.startScheduleTimer = function () {
-                currentHasSegmentsOnRestart.push(!!representationController.getCurrentRepresentation().segments);
-            };
-
-            holdSegmentList = true;
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[1],
-                oldRepresentation: representations[0]
-            });
+            switchQuality(representations[1], representations[0]);
             const staleLoad = pendingSegmentListResolvers.shift();
 
             // An MPD update installs new Representation instances with the same ids while the
@@ -335,97 +330,63 @@ describe('StreamProcessor', function () {
             holdSegmentList = false;
             staleLoad();
 
-            return new Promise(function (resolve) {
-                setTimeout(resolve, specHelper.getExecutionDelay());
-            }).then(function () {
-                expect(currentHasSegmentsOnRestart).to.not.be.empty;
-                expect(currentHasSegmentsOnRestart).to.not.include(false);
+            return wait().then(function () {
+                const current = streamProcessor.getRepresentationController().getCurrentRepresentation();
+                expect(current).to.equal(representations[1]);
+                expect(current.segments).to.not.be.empty;
+                scheduledOn.forEach(function (representation) {
+                    expect(representation.segments, 'scheduled on a Representation without segments').to.not.be.empty;
+                });
             });
         });
 
-        it('should not run a queued switch once a newer switch is loading its segment list', function () {
+        it('should apply a queued switch and then a newer switch once its segment list has been loaded', function () {
             // Switch to a Representation whose segment list is already there. A segment is still
             // loading, so the switch is queued until that segment has been appended.
             ongoingRequests = [{}];
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[0],
-                oldRepresentation: representations[1]
-            });
+            switchQuality(representations[0], representations[1]);
 
             // A newer switch to a Representation whose segment list still has to be loaded.
             holdSegmentList = true;
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[1],
-                oldRepresentation: representations[0]
-            });
+            switchQuality(representations[1], representations[0]);
 
             // The segment the first switch was waiting for finishes appending.
             ongoingRequests = [];
-            eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, {
-                streamId: 'streamId',
-                mediaType: testType,
-                representationId: representations[0].id
-            }, { streamId: 'streamId', mediaType: testType });
+            appendFragment();
 
-            return new Promise(function (resolve) {
-                setTimeout(resolve, specHelper.getExecutionDelay());
-            }).then(function () {
-                expect(startScheduleTimerCalls, 'canceled switch must not restart scheduling').to.equal(0);
-            });
-        });
-
-        it('should not let a superseded preparation restart scheduling while a newer switch loads its segment list', function () {
-            // Hold the buffer preparation of the first switch so it completes after the newer switch started.
-            let releaseBufferPreparation;
-            streamProcessor.getBufferController().prepareForDefaultQualitySwitch = function () {
-                return new Promise(function (resolve) {
-                    releaseBufferPreparation = resolve;
+            return wait()
+                .then(function () {
+                    expect(scheduledOn).to.deep.equal([representations[0]]);
+                    releaseHeldSegmentLists();
+                    return wait();
+                })
+                .then(function () {
+                    expect(streamProcessor.getRepresentationController().getCurrentRepresentation()).to.equal(representations[1]);
+                    expect(scheduledOn).to.deep.equal([representations[0], representations[1]]);
                 });
-            };
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[0],
-                oldRepresentation: representations[1]
-            });
+        });
 
-            holdSegmentList = true;
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[1],
-                oldRepresentation: representations[0]
-            });
+        it('should stay on the current Representation when the segment list cannot be loaded', function () {
+            segmentListResponse = { error: 'sidx request failed' };
+            switchQuality(representations[1], representations[0]);
 
-            releaseBufferPreparation();
-
-            return new Promise(function (resolve) {
-                setTimeout(resolve, specHelper.getExecutionDelay());
-            }).then(function () {
-                expect(startScheduleTimerCalls, 'superseded preparation must not restart scheduling').to.equal(0);
+            return wait().then(function () {
+                expect(streamProcessor.getRepresentationController().getCurrentRepresentation()).to.equal(representations[0]);
+                expect(scheduledOn).to.be.empty;
             });
         });
 
-        it('should resume scheduling once the segment list has been resolved', function () {
-            holdSegmentList = true;
-            streamProcessor.prepareQualityChange({
-                newRepresentation: representations[1],
-                oldRepresentation: representations[0]
-            });
+        it('should restart scheduling on quota recovery while a default switch waits for an ongoing request', function () {
+            // Switch to a Representation whose segment list is already there. A segment is still
+            // loading, so the switch is queued until that segment has been appended.
+            ongoingRequests = [{}];
+            switchQuality(representations[0], representations[1]);
 
-            expect(startScheduleTimerCalls).to.equal(0);
+            // The append of that segment failed with a QuotaExceededError, so BYTES_APPENDED never
+            // fires. Quota recovery is the only thing left to restart scheduling.
+            recoverFromQuotaExceeded();
 
-            holdSegmentList = false;
-            releaseHeldSegmentLists();
-
-            return new Promise(function (resolve, reject) {
-                const deadline = Date.now() + 2000;
-                (function poll() {
-                    if (startScheduleTimerCalls > 0) {
-                        resolve();
-                    } else if (Date.now() > deadline) {
-                        reject(new Error('scheduling did not resume after the segment list resolved'));
-                    } else {
-                        setTimeout(poll, 10);
-                    }
-                })();
-            });
+            expect(startScheduleTimerCalls).to.equal(1);
         });
     });
 
