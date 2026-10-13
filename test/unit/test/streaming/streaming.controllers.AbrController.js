@@ -469,6 +469,43 @@ describe('AbrController', function () {
             expect(abrCtrl.getPossibleVoRepresentations(mediaInfo).map((rep) => rep.id)).to.have.members(['high', 'low']);
             expect(requested).to.deep.equal(['low']);
         });
+
+        it('should keep the excluded Representation as a candidate if no other one is left', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const representations = [{ bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'only' }];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+
+            const requested = [];
+            const onQualityChangeRequested = (e) => requested.push(e.newRepresentation.id);
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            abrCtrl.excludeRepresentation(representations[0]);
+            eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['only']);
+            expect(abrCtrl.getOptimalRepresentationForBitrate(mediaInfo, 10).id).to.equal('only');
+            expect(requested).to.be.empty;
+        });
+
+        it('should apply the bitrate settings to the Representations that are not excluded', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const representations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'high' },
+                { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'low' }
+            ];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+            settings.update({ streaming: { abr: { maxBitrate: { video: 7 } } } });
+
+            abrCtrl.excludeRepresentation(representations[1]);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['high']);
+        });
     });
 
     describe('canPerformQualitySwitch()', function () {

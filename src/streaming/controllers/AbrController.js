@@ -272,11 +272,24 @@ function AbrController() {
     function getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos = true) {
         let voRepresentations = _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
 
+        // Drop excluded Representations first, so the settings filters fall back to the remaining ones
+        voRepresentations = _filterExcluded(voRepresentations);
+
         // Filter the list of options based on the provided settings
         voRepresentations = _filterByAllowedSettings(voRepresentations)
-        voRepresentations = voRepresentations.filter((rep) => !excludedRepresentationIds[rep.mediaInfo.streamInfo.id]?.has(rep.id));
 
         return voRepresentations;
+    }
+
+    function _filterExcluded(voRepresentations) {
+        const filteredRepresentations = voRepresentations.filter((rep) => !excludedRepresentationIds[rep.mediaInfo.streamInfo.id]?.has(rep.id));
+
+        // Like the settings filters, never return an empty list
+        if (filteredRepresentations.length === 0) {
+            return voRepresentations;
+        }
+
+        return filteredRepresentations;
     }
 
     function _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos) {
@@ -746,8 +759,11 @@ function AbrController() {
         }
         excludedRepresentationIds[streamId].add(representation.id);
 
+        // Rules like BOLA cache the list of possible Representations, make them rebuild it without the excluded one
+        handleNewMediaInfo(mediaInfo);
+
         const fallbackRepresentation = getOptimalRepresentationForBitrate(mediaInfo, representation.bitrateInKbit);
-        if (!fallbackRepresentation) {
+        if (!fallbackRepresentation || fallbackRepresentation.id === representation.id) {
             logger.error(`Excluded representation ${representation.id} for ${mediaInfo.type}, no other representation left to switch to`);
             return;
         }
