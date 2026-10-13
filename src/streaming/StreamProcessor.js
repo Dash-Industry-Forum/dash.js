@@ -92,6 +92,7 @@ function StreamProcessor(config) {
         qualityChangeInProgress,
         representationController,
         scheduleController,
+        segmentListLoadInProgress,
         segmentsController,
         shouldRepeatRequest,
         shouldUseExplicitTimeForRequest,
@@ -216,6 +217,7 @@ function StreamProcessor(config) {
         shouldUseExplicitTimeForRequest = false;
         shouldRepeatRequest = false;
         qualityChangeInProgress = false;
+        segmentListLoadInProgress = false;
         enhancementStreamProcessor = null;
         trackSwitchInProgress = false;
         _resetPendingSwitchToRepresentation();
@@ -649,10 +651,10 @@ function StreamProcessor(config) {
             setExplicitBufferingTime(e.from);
         }
 
-        // (Re)start schedule once buffer has been pruned after a QuotaExceededError, unless a
-        // quality switch is still being prepared. The *QualitySwitchPreparationDone() handlers
-        // restart it once the new Representation is usable.
-        if (e.hasEnoughSpaceToAppend && e.quotaExceeded && !qualityChangeInProgress) {
+        // (Re)start schedule once buffer has been pruned after a QuotaExceededError, unless the
+        // segment list of the new Representation is still loading. The *QualitySwitchPreparationDone()
+        // handlers restart it once the new Representation is usable.
+        if (e.hasEnoughSpaceToAppend && e.quotaExceeded && !segmentListLoadInProgress) {
             scheduleController.startScheduleTimer();
         }
     }
@@ -689,8 +691,8 @@ function StreamProcessor(config) {
 
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
             _prepareForDefaultQualitySwitch(pendingSwitchToVoRepresentation.newRepresentation, pendingSwitchToVoRepresentation.oldRepresentation);
-        } else if (!trackSwitchInProgress && !qualityChangeInProgress) {
-            // Paused while a quality switch is prepared; the *QualitySwitchPreparationDone() handlers restart it.
+        } else if (!trackSwitchInProgress && !segmentListLoadInProgress) {
+            // Paused while the segment list of the new Representation loads; the *QualitySwitchPreparationDone() handlers restart it.
             scheduleController.startScheduleTimer(0);
         }
     }
@@ -818,6 +820,9 @@ function StreamProcessor(config) {
             return;
         }
 
+        // A newer switch supersedes a segment list load that is still in flight
+        segmentListLoadInProgress = false;
+
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
             logger.warn(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.newRepresentation.id} for ${type}`);
         }
@@ -845,11 +850,21 @@ function StreamProcessor(config) {
             _handleDifferentSwitchTypes(e);
             return;
         }
+        segmentListLoadInProgress = true;
+        const loadingRepresentation = representationController.getCurrentRepresentation();
         segmentListPromise.then(() => {
+            const currentRepresentation = representationController?.getCurrentRepresentation();
             // Reset or superseded by a newer switch while the segment list was loading
-            if (representationController?.getCurrentRepresentation()?.id !== newRepresentation.id) {
+            if (currentRepresentation?.id !== newRepresentation.id) {
                 return;
             }
+            // The Representations were replaced (e.g. MPD update) while loading, so the segments landed on the old instance
+            if (currentRepresentation !== loadingRepresentation) {
+                segmentListLoadInProgress = false;
+                _prepareNonAdaptationSwitchQualityChange(e);
+                return;
+            }
+            segmentListLoadInProgress = false;
             _handleDifferentSwitchTypes(e);
         });
     }

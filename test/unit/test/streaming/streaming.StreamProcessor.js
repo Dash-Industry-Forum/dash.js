@@ -72,6 +72,9 @@ describe('StreamProcessor', function () {
         let pendingSegmentListResolvers;
         let segmentListRequestedFor;
 
+        // RepresentationController only stores a non-empty segment list on the Representation.
+        const segmentList = { segments: [{ duration: 2, timescale: 1, startTime: 0, media: 'segment.mp4', mediaRange: '0-999' }] };
+
         const segmentBaseControllerMock = {
             getSegmentBaseInitSegment: function () {
                 return Promise.resolve();
@@ -79,11 +82,11 @@ describe('StreamProcessor', function () {
             getSegmentList: function (e) {
                 segmentListRequestedFor.push(e.representation.id);
                 if (!holdSegmentList) {
-                    return Promise.resolve({ segments: [] });
+                    return Promise.resolve(segmentList);
                 }
                 return new Promise(function (resolve) {
                     pendingSegmentListResolvers.push(function () {
-                        resolve({ segments: [] });
+                        resolve(segmentList);
                     });
                 });
             }
@@ -101,6 +104,7 @@ describe('StreamProcessor', function () {
         let scheduleController;
         let startScheduleTimerCalls;
         let getRequestsCalls;
+        let ongoingRequests;
         let representations;
         let mediaInfo;
 
@@ -109,6 +113,7 @@ describe('StreamProcessor', function () {
             pendingSegmentListResolvers = [];
             segmentListRequestedFor = [];
             getRequestsCalls = 0;
+            ongoingRequests = [];
             representations = [0, 1].map(function (index) {
                 return voHelper.createSegmentBaseRepresentation(testType, index);
             });
@@ -145,7 +150,7 @@ describe('StreamProcessor', function () {
                 fragmentModel: {
                     getRequests: function () {
                         getRequestsCalls++;
-                        return [];
+                        return ongoingRequests;
                     },
                     syncExecutedRequestsWithBufferedRange: function () {
                     }
@@ -162,7 +167,12 @@ describe('StreamProcessor', function () {
                 segmentBlacklistController: objectsHelper.getDummyBlacklistController(),
                 settings: Settings(context).getInstance(),
                 textController: new TextControllerMock(),
-                timelineConverter: objectsHelper.getDummyTimelineConverter()
+                timelineConverter: Object.assign(objectsHelper.getDummyTimelineConverter(), {
+                    // Turns the segment list into segments, see segmentList.
+                    calcPresentationTimeFromMediaTime: function (mediaTime) {
+                        return mediaTime;
+                    }
+                })
             });
 
             streamProcessor.initialize(new MediaSourceMock(), true, true);
@@ -273,6 +283,64 @@ describe('StreamProcessor', function () {
             }, { streamId: 'streamId', mediaType: testType });
 
             expect(startScheduleTimerCalls).to.equal(0);
+        });
+
+        it('should restart scheduling on quota recovery while a default switch waits for an ongoing request', function () {
+            // Switch to a Representation whose segment list is already there. A segment is still
+            // loading, so the switch is queued until that segment has been appended.
+            ongoingRequests = [{}];
+            streamProcessor.prepareQualityChange({
+                newRepresentation: representations[0],
+                oldRepresentation: representations[1]
+            });
+
+            // The append of that segment failed with a QuotaExceededError, so BYTES_APPENDED never
+            // fires. Quota recovery is the only thing left to restart scheduling.
+            eventBus.trigger(Events.BUFFER_CLEARED, {
+                streamId: 'streamId',
+                mediaType: testType,
+                from: 0,
+                to: 10,
+                hasEnoughSpaceToAppend: true,
+                quotaExceeded: true
+            }, { streamId: 'streamId', mediaType: testType });
+
+            expect(startScheduleTimerCalls).to.equal(1);
+        });
+
+        it('should not resume scheduling on a replaced Representation that has no segment list yet', function () {
+            const representationController = streamProcessor.getRepresentationController();
+            const currentHasSegmentsOnRestart = [];
+            scheduleController.startScheduleTimer = function () {
+                currentHasSegmentsOnRestart.push(!!representationController.getCurrentRepresentation().segments);
+            };
+
+            holdSegmentList = true;
+            streamProcessor.prepareQualityChange({
+                newRepresentation: representations[1],
+                oldRepresentation: representations[0]
+            });
+            const staleLoad = pendingSegmentListResolvers.shift();
+
+            // An MPD update installs new Representation instances with the same ids while the
+            // segment list of the old instance is still loading.
+            representations = [0, 1].map(function (index) {
+                const representation = voHelper.createSegmentBaseRepresentation(testType, index);
+                representation.mediaInfo = mediaInfo;
+                return representation;
+            });
+            streamProcessor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: mediaInfo }));
+
+            // Only the load for the old instance completes.
+            holdSegmentList = false;
+            staleLoad();
+
+            return new Promise(function (resolve) {
+                setTimeout(resolve, specHelper.getExecutionDelay());
+            }).then(function () {
+                expect(currentHasSegmentsOnRestart).to.not.be.empty;
+                expect(currentHasSegmentsOnRestart).to.not.include(false);
+            });
         });
 
         it('should resume scheduling once the segment list has been resolved', function () {
