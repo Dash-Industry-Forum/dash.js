@@ -8,6 +8,10 @@ import AbrControllerMock from '../../mocks/AbrControllerMock.js';
 import MediaPlayerModelMock from '../../mocks/MediaPlayerModelMock.js';
 import TextControllerMock from '../../mocks/TextControllerMock.js';
 import RepresentationControllerMock from '../../mocks/RepresentationControllerMock.js';
+import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
+import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
+import sinon from 'sinon';
 
 const voHelper = new VoHelper();
 import {expect} from 'chai';
@@ -213,4 +217,107 @@ describe('ScheduleController', function () {
         })
 
     })
+    describe('lazy SegmentBase segment list', () => {
+        const eventBus = EventBus(context).getInstance();
+        let clock, representation, loadSegmentListCalls, pendingLoad, initFragmentsNeeded;
+
+        function onInitFragmentNeeded() {
+            initFragmentsNeeded++;
+        }
+
+        beforeEach(() => {
+            clock = sinon.useFakeTimers();
+            representation = { id: 'rep1', segments: null };
+            loadSegmentListCalls = 0;
+            initFragmentsNeeded = 0;
+            pendingLoad = null;
+            representationController = new RepresentationControllerMock();
+            representationController.getCurrentRepresentation = () => representation;
+            // Every call starts a load that settles when the test resolves it, like a sidx request
+            representationController.loadSegmentList = () => {
+                if (representation.segments) {
+                    return null;
+                }
+                loadSegmentListCalls++;
+                if (!pendingLoad) {
+                    let resolve;
+                    const promise = new Promise((r) => {
+                        resolve = r;
+                    });
+                    pendingLoad = { promise, resolve: () => {
+                        pendingLoad = null;
+                        resolve(representation);
+                    } };
+                }
+                return pendingLoad.promise;
+            };
+            abrController = new AbrControllerMock();
+            abrController.handlePendingManualQualitySwitch = () => false;
+            eventBus.on(Events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded);
+
+            scheduleController = ScheduleController(context).create({
+                streamInfo: voHelper.getDummyStreamInfo(),
+                type: Constants.VIDEO,
+                dashMetrics: new DashMetricsMock(),
+                abrController,
+                bufferController: { getIsBufferingCompleted: () => false },
+                mediaPlayerModel: { getScheduleTimeout: () => 500 },
+                playbackController: new PlaybackControllerMock(),
+                representationController,
+                settings
+            });
+            scheduleController.initialize(true);
+        });
+
+        afterEach(() => {
+            eventBus.off(Events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded);
+            clock.restore();
+        });
+
+        it('should pause scheduling while the segment list loads and resume once it is loaded', async () => {
+            scheduleController.startScheduleTimer(0);
+            await clock.tickAsync(0);
+            expect(loadSegmentListCalls).to.equal(1);
+            expect(initFragmentsNeeded).to.equal(0);
+
+            // Another restart while loading must not start a second load
+            scheduleController.startScheduleTimer(0);
+            await clock.tickAsync(0);
+            expect(initFragmentsNeeded).to.equal(0);
+
+            representation.segments = [{}];
+            pendingLoad.resolve();
+            await clock.tickAsync(0);
+            expect(initFragmentsNeeded).to.equal(1);
+        });
+
+        it('should retry with a backoff when the segment list could not be loaded', async () => {
+            scheduleController.startScheduleTimer(0);
+            await clock.tickAsync(0);
+            pendingLoad.resolve();
+            await clock.tickAsync(999);
+            expect(loadSegmentListCalls).to.equal(1);
+            await clock.tickAsync(1);
+            expect(loadSegmentListCalls).to.equal(2);
+
+            pendingLoad.resolve();
+            await clock.tickAsync(1999);
+            expect(loadSegmentListCalls).to.equal(2);
+            await clock.tickAsync(1);
+            expect(loadSegmentListCalls).to.equal(3);
+            expect(initFragmentsNeeded).to.equal(0);
+        });
+
+        it('should not resume scheduling when reset while the segment list loads', async () => {
+            scheduleController.startScheduleTimer(0);
+            await clock.tickAsync(0);
+            scheduleController.reset();
+
+            representation.segments = [{}];
+            pendingLoad.resolve();
+            await clock.tickAsync(20000);
+            expect(initFragmentsNeeded).to.equal(0);
+            scheduleController = null;
+        });
+    });
 });

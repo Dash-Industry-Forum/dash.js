@@ -182,6 +182,17 @@ describe('RepresentationController', function () {
                 });
         });
 
+        it('should also load the segment list of the dependent Representation of the selected one at startup', function () {
+            const [base, , enhancement] = segmentBaseRepresentations;
+            enhancement.dependentRepresentation = base;
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, enhancement.id)
+                .then(function () {
+                    expect(segmentDataLoadedFor).to.have.members([base.id, enhancement.id]);
+                });
+        });
+
         it('should load the segment list of each Representation only once across repeated quality switches', function () {
             const [repA, repB] = segmentBaseRepresentations;
 

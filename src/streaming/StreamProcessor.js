@@ -86,7 +86,6 @@ function StreamProcessor(config) {
         enhancementStreamProcessor,
         instance,
         isDynamic,
-        latestQualityChange,
         logger,
         mediaInfoArr,
         pendingSwitchToVoRepresentation,
@@ -219,7 +218,6 @@ function StreamProcessor(config) {
         qualityChangeInProgress = false;
         enhancementStreamProcessor = null;
         trackSwitchInProgress = false;
-        latestQualityChange = null;
         _resetPendingSwitchToRepresentation();
     }
 
@@ -817,8 +815,6 @@ function StreamProcessor(config) {
             return;
         }
 
-        latestQualityChange = e;
-
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
             logger.warn(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.newRepresentation.id} for ${type}`);
         }
@@ -834,26 +830,6 @@ function StreamProcessor(config) {
 
     function _prepareNonAdaptationSwitchQualityChange(e) {
         const newRepresentation = e.newRepresentation;
-
-        // SegmentBase: keep playing the current Representation until the segment list of the new one is available
-        const segmentListPromise = representationController.loadSegmentList(newRepresentation);
-        if (segmentListPromise) {
-            segmentListPromise.then((rep) => {
-                // Reset or superseded by a newer switch while the segment list was loading
-                if (!representationController || e !== latestQualityChange) {
-                    return;
-                }
-                if (!rep.segments) {
-                    logger.warn(`Segment list of representation ${rep.id} could not be loaded, staying on the current representation for ${type}`);
-                    return;
-                }
-                // Switches now, or loads again if the Representations were replaced (e.g. MPD update) in the meantime
-                _prepareNonAdaptationSwitchQualityChange(e);
-            }).catch((err) => {
-                logger.error(err);
-            });
-            return;
-        }
 
         qualityChangeInProgress = true;
 

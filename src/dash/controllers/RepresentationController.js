@@ -134,10 +134,12 @@ function RepresentationController(config) {
                 return;
             }
 
+            // The dependent Representation is scheduled on as well (e.g. the base layer of an enhancement Representation)
+            const dependentRepresentationId = selectedRepresentation?.dependentRepresentation?.id;
             const promises = [];
             for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
                 const currentRep = voAvailableRepresentations[i];
-                const isSelected = currentRep.id === selectedRepresentationId;
+                const isSelected = currentRep.id === selectedRepresentationId || currentRep.id === dependentRepresentationId;
                 promises.push(_updateRepresentation(currentRep, isSelected));
             }
 
@@ -173,7 +175,7 @@ function RepresentationController(config) {
 
             promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
             // For SegmentBase streams the segment list is only fetched for the Representation we
-            // are about to play. The others are resolved lazily in loadSegmentList().
+            // are about to play. The others are loaded by the ScheduleController via loadSegmentList() once scheduled on.
             promises.push(isSelected ? segmentsController.updateSegmentData(currentRep, hasSegments) : Promise.resolve());
 
             Promise.all(promises)

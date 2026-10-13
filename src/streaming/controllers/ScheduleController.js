@@ -60,7 +60,9 @@ function ScheduleController(config) {
         lastInitializedRepresentationId,
         logger,
         managedMediaSourceAllowsRequest,
+        pendingSegmentListLoad,
         scheduleTimeout,
+        segmentListLoadFailures,
         streamInfo,
         switchTrack,
         timeToLoadDelay,
@@ -163,12 +165,61 @@ function ScheduleController(config) {
     function _getNextFragment() {
         const currentRepresentation = representationController.getCurrentRepresentation();
 
+        if (_isWaitingForSegmentList(currentRepresentation)) {
+            return;
+        }
+
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
         if (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack) {
             _initFragmentNeeded(currentRepresentation)
         } else {
             _mediaFragmentNeeded()
         }
+    }
+
+    /**
+     * SegmentBase: the segment list of a Representation is only loaded once we schedule on it.
+     * Scheduling pauses while the list loads and resumes afterwards, after a backoff delay if the load failed.
+     * @param {object} representation
+     * @return {boolean} true while the segment list is loading
+     * @private
+     */
+    function _isWaitingForSegmentList(representation) {
+        const load = representationController.loadSegmentList(representation);
+        if (!load) {
+            return false;
+        }
+        if (load === pendingSegmentListLoad) {
+            return true;
+        }
+        pendingSegmentListLoad = load;
+        load
+            .then((rep) => !!rep.segments, (e) => {
+                logger.error(e);
+                return false;
+            })
+            .then((loaded) => {
+                // Reset while the segment list was loading
+                if (load !== pendingSegmentListLoad) {
+                    return;
+                }
+                pendingSegmentListLoad = null;
+                if (loaded) {
+                    segmentListLoadFailures = 0;
+                    startScheduleTimer(0);
+                    return;
+                }
+                segmentListLoadFailures++;
+                // A switch away from the failed Representation already restarted scheduling, do not delay it
+                if (representation !== representationController.getCurrentRepresentation()) {
+                    return;
+                }
+                // ponytail: plain exponential backoff, the failed Representation stays an ABR candidate. Exclude it from ABR if retrying keeps stalling.
+                const delay = Math.min(1000 * Math.pow(2, segmentListLoadFailures - 1), 16000);
+                logger.warn(`Segment list of representation ${representation.id} could not be loaded for ${type}, retrying in ${delay} ms`);
+                startScheduleTimer(delay);
+            });
+        return true;
     }
 
     function _initFragmentNeeded(currentRepresentation) {
@@ -438,6 +489,8 @@ function ScheduleController(config) {
         switchTrack = false;
         initSegmentRequired = false;
         managedMediaSourceAllowsRequest = true;
+        pendingSegmentListLoad = null;
+        segmentListLoadFailures = 0;
     }
 
     function reset() {
