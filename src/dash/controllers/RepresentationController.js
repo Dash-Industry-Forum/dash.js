@@ -51,6 +51,7 @@ function RepresentationController(config) {
     let instance,
         voAvailableRepresentations,
         currentVoRepresentation,
+        hasSegmentData,
         segmentListLoads;
 
     function setup() {
@@ -113,6 +114,7 @@ function RepresentationController(config) {
     function resetInitialSettings() {
         currentVoRepresentation = null;
         voAvailableRepresentations = [];
+        hasSegmentData = false;
         segmentListLoads = new WeakMap();
     }
 
@@ -128,7 +130,9 @@ function RepresentationController(config) {
             const selectedRepresentation = getRepresentationById(selectedRepresentationId);
             _setCurrentVoRepresentation(selectedRepresentation);
 
-            if (type !== Constants.VIDEO && type !== Constants.ENHANCEMENT && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
+            // Non-fragmented text (e.g. a single WebVTT file) has no segment data to load
+            hasSegmentData = type === Constants.VIDEO || type === Constants.ENHANCEMENT || type === Constants.AUDIO || (type === Constants.TEXT && isFragmented);
+            if (!hasSegmentData) {
                 _endDataUpdate();
                 resolve();
                 return;
@@ -333,7 +337,7 @@ function RepresentationController(config) {
      */
     function loadSegmentList(newRep) {
         const rep = getRepresentationById(newRep.id);
-        if (!rep || rep.hasSegments() || rep.segments) {
+        if (!hasSegmentData || !rep || rep.hasSegments() || rep.segments) {
             return null;
         }
         if (!segmentListLoads.has(rep)) {

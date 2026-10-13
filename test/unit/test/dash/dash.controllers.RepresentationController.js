@@ -182,6 +182,35 @@ describe('RepresentationController', function () {
                 });
         });
 
+        it('should not load a segment list for non-fragmented text', function () {
+            const textRepresentationController = RepresentationController(context).create({
+                streamInfo: streamProcessor.getStreamInfo(),
+                abrController: abrControllerMock,
+                segmentsController: segmentsControllerMock,
+                timelineConverter: timelineConverter,
+                playbackController: playbackControllerMock,
+                dashMetrics: dashMetricsMock,
+                type: 'text',
+                events: Events,
+                eventBus: eventBus,
+                dashConstants: DashConstants,
+                adapter: adapterMock
+            });
+            // A single WebVTT file only referenced by a BaseURL
+            const textRepresentation = voHelper.createRepresentation('text', 0);
+            textRepresentation.segmentInfoType = DashConstants.BASE_URL;
+
+            return textRepresentationController
+                .updateData([textRepresentation], false, textRepresentation.id)
+                .then(function () {
+                    expect(textRepresentationController.loadSegmentList(textRepresentation)).to.be.null;
+                    expect(segmentDataLoadedFor).to.be.empty;
+                })
+                .finally(function () {
+                    textRepresentationController.reset();
+                });
+        });
+
         it('should also load the segment list of the dependent Representation of the selected one at startup', function () {
             const [base, , enhancement] = segmentBaseRepresentations;
             enhancement.dependentRepresentation = base;
