@@ -348,6 +348,8 @@ export interface RepresentationController {
 
     getRepresentationForQuality(quality: number): object | null;
 
+    loadSegmentList(newRep: Representation): Promise<Representation> | null;
+
     prepareQualityChange(newRep: Representation): void;
 
     reset(): void;
