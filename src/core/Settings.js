@@ -159,8 +159,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                maximumAllowedDrift: 100,
  *                enableBackgroundSyncAfterSegmentDownloadError: true,
  *                defaultTimingSource: {
- *                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
- *                    value: 'http://time.akamai.com/?iso&ms'
+ *                    scheme: 'urn:mpeg:dash:utc:http-iso:2014',
+ *                    value: 'https://time.akamai.com/?iso&ms'
  *                },
  *                artificialTimeOffsetToApply: 0
  *            },
@@ -335,11 +335,13 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                cid: null,
  *                rtp: null,
  *                rtpSafetyFactor: 5,
+ *                maxBufferedErrorCodes: 10,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
- *                includeInRequests: ['segment', 'mpd'],
+ *                includeInRequests: ['segment', 'mpd', 'license'],
  *                version: 1,
- *                eventTargets: []
+ *                eventTargets: [],
+ *                customKeys: []
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -621,7 +623,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [enableBackgroundSyncAfterSegmentDownloadError=true]
  * Enables or disables the background sync after the player ran into a segment download error.
  *
- * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
+ * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-iso:2014',value: 'https://time.akamai.com/?iso&ms'}]
  * The default timing source to be used. The timing sources in the MPD take precedence over this one.
  *
  * @property {number} [artificialTimeOffsetToApply=0]
@@ -968,6 +970,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
+ * @property {number} [maxBufferedErrorCodes=10]
+ * The maximum number of error codes (ec) buffered per CMCD v2 report destination until its next report.
+ * When the limit is reached, the oldest code is dropped. This bounds the buffer of a destination that does not report again.
+ *
+ * If not specified this value defaults to 10.
  * @property {number} [mode="query"]
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
@@ -977,13 +984,24 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {Array.<string>} [includeInRequests]
  * Specifies which HTTP GET requests shall carry parameters.
  *
- * If not specified this value defaults to ['segment', 'mpd].
+ * Possible values are 'segment', 'mpd', 'xlink', 'steering', 'other' and 'license'.
+ *
+ * If not specified this value defaults to ['segment', 'mpd', 'license'].
  * @property {number} [version=1]
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
  * @property {Array.<CmcdEventTarget>} [eventTargets]
  * List of CMCD reporting targets.
+ * @property {Array.<CmcdCustomKey>} [customKeys=[]]
+ * Custom CMCD keys to include in reports as persistent session data, e.g. [{ key: 'org.svta-p-n', value: 'dash.js' }].
+ *
+ * Per the CMCD specification, custom keys must carry a hyphenated prefix (reverse-DNS syntax recommended)
+ * to avoid namespace collisions, e.g. 'com.example-mykey'. Keys without a valid prefix are ignored.
+ * See the SVTA CMCD custom keys registry for registered keys.
+ *
+ * Note: event/response targets filter keys by their own enabledKeys; add custom keys there to include
+ * them in target reports.
  */
 
 /**
@@ -998,10 +1016,19 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {Array.<string>} [includeInRequests]
- * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {Array.<string>} [responseReceivedTypes]
+ * Types of requests whose responses trigger a response received (rr) report (e.g., 'mpd', 'segment').
+ * If not specified, rr is reported for every request type.
  * @property {number} [batchSize]
  * The batch size for the CMCD reporting.
+ */
+
+/**
+ * @typedef {Object} CmcdCustomKey
+ * @property {string} key
+ * The custom key name. Must carry a hyphenated prefix, e.g. 'com.example-mykey'.
+ * @property {string|number|boolean} value
+ * The value reported for the custom key.
  */
 
 /**
@@ -1326,7 +1353,7 @@ function Settings() {
                 maximumAllowedDrift: 100,
                 enableBackgroundSyncAfterSegmentDownloadError: true,
                 defaultTimingSource: {
-                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+                    scheme: 'urn:mpeg:dash:utc:http-iso:2014',
                     value: 'https://time.akamai.com/?iso&ms'
                 },
                 artificialTimeOffsetToApply: 0,
@@ -1524,11 +1551,13 @@ function Settings() {
                 cid: null,
                 rtp: null,
                 rtpSafetyFactor: 5,
+                maxBufferedErrorCodes: 10,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_KEYS,
-                includeInRequests: ['segment', 'mpd'],
+                includeInRequests: ['segment', 'mpd', 'license'],
                 version: 1,
-                eventTargets: []
+                eventTargets: [],
+                customKeys: []
             },
             cmsd: {
                 enabled: false,

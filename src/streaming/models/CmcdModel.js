@@ -52,6 +52,7 @@ const REQUEST_TYPE_TO_CMCD_FILTER = {
     [HTTPRequest.MPD_TYPE]: 'mpd',
     [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
     [HTTPRequest.OTHER_TYPE]: 'other',
+    [HTTPRequest.LICENSE]: 'license',
 };
 
 function CmcdModel() {
@@ -67,6 +68,7 @@ function CmcdModel() {
         _bufferLevelStarved,
         _initialMediaRequestsDone,
         _playbackStartedTime,
+        _msd,
         _isSeeking,
         streamProcessors,
         _rebufferingStartTime = {},
@@ -531,12 +533,17 @@ function CmcdModel() {
     }
 
     function onPlaybackStarted() {
-        if (!_playbackStartedTime) {
+        if (_playbackStartedTime === undefined) {
             _playbackStartedTime = Date.now();
         }
     }
 
     function onPlaybackPlaying() {
+        // MSD is the wall-clock time between the player being instructed to play (play event,
+        // or start of manifest loading for autoplay) and the first transition to the playing state.
+        if (_msd === undefined && _playbackStartedTime !== undefined) {
+            _msd = Date.now() - _playbackStartedTime;
+        }
         for (const mediaType in _rebufferingStartTime) {
             if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
                 onRebufferingCompleted(mediaType);
@@ -558,10 +565,7 @@ function CmcdModel() {
     }
 
     function _calculateMsd() {
-        if (!_playbackStartedTime) {
-            return null;
-        }
-        return Date.now() - _playbackStartedTime;
+        return _msd !== undefined ? _msd : null;
     }
 
     function getGenericCmcdData(mediaType) {
@@ -619,6 +623,7 @@ function CmcdModel() {
         _isSeeking = false;
         _lastMediaTypeRequest = undefined;
         _playbackStartedTime = undefined;
+        _msd = undefined;
         _rebufferingStartTime = {};
         _rebufferingDuration = {};
         _streamType = undefined;
@@ -746,25 +751,22 @@ function CmcdModel() {
         _topBitrateCache = new Map();
         try {
             _updateLastMediaTypeRequest(request.type, request.mediaType);
-            let cmcdData = {};
 
-            if (isIncludedInRequestFilter(request.type)) {
-                if (request.type === HTTPRequest.MPD_TYPE) {
-                    return _calculateCmcdDataForRequestForMpd(request);
-                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                    _initForMediaType(request.mediaType);
-                    return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
-                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-                    return _calculateCmcdDataForRequestForInitSegment(request);
-                } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
-                    return _calculateCmcdDataForRequestForOther(request);
-                } else if (request.type === HTTPRequest.LICENSE) {
-                    return _calculateCmcdDataForRequestForLicense(request);
-                } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
-                    return _calculateCmcdDataForRequestForSteering(request);
-                }
+            if (request.type === HTTPRequest.MPD_TYPE) {
+                return _calculateCmcdDataForRequestForMpd(request);
+            } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                _initForMediaType(request.mediaType);
+                return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
+            } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                return _calculateCmcdDataForRequestForInitSegment(request);
+            } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
+                return _calculateCmcdDataForRequestForOther(request);
+            } else if (request.type === HTTPRequest.LICENSE) {
+                return _calculateCmcdDataForRequestForLicense(request);
+            } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
+                return _calculateCmcdDataForRequestForSteering(request);
             }
-            return cmcdData;
+            return {};
         } catch (e) {
             return null;
         } finally {

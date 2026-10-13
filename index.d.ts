@@ -1962,6 +1962,7 @@ export class MediaPlayerSettingClass {
             cid?: string | null,
             rtp?: number | null,
             rtpSafetyFactor?: number,
+            maxBufferedErrorCodes?: number,
             mode?: 'query' | 'header',
             enabledKeys?: Array<string>,
             includeInRequests?: Array<string>,
@@ -1972,8 +1973,12 @@ export class MediaPlayerSettingClass {
                 events?: Array<string>,
                 interval?: number,
                 enabledKeys?: Array<string>,
-                includeInRequests?: Array<string>,
+                responseReceivedTypes?: Array<string>,
                 batchSize?: number
+            }>,
+            customKeys?: Array<{
+                key: string,
+                value: string | number | boolean
             }>
         },
         cmsd?: {
@@ -2970,7 +2975,7 @@ export interface Constants {
     CMCD_MODE_HEADERS: 'headers',
     CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
     CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
-    CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+    CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other', 'license'],
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
     TEXT_HIDDEN: 'hidden',
