@@ -163,6 +163,13 @@ function TimelineSegmentsGetter(config, isDynamic) {
             representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
         const timeline = base.SegmentTimeline;
 
+        // A dynamic manifest can be read while the SegmentTimeline is absent or
+        // carries no S elements yet. Report that nothing is available instead of
+        // throwing; the next manifest refresh recovers.
+        if (!timeline || !timeline.S) {
+            return { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
+        }
+
         let mediaTime = 0;
         let mediaTimeInSeconds = 0;
         let availableSegments = 0;
@@ -215,6 +222,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
         const segmentBase = _getSegmentBase(representation);
         const segmentTimeline = segmentBase.SegmentTimeline;
         const segmentURL = segmentBase.SegmentURL;
+
+        // Nothing to iterate while the timeline is absent or has no S elements
+        // yet; leave the caller with no segment rather than throwing.
+        if (!segmentTimeline || !segmentTimeline.S) {
+            return;
+        }
 
         let mediaTime = 0;
         let sElementCounterIncludingRepeats = -1;
