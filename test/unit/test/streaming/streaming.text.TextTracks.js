@@ -90,6 +90,48 @@ describe('TextTracks', function () {
         });
     });
 
+    describe('Sizing of the TTML caption container', function () {
+        let captionContainer;
+        let videoSize;
+
+        beforeEach(function () {
+            captionContainer = document.createElement('div');
+            videoSize = { w: 0, h: 0 };
+            sinon.stub(videoModelMock, 'getTTMLRenderingDiv').returns(captionContainer);
+            sinon.stub(videoModelMock, 'getVideoWidth').callsFake(() => videoSize.w);
+            sinon.stub(videoModelMock, 'getVideoHeight').callsFake(() => videoSize.h);
+
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                label: 'eng',
+                defaultTrack: true,
+                isTTML: true
+            }, 1);
+            textTracks.createTracks();
+        });
+
+        it('should size the container when the intrinsic video size becomes known without the element resizing', function () {
+            // As in WebKit with MSE: no picture size yet when the track is set up.
+            expect(captionContainer.style.width).to.equal('');
+
+            videoSize = { w: 640, h: 360 };
+            videoModelMock.fireEvent('resize');
+
+            // 800x600 client area, 16:9 picture: full width, letterboxed height.
+            expect(captionContainer.style.width).to.equal('800px');
+            expect(captionContainer.style.height).to.equal('450px');
+        });
+
+        it('should stop listening for resize events when the text tracks are deleted', function () {
+            expect(videoModelMock.events.resize).to.have.lengthOf(1);
+
+            textTracks.deleteAllTextTracks();
+
+            expect(videoModelMock.events.resize).to.have.lengthOf(0);
+        });
+    });
+
     describe('Method addCaptions', function () {
         it('should call addCue function when a call to addCaptions is made', function () {
             textTracks.addTextTrackInfo({
