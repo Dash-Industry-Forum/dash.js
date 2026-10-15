@@ -18,7 +18,8 @@ export class SettingsController {
     static get _ARRAY_SETTING_PATHS() {
         return new Set([
             'streaming.cmcd.enabledKeys',
-            'streaming.cmcd.includeInRequests'
+            'streaming.cmcd.includeInRequests',
+            'streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.codecFamilies'
         ]);
     }
 
@@ -74,6 +75,11 @@ export class SettingsController {
                     lowLatencyStallThreshold: parseFloat($('#opt-ll-stall-threshold').value) || 0.3,
                     fastSwitchEnabled: this._isChecked('opt-fast-switch'),
                     reuseExistingSourceBuffers: this._isChecked('opt-reuse-sourcebuffers'),
+                    useChangeType: this._isChecked('opt-use-change-type'),
+                    reuseExistingSourceBuffersWithoutChangeType: {
+                        enabled: this._isChecked('opt-reuse-sourcebuffers-without-changetype'),
+                        codecFamilies: this._parseCommaSeparatedInput($('#opt-reuse-sourcebuffer-codec-families').value).map((family) => family.toLowerCase())
+                    },
                     mediaSourceDurationInfinity: this._isChecked('opt-mediasource-duration-inf'),
                     resetSourceBuffersForTrackSwitch: this._isChecked('opt-reset-sb-track-switch')
                 },
@@ -455,6 +461,7 @@ export class SettingsController {
         // All streaming settings - bind change events
         const settingsCheckboxes = [
             'opt-schedule-while-paused', 'opt-calc-seg-avail', 'opt-reuse-sourcebuffers',
+            'opt-use-change-type', 'opt-reuse-sourcebuffers-without-changetype',
             'opt-mediasource-duration-inf', 'opt-reset-sb-track-switch', 'opt-save-last-media',
             'opt-local-storage', 'opt-jump-gaps', 'opt-content-steering', 'opt-catchup-enabled',
             'opt-fast-switch', 'opt-auto-switch-video',
@@ -478,6 +485,7 @@ export class SettingsController {
             'opt-catchup-step-start-min', 'opt-catchup-step-start-max',
             'opt-catchup-step-stop-min', 'opt-catchup-step-stop-max',
             'opt-stall-threshold', 'opt-ll-stall-threshold',
+            'opt-reuse-sourcebuffer-codec-families',
             'opt-live-delay', 'opt-live-delay-frag-count', 'opt-utc-offset',
             'opt-init-bitrate-video', 'opt-min-bitrate-video', 'opt-max-bitrate-video',
             'opt-cmcd-session-id', 'opt-cmcd-content-id', 'opt-cmcd-rtp',
@@ -492,6 +500,8 @@ export class SettingsController {
                 el.addEventListener('change', () => this._applySettings());
             }
         }
+
+        this._updatePeriodTransitionControlStates();
 
         // Track switch mode radios
         for (const radio of document.querySelectorAll('input[name="track-audio"], input[name="track-video"]')) {
@@ -521,6 +531,22 @@ export class SettingsController {
     _applySettings() {
         const config = this.buildConfig();
         this.player.updateSettings(config);
+        this._updatePeriodTransitionControlStates();
+    }
+
+    _updatePeriodTransitionControlStates() {
+        const reuseEnabled = this._isChecked('opt-reuse-sourcebuffers');
+        const fallbackEnabled = reuseEnabled && this._isChecked('opt-reuse-sourcebuffers-without-changetype');
+        for (const id of ['opt-reuse-sourcebuffers-without-changetype']) {
+            const el = $(`#${id}`);
+            if (el) {
+                el.disabled = !reuseEnabled;
+            }
+        }
+        const codecFamilies = $('#opt-reuse-sourcebuffer-codec-families');
+        if (codecFamilies) {
+            codecFamilies.disabled = !fallbackEnabled;
+        }
     }
 
     _addTooltips() {
@@ -574,6 +600,8 @@ export class SettingsController {
         this._setChecked('opt-schedule-while-paused', s?.streaming?.scheduling?.scheduleWhilePaused);
         this._setChecked('opt-calc-seg-avail', s?.streaming?.timeShiftBuffer?.calcFromSegmentTimeline);
         this._setChecked('opt-reuse-sourcebuffers', s?.streaming?.buffer?.reuseExistingSourceBuffers);
+        this._setChecked('opt-use-change-type', s?.streaming?.buffer?.useChangeType);
+        this._setChecked('opt-reuse-sourcebuffers-without-changetype', s?.streaming?.buffer?.reuseExistingSourceBuffersWithoutChangeType?.enabled);
         this._setChecked('opt-mediasource-duration-inf', s?.streaming?.buffer?.mediaSourceDurationInfinity);
         this._setChecked('opt-reset-sb-track-switch', s?.streaming?.buffer?.resetSourceBuffersForTrackSwitch);
         this._setChecked('opt-save-last-media', s?.streaming?.saveLastMediaSettingsForCurrentStreamingSession);
@@ -668,6 +696,11 @@ export class SettingsController {
         if (llStallThreshold && s?.streaming?.buffer?.lowLatencyStallThreshold !== undefined) {
             llStallThreshold.value = s.streaming.buffer.lowLatencyStallThreshold;
         }
+        const codecFamilies = $('#opt-reuse-sourcebuffer-codec-families');
+        if (codecFamilies && s?.streaming?.buffer?.reuseExistingSourceBuffersWithoutChangeType?.codecFamilies) {
+            codecFamilies.value = s.streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.codecFamilies.join(', ');
+        }
+        this._updatePeriodTransitionControlStates();
 
         // ---- CMCD numeric inputs ----
         const cmcdRtpSafety = $('#opt-cmcd-rtp-safety');
@@ -812,9 +845,14 @@ export class SettingsController {
             }
             current = current[keys[i]];
         }
-        current[keys[keys.length - 1]] = SettingsController._ARRAY_SETTING_PATHS.has(path)
-            ? this._parseCommaSeparatedInput(value)
-            : value;
+        if (SettingsController._ARRAY_SETTING_PATHS.has(path)) {
+            const arrayValue = this._parseCommaSeparatedInput(value);
+            current[keys[keys.length - 1]] = path === 'streaming.buffer.reuseExistingSourceBuffersWithoutChangeType.codecFamilies'
+                ? arrayValue.map((family) => family.toLowerCase())
+                : arrayValue;
+        } else {
+            current[keys[keys.length - 1]] = value;
+        }
     }
 
     _coerceType(value) {

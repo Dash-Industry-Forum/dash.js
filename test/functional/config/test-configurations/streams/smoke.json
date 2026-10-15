@@ -478,7 +478,8 @@
         }
       },
       "includedTestfiles": [
-        "playback-advanced/multiperiod-playback"
+        "playback-advanced/multiperiod-playback",
+        "playback-advanced/multiperiod-buffer-reuse"
       ]
     },
     {
