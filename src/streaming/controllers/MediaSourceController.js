@@ -39,7 +39,8 @@ function MediaSourceController() {
         mediaSource,
         settings,
         mediaSourceType,
-        logger;
+        logger,
+        managedMediaSourceEventHandlers;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -78,12 +79,36 @@ function MediaSourceController() {
 
         if (mediaSourceType === 'managedMediaSource') {
             videoModel.setDisableRemotePlayback(true);
-            mediaSource.addEventListener('startstreaming', () => {
-                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING)
-            })
-            mediaSource.addEventListener('endstreaming', () => {
-                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING)
-            })
+            // Re-attaching the same source must not stack a second pair of
+            // forwarding listeners, so drop the previous pair first.
+            if (managedMediaSourceEventHandlers) {
+                mediaSource.removeEventListener('startstreaming', managedMediaSourceEventHandlers.start);
+                mediaSource.removeEventListener('endstreaming', managedMediaSourceEventHandlers.end);
+            }
+            const attachedMediaSource = mediaSource;
+
+            managedMediaSourceEventHandlers = {
+                // A ManagedMediaSource that is being detached emits streaming events
+                // while it closes, and a replaced source's listeners survive its
+                // replacement. Forwarding those latches ScheduleController on
+                // behalf of a source that no longer exists, so only pass events
+                // when the source these handlers were attached for is still the
+                // controller's current one and still open.
+                start: () => {
+                    if (attachedMediaSource !== mediaSource || attachedMediaSource.readyState !== 'open') {
+                        return;
+                    }
+                    eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING)
+                },
+                end: () => {
+                    if (attachedMediaSource !== mediaSource || attachedMediaSource.readyState !== 'open') {
+                        return;
+                    }
+                    eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING)
+                }
+            };
+            mediaSource.addEventListener('startstreaming', managedMediaSourceEventHandlers.start)
+            mediaSource.addEventListener('endstreaming', managedMediaSourceEventHandlers.end)
         }
 
         return objectURL;
