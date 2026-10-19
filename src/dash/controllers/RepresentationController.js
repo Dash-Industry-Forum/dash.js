@@ -34,6 +34,9 @@ import Debug from '../../core/Debug.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import {getTimeBasedSegment} from '../utils/SegmentsUtils.js';
 
+// ponytail: fixed retry delay for failed segment list loads, move to Settings if it needs tuning
+const SEGMENT_LIST_RETRY_DELAY = 10000;
+
 function RepresentationController(config) {
 
     config = config || {};
@@ -55,6 +58,7 @@ function RepresentationController(config) {
         currentVoRepresentation,
         hasSegmentData,
         logger,
+        segmentListFailures,
         segmentListLoads;
 
     function setup() {
@@ -119,6 +123,7 @@ function RepresentationController(config) {
         currentVoRepresentation = null;
         voAvailableRepresentations = [];
         hasSegmentData = false;
+        segmentListFailures = new WeakMap();
         segmentListLoads = new WeakMap();
     }
 
@@ -149,9 +154,9 @@ function RepresentationController(config) {
                 const currentRep = voAvailableRepresentations[i];
                 const isSelected = currentRep.id === selectedRepresentationId || currentRep.id === dependentRepresentationId;
                 const update = _updateRepresentation(currentRep, isSelected);
-                // Share the segment list load with loadSegmentList(). A failure here is not excluded, there is no other Representation selected yet to fall back to.
+                // Share the segment list load with loadSegmentList()
                 if (isSelected && !currentRep.hasSegments()) {
-                    _trackSegmentListLoad(currentRep, update, false);
+                    _trackSegmentListLoad(currentRep, update);
                 }
                 promises.push(update);
             }
@@ -345,21 +350,28 @@ function RepresentationController(config) {
      * Loads the segment list of a SegmentBase Representation that was skipped in updateData().
      * Concurrent calls for the same Representation share one request.
      * @param newRep
-     * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded or the load failed
+     * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded or the load failed recently
      */
     function loadSegmentList(newRep) {
         if (!isSegmentListMissing(newRep)) {
             return null;
         }
         const rep = getRepresentationById(newRep.id);
-        // Loaded once: a failed load is not retried, the Representation is excluded from ABR instead
+        // A failed load is excluded from ABR and only retried after SEGMENT_LIST_RETRY_DELAY, callers must not wait for it in the meantime
+        const failedAt = segmentListFailures.get(rep);
+        if (failedAt !== undefined) {
+            if (Date.now() - failedAt < SEGMENT_LIST_RETRY_DELAY) {
+                return null;
+            }
+            segmentListFailures.delete(rep);
+        }
         if (!segmentListLoads.has(rep)) {
-            _trackSegmentListLoad(rep, _updateRepresentation(rep, true), true);
+            _trackSegmentListLoad(rep, _updateRepresentation(rep, true));
         }
         return segmentListLoads.get(rep);
     }
 
-    function _trackSegmentListLoad(rep, update, excludeOnFailure) {
+    function _trackSegmentListLoad(rep, update) {
         const load = update
             .catch((e) => {
                 logger.warn(`Updating representation ${rep.id} for ${type} failed`, e);
@@ -367,11 +379,9 @@ function RepresentationController(config) {
             .then(() => {
                 // Ignore loads that outlived a reset() or an updateData() with new Representations
                 if (!rep.segments && voAvailableRepresentations.includes(rep)) {
-                    // Callers must not wait for a load that already failed
-                    segmentListLoads.set(rep, null);
-                    if (excludeOnFailure) {
-                        abrController.excludeRepresentation(rep);
-                    }
+                    segmentListFailures.set(rep, Date.now());
+                    segmentListLoads.delete(rep);
+                    abrController.excludeRepresentation(rep, SEGMENT_LIST_RETRY_DELAY);
                 }
                 return rep;
             });

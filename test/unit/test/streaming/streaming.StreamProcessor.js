@@ -326,6 +326,42 @@ describe('StreamProcessor', function () {
             });
         });
 
+        it('should not restart scheduling once the segment list is loaded while the buffer is pruned', function () {
+            let releaseSegmentList;
+            segmentBaseControllerMock.getSegmentList = function (e) {
+                segmentListRequestedFor.push(e.representation.id);
+                return new Promise(function (resolve) {
+                    releaseSegmentList = function () {
+                        resolve(segmentList);
+                    };
+                });
+            };
+            switchQuality(representations[1], representations[0]);
+            const load = streamProcessor.getRepresentationController().loadSegmentList(representations[1]);
+            const bufferController = streamProcessor.getBufferController();
+
+            return new Promise(function (resolve) {
+                setTimeout(resolve, 0);
+            }).then(function () {
+                eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {}, { streamId: 'streamId', mediaType: testType });
+                // Pruning starts after the request was put on hold, e.g. after a QuotaExceededError
+                bufferController.getIsPruningInProgress = () => true;
+                startScheduleTimerCalls = 0;
+
+                releaseSegmentList();
+                return load;
+            }).then(function () {
+                return Promise.resolve();
+            }).then(function () {
+                expect(startScheduleTimerCalls).to.equal(0);
+            }).finally(function () {
+                segmentBaseControllerMock.getSegmentList = function (e) {
+                    segmentListRequestedFor.push(e.representation.id);
+                    return Promise.resolve(segmentList);
+                };
+            });
+        });
+
         it('should report an error if the segment list failed to load and there is no other Representation to switch to', function () {
             segmentBaseControllerMock.getSegmentList = function (e) {
                 segmentListRequestedFor.push(e.representation.id);

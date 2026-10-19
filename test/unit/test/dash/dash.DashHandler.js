@@ -155,6 +155,22 @@ describe('DashHandler', function () {
             expect(mediaSegment).not.to.be.null; // jshint ignore:line
         })
 
+        it('isLastSegmentRequested returns false for a SegmentBase Representation without a segment list', () => {
+            const dashHandler = DashHandler(context).create(config);
+            // Sets the last requested segment
+            dashHandler.getNextSegmentRequest({}, { segmentInfoType: DashConstants.SEGMENT_TEMPLATE, adaptation: { index: 1 } });
+            const representation = {
+                segmentInfoType: DashConstants.SEGMENT_BASE,
+                adaptation: { period: { duration: 30 } },
+                mediaFinishedInformation: { numberOfSegments: 0 }
+            };
+
+            expect(dashHandler.isLastSegmentRequested(representation, 1000)).to.be.false;
+
+            representation.segments = [{}];
+            expect(dashHandler.isLastSegmentRequested(representation, 1000)).to.be.true;
+        });
+
         it('returns null if the next segment is after @endNumber', () => {
             const dashHandler = DashHandler(context).create(config);
             const representation = {segmentInfoType: DashConstants.SEGMENT_TEMPLATE, adaptation: {index: 1}, endNumber: 2 };

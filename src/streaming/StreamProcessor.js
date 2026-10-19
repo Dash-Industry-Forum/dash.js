@@ -583,14 +583,18 @@ function StreamProcessor(config) {
         }
         if (load !== segmentListLoad) {
             segmentListLoad = load;
-            load.then(() => {
+            load.then((rep) => {
                 // Superseded by a reset or a load for another Representation
                 if (segmentListLoad !== load) {
                     return;
                 }
                 segmentListLoad = null;
-                // A quality switch in preparation restarts scheduling once it is done
-                if (!qualityChangeInProgress) {
+                if (rep.segments && reportedSegmentListFailureId === rep.id) {
+                    // Loaded on a retry, report the next failure again
+                    reportedSegmentListFailureId = null;
+                }
+                // Quality and track switches as well as buffer pruning restart scheduling themselves once they are done
+                if (!qualityChangeInProgress && !trackSwitchInProgress && !bufferController.getIsPruningInProgress()) {
                     scheduleController.startScheduleTimer(0);
                 }
             });
@@ -600,12 +604,6 @@ function StreamProcessor(config) {
 
     function checkAndHandleCompletedBuffering() {
         const representation = representationController.getCurrentRepresentation();
-
-        // SegmentBase: without a segment list the last segment can not have been requested. Loading it is left to scheduling.
-        if (representationController.isSegmentListMissing(representation)) {
-            return false;
-        }
-
         const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
 
         if (isLastSegmentRequested) {

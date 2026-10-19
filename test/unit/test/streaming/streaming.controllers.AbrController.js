@@ -471,6 +471,47 @@ describe('AbrController', function () {
             expect(requested).to.deep.equal(['low']);
         });
 
+        it('should include an excluded Representation again once the exclusion expired', function () {
+            const clock = sinon.useFakeTimers();
+            try {
+                const mediaInfo = streamProcessor.getMediaInfo();
+                mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+                mediaInfo.type = Constants.VIDEO;
+                const representations = [
+                    { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'high' },
+                    { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'low' }
+                ];
+                adapterMock.getVoRepresentations = () => representations;
+                adapterMock.areMediaInfosEqual = () => true;
+
+                abrCtrl.excludeRepresentation(representations[0], 10000);
+                expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['low']);
+
+                clock.tick(10000);
+                expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.have.members(['high', 'low']);
+            } finally {
+                clock.restore();
+            }
+        });
+
+        it('should also drop Representations that depend on an excluded one', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const base = { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'base' };
+            const representations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'enhancement', dependentRepresentation: base },
+                { bitrateInKbit: 7, bandwidth: 7000, mediaInfo, id: 'other' },
+                base
+            ];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+
+            abrCtrl.excludeRepresentation(base);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['other']);
+        });
+
         it('should only exclude the Representation of the given media type if ids are reused across types', function () {
             const mediaInfo = streamProcessor.getMediaInfo();
             mediaInfo.streamInfo = streamProcessor.getStreamInfo();

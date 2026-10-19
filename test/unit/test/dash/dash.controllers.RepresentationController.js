@@ -14,6 +14,7 @@ import SegmentsControllerMock from '../../mocks/SegmentsControllerMock.js';
 
 import chai from 'chai';
 import spies from 'chai-spies';
+import sinon from 'sinon';
 
 chai.use(spies);
 
@@ -355,6 +356,67 @@ describe('RepresentationController', function () {
                 })
                 .then(function () {
                     expect(excluded).to.be.empty;
+                })
+                .finally(function () {
+                    abrControllerMock.excludeRepresentation = originalExcludeRepresentation;
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
+                });
+        });
+
+        it('should retry a failed segment list load once the retry delay passed', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+            const excluded = [];
+            const originalExcludeRepresentation = abrControllerMock.excludeRepresentation;
+            const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
+            abrControllerMock.excludeRepresentation = (rep, duration) => excluded.push({ id: rep.id, duration });
+            let clock;
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    clock = sinon.useFakeTimers({ now: Date.now(), toFake: ['Date'] });
+                    segmentsControllerMock.updateSegmentData = () => Promise.resolve({ error: 'sidx request failed' });
+                    return lazyRepresentationController.loadSegmentList(repB);
+                })
+                .then(function () {
+                    expect(excluded).to.deep.equal([{ id: repB.id, duration: 10000 }]);
+                    // Within the retry delay the failed load is neither waited for nor retried
+                    expect(lazyRepresentationController.loadSegmentList(repB)).to.be.null;
+                    expect(lazyRepresentationController.isSegmentListMissing(repB)).to.be.true;
+
+                    clock.tick(10000);
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
+                    const retry = lazyRepresentationController.loadSegmentList(repB);
+                    expect(retry).to.not.be.null;
+                    return retry;
+                })
+                .then(function () {
+                    expect(segmentDataLoadedFor).to.deep.equal([repA.id, repB.id]);
+                    expect(lazyRepresentationController.isSegmentListMissing(repB)).to.be.false;
+                })
+                .finally(function () {
+                    if (clock) {
+                        clock.restore();
+                    }
+                    abrControllerMock.excludeRepresentation = originalExcludeRepresentation;
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
+                });
+        });
+
+        it('should exclude the selected Representation if its segment list fails to load at startup', function () {
+            const [repA] = segmentBaseRepresentations;
+            const excluded = [];
+            const originalExcludeRepresentation = abrControllerMock.excludeRepresentation;
+            const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
+            abrControllerMock.excludeRepresentation = (rep) => excluded.push(rep.id);
+            segmentsControllerMock.updateSegmentData = () => Promise.resolve({ error: 'sidx request failed' });
+
+            const update = lazyRepresentationController.updateData(segmentBaseRepresentations, true, repA.id);
+            const load = lazyRepresentationController.loadSegmentList(repA);
+
+            return Promise.all([update, load])
+                .then(function () {
+                    expect(excluded).to.deep.equal([repA.id]);
                 })
                 .finally(function () {
                     abrControllerMock.excludeRepresentation = originalExcludeRepresentation;

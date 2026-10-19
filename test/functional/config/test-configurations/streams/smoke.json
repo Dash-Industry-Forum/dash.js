@@ -523,6 +523,7 @@
       "includedTestfiles": [
         "playback/*",
         "playback-advanced/switch-quality",
+        "playback-advanced/segment-base-lazy-sidx",
         "video/*"
       ]
     },

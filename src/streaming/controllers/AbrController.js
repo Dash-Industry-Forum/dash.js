@@ -281,8 +281,14 @@ function AbrController() {
         return voRepresentations;
     }
 
+    function _isExcluded(rep) {
+        const excludedUntil = excludedRepresentationIds[rep.mediaInfo.streamInfo.id]?.[rep.mediaInfo.type]?.get(rep.id);
+        return excludedUntil !== undefined && Date.now() < excludedUntil;
+    }
+
     function _filterExcluded(voRepresentations) {
-        const filteredRepresentations = voRepresentations.filter((rep) => !excludedRepresentationIds[rep.mediaInfo.streamInfo.id]?.[rep.mediaInfo.type]?.has(rep.id));
+        // A Representation is not playable either if the one it depends on (e.g. its base layer) is excluded
+        const filteredRepresentations = voRepresentations.filter((rep) => !_isExcluded(rep) && !(rep.dependentRepresentation && _isExcluded(rep.dependentRepresentation)));
 
         // Like the settings filters, never return an empty list
         if (filteredRepresentations.length === 0) {
@@ -747,19 +753,21 @@ function AbrController() {
     }
 
     /**
-     * Excludes a Representation from all further quality decisions, e.g. because its segment list could not be loaded,
+     * Excludes a Representation from quality decisions, e.g. because its segment list could not be loaded,
      * and switches to the best remaining Representation at or below its bitrate.
      * @param {object} representation
+     * @param {number} [duration] in milliseconds, excluded for good if not set
      */
-    function excludeRepresentation(representation) {
+    function excludeRepresentation(representation, duration = Infinity) {
         const mediaInfo = representation.mediaInfo;
         const streamId = mediaInfo.streamInfo.id;
         // Content often reuses Representation ids across media types, keep them apart
         excludedRepresentationIds[streamId] = excludedRepresentationIds[streamId] || {};
-        excludedRepresentationIds[streamId][mediaInfo.type] = excludedRepresentationIds[streamId][mediaInfo.type] || new Set();
-        excludedRepresentationIds[streamId][mediaInfo.type].add(representation.id);
+        excludedRepresentationIds[streamId][mediaInfo.type] = excludedRepresentationIds[streamId][mediaInfo.type] || new Map();
+        excludedRepresentationIds[streamId][mediaInfo.type].set(representation.id, Date.now() + duration);
 
-        // Rules like BOLA cache the list of possible Representations, make them rebuild it without the excluded one
+        // Rules like BOLA cache the list of possible Representations, make them rebuild it without the excluded one.
+        // ponytail: BOLA only picks the Representation up again once the exclusion expired and its list is rebuilt for another reason
         handleNewMediaInfo(mediaInfo);
 
         // A late failure must not override a newer selection, only switch away if we are still on (or depend on) the excluded one
