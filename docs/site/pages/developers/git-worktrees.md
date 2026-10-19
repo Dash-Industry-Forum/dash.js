@@ -85,6 +85,13 @@ npm ci
 claude
 ```
 
+::: tip
+If `npm ci` fails with `ENOTDIR: not a directory, mkdir '.../.git/hooks'`, the pull request branch is based on an
+older version of dash.js. Its `githook.cjs` does not support worktrees yet. Run `npm ci --ignore-scripts` instead. This
+skips the pre-commit hook setup. Commits still use the hook from your main clone, so make sure you ran `npm ci` there
+on a current `development` branch to install the worktree-compatible version.
+:::
+
 Pushing to a contributor's fork only works if they enabled **Allow edits by maintainers** on the pull request.
 
 You can skip the `claude` step and use these worktrees with any editor or agent. Open the worktree folder as its own

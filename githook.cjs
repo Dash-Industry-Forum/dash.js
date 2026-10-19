@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 // Git runs hooks from the root of the current working tree, so this lints whichever worktree is committing
 const precommitTemplate = `#!/bin/sh
@@ -8,14 +8,24 @@ const precommitTemplate = `#!/bin/sh
 exec npm run lint
 `;
 
-let pathToHooksFolder;
+let topLevel, commonDir;
 try {
-    // Resolves to the shared hooks folder, also when called from a git worktree where .git is a file
-    pathToHooksFolder = path.resolve(__dirname, execSync('git rev-parse --git-path hooks', { cwd: __dirname }).toString().trim());
+    // --git-common-dir resolves to the main .git folder, also when called from a git worktree where .git is a file
+    [topLevel, commonDir] = execFileSync('git', ['rev-parse', '--show-toplevel', '--git-common-dir'], { cwd: __dirname, stdio: ['ignore', 'pipe', 'ignore'] })
+        .toString().trim().split('\n');
 } catch (e) {
     console.log('Not a git repository, skipping pre-commit hook installation.');
-    return;
+    process.exit(0);
 }
+
+// Don't touch the hooks of an outer repository that dash.js happens to live in
+if (path.resolve(topLevel) !== fs.realpathSync(__dirname)) {
+    console.log('dash.js is not the root of its git repository, skipping pre-commit hook installation.');
+    process.exit(0);
+}
+
+// Write to .git/hooks even if core.hooksPath is set, so a shared hooks folder is never overwritten
+const pathToHooksFolder = path.join(path.resolve(__dirname, commonDir), 'hooks');
 
 fs.mkdirSync(pathToHooksFolder, { recursive: true });
 // Remove the helper script used by older versions of this hook
