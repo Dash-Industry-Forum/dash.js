@@ -101,6 +101,14 @@ options:
 
 dash.js ships with predefined configuration files. They are located in `test/functional/config/test-configurations`.
 
+The stream configurations are located in `test/functional/config/test-configurations/streams`:
+
+* `smoke`: Small set of core vectors, default for `npm run test-functional`.
+* `complete`: All vectors with all applicable testcases (`npm run test-functional:complete`).
+* `drm`: DRM subset of `complete` (`npm run test-functional:drm`).
+* `text`: Subtitle and caption subset of `complete` (`npm run test-functional:text`).
+* `single`: One vector, used in the pull request CI.
+
 ## Supported Testcases
 
 | Testcase                                 | Description                                                                                                                                                   |

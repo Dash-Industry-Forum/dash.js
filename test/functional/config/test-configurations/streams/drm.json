@@ -4,13 +4,13 @@
       "all"
     ],
     "excluded": [
-      "buffer/buffer-to-keep-seek",
       "vendor/google-ad-manager-emsg"
     ]
   },
   "testvectors": [
     {
       "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - Encryption (2 keys : audio + video) - No key rotation",
+      "type": "live",
       "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams//6e16c26536564c2f9dbc5f725a820cff/index.mpd",
       "drm": {
         "com.widevine.alpha": {
@@ -26,7 +26,143 @@
           }
         }
       },
-      "type": "live",
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 70000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 15
+        }
+      },
+      "includedTestfiles": [
+        "playback/*",
+        "playback-advanced/multiperiod-playback"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Multiperiod encrypted to unencrypted",
+      "type": "vod",
+      "url": "/base/test/functional/content/multi-period/enc-unenc.mpd",
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 16000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 1
+        }
+      },
+      "includedTestfiles": [
+        "playback-advanced/multiperiod-playback"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Multiperiod unencrypted to encrypted",
+      "type": "vod",
+      "url": "/base/test/functional/content/multi-period/unenc-enc.mpd",
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 10000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 1
+        }
+      },
+      "includedTestfiles": [
+        "playback-advanced/multiperiod-playback"
+      ]
+    },
+    {
+      "name": "Shaka Demo Assets: Angel-One Widevine",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
+        }
+      },
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, single key, Widevine+PlayReady",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/Dash/protected_dash_1080p_h264_singlekey/manifest.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axprod.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICI0MDYwYTg2NS04ODc4LTQyNjctOWNiZi05MWFlNWJhZTFlNzIiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAid3QzRW51dVI1UkFybjZBRGYxNkNCQT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgImNvbnRlbnRfa2V5X3VzYWdlX3BvbGljaWVzIjogWwogICAgICB7CiAgICAgICAgIm5hbWUiOiAiUG9saWN5IEEiLAogICAgICAgICJwbGF5cmVhZHkiOiB7CiAgICAgICAgICAibWluX2RldmljZV9zZWN1cml0eV9sZXZlbCI6IDE1MCwKICAgICAgICAgICJwbGF5X2VuYWJsZXJzIjogWwogICAgICAgICAgICAiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3IgogICAgICAgICAgXQogICAgICAgIH0KICAgICAgfQogICAgXQogIH0KfQ.l8PnZznspJ6lnNmfAE9UQV532Ypzt1JXQkvrk8gFSRw"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axprod.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICI0MDYwYTg2NS04ODc4LTQyNjctOWNiZi05MWFlNWJhZTFlNzIiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAid3QzRW51dVI1UkFybjZBRGYxNkNCQT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgImNvbnRlbnRfa2V5X3VzYWdlX3BvbGljaWVzIjogWwogICAgICB7CiAgICAgICAgIm5hbWUiOiAiUG9saWN5IEEiLAogICAgICAgICJwbGF5cmVhZHkiOiB7CiAgICAgICAgICAibWluX2RldmljZV9zZWN1cml0eV9sZXZlbCI6IDE1MCwKICAgICAgICAgICJwbGF5X2VuYWJsZXJzIjogWwogICAgICAgICAgICAiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3IgogICAgICAgICAgXQogICAgICAgIH0KICAgICAgfQogICAgXQogIH0KfQ.l8PnZznspJ6lnNmfAE9UQV532Ypzt1JXQkvrk8gFSRw"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "platformOverrides": [
+        {
+          "browser": "edge",
+          "drm": {
+            "com.microsoft.playready": {
+              "systemStringPriority": [
+                "com.microsoft.playready.recommendation"
+              ],
+              "audioRobustness": "2000",
+              "videoRobustness": "2000"
+            }
+          },
+          "settings": {
+            "streaming": {
+              "buffer": {
+                "useChangeType": false,
+                "resetSourceBuffersForTrackSwitch": true
+              },
+              "abr": {
+                "maxBitrate": {
+                  "video": 1200
+                }
+              }
+            }
+          }
+        }
+      ],
+      "includedTestfiles": [
+        "playback/*",
+        "audio/*",
+        "video/*",
+        "text/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "1080p with W3C Clear Key, single key",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
+      "drm": {
+        "org.w3.clearkey": {
+          "clearkeys": {
+            "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+          }
+        }
+      },
       "excludedPlatforms": [
         {
           "browser": "safari"
@@ -40,7 +176,6 @@
       "drm": {
         "com.widevine.alpha": {
           "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
-          "priority": 2,
           "httpRequestHeaders": {
             "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
           },
@@ -48,31 +183,48 @@
         },
         "com.microsoft.playready": {
           "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
-          "priority": 1,
           "httpRequestHeaders": {
             "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
           },
           "httpTimeout": 5000
         }
       },
-      "excludedPlatforms": [
+      "platformOverrides": [
         {
-          "browser": "safari"
-        }
-      ]
-    },
-    {
-      "name": "Multiperiod - ContentProtection Reference",
-      "url": "https://d24rwxnt7vw9qb.cloudfront.net/out/v1/feb9354da126479386ae8d47ba103cf8/index.mpd",
-      "type": "live",
-      "drm": {
-        "com.widevine.alpha": {
-          "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
-          "httpRequestHeaders": {
-            "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAidGVzdHNlc3Npb25tdWx0aWtleSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQ=="
+          "browser": "edge",
+          "drm": {
+            "com.microsoft.playready": {
+              "priority": 0,
+              "systemStringPriority": [
+                "com.microsoft.playready.recommendation"
+              ],
+              "audioRobustness": "2000",
+              "videoRobustness": "2000"
+            },
+            "com.widevine.alpha": {
+              "priority": 1
+            }
+          },
+          "settings": {
+            "streaming": {
+              "buffer": {
+                "useChangeType": false,
+                "resetSourceBuffersForTrackSwitch": true
+              },
+              "abr": {
+                "maxBitrate": {
+                  "video": 1200
+                }
+              }
+            }
           }
         }
-      },
+      ],
+      "includedTestfiles": [
+        "playback/*",
+        "audio/*",
+        "text/*"
+      ],
       "excludedPlatforms": [
         {
           "browser": "safari"
@@ -94,18 +246,99 @@
         "com.microsoft.playready": {
           "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
           "httpRequestHeaders": {
-            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiODAzOTliZjUtOGEyMS00MDE0LTgwNTMtZTI3ZTc0OGU5OGMwIiwiZW5jcnlwdGVkX2tleSI6ImxpTkpxVmFZa05oK01LY3hKRms3SWc9PSJ9LHsiaWQiOiI5MDk1M2UwOS02Y2IyLTQ5YTMtYTI2MC03YTVmZWZlYWQ0OTkiLCJlbmNyeXB0ZWRfa2V5Ijoia1l0SEh2cnJmQ01lVmRKNkxrYmtuZz09In0seyJpZCI6IjBlNGRhOTJiLWQwZTgtNGE2Ni04YzNmLWMyNWE5N2ViNjUzMiIsImVuY3J5cHRlZF9rZXkiOiI3dzdOWkhITE1nSjRtUUtFSzVMVE1RPT0ifSx7ImlkIjoiNTg1ZjIzM2YtMzA3Mi00NmYxLTlmYTQtNmRjMjJjNjZhMDE0IiwiZW5jcnlwdGVkX2tleSI6IkFjNFVVbVl0Qko1blBROU4xNXJjM2c9PSJ9LHsiaWQiOiI0MjIyYmQ3OC1iYzQ1LTQxYmYtYjYzZS02ZjgxNGRjMzkxZGYiLCJlbmNyeXB0ZWRfa2V5IjoiTzZGTzBmcVNXb3BwN2JqYy9ENGxNQT09In1dfX0.uF6YlKAREOmbniAeYiH070HSJhV0YS7zSKjlCtiDR5Y"
           },
           "httpTimeout": 5000
         }
       },
-      "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-      "provider": "axinom",
+      "platformOverrides": [
+        {
+          "browser": "edge",
+          "drm": {
+            "com.microsoft.playready": {
+              "systemStringPriority": [
+                "com.microsoft.playready.recommendation"
+              ],
+              "audioRobustness": "2000",
+              "videoRobustness": "2000"
+            }
+          },
+          "settings": {
+            "streaming": {
+              "buffer": {
+                "useChangeType": false,
+                "resetSourceBuffersForTrackSwitch": true
+              },
+              "abr": {
+                "maxBitrate": {
+                  "video": 1200
+                }
+              }
+            }
+          }
+        }
+      ],
       "includedTestfiles": [
         "playback/*",
         "audio/*",
         "video/*",
         "text/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Multi-period 1080p with PlayReady and Widevine DRM, multiple keys",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "platformOverrides": [
+        {
+          "browser": "edge",
+          "drm": {
+            "com.microsoft.playready": {
+              "systemStringPriority": [
+                "com.microsoft.playready.recommendation"
+              ],
+              "audioRobustness": "2000",
+              "videoRobustness": "2000"
+            }
+          },
+          "settings": {
+            "streaming": {
+              "buffer": {
+                "useChangeType": false,
+                "resetSourceBuffersForTrackSwitch": true
+              },
+              "abr": {
+                "maxBitrate": {
+                  "video": 1200
+                }
+              }
+            }
+          }
+        }
+      ],
+      "includedTestfiles": [
+        "playback/*"
       ],
       "excludedPlatforms": [
         {
@@ -125,41 +358,9 @@
           }
         }
       },
-      "excludedPlatforms": [
-        {
-          "browser": "safari"
-        }
+      "includedTestfiles": [
+        "playback/*"
       ],
-      "excludedTestfiles": [
-        "video/switch-video"
-      ]
-    },
-    {
-      "name": "1080p with W3C Clear Key, single key",
-      "type": "vod",
-      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
-      "drm": {
-        "org.w3.clearkey": {
-          "clearkeys": {
-            "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
-          }
-        }
-      },
-      "excludedPlatforms": [
-        {
-          "browser": "safari"
-        }
-      ]
-    },
-    {
-      "name": "Shaka Demo Assets: Angel-One Widevine",
-      "type": "vod",
-      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
-      "drm": {
-        "com.widevine.alpha": {
-          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
-        }
-      },
       "excludedPlatforms": [
         {
           "browser": "safari"
@@ -170,32 +371,24 @@
       "name": "Livesim 2 ECCP with CBCS encryption and dashif:Laurl",
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/*"
+      ],
       "excludedPlatforms": [
         {
           "browser": "safari"
         }
-      ],
-      "excludedTestfiles": [
-        "playback-advanced/preload"
-      ]
-    },
-    {
-      "name": "Livesim 2 ECCP with CENC encryption and dashif:Laurl",
-      "type": "live",
-      "url": "https://livesim2.dashif.org/livesim2/eccp_cenc/testpic_2s/Manifest.mpd",
-      "excludedPlatforms": [
-        {
-          "browser": "safari"
-        }
-      ],
-      "excludedTestfiles": [
-        "playback-advanced/preload"
       ]
     },
     {
       "name": "LiveSim2 - DRM EZDRM-2-keys-cbcs",
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-2-keys-cbcs/testpic_2s/Manifest.mpd",
+      "testdata": {
+        "drm": {
+          "keepMediaKeySessions": true
+        }
+      },
       "includedTestfiles": [
         "playback/*",
         "drm/keep-media-key-sessions"
@@ -207,14 +400,327 @@
       ]
     },
     {
-      "name": "LiveSim2 - DRM EZDRM-1-key-cbcs",
+      "name": "LiveSim2 - DRM EZDRM-1-key-cbcs - Widevine, Playready, Fairplay",
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-1-key-cbcs/testpic_2s/Manifest.mpd",
+      "testdata": {
+        "drm": {
+          "keepMediaKeySessions": true
+        }
+      },
       "includedTestfiles": [
         "playback/*",
         "drm/keep-media-key-sessions"
       ],
       "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - Encryption (1 key) PlayReady/Widevine (DRMtoday) - Key rotation (60s)",
+      "type": "live",
+      "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/2fc23947945841b9b1be9768f9c13e75/index.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
+          "httpRequestHeaders": {
+            "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
+          }
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+          "httpRequestHeaders": {
+            "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
+          }
+        }
+      },
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 70000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 15
+        }
+      },
+      "includedTestfiles": [
+        "playback/*",
+        "playback-advanced/multiperiod-playback"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, multi key, Widevine+PlayReady",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/MultiKey/Cmaf_h264_1080p_cbcs/manifest.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axprod.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICJiNTRlYzkxNC0xOTJkLTRlYTEtYWMxOS1mNDI5ZWI0OTgyNjgiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAiR1ZERnJZUU9Bb1kzZmpxVVVtamswQT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAiaWQiOiAiYzgzYzRlYTgtMGYyYS00NTIzLTg1MWMtZmJlY2NkYzBmMjAyIiwKICAgICAgICAgICJlbmNyeXB0ZWRfa2V5IjogIlRKZGZsWmJLYmZXQXl5K1dta21UUEE9PSIsCiAgICAgICAgICAidXNhZ2VfcG9saWN5IjogIlBvbGljeSBBIgogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgImlkIjogImM4NjhjNzAyLWM3MWItNDA2NC1hZTJiLWMyNGY3Y2MxMDc5MiIsCiAgICAgICAgICAiZW5jcnlwdGVkX2tleSI6ICJ4QXJpUkpOcUFTdXp6RExDRzNXSjdnPT0iLAogICAgICAgICAgInVzYWdlX3BvbGljeSI6ICJQb2xpY3kgQSIKICAgICAgICB9CiAgICAgIF0KICAgIH0sCiAgICAiY29udGVudF9rZXlfdXNhZ2VfcG9saWNpZXMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJQb2xpY3kgQSIsCiAgICAgICAgInBsYXlyZWFkeSI6IHsKICAgICAgICAgICJtaW5fZGV2aWNlX3NlY3VyaXR5X2xldmVsIjogMTUwLAogICAgICAgICAgInBsYXlfZW5hYmxlcnMiOiBbCiAgICAgICAgICAgICI3ODY2MjdEOC1DMkE2LTQ0QkUtOEY4OC0wOEFFMjU1QjAxQTciCiAgICAgICAgICBdCiAgICAgICAgfQogICAgICB9CiAgICBdCiAgfQp9.XC0YIbZpKGFc3IZROklP4LvISc6cZGpE9UL-XcpcqWg"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axprod.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICJiNTRlYzkxNC0xOTJkLTRlYTEtYWMxOS1mNDI5ZWI0OTgyNjgiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAiR1ZERnJZUU9Bb1kzZmpxVVVtamswQT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAiaWQiOiAiYzgzYzRlYTgtMGYyYS00NTIzLTg1MWMtZmJlY2NkYzBmMjAyIiwKICAgICAgICAgICJlbmNyeXB0ZWRfa2V5IjogIlRKZGZsWmJLYmZXQXl5K1dta21UUEE9PSIsCiAgICAgICAgICAidXNhZ2VfcG9saWN5IjogIlBvbGljeSBBIgogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgImlkIjogImM4NjhjNzAyLWM3MWItNDA2NC1hZTJiLWMyNGY3Y2MxMDc5MiIsCiAgICAgICAgICAiZW5jcnlwdGVkX2tleSI6ICJ4QXJpUkpOcUFTdXp6RExDRzNXSjdnPT0iLAogICAgICAgICAgInVzYWdlX3BvbGljeSI6ICJQb2xpY3kgQSIKICAgICAgICB9CiAgICAgIF0KICAgIH0sCiAgICAiY29udGVudF9rZXlfdXNhZ2VfcG9saWNpZXMiOiBbCiAgICAgIHsKICAgICAgICAibmFtZSI6ICJQb2xpY3kgQSIsCiAgICAgICAgInBsYXlyZWFkeSI6IHsKICAgICAgICAgICJtaW5fZGV2aWNlX3NlY3VyaXR5X2xldmVsIjogMTUwLAogICAgICAgICAgInBsYXlfZW5hYmxlcnMiOiBbCiAgICAgICAgICAgICI3ODY2MjdEOC1DMkE2LTQ0QkUtOEY4OC0wOEFFMjU1QjAxQTciCiAgICAgICAgICBdCiAgICAgICAgfQogICAgICB9CiAgICBdCiAgfQp9.XC0YIbZpKGFc3IZROklP4LvISc6cZGpE9UL-XcpcqWg"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ]
+    },
+    {
+      "name": "Single-period, 1080p, H.265, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, single key, Widevine+PlayReady",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/H265/protected_cmaf_1080p_h265_singlekey/manifest.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axprod.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICJhYmNjNDRlNS1jMTIyLTQ1YWItYWM4MC1hNWIzNTIyYTBhMzEiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAiZnM2VUx1UzR3SFQxdkI2M0RONnI5UT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgImNvbnRlbnRfa2V5X3VzYWdlX3BvbGljaWVzIjogWwogICAgICB7CiAgICAgICAgIm5hbWUiOiAiUG9saWN5IEEiLAogICAgICAgICJwbGF5cmVhZHkiOiB7CiAgICAgICAgICAibWluX2RldmljZV9zZWN1cml0eV9sZXZlbCI6IDE1MCwKICAgICAgICAgICJwbGF5X2VuYWJsZXJzIjogWwogICAgICAgICAgICAiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3IgogICAgICAgICAgXQogICAgICAgIH0KICAgICAgfQogICAgXQogIH0KfQ.5rM_qUo4dKrHNDKQO0yzbCiufJxFUzHeOQc13Z48rv4"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axprod.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICJhYmNjNDRlNS1jMTIyLTQ1YWItYWM4MC1hNWIzNTIyYTBhMzEiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAiZnM2VUx1UzR3SFQxdkI2M0RONnI5UT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgImNvbnRlbnRfa2V5X3VzYWdlX3BvbGljaWVzIjogWwogICAgICB7CiAgICAgICAgIm5hbWUiOiAiUG9saWN5IEEiLAogICAgICAgICJwbGF5cmVhZHkiOiB7CiAgICAgICAgICAibWluX2RldmljZV9zZWN1cml0eV9sZXZlbCI6IDE1MCwKICAgICAgICAgICJwbGF5X2VuYWJsZXJzIjogWwogICAgICAgICAgICAiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3IgogICAgICAgICAgXQogICAgICAgIH0KICAgICAgfQogICAgXQogIH0KfQ.5rM_qUo4dKrHNDKQO0yzbCiufJxFUzHeOQc13Z48rv4"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "firefox"
+        }
+      ]
+    },
+    {
+      "name": "1080p with W3C Clear Key, multiple keys",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_1080p_ClearKey.mpd",
+      "drm": {
+        "org.w3.clearkey": {
+          "clearkeys": {
+            "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
+            "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
+            "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
+            "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
+            "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+          }
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ]
+    },
+    {
+      "name": "Audio with PlayReady and Widevine DRM, multiple keys",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest_AudioOnly.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiODAzOTliZjUtOGEyMS00MDE0LTgwNTMtZTI3ZTc0OGU5OGMwIiwiZW5jcnlwdGVkX2tleSI6ImxpTkpxVmFZa05oK01LY3hKRms3SWc9PSJ9LHsiaWQiOiI5MDk1M2UwOS02Y2IyLTQ5YTMtYTI2MC03YTVmZWZlYWQ0OTkiLCJlbmNyeXB0ZWRfa2V5Ijoia1l0SEh2cnJmQ01lVmRKNkxrYmtuZz09In0seyJpZCI6IjBlNGRhOTJiLWQwZTgtNGE2Ni04YzNmLWMyNWE5N2ViNjUzMiIsImVuY3J5cHRlZF9rZXkiOiI3dzdOWkhITE1nSjRtUUtFSzVMVE1RPT0ifSx7ImlkIjoiNTg1ZjIzM2YtMzA3Mi00NmYxLTlmYTQtNmRjMjJjNjZhMDE0IiwiZW5jcnlwdGVkX2tleSI6IkFjNFVVbVl0Qko1blBROU4xNXJjM2c9PSJ9LHsiaWQiOiI0MjIyYmQ3OC1iYzQ1LTQxYmYtYjYzZS02ZjgxNGRjMzkxZGYiLCJlbmNyeXB0ZWRfa2V5IjoiTzZGTzBmcVNXb3BwN2JqYy9ENGxNQT09In1dfX0.uF6YlKAREOmbniAeYiH070HSJhV0YS7zSKjlCtiDR5Y"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiODAzOTliZjUtOGEyMS00MDE0LTgwNTMtZTI3ZTc0OGU5OGMwIiwiZW5jcnlwdGVkX2tleSI6ImxpTkpxVmFZa05oK01LY3hKRms3SWc9PSJ9LHsiaWQiOiI5MDk1M2UwOS02Y2IyLTQ5YTMtYTI2MC03YTVmZWZlYWQ0OTkiLCJlbmNyeXB0ZWRfa2V5Ijoia1l0SEh2cnJmQ01lVmRKNkxrYmtuZz09In0seyJpZCI6IjBlNGRhOTJiLWQwZTgtNGE2Ni04YzNmLWMyNWE5N2ViNjUzMiIsImVuY3J5cHRlZF9rZXkiOiI3dzdOWkhITE1nSjRtUUtFSzVMVE1RPT0ifSx7ImlkIjoiNTg1ZjIzM2YtMzA3Mi00NmYxLTlmYTQtNmRjMjJjNjZhMDE0IiwiZW5jcnlwdGVkX2tleSI6IkFjNFVVbVl0Qko1blBROU4xNXJjM2c9PSJ9LHsiaWQiOiI0MjIyYmQ3OC1iYzQ1LTQxYmYtYjYzZS02ZjgxNGRjMzkxZGYiLCJlbmNyeXB0ZWRfa2V5IjoiTzZGTzBmcVNXb3BwN2JqYy9ENGxNQT09In1dfX0.uF6YlKAREOmbniAeYiH070HSJhV0YS7zSKjlCtiDR5Y"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ]
+    },
+    {
+      "name": "Complex multi-period with different content, encrypted",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v8-MultiContent/Encrypted/Manifest.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXNzYWdlIjp7InBsYXlyZWFkeSI6eyJtaW5fYXBwX3NlY3VyaXR5X2xldmVsIjoxNTAsInBsYXlfZW5hYmxlcnMiOlsiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3Il19LCJrZXlzIjpbeyJlbmNyeXB0ZWRfa2V5IjoiN1hIS21uL3NmdnVQTFd0UHRHVFpEUT09IiwiaWQiOiIxZWIzMzJiMi03NDM3LTQ5YWUtYmYzOS1lNzAwMTBjYjYyMGIifSx7ImVuY3J5cHRlZF9rZXkiOiJzUXRGWDh6Y2o5bEVyZ282RDdjNGh3PT0iLCJpZCI6IjlhYTYwZTNhLTljOTEtNDc0ZC04OTM3LTdkOGIzMjU5Y2NjZCJ9LHsiZW5jcnlwdGVkX2tleSI6Im8wUlY0a2tuVE1KTFFkeVh1a1VlT2c9PSIsImlkIjoiNTk0Nzk3YTctNmIwMC00NjczLWIyZTEtYWVmYzU1MmIxYmJjIn0seyJlbmNyeXB0ZWRfa2V5IjoiZVl1dlIvS1BhWCtXWG43Rkw5WkNxQT09IiwiaWQiOiJhYWUyNTc1OC1lNDgxLTQ4OTUtODEzMy1iODA5NDgzMzkzZDAifSx7ImVuY3J5cHRlZF9rZXkiOiIwQ1BUWVpMWmk1SmhZZ0NiZThKTnhRPT0iLCJpZCI6IjkzMTEzZDVlLTJlYzgtNDNjMS05MDgzLTEwZjNkZTIwM2EyOSJ9LHsiZW5jcnlwdGVkX2tleSI6IlFQUlBrQ09tenNORkl1cCszSFp3WWc9PSIsImlkIjoiZTQ4NzcwMzctNDM3Ni00ZWRkLTg1ODYtMTQ1MTk0MzU4ODAzIn0seyJlbmNyeXB0ZWRfa2V5IjoiVWtrWUZ0TXJGMnlET0hvYWxKRmZSZz09IiwiaWQiOiJlOGFkNTk3Mi04ODE5LTQzMjYtYWQ2YS1mOWExNTE2OGJjYTcifSx7ImVuY3J5cHRlZF9rZXkiOiJkdWhnRVJSRkRiZlFEcnlwUWRCUUVRPT0iLCJpZCI6IjI2YTA5MzlmLTNhMGMtNDI4OS1hZDZiLWJiNWNlYzE3ZmY0MCJ9LHsiZW5jcnlwdGVkX2tleSI6IjFOUHp1Q1JLM3p4bWpYK3FZZnU1bXc9PSIsImlkIjoiYTVlZDcxNzMtMzc4MS00Yzc0LTkwYWMtZjA4MzRlZjFhMWM4In0seyJlbmNyeXB0ZWRfa2V5IjoiYXVQTEJjd2NmTnFSRTV1WFdUZ1NLUT09IiwiaWQiOiIzMjlmNTMzZS1mYTc3LTQwNzAtYjY1Yi0zOTI5ODBiYWRhMGQifSx7ImVuY3J5cHRlZF9rZXkiOiI2NkE1MnFiZEcyQlg3SUhTaml6WUpRPT0iLCJpZCI6IjE5N2Y4Yjg0LTNiZjItNDg2MC1iMjNhLTVjNTQ2MjhhZDBiMSJ9LHsiZW5jcnlwdGVkX2tleSI6IlhIUUE3WWlEZGZwTE05QWxwcklDK2c9PSIsImlkIjoiNGVjZGQ0YzctNGQyOS00M2ZmLWJkYWYtMDJiNzY5MDBmMTIzIn0seyJlbmNyeXB0ZWRfa2V5IjoiblBqNWl3N1IvZDR0WmdKZktoRFhYZz09IiwiaWQiOiJlZTc0NmQxMi1hNDg4LTQ5NzctYjFjYS03N2ExMDFiYjQ4M2MifSx7ImVuY3J5cHRlZF9rZXkiOiJ5U1Vma0Q5ZEliK0ExNmoydHNzNDV3PT0iLCJpZCI6IjQ5NGY5NmUxLTM1MzUtNGE4NC05MWMxLWZhYTI4M2IwNmE1NCJ9LHsiZW5jcnlwdGVkX2tleSI6InJlUHVsaXg0eFZNZHlsUnVpcG5FK0E9PSIsImlkIjoiNWMwN2JmZjQtYzcwYi00ZDAyLWEzNzgtMzgzMjZmOTEwMDBjIn0seyJlbmNyeXB0ZWRfa2V5Ijoialc3Z2E0aytMcDdxWTd4Zmo5dHB5Zz09IiwiaWQiOiIzMjgzYzM1ZS1hZTJjLTRmOGMtOGE0OS00YTc1MGFlZGYxNDIifSx7ImVuY3J5cHRlZF9rZXkiOiJLdHNNYlZRM0JXL1dwQlIwSlQwa2R3PT0iLCJpZCI6IjhkNzdiOWM0LTdmNmQtNDdmOS04NTYyLWE1ZTVlNGMzNTFjZSJ9LHsiZW5jcnlwdGVkX2tleSI6IlhRTGZKQUpmSjFyelFMZGNFRWM5L2c9PSIsImlkIjoiODIzMTcxZDctZGZjMS00ZDBlLTgwM2YtNDBhMWY1ZTQzODY4In0seyJlbmNyeXB0ZWRfa2V5IjoiR0hQSVNYTXZKWEJ6WktGQm1ZMXFCZz09IiwiaWQiOiJjMTYyYWM3ZC00MGQ3LTQ2YzAtYjJjZC1lOTQyN2Q0MzljMzIifSx7ImVuY3J5cHRlZF9rZXkiOiJ2bzJhamlLaWV6Yk9xY2tyNTN0U3B3PT0iLCJpZCI6ImZhYTZkNmY1LTM1MDEtNDg1MS05MmViLWM3ZGE0NDRlY2FhYyJ9LHsiZW5jcnlwdGVkX2tleSI6Ijg2QkEwUHYwYXk4UmV5Wk4zeElYa2c9PSIsImlkIjoiZmM0OWI3MTEtMWNiNi00MGE3LTk4NDAtODNjNDFiNTViOTliIn0seyJlbmNyeXB0ZWRfa2V5IjoibUhBbERaa0NYQWpCR1pLR2h0Y3Zpdz09IiwiaWQiOiI0M2QwMjIwNC04NjA5LTRkNDYtOTlhYy00MjVhNWI0ODAwOTgifSx7ImVuY3J5cHRlZF9rZXkiOiJ3bWhjREdZcG84YlZBSit0OGF4SUZnPT0iLCJpZCI6IjRkNmU0OTZhLTFmOTgtNGVlOC04Zjg3LTRiMTAzYmQzOGQwZiJ9LHsiZW5jcnlwdGVkX2tleSI6Ik92cWF3Y0JVQVE3cHM2T0xhSnZPRmc9PSIsImlkIjoiYzRlMGQ5ZjctZDQ4Mi00MWMzLThjYmItOTdiMTEyZDcyZTY2In0seyJlbmNyeXB0ZWRfa2V5IjoiM3dTMkdpemxWcGtuNDlRRExxcFBhZz09IiwiaWQiOiIxYzJkZTFlNC1lZDMwLTQ0NTItYTExNS0wOTIzYjk0MGM0ZWQifSx7ImVuY3J5cHRlZF9rZXkiOiJTNWRGQ25yRUNjREswOEVreHllY3lRPT0iLCJpZCI6ImRjZjQzODVmLTM1MDUtNGZmNS1iMDU1LTQ2MWQ1YTA3ZjBmNSJ9LHsiZW5jcnlwdGVkX2tleSI6IlBnRUhyK0Nrd3JYTStlSWFnUnl4b3c9PSIsImlkIjoiZjMyNGYwNGUtN2M3My00ZjM3LTgxMzUtYzg5ZjhjNGU2Y2Y0In0seyJlbmNyeXB0ZWRfa2V5IjoiSkx6UUZGMXp4MFpZMzZYSTdaR0VaUT09IiwiaWQiOiI1Y2I1M2RkOC0xMjk0LTRjOGUtOTY0ZS0yNTg2OWQ1M2EyNGEifSx7ImVuY3J5cHRlZF9rZXkiOiJVOHBRdW1HUmtrTGppSEg1cjlqWGhnPT0iLCJpZCI6IjA1NjgyYTI2LTg4NzctNDZkMy05NDY1LTEwNGEzYTQwMDEwYSJ9LHsiZW5jcnlwdGVkX2tleSI6IlVJTDZKNGRzZEpGNi9tQTM1dHIvVFE9PSIsImlkIjoiYmNlNTM0MTAtM2IwYy00OTE0LTg3YTMtNzIzNjNjYTE3NTMxIn0seyJlbmNyeXB0ZWRfa2V5IjoiM3pCaW1Dc2NlMTV2YkV0Mm8zNEhhUT09IiwiaWQiOiI0ZjRmOGExYy0zMjAyLTQ2YWUtODA5ZS00ZmNmOTMzZWU2NTQifSx7ImVuY3J5cHRlZF9rZXkiOiJDVHdTU3RQMnV1QjVZdStNUGpZY29RPT0iLCJpZCI6Ijg1MmNkN2Y3LTQwZTktNDgyZC04MjI1LWRjYmM4ZTA4ZGI4YiJ9LHsiZW5jcnlwdGVkX2tleSI6Im1ubXRuUWVHYm0rZUEzN2t6dFovRVE9PSIsImlkIjoiZWZkZGI4ZWUtODI3OC00NDM2LWE2OTgtNzJiODAzZDA1MGRiIn0seyJlbmNyeXB0ZWRfa2V5Ijoib3BicXltZVRiT3VWalJnYjJHMHpVdz09IiwiaWQiOiJkNWJkYmE1My02MDZmLTRkNDYtODg4ZC1hMWViNDRjZDVmNDEifSx7ImVuY3J5cHRlZF9rZXkiOiJiSWRsOFhoVmdobmc4Tis4cUZVbFRnPT0iLCJpZCI6ImFlZDQ5NjA5LTUwOTktNDExOC05YjA4LWI5NTM4ZGIwMGMwYyJ9LHsiZW5jcnlwdGVkX2tleSI6Ikp1SS9UMSt5cUtzUU95MjZEbzRuZmc9PSIsImlkIjoiN2I1YzFlOWYtZjhiOC00OTkyLWFhM2UtYTA4NWZjMzY3MzExIn0seyJlbmNyeXB0ZWRfa2V5IjoiM2ladUZxalh3bzhiN1lkamxKZUVPUT09IiwiaWQiOiI1YmU0MGViZi0yZWE0LTQ5ZmItYjZlYy1iMDlkZTVhYjYxN2YifSx7ImVuY3J5cHRlZF9rZXkiOiJoQ3gybzJxQlJKL2hiZVNqKzY5dHF3PT0iLCJpZCI6ImU1MzBkZjFiLWZmN2UtNDJhNC1iNTNhLThkNmRlNjhmMDAxMCJ9LHsiZW5jcnlwdGVkX2tleSI6IjhveWlGM0pQTmdzd0tPajVrWjVIT0E9PSIsImlkIjoiYjk0OTg3NDUtODJlYS00ZmZhLWFiMmItZDczN2VmNTRmODYzIn0seyJlbmNyeXB0ZWRfa2V5IjoiTEs4TENTY28zQmZYZXhLMlh0WUZSQT09IiwiaWQiOiI0ZjUyOTc1Yi1lOWYzLTRmZDctYmI4OS00MDNiMjgwMGU4Y2YifV0sInR5cGUiOiJlbnRpdGxlbWVudF9tZXNzYWdlIn0sImNvbV9rZXlfaWQiOiJiMzM2NGViNS01MWY2LTRhZTMtOGM5OC0zM2NlZDVlMzFjNzgiLCJ2ZXJzaW9uIjoxfQ.kuZip7wOBZ6-FjAO_VcBq0r816426dFK4fTdfm99NqE"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXNzYWdlIjp7InBsYXlyZWFkeSI6eyJtaW5fYXBwX3NlY3VyaXR5X2xldmVsIjoxNTAsInBsYXlfZW5hYmxlcnMiOlsiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3Il19LCJrZXlzIjpbeyJlbmNyeXB0ZWRfa2V5IjoiN1hIS21uL3NmdnVQTFd0UHRHVFpEUT09IiwiaWQiOiIxZWIzMzJiMi03NDM3LTQ5YWUtYmYzOS1lNzAwMTBjYjYyMGIifSx7ImVuY3J5cHRlZF9rZXkiOiJzUXRGWDh6Y2o5bEVyZ282RDdjNGh3PT0iLCJpZCI6IjlhYTYwZTNhLTljOTEtNDc0ZC04OTM3LTdkOGIzMjU5Y2NjZCJ9LHsiZW5jcnlwdGVkX2tleSI6Im8wUlY0a2tuVE1KTFFkeVh1a1VlT2c9PSIsImlkIjoiNTk0Nzk3YTctNmIwMC00NjczLWIyZTEtYWVmYzU1MmIxYmJjIn0seyJlbmNyeXB0ZWRfa2V5IjoiZVl1dlIvS1BhWCtXWG43Rkw5WkNxQT09IiwiaWQiOiJhYWUyNTc1OC1lNDgxLTQ4OTUtODEzMy1iODA5NDgzMzkzZDAifSx7ImVuY3J5cHRlZF9rZXkiOiIwQ1BUWVpMWmk1SmhZZ0NiZThKTnhRPT0iLCJpZCI6IjkzMTEzZDVlLTJlYzgtNDNjMS05MDgzLTEwZjNkZTIwM2EyOSJ9LHsiZW5jcnlwdGVkX2tleSI6IlFQUlBrQ09tenNORkl1cCszSFp3WWc9PSIsImlkIjoiZTQ4NzcwMzctNDM3Ni00ZWRkLTg1ODYtMTQ1MTk0MzU4ODAzIn0seyJlbmNyeXB0ZWRfa2V5IjoiVWtrWUZ0TXJGMnlET0hvYWxKRmZSZz09IiwiaWQiOiJlOGFkNTk3Mi04ODE5LTQzMjYtYWQ2YS1mOWExNTE2OGJjYTcifSx7ImVuY3J5cHRlZF9rZXkiOiJkdWhnRVJSRkRiZlFEcnlwUWRCUUVRPT0iLCJpZCI6IjI2YTA5MzlmLTNhMGMtNDI4OS1hZDZiLWJiNWNlYzE3ZmY0MCJ9LHsiZW5jcnlwdGVkX2tleSI6IjFOUHp1Q1JLM3p4bWpYK3FZZnU1bXc9PSIsImlkIjoiYTVlZDcxNzMtMzc4MS00Yzc0LTkwYWMtZjA4MzRlZjFhMWM4In0seyJlbmNyeXB0ZWRfa2V5IjoiYXVQTEJjd2NmTnFSRTV1WFdUZ1NLUT09IiwiaWQiOiIzMjlmNTMzZS1mYTc3LTQwNzAtYjY1Yi0zOTI5ODBiYWRhMGQifSx7ImVuY3J5cHRlZF9rZXkiOiI2NkE1MnFiZEcyQlg3SUhTaml6WUpRPT0iLCJpZCI6IjE5N2Y4Yjg0LTNiZjItNDg2MC1iMjNhLTVjNTQ2MjhhZDBiMSJ9LHsiZW5jcnlwdGVkX2tleSI6IlhIUUE3WWlEZGZwTE05QWxwcklDK2c9PSIsImlkIjoiNGVjZGQ0YzctNGQyOS00M2ZmLWJkYWYtMDJiNzY5MDBmMTIzIn0seyJlbmNyeXB0ZWRfa2V5IjoiblBqNWl3N1IvZDR0WmdKZktoRFhYZz09IiwiaWQiOiJlZTc0NmQxMi1hNDg4LTQ5NzctYjFjYS03N2ExMDFiYjQ4M2MifSx7ImVuY3J5cHRlZF9rZXkiOiJ5U1Vma0Q5ZEliK0ExNmoydHNzNDV3PT0iLCJpZCI6IjQ5NGY5NmUxLTM1MzUtNGE4NC05MWMxLWZhYTI4M2IwNmE1NCJ9LHsiZW5jcnlwdGVkX2tleSI6InJlUHVsaXg0eFZNZHlsUnVpcG5FK0E9PSIsImlkIjoiNWMwN2JmZjQtYzcwYi00ZDAyLWEzNzgtMzgzMjZmOTEwMDBjIn0seyJlbmNyeXB0ZWRfa2V5Ijoialc3Z2E0aytMcDdxWTd4Zmo5dHB5Zz09IiwiaWQiOiIzMjgzYzM1ZS1hZTJjLTRmOGMtOGE0OS00YTc1MGFlZGYxNDIifSx7ImVuY3J5cHRlZF9rZXkiOiJLdHNNYlZRM0JXL1dwQlIwSlQwa2R3PT0iLCJpZCI6IjhkNzdiOWM0LTdmNmQtNDdmOS04NTYyLWE1ZTVlNGMzNTFjZSJ9LHsiZW5jcnlwdGVkX2tleSI6IlhRTGZKQUpmSjFyelFMZGNFRWM5L2c9PSIsImlkIjoiODIzMTcxZDctZGZjMS00ZDBlLTgwM2YtNDBhMWY1ZTQzODY4In0seyJlbmNyeXB0ZWRfa2V5IjoiR0hQSVNYTXZKWEJ6WktGQm1ZMXFCZz09IiwiaWQiOiJjMTYyYWM3ZC00MGQ3LTQ2YzAtYjJjZC1lOTQyN2Q0MzljMzIifSx7ImVuY3J5cHRlZF9rZXkiOiJ2bzJhamlLaWV6Yk9xY2tyNTN0U3B3PT0iLCJpZCI6ImZhYTZkNmY1LTM1MDEtNDg1MS05MmViLWM3ZGE0NDRlY2FhYyJ9LHsiZW5jcnlwdGVkX2tleSI6Ijg2QkEwUHYwYXk4UmV5Wk4zeElYa2c9PSIsImlkIjoiZmM0OWI3MTEtMWNiNi00MGE3LTk4NDAtODNjNDFiNTViOTliIn0seyJlbmNyeXB0ZWRfa2V5IjoibUhBbERaa0NYQWpCR1pLR2h0Y3Zpdz09IiwiaWQiOiI0M2QwMjIwNC04NjA5LTRkNDYtOTlhYy00MjVhNWI0ODAwOTgifSx7ImVuY3J5cHRlZF9rZXkiOiJ3bWhjREdZcG84YlZBSit0OGF4SUZnPT0iLCJpZCI6IjRkNmU0OTZhLTFmOTgtNGVlOC04Zjg3LTRiMTAzYmQzOGQwZiJ9LHsiZW5jcnlwdGVkX2tleSI6Ik92cWF3Y0JVQVE3cHM2T0xhSnZPRmc9PSIsImlkIjoiYzRlMGQ5ZjctZDQ4Mi00MWMzLThjYmItOTdiMTEyZDcyZTY2In0seyJlbmNyeXB0ZWRfa2V5IjoiM3dTMkdpemxWcGtuNDlRRExxcFBhZz09IiwiaWQiOiIxYzJkZTFlNC1lZDMwLTQ0NTItYTExNS0wOTIzYjk0MGM0ZWQifSx7ImVuY3J5cHRlZF9rZXkiOiJTNWRGQ25yRUNjREswOEVreHllY3lRPT0iLCJpZCI6ImRjZjQzODVmLTM1MDUtNGZmNS1iMDU1LTQ2MWQ1YTA3ZjBmNSJ9LHsiZW5jcnlwdGVkX2tleSI6IlBnRUhyK0Nrd3JYTStlSWFnUnl4b3c9PSIsImlkIjoiZjMyNGYwNGUtN2M3My00ZjM3LTgxMzUtYzg5ZjhjNGU2Y2Y0In0seyJlbmNyeXB0ZWRfa2V5IjoiSkx6UUZGMXp4MFpZMzZYSTdaR0VaUT09IiwiaWQiOiI1Y2I1M2RkOC0xMjk0LTRjOGUtOTY0ZS0yNTg2OWQ1M2EyNGEifSx7ImVuY3J5cHRlZF9rZXkiOiJVOHBRdW1HUmtrTGppSEg1cjlqWGhnPT0iLCJpZCI6IjA1NjgyYTI2LTg4NzctNDZkMy05NDY1LTEwNGEzYTQwMDEwYSJ9LHsiZW5jcnlwdGVkX2tleSI6IlVJTDZKNGRzZEpGNi9tQTM1dHIvVFE9PSIsImlkIjoiYmNlNTM0MTAtM2IwYy00OTE0LTg3YTMtNzIzNjNjYTE3NTMxIn0seyJlbmNyeXB0ZWRfa2V5IjoiM3pCaW1Dc2NlMTV2YkV0Mm8zNEhhUT09IiwiaWQiOiI0ZjRmOGExYy0zMjAyLTQ2YWUtODA5ZS00ZmNmOTMzZWU2NTQifSx7ImVuY3J5cHRlZF9rZXkiOiJDVHdTU3RQMnV1QjVZdStNUGpZY29RPT0iLCJpZCI6Ijg1MmNkN2Y3LTQwZTktNDgyZC04MjI1LWRjYmM4ZTA4ZGI4YiJ9LHsiZW5jcnlwdGVkX2tleSI6Im1ubXRuUWVHYm0rZUEzN2t6dFovRVE9PSIsImlkIjoiZWZkZGI4ZWUtODI3OC00NDM2LWE2OTgtNzJiODAzZDA1MGRiIn0seyJlbmNyeXB0ZWRfa2V5Ijoib3BicXltZVRiT3VWalJnYjJHMHpVdz09IiwiaWQiOiJkNWJkYmE1My02MDZmLTRkNDYtODg4ZC1hMWViNDRjZDVmNDEifSx7ImVuY3J5cHRlZF9rZXkiOiJiSWRsOFhoVmdobmc4Tis4cUZVbFRnPT0iLCJpZCI6ImFlZDQ5NjA5LTUwOTktNDExOC05YjA4LWI5NTM4ZGIwMGMwYyJ9LHsiZW5jcnlwdGVkX2tleSI6Ikp1SS9UMSt5cUtzUU95MjZEbzRuZmc9PSIsImlkIjoiN2I1YzFlOWYtZjhiOC00OTkyLWFhM2UtYTA4NWZjMzY3MzExIn0seyJlbmNyeXB0ZWRfa2V5IjoiM2ladUZxalh3bzhiN1lkamxKZUVPUT09IiwiaWQiOiI1YmU0MGViZi0yZWE0LTQ5ZmItYjZlYy1iMDlkZTVhYjYxN2YifSx7ImVuY3J5cHRlZF9rZXkiOiJoQ3gybzJxQlJKL2hiZVNqKzY5dHF3PT0iLCJpZCI6ImU1MzBkZjFiLWZmN2UtNDJhNC1iNTNhLThkNmRlNjhmMDAxMCJ9LHsiZW5jcnlwdGVkX2tleSI6IjhveWlGM0pQTmdzd0tPajVrWjVIT0E9PSIsImlkIjoiYjk0OTg3NDUtODJlYS00ZmZhLWFiMmItZDczN2VmNTRmODYzIn0seyJlbmNyeXB0ZWRfa2V5IjoiTEs4TENTY28zQmZYZXhLMlh0WUZSQT09IiwiaWQiOiI0ZjUyOTc1Yi1lOWYzLTRmZDctYmI4OS00MDNiMjgwMGU4Y2YifV0sInR5cGUiOiJlbnRpdGxlbWVudF9tZXNzYWdlIn0sImNvbV9rZXlfaWQiOiJiMzM2NGViNS01MWY2LTRhZTMtOGM5OC0zM2NlZDVlMzFjNzgiLCJ2ZXJzaW9uIjoxfQ.kuZip7wOBZ6-FjAO_VcBq0r816426dFK4fTdfm99NqE"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ]
+    },
+    {
+      "name": "Unified Streaming (Widevine, persistent)",
+      "type": "vod",
+      "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth",
+          "sessionType": "persistent-license"
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Live Dash WV and PR with unencrypted ad breaks -- Always starts in encrypted content - Keys never change",
+      "type": "live",
+      "url": "https://content.uplynk.com/playlist/6c526d97954b41deb90fe64328647a71.mpd?ad=bbbads&delay=25",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://content.uplynk.com/wv",
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://content.uplynk.com/pr",
+          "httpTimeout": 5000
+        }
+      },
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 40000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 5
+        }
+      },
+      "includedTestfiles": [
+        "playback/*",
+        "playback-advanced/multiperiod-playback"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Super Speedway + PlayReady DRM",
+      "type": "vod",
+      "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
+      "drm": {
+        "com.microsoft.playready": {}
+      },
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "chrome"
+        },
+        {
+          "browser": "firefox"
+        },
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Shaka Sintel mixed encryption enc-clear-enc (Widevine)",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/sintel-mixed-encryption/enc-clear-enc.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://proxy.uat.widevine.com/proxy"
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Shaka Angel-One ClearKey license server",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-clearkey/dash.mpd",
+      "drm": {
+        "org.w3.clearkey": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/clearkey?_u3wDe7erb7v8Lqt8A3QDQ=ABEiM0RVZneImaq7zN3u_w"
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ]
+    },
+    {
+      "name": "Microsoft PlayReady BBB AV1 CBCS",
+      "type": "vod",
+      "url": "https://test.playready.microsoft.com/media/dash/BBBAV1CBC/manifest.mpd",
+      "drm": {
+        "com.microsoft.playready": {
+          "serverURL": "https://test.playready.microsoft.com/core/rightsmanager.asmx?cfg=(ckt:AES128BitCBC)"
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "chrome"
+        },
+        {
+          "browser": "firefox"
+        },
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Microsoft PlayReady BBB 1080p CBCS",
+      "type": "vod",
+      "url": "https://test.playready.microsoft.com/media/dash/APPLEENC_CBCS_BBB_1080p/1080p.mpd",
+      "drm": {
+        "com.microsoft.playready": {
+          "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:false,ck:W31bfVt9W31bfVt9W31bfQ==,ckt:aescbc)"
+        }
+      },
+      "includedTestfiles": [
+        "playback/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "chrome"
+        },
+        {
+          "browser": "firefox"
+        },
         {
           "browser": "safari"
         }

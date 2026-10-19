@@ -18,41 +18,26 @@ class Utils {
 
             const testvector = Utils._applyPlatformOverrides(rawTestvector)
 
-            // Nothing to be filtered
-            if ((!testvector.includedTestfiles || testvector.includedTestfiles.length === 0) && (!testvector.excludedTestfiles || testvector.excludedTestfiles.length === 0)) {
-                targetTestvectors.push(testvector)
-            }
-
-            // Testvector explicitly included either concretely or per category
-            else if (testvector.includedTestfiles && testvector.includedTestfiles.length > 0) {
-                if (testvector.includedTestfiles.indexOf(testcase) >= 0) {
-                    targetTestvectors.push(testvector);
-                } else {
-                    const lastIndex = testcase.lastIndexOf('/');
-                    const category = testcase.substring(0, lastIndex) + '/*';
-                    if (testvector.includedTestfiles.indexOf(category) >= 0) {
-                        targetTestvectors.push(testvector);
-                    }
-                }
-            }
-
-            // All testfiles included and the current testcase not explicitly excluded
-            else if (
-                (testvector.includedTestfiles
-                    && testvector.includedTestfiles.length > 0
-                    && testvector.includedTestfiles.indexOf('all') >= 0
-                )
-                &&
-                (!testvector.excludedTestfiles
-                    || testvector.excludedTestfiles.length === 0
-                    || testvector.excludedTestfiles.indexOf(testcase) === -1
-                )
-            ) {
+            // No or empty includedTestfiles means all testfiles; excludedTestfiles is applied on top
+            const included = testvector.includedTestfiles
+            const isIncluded = !included || included.length === 0 || included.indexOf('all') >= 0 || Utils._matchesTestfiles(included, testcase)
+            if (isIncluded && !Utils._matchesTestfiles(testvector.excludedTestfiles, testcase)) {
                 targetTestvectors.push(testvector)
             }
         })
 
         return targetTestvectors
+    }
+
+    /**
+     * Checks whether a testcase is listed concretely (e.g. "playback/seek") or per category (e.g. "playback/*").
+     */
+    static _matchesTestfiles(testfiles, testcase) {
+        if (!testfiles || testfiles.length === 0) {
+            return false
+        }
+        const category = testcase.substring(0, testcase.lastIndexOf('/')) + '/*'
+        return testfiles.indexOf(testcase) >= 0 || testfiles.indexOf(category) >= 0
     }
 
     /**
