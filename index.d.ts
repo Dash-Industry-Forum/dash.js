@@ -348,6 +348,10 @@ export interface RepresentationController {
 
     getRepresentationForQuality(quality: number): object | null;
 
+    isSegmentListMissing(newRep: Representation): boolean;
+
+    loadSegmentList(newRep: Representation): Promise<Representation> | null;
+
     prepareQualityChange(newRep: Representation): void;
 
     reset(): void;
@@ -1774,7 +1778,8 @@ export class MediaPlayerSettingClass {
         scheduling?: {
             defaultTimeout?: number,
             lowLatencyTimeout?: number,
-            scheduleWhilePaused?: boolean
+            scheduleWhilePaused?: boolean,
+            segmentListRetryDelay?: number
         },
         text?: {
             defaultEnabled?: boolean,
@@ -3163,6 +3168,8 @@ export interface AbrController {
     checkPlaybackQuality(type: string, streamId: string | number): boolean;
 
     clearDataForStream(streamId: string): void;
+
+    excludeRepresentation(representation: Representation, duration?: number): void;
 
     getAbandonmentStateFor(streamId: string, type: string): any | null;
 
