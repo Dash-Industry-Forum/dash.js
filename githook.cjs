@@ -1,50 +1,25 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
+// Git runs hooks from the root of the current working tree, so this lints whichever worktree is committing
+const precommitTemplate = `#!/bin/sh
 
-const precommitTemplate = `#!/usr/bin/env node
-
-var exec = require('child_process').exec;
-
-exec('npm run lint', {
-       cwd: '${__dirname.toString().replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'
-     }, function (err, stdout, stderr) {
-
-  var exitCode = 0;
-  if (err) {
-    console.log(stderr || err);
-    exitCode = -1;
-  }
-
-  process.exit(exitCode);
-}).stdout.on('data', function (chunk){
-    process.stdout.write(chunk);
-});
+exec npm run lint
 `;
 
-const callerTemplate = `#!/bin/sh
-
-node .git/hooks/pre-commit.cjs;`
-
-const pathToHooksFolder = path.join(`${__dirname}`, '.git', 'hooks');
-
-function writeHook(name, content) {
-    const precommitFile = path.join(pathToHooksFolder, name);
-    fs.writeFile(precommitFile, content, { mode: 0o755 }, (err) => {
-        if (err) throw err;
-        console.log(`${precommitFile} created.`);
-    });
+let pathToHooksFolder;
+try {
+    // Resolves to the shared hooks folder, also when called from a git worktree where .git is a file
+    pathToHooksFolder = path.resolve(__dirname, execSync('git rev-parse --git-path hooks', { cwd: __dirname }).toString().trim());
+} catch (e) {
+    console.log('Not a git repository, skipping pre-commit hook installation.');
+    return;
 }
 
-fs.access(pathToHooksFolder, (err) => {
-    if (err) {
-        fs.mkdir(pathToHooksFolder, { recursive: true }, (err) => {
-            if (err) throw err;
-            writeHook('pre-commit.cjs', precommitTemplate);
-            writeHook('pre-commit', callerTemplate);
-        });
-    } else {
-        writeHook('pre-commit.cjs', precommitTemplate);
-        writeHook('pre-commit', callerTemplate);
-    }
-});
+fs.mkdirSync(pathToHooksFolder, { recursive: true });
+// Remove the helper script used by older versions of this hook
+fs.rmSync(path.join(pathToHooksFolder, 'pre-commit.cjs'), { force: true });
+const precommitFile = path.join(pathToHooksFolder, 'pre-commit');
+fs.writeFileSync(precommitFile, precommitTemplate, { mode: 0o755 });
+console.log(`${precommitFile} created.`);
