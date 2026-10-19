@@ -98,6 +98,9 @@ describe('StreamProcessor', function () {
         let scheduleController;
         let startScheduleTimerCalls;
         let ongoingRequests;
+        let requestQueries;
+        let fastSwitchEnabled;
+        let playbackController;
         let executedRequests;
         let representations;
         let mediaInfo;
@@ -105,6 +108,9 @@ describe('StreamProcessor', function () {
         beforeEach(function () {
             segmentListRequestedFor = [];
             ongoingRequests = [];
+            requestQueries = [];
+            fastSwitchEnabled = false;
+            playbackController = new PlaybackControllerMock();
             executedRequests = [];
             representations = [0, 1].map(function (index) {
                 return voHelper.createSegmentBaseRepresentation(testType, index);
@@ -140,7 +146,8 @@ describe('StreamProcessor', function () {
                 dashMetrics: new DashMetricsMock(),
                 errHandler: new ErrorHandlerMock(),
                 fragmentModel: {
-                    getRequests: function () {
+                    getRequests: function (filter) {
+                        requestQueries.push(filter);
                         return ongoingRequests;
                     },
                     executeRequest: function (request) {
@@ -153,13 +160,13 @@ describe('StreamProcessor', function () {
                 mediaController: new MediaControllerMock(),
                 mediaPlayerModel: Object.assign(new MediaPlayerModelMock(), {
                     getFastSwitchEnabled: function () {
-                        return false;
+                        return fastSwitchEnabled;
                     },
                     getScheduleTimeout: function () {
                         return 500;
                     }
                 }),
-                playbackController: new PlaybackControllerMock(),
+                playbackController,
                 segmentBaseController: segmentBaseControllerMock,
                 segmentBlacklistController: objectsHelper.getDummyBlacklistController(),
                 settings: Settings(context).getInstance(),
@@ -214,12 +221,26 @@ describe('StreamProcessor', function () {
             expect(segmentListRequestedFor).to.deep.equal([representations[0].id]);
         });
 
-        it('should switch right away even if the segment list of the new Representation is not loaded yet', function () {
+        it('should switch right away and start loading the segment list of the new Representation', function () {
             switchQuality(representations[1], representations[0]);
 
-            // Loading the segment list is left to the ScheduleController
+            // Not awaited, the segment list loads in parallel to the init segment
             expect(streamProcessor.getRepresentationController().getCurrentRepresentation()).to.equal(representations[1]);
-            expect(segmentListRequestedFor).to.deep.equal([representations[0].id]);
+            expect(segmentListRequestedFor).to.deep.equal([representations[0].id, representations[1].id]);
+        });
+
+        [NaN, null].forEach(function (fragmentDuration) {
+            it(`should use the duration of the old Representation for a fast switch if the new one is ${fragmentDuration}`, function () {
+                fastSwitchEnabled = true;
+                playbackController.setTime(10);
+                representations[0].fragmentDuration = 2;
+                representations[1].fragmentDuration = fragmentDuration;
+                requestQueries = [];
+
+                switchQuality(representations[1], representations[0]);
+
+                expect(requestQueries[0].time).to.equal(13);
+            });
         });
 
         it('should load the segment list and poll instead of requesting a media segment while it is missing', function () {

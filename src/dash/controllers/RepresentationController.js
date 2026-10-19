@@ -326,6 +326,9 @@ function RepresentationController(config) {
         const rep = getRepresentationById(newRep.id);
         if (rep) {
             _setCurrentVoRepresentation(rep);
+            // Start loading the segment list right away, so it overlaps with the init segment request
+            loadSegmentList(rep);
+            loadSegmentList(rep.dependentRepresentation);
         }
     }
 

@@ -762,6 +762,13 @@ function AbrController() {
         // Rules like BOLA cache the list of possible Representations, make them rebuild it without the excluded one
         handleNewMediaInfo(mediaInfo);
 
+        // A late failure must not override a newer selection, only switch away if we are still on (or depend on) the excluded one
+        const currentRepresentation = streamProcessorDict[streamId]?.[mediaInfo.type]?.getRepresentationController()?.getCurrentCompositeRepresentation();
+        if (!currentRepresentation || (currentRepresentation.id !== representation.id && currentRepresentation.dependentRepresentation?.id !== representation.id)) {
+            logger.warn(`Excluded representation ${representation.id} for ${mediaInfo.type}`);
+            return;
+        }
+
         const fallbackRepresentation = getOptimalRepresentationForBitrate(mediaInfo, representation.bitrateInKbit);
         if (!fallbackRepresentation || fallbackRepresentation.id === representation.id) {
             logger.error(`Excluded representation ${representation.id} for ${mediaInfo.type}, no other representation left to switch to`);

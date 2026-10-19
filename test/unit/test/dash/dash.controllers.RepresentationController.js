@@ -251,6 +251,18 @@ describe('RepresentationController', function () {
                 });
         });
 
+        it('should start loading the segment list of the new Representation and its dependent one on a quality change', function () {
+            const [repA, repB, enhancement] = segmentBaseRepresentations;
+            enhancement.dependentRepresentation = repB;
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    lazyRepresentationController.prepareQualityChange(enhancement);
+                    expect(segmentDataLoadedFor).to.have.members([repA.id, enhancement.id, repB.id]);
+                });
+        });
+
         it('should keep the current Representation while the segment list of another one loads', function () {
             const [repA, repB] = segmentBaseRepresentations;
 

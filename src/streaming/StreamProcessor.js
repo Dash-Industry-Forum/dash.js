@@ -967,7 +967,10 @@ function StreamProcessor(config) {
     function _prepareForFastQualitySwitch(newRepresentation, oldRepresentation) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         const time = playbackController.getTime();
-        let safeBufferLevel = 1.5 * (!isNaN(newRepresentation.fragmentDuration) ? newRepresentation.fragmentDuration : 1);
+        // SegmentBase: the duration of the new Representation is unknown until its segment list was loaded, use the one of the old Representation instead
+        const isValidDuration = (duration) => isFinite(duration) && duration > 0;
+        const fragmentDuration = isValidDuration(newRepresentation.fragmentDuration) ? newRepresentation.fragmentDuration : isValidDuration(oldRepresentation?.fragmentDuration) ? oldRepresentation.fragmentDuration : 1;
+        let safeBufferLevel = 1.5 * fragmentDuration;
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: time + safeBufferLevel,
