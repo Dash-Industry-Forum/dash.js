@@ -2,6 +2,7 @@ import ObjectsHelper from '../../helpers/ObjectsHelper.js';
 import VoHelper from '../../helpers/VOHelper.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import RepresentationController from '../../../../src/dash/controllers/RepresentationController.js';
+import Settings from '../../../../src/core/Settings.js';
 import Events from '../../../../src/core/events/Events.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import DashConstants from '../../../../src/dash/constants/DashConstants.js';
@@ -369,6 +370,8 @@ describe('RepresentationController', function () {
             const originalExcludeRepresentation = abrControllerMock.excludeRepresentation;
             const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
             abrControllerMock.excludeRepresentation = (rep, duration) => excluded.push({ id: rep.id, duration });
+            const settings = Settings(context).getInstance();
+            settings.update({ streaming: { scheduling: { segmentListRetryDelay: 5000 } } });
             let clock;
 
             return lazyRepresentationController
@@ -379,12 +382,14 @@ describe('RepresentationController', function () {
                     return lazyRepresentationController.loadSegmentList(repB);
                 })
                 .then(function () {
-                    expect(excluded).to.deep.equal([{ id: repB.id, duration: 10000 }]);
+                    expect(excluded).to.deep.equal([{ id: repB.id, duration: 5000 }]);
                     // Within the retry delay the failed load is neither waited for nor retried
                     expect(lazyRepresentationController.loadSegmentList(repB)).to.be.null;
                     expect(lazyRepresentationController.isSegmentListMissing(repB)).to.be.true;
 
-                    clock.tick(10000);
+                    clock.tick(4999);
+                    expect(lazyRepresentationController.loadSegmentList(repB)).to.be.null;
+                    clock.tick(1);
                     segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
                     const retry = lazyRepresentationController.loadSegmentList(repB);
                     expect(retry).to.not.be.null;
@@ -395,6 +400,52 @@ describe('RepresentationController', function () {
                     expect(lazyRepresentationController.isSegmentListMissing(repB)).to.be.false;
                 })
                 .finally(function () {
+                    settings.reset();
+                    if (clock) {
+                        clock.restore();
+                    }
+                    abrControllerMock.excludeRepresentation = originalExcludeRepresentation;
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
+                });
+        });
+
+        it('should double the retry delay with every failed segment list load in a row up to eight times the setting', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+            const exclusions = [];
+            const originalExcludeRepresentation = abrControllerMock.excludeRepresentation;
+            const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
+            abrControllerMock.excludeRepresentation = (rep, duration) => exclusions.push(duration);
+            const settings = Settings(context).getInstance();
+            settings.update({ streaming: { scheduling: { segmentListRetryDelay: 1000 } } });
+            let clock;
+
+            // Fails, then checks the load is not retried before the expected delay passed
+            function failAndWait(expectedDelay) {
+                return lazyRepresentationController.loadSegmentList(repB)
+                    .then(function () {
+                        expect(exclusions[exclusions.length - 1]).to.equal(expectedDelay);
+                        clock.tick(expectedDelay - 1);
+                        expect(lazyRepresentationController.loadSegmentList(repB)).to.be.null;
+                        clock.tick(1);
+                    });
+            }
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    clock = sinon.useFakeTimers({ now: Date.now(), toFake: ['Date'] });
+                    segmentsControllerMock.updateSegmentData = () => Promise.resolve({ error: 'sidx request failed' });
+                    return failAndWait(1000);
+                })
+                .then(() => failAndWait(2000))
+                .then(() => failAndWait(4000))
+                .then(() => failAndWait(8000))
+                .then(() => failAndWait(8000))
+                .then(function () {
+                    expect(exclusions).to.deep.equal([1000, 2000, 4000, 8000, 8000]);
+                })
+                .finally(function () {
+                    settings.reset();
                     if (clock) {
                         clock.restore();
                     }

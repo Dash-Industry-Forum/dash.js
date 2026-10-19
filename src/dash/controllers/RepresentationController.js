@@ -31,11 +31,12 @@
 import Constants from '../../streaming/constants/Constants.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
+import Settings from '../../core/Settings.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import {getTimeBasedSegment} from '../utils/SegmentsUtils.js';
 
-// ponytail: fixed retry delay for failed segment list loads, move to Settings if it needs tuning
-const SEGMENT_LIST_RETRY_DELAY = 10000;
+// The retry delay doubles with every failed segment list load in a row, up to this factor of segmentListRetryDelay
+const MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR = 8;
 
 function RepresentationController(config) {
 
@@ -50,6 +51,7 @@ function RepresentationController(config) {
     const type = config.type;
     const streamInfo = config.streamInfo;
     const segmentsController = config.segmentsController;
+    const settings = Settings(context).getInstance();
 
     let isDynamic = config.isDynamic;
 
@@ -357,13 +359,10 @@ function RepresentationController(config) {
             return null;
         }
         const rep = getRepresentationById(newRep.id);
-        // A failed load is excluded from ABR and only retried after SEGMENT_LIST_RETRY_DELAY, callers must not wait for it in the meantime
-        const failedAt = segmentListFailures.get(rep);
-        if (failedAt !== undefined) {
-            if (Date.now() - failedAt < SEGMENT_LIST_RETRY_DELAY) {
-                return null;
-            }
-            segmentListFailures.delete(rep);
+        // A failed load is excluded from ABR and only retried after its retry delay, callers must not wait for it in the meantime
+        const failure = segmentListFailures.get(rep);
+        if (failure && Date.now() - failure.failedAt < failure.retryDelay) {
+            return null;
         }
         if (!segmentListLoads.has(rep)) {
             _trackSegmentListLoad(rep, _updateRepresentation(rep, true));
@@ -379,9 +378,11 @@ function RepresentationController(config) {
             .then(() => {
                 // Ignore loads that outlived a reset() or an updateData() with new Representations
                 if (!rep.segments && voAvailableRepresentations.includes(rep)) {
-                    segmentListFailures.set(rep, Date.now());
+                    const failureCount = (segmentListFailures.get(rep)?.failureCount || 0) + 1;
+                    const retryDelay = settings.get().streaming.scheduling.segmentListRetryDelay * Math.min(2 ** (failureCount - 1), MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR);
+                    segmentListFailures.set(rep, { failureCount, failedAt: Date.now(), retryDelay });
                     segmentListLoads.delete(rep);
-                    abrController.excludeRepresentation(rep, SEGMENT_LIST_RETRY_DELAY);
+                    abrController.excludeRepresentation(rep, retryDelay);
                 }
                 return rep;
             });

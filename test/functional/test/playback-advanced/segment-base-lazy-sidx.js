@@ -5,8 +5,7 @@ import {checkIsPlaying, checkIsProgressing, initializeDashJsAdapterWithoutAttach
 
 const TESTCASE = Constants.TESTCASES.PLAYBACK_ADVANCED.SEGMENT_BASE_LAZY_SIDX;
 const VIDEO = Constants.DASH_JS.MEDIA_TYPES.VIDEO;
-// Must match SEGMENT_LIST_RETRY_DELAY in RepresentationController
-const SEGMENT_LIST_RETRY_DELAY = 10000;
+const SEGMENT_LIST_RETRY_DELAY = 5000;
 const POLLING_INTERVAL = 200;
 // A failing sidx load takes a few attempts (retryAttempts.MediaSegment) before the Representation is excluded
 const EXCLUSION_TIMEOUT = 20000;
@@ -25,8 +24,13 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         let failingRepresentation;
 
         before(() => {
-            // No ABR switches, the test decides which Representations are scheduled on
-            const settings = { streaming: { abr: { autoSwitchBitrate: { video: false } } } };
+            const settings = {
+                streaming: {
+                    // No ABR switches, the test decides which Representations are scheduled on
+                    abr: { autoSwitchBitrate: { video: false } },
+                    scheduling: { segmentListRetryDelay: SEGMENT_LIST_RETRY_DELAY }
+                }
+            };
             playerAdapter = initializeDashJsAdapterWithoutAttachSource(item, settings);
             playerAdapter.player.addRequestInterceptor((request) => {
                 const dashRequest = request.customData.request;

@@ -1778,7 +1778,8 @@ export class MediaPlayerSettingClass {
         scheduling?: {
             defaultTimeout?: number,
             lowLatencyTimeout?: number,
-            scheduleWhilePaused?: boolean
+            scheduleWhilePaused?: boolean,
+            segmentListRetryDelay?: number
         },
         text?: {
             defaultEnabled?: boolean,
