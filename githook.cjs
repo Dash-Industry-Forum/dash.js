@@ -3,8 +3,13 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 // Git runs hooks from the root of the current working tree, so this lints whichever worktree is committing
+// Fresh worktrees have no node_modules yet, so skip instead of blocking the commit (CI lints anyway)
 const precommitTemplate = `#!/bin/sh
 
+if [ ! -d node_modules ]; then
+    echo "pre-commit: node_modules not found, skipping lint. Run npm ci to enable it."
+    exit 0
+fi
 exec npm run lint
 `;
 
