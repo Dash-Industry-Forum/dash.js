@@ -164,6 +164,17 @@ describe('Utils', () => {
             expect(Utils.getCodecFamily('mp4a.40.2')).to.be.equal(Constants.CODEC_FAMILIES.AAC);
         })
 
+        it('should return AVC codec family for both AVC sample entries', () => {
+            expect(Utils.getCodecFamily('avc1.64001E')).to.be.equal(Constants.CODEC_FAMILIES.AVC);
+            expect(Utils.getCodecFamily('avc3.64001E')).to.be.equal(Constants.CODEC_FAMILIES.AVC);
+        })
+
+        it('should normalize HEVC and E-AC-3 sample entry aliases', () => {
+            expect(Utils.getCodecFamily('hev1.2.4.L90.90')).to.be.equal(Constants.CODEC_FAMILIES.HEVC);
+            expect(Utils.getCodecFamily('ec-3')).to.be.equal(Constants.CODEC_FAMILIES.EC3);
+            expect(Utils.getCodecFamily('ec3')).to.be.equal(Constants.CODEC_FAMILIES.EC3);
+        })
+
         it('should return default base for unknown family', () => {
             expect(Utils.getCodecFamily('vp09.00.10.08.00.02.02.02.00')).to.be.equal('vp09');
         })

@@ -389,13 +389,16 @@ function L2ARule(config) {
             }
 
             // Quality is calculated based on the probability distribution w (the output of L2A)
-            const absoluteIndex = temp.indexOf(Math.min(...temp));
-            selectedRepresentation = abrController.getRepresentationByAbsoluteIndex(absoluteIndex, mediaInfo, true);
+            const representationIndex = temp.indexOf(Math.min(...temp));
+            selectedRepresentation = possibleRepresentations[representationIndex];
 
             // We employ a cautious -stepwise- ascent
-            if (selectedRepresentation.absoluteIndex > l2AState.currentRepresentation.absoluteIndex) {
-                if (bitrates[l2AState.currentRepresentation.absoluteIndex + 1] <= lastThroughput) {
-                    selectedRepresentation = abrController.getRepresentationByAbsoluteIndex(l2AState.currentRepresentation.absoluteIndex + 1, mediaInfo, true);
+            const currentRepresentationIndex = possibleRepresentations.findIndex((representation) => {
+                return representation.id === l2AState.currentRepresentation.id && representation.mediaInfo === l2AState.currentRepresentation.mediaInfo;
+            });
+            if (currentRepresentationIndex >= 0 && representationIndex > currentRepresentationIndex) {
+                if (bitrates[currentRepresentationIndex + 1] <= lastThroughput) {
+                    selectedRepresentation = possibleRepresentations[currentRepresentationIndex + 1];
                 }
             }
 

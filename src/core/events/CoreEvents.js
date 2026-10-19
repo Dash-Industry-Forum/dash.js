@@ -79,6 +79,7 @@ class CoreEvents extends EventsBase {
         this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
         this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
         this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
+        this.SETTING_UPDATED_SOURCE_BUFFER_REUSE = 'settingUpdatedSourceBufferReuse';
         this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
         this.SET_NON_FRAGMENTED_TEXT = 'setNonFragmentedText';
         this.SOURCE_BUFFER_ERROR = 'sourceBufferError';
