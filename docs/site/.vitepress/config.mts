@@ -14,7 +14,7 @@ export default withMermaid({
     ],
     // mermaid >= 11.17 imports CJS-only fastdom; vitepress-plugin-mermaid doesn't pre-bundle it.
     vite: {
-        optimizeDeps: { include: ['fastdom', 'fastdom/extensions/fastdom-promised.js'] }
+        optimizeDeps: { include: ['mermaid > fastdom', 'mermaid > fastdom/extensions/fastdom-promised.js'] }
     },
     ignoreDeadLinks: [
         /^https?:\/\/localhost/

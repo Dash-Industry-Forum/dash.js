@@ -6,25 +6,26 @@ const { execFileSync } = require('child_process');
 // Fresh worktrees have no node_modules yet, so skip instead of blocking the commit (CI lints anyway)
 const precommitTemplate = `#!/bin/sh
 
-if [ ! -d node_modules ]; then
-    echo "pre-commit: node_modules not found, skipping lint. Run npm ci to enable it."
+if [ ! -f node_modules/.bin/eslint ]; then
+    echo "pre-commit: eslint not installed, skipping lint. Run npm ci to enable it."
     exit 0
 fi
 exec npm run lint
 `;
 
-let topLevel, commonDir;
+let commonDir, prefix;
 try {
-    // --git-common-dir resolves to the main .git folder, also when called from a git worktree where .git is a file
-    [topLevel, commonDir] = execFileSync('git', ['rev-parse', '--show-toplevel', '--git-common-dir'], { cwd: __dirname, stdio: ['ignore', 'pipe', 'ignore'] })
-        .toString().trim().split('\n');
+    // --git-common-dir resolves to the main .git folder, also when called from a git worktree where .git is a file.
+    // --show-prefix is empty when called from the root of the repository.
+    [commonDir, prefix] = execFileSync('git', ['rev-parse', '--git-common-dir', '--show-prefix'], { cwd: __dirname, stdio: ['ignore', 'pipe', 'ignore'] })
+        .toString().split('\n');
 } catch (e) {
     console.log('Not a git repository, skipping pre-commit hook installation.');
     process.exit(0);
 }
 
 // Don't touch the hooks of an outer repository that dash.js happens to live in
-if (path.resolve(topLevel) !== fs.realpathSync(__dirname)) {
+if (prefix) {
     console.log('dash.js is not the root of its git repository, skipping pre-commit hook installation.');
     process.exit(0);
 }

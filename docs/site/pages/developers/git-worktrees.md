@@ -19,13 +19,7 @@ directory, so they cannot overwrite each other's files.
 * The [GitHub CLI](https://cli.github.com/) (`gh`), if you want to push changes back to a pull request
 * Optional: [Claude Code](https://docs.claude.com/en/docs/claude-code/overview)
 
-## One-time setup
-
-Keep worktree folders out of `git status` by adding them to your local exclude file:
-
-```bash
-echo ".claude/worktrees/" >> .git/info/exclude
-```
+The examples create worktrees in `.claude/worktrees/`, which is already listed in the dash.js `.gitignore`.
 
 ## Working on two pull requests in parallel
 
@@ -91,6 +85,11 @@ older version of dash.js. Its `githook.cjs` does not support worktrees yet. Run 
 skips the pre-commit hook setup. Commits still use the hook from your main clone, so make sure you ran `npm ci` there
 on a current `development` branch to install the worktree-compatible version.
 :::
+
+If `gh pr checkout` fails because a branch with the same name is already checked out (for example, a pull request
+opened from a fork's `development` branch), give the local branch a different name with
+`gh pr checkout 1234 --branch pr-1234`. A plain `git push` then refuses to push, because the local and remote branch names
+differ. Push with `git push <remote> HEAD:<branch>` instead; the error message from `git push` shows the exact command.
 
 Pushing to a contributor's fork only works if they enabled **Allow edits by maintainers** on the pull request.
 
