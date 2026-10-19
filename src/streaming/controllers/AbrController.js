@@ -282,7 +282,7 @@ function AbrController() {
     }
 
     function _filterExcluded(voRepresentations) {
-        const filteredRepresentations = voRepresentations.filter((rep) => !excludedRepresentationIds[rep.mediaInfo.streamInfo.id]?.has(rep.id));
+        const filteredRepresentations = voRepresentations.filter((rep) => !excludedRepresentationIds[rep.mediaInfo.streamInfo.id]?.[rep.mediaInfo.type]?.has(rep.id));
 
         // Like the settings filters, never return an empty list
         if (filteredRepresentations.length === 0) {
@@ -754,10 +754,10 @@ function AbrController() {
     function excludeRepresentation(representation) {
         const mediaInfo = representation.mediaInfo;
         const streamId = mediaInfo.streamInfo.id;
-        if (!excludedRepresentationIds[streamId]) {
-            excludedRepresentationIds[streamId] = new Set();
-        }
-        excludedRepresentationIds[streamId].add(representation.id);
+        // Content often reuses Representation ids across media types, keep them apart
+        excludedRepresentationIds[streamId] = excludedRepresentationIds[streamId] || {};
+        excludedRepresentationIds[streamId][mediaInfo.type] = excludedRepresentationIds[streamId][mediaInfo.type] || new Set();
+        excludedRepresentationIds[streamId][mediaInfo.type].add(representation.id);
 
         // Rules like BOLA cache the list of possible Representations, make them rebuild it without the excluded one
         handleNewMediaInfo(mediaInfo);

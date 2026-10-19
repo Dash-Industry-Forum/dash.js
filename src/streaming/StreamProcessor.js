@@ -92,6 +92,7 @@ function StreamProcessor(config) {
         qualityChangeInProgress,
         representationController,
         scheduleController,
+        segmentListLoad,
         segmentsController,
         shouldRepeatRequest,
         shouldUseExplicitTimeForRequest,
@@ -218,6 +219,7 @@ function StreamProcessor(config) {
         qualityChangeInProgress = false;
         enhancementStreamProcessor = null;
         trackSwitchInProgress = false;
+        segmentListLoad = null;
         _resetPendingSwitchToRepresentation();
     }
 
@@ -440,9 +442,8 @@ function StreamProcessor(config) {
             return;
         }
 
-        // Poll until the segment list is there, also when called from the fragment loading error path
-        if (_loadSegmentListIfMissing()) {
-            _noValidRequest();
+        // Scheduling continues once the segment list is there, see _waitForSegmentList()
+        if (_waitForSegmentList()) {
             return;
         }
 
@@ -562,7 +563,35 @@ function StreamProcessor(config) {
      * @private
      */
     function _loadSegmentListIfMissing() {
-        return !!representationController.loadSegmentList(representationController.getCurrentRepresentation());
+        return representationController.loadSegmentList(representationController.getCurrentRepresentation());
+    }
+
+    /**
+     * Restarts scheduling as soon as the segment list of the current Representation was loaded.
+     * @return {boolean} true while the segment list of the current Representation is loading
+     * @private
+     */
+    function _waitForSegmentList() {
+        const load = _loadSegmentListIfMissing();
+        if (!load) {
+            return false;
+        }
+        if (load !== segmentListLoad) {
+            segmentListLoad = load;
+            load.then((rep) => {
+                // Superseded by a reset or a load for another Representation
+                if (segmentListLoad !== load) {
+                    return;
+                }
+                segmentListLoad = null;
+                // The load failed and ABR had nothing left to switch to
+                if (!rep.segments && representationController.getCurrentRepresentation()?.id === rep.id) {
+                    errHandler.error(new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE));
+                }
+                scheduleController.startScheduleTimer(0);
+            });
+        }
+        return true;
     }
 
     function checkAndHandleCompletedBuffering() {

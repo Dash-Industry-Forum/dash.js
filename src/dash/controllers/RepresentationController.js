@@ -336,19 +336,22 @@ function RepresentationController(config) {
      * Loads the segment list of a SegmentBase Representation that was skipped in updateData().
      * Concurrent calls for the same Representation share one request.
      * @param newRep
-     * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded
+     * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded or the load failed
      */
     function loadSegmentList(newRep) {
         const rep = newRep ? getRepresentationById(newRep.id) : null;
         if (!hasSegmentData || !rep || rep.hasSegments() || rep.segments) {
             return null;
         }
-        // Loaded once: a failed load stays cached, the Representation is excluded from ABR instead of retried
+        // Loaded once: a failed load is not retried, the Representation is excluded from ABR instead
         if (!segmentListLoads.has(rep)) {
             const load = _updateRepresentation(rep, true)
                 .catch(() => {})
                 .then(() => {
-                    if (!rep.segments) {
+                    // Ignore loads that outlived a reset() or an updateData() with new Representations
+                    if (!rep.segments && voAvailableRepresentations.includes(rep)) {
+                        // Callers must not wait for a load that already failed
+                        segmentListLoads.set(rep, null);
                         abrController.excludeRepresentation(rep);
                     }
                     return rep;

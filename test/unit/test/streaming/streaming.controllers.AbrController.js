@@ -471,6 +471,28 @@ describe('AbrController', function () {
             expect(requested).to.deep.equal(['low']);
         });
 
+        it('should only exclude the Representation of the given media type if ids are reused across types', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const audioMediaInfo = { streamInfo: mediaInfo.streamInfo, type: Constants.AUDIO };
+            const videoRepresentations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: '1' },
+                { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: '2' }
+            ];
+            const audioRepresentations = [
+                { bitrateInKbit: 2, bandwidth: 2000, mediaInfo: audioMediaInfo, id: '1' },
+                { bitrateInKbit: 1, bandwidth: 1000, mediaInfo: audioMediaInfo, id: '2' }
+            ];
+            adapterMock.getVoRepresentations = (info) => info === audioMediaInfo ? audioRepresentations : videoRepresentations;
+            adapterMock.areMediaInfosEqual = () => true;
+
+            abrCtrl.excludeRepresentation(videoRepresentations[0]);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['2']);
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(audioMediaInfo).map((rep) => rep.id)).to.have.members(['1', '2']);
+        });
+
         it('should not override a newer selection when a Representation that is no longer selected is excluded', function () {
             const mediaInfo = streamProcessor.getMediaInfo();
             mediaInfo.streamInfo = streamProcessor.getStreamInfo();

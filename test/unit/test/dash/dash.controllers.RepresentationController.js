@@ -306,6 +306,30 @@ describe('RepresentationController', function () {
                 });
         });
 
+        it('should not exclude a Representation whose failing load outlived a reset', function () {
+            const [repA, repB] = segmentBaseRepresentations;
+            const excluded = [];
+            const originalExcludeRepresentation = abrControllerMock.excludeRepresentation;
+            const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
+            abrControllerMock.excludeRepresentation = (rep) => excluded.push(rep.id);
+
+            return lazyRepresentationController
+                .updateData(segmentBaseRepresentations, true, repA.id)
+                .then(function () {
+                    segmentsControllerMock.updateSegmentData = () => Promise.resolve({ error: 'sidx request failed' });
+                    const load = lazyRepresentationController.loadSegmentList(repB);
+                    lazyRepresentationController.reset();
+                    return load;
+                })
+                .then(function () {
+                    expect(excluded).to.be.empty;
+                })
+                .finally(function () {
+                    abrControllerMock.excludeRepresentation = originalExcludeRepresentation;
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
+                });
+        });
+
         it('should share one segment list request between concurrent loads of the same Representation', function () {
             const [repA, repB] = segmentBaseRepresentations;
             let releaseSegmentData;

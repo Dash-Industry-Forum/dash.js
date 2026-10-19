@@ -3,6 +3,7 @@ import Events from '../../../../src/core/events/Events.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Settings from '../../../../src/core/Settings.js';
+import Errors from '../../../../src/core/errors/Errors.js';
 import BoxParser from '../../../../src/streaming/utils/BoxParser.js';
 import MediaInfoSelectionInput from '../../../../src/streaming/vo/MediaInfoSelectionInput.js';
 import AbrControllerMock from '../../mocks/AbrControllerMock.js';
@@ -101,6 +102,8 @@ describe('StreamProcessor', function () {
         let requestQueries;
         let fastSwitchEnabled;
         let playbackController;
+        let errHandler;
+        let abrController;
         let executedRequests;
         let representations;
         let mediaInfo;
@@ -111,6 +114,16 @@ describe('StreamProcessor', function () {
             requestQueries = [];
             fastSwitchEnabled = false;
             playbackController = new PlaybackControllerMock();
+            errHandler = new ErrorHandlerMock();
+            // Representation aware, so this stays local to the suite.
+            abrController = Object.assign(new AbrControllerMock(), {
+                getOptimalRepresentationForBitrate: function () {
+                    return representations[0];
+                },
+                getPossibleVoRepresentations: function () {
+                    return representations;
+                }
+            });
             executedRequests = [];
             representations = [0, 1].map(function (index) {
                 return voHelper.createSegmentBaseRepresentation(testType, index);
@@ -130,21 +143,13 @@ describe('StreamProcessor', function () {
                 type: testType,
                 mimeType: 'video/mp4',
                 streamInfo: { id: 'streamId', manifestInfo: { isDynamic: false }, duration: 100 },
-                abrController: Object.assign(new AbrControllerMock(), {
-                    // Representation aware, so this stays local to the suite.
-                    getOptimalRepresentationForBitrate: function () {
-                        return representations[0];
-                    },
-                    getPossibleVoRepresentations: function () {
-                        return representations;
-                    }
-                }),
+                abrController,
                 adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 boxParser: BoxParser(context).getInstance(),
                 capabilities: new CapabilitiesMock(),
                 dashMetrics: new DashMetricsMock(),
-                errHandler: new ErrorHandlerMock(),
+                errHandler,
                 fragmentModel: {
                     getRequests: function (filter) {
                         requestQueries.push(filter);
@@ -243,15 +248,74 @@ describe('StreamProcessor', function () {
             });
         });
 
-        it('should load the segment list and poll instead of requesting a media segment while it is missing', function () {
+        it('should not request a media segment while the segment list is missing and resume scheduling once it is loaded', function () {
+            // Hold the segment list request, so the quality switch preparation can settle first
+            let releaseSegmentList;
+            segmentBaseControllerMock.getSegmentList = function (e) {
+                segmentListRequestedFor.push(e.representation.id);
+                return new Promise(function (resolve) {
+                    releaseSegmentList = function () {
+                        resolve(segmentList);
+                    };
+                });
+            };
             switchQuality(representations[1], representations[0]);
-            startScheduleTimerCalls = 0;
+            const load = streamProcessor.getRepresentationController().loadSegmentList(representations[1]);
 
+            return new Promise(function (resolve) {
+                setTimeout(resolve, 0);
+            }).then(function () {
+                startScheduleTimerCalls = 0;
+                eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {}, { streamId: 'streamId', mediaType: testType });
+                eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {}, { streamId: 'streamId', mediaType: testType });
+
+                expect(segmentListRequestedFor).to.deep.equal([representations[0].id, representations[1].id]);
+                expect(executedRequests).to.be.empty;
+                // No polling while the segment list loads
+                expect(startScheduleTimerCalls).to.equal(0);
+
+                releaseSegmentList();
+                return load;
+            }).then(function () {
+                return Promise.resolve();
+            }).then(function () {
+                expect(startScheduleTimerCalls).to.equal(1);
+                expect(errHandler.errorCode).to.be.undefined;
+            }).finally(function () {
+                segmentBaseControllerMock.getSegmentList = function (e) {
+                    segmentListRequestedFor.push(e.representation.id);
+                    return Promise.resolve(segmentList);
+                };
+            });
+        });
+
+        it('should report an error if the segment list failed to load and there is no other Representation to switch to', function () {
+            segmentBaseControllerMock.getSegmentList = function (e) {
+                segmentListRequestedFor.push(e.representation.id);
+                return Promise.resolve({ error: 'sidx request failed' });
+            };
+            let excluded;
+            abrController.excludeRepresentation = function (rep) {
+                excluded = rep.id;
+            };
+
+            switchQuality(representations[1], representations[0]);
+            const load = streamProcessor.getRepresentationController().loadSegmentList(representations[1]);
             eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {}, { streamId: 'streamId', mediaType: testType });
 
-            expect(segmentListRequestedFor).to.deep.equal([representations[0].id, representations[1].id]);
-            expect(executedRequests).to.be.empty;
-            expect(startScheduleTimerCalls).to.equal(1);
+            return load.then(function () {
+                return Promise.resolve();
+            }).then(function () {
+                expect(excluded).to.equal(representations[1].id);
+                expect(errHandler.errorCode).to.equal(Errors.SEGMENT_BASE_LOADER_ERROR_CODE);
+                // The failed load is not waited for again
+                expect(streamProcessor.getRepresentationController().loadSegmentList(representations[1])).to.be.null;
+            }).finally(function () {
+                segmentBaseControllerMock.getSegmentList = function (e) {
+                    segmentListRequestedFor.push(e.representation.id);
+                    return Promise.resolve(segmentList);
+                };
+            });
         });
 
         it('should not report buffering as completed while the segment list is missing', function () {
