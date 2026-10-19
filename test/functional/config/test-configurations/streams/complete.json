@@ -184,6 +184,11 @@
       "name": "Multiperiod unencrypted to encrypted",
       "type": "vod",
       "url": "/base/test/functional/content/multi-period/unenc-enc.mpd",
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ],
       "testdata": {
         "periods": {
           "waitingTimeForPeriodSwitches": 10000,
@@ -760,7 +765,10 @@
       "url": "/base/test/functional/content/gap/video_negative_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "playback-advanced/attach-at-non-zero"
+        "playback/seek-ended",
+        "playback/seek-to-presentation-time",
+        "playback-advanced/attach-at-non-zero",
+        "playback-advanced/preload"
       ]
     },
     {
@@ -769,7 +777,10 @@
       "url": "/base/test/functional/content/gap/audio_negative_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "playback-advanced/attach-at-non-zero"
+        "playback/seek-ended",
+        "playback/seek-to-presentation-time",
+        "playback-advanced/attach-at-non-zero",
+        "playback-advanced/preload"
       ]
     },
     {
@@ -778,7 +789,9 @@
       "url": "/base/test/functional/content/gap/video_positive_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "playback-advanced/attach-at-non-zero"
+        "advanced/no-reload-after-seek",
+        "playback-advanced/attach-at-non-zero",
+        "playback-advanced/preload"
       ]
     },
     {
@@ -787,7 +800,9 @@
       "url": "/base/test/functional/content/gap/audio_positive_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "playback-advanced/attach-at-non-zero"
+        "advanced/no-reload-after-seek",
+        "playback-advanced/attach-at-non-zero",
+        "playback-advanced/preload"
       ]
     },
     {

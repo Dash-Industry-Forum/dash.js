@@ -637,12 +637,8 @@ function StreamController() {
      * @private
      */
     function _onPlaybackSeeking(e) {
-        const newTime = e.seekTime;
-        let seekToStream = getStreamForTime(newTime);
-
-        if (!seekToStream) {
-            seekToStream = _handleSeekBeyondEndOfContent(e);
-        }
+        // Checked first: the end of content can lie within the last period if the MediaSource duration is shorter
+        const seekToStream = _handleSeekBeyondEndOfContent(e) || getStreamForTime(e.seekTime);
 
         if (!seekToStream || seekToStream === activeStream) {
             _cancelPreloading();
@@ -677,13 +673,18 @@ function StreamController() {
         }
 
         const lastStream = streams[streams.length - 1];
-        const lastStreamEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
-        if (e.seekTime < lastStreamEnd) {
+        let contentEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
+        // endOfStream() can shrink the MediaSource duration below the period end, e.g. to the end of the buffered media.
+        // MediaPlayer.seek() clamps to that duration, so treat it as the end of content as well.
+        if (mediaSource && !isNaN(mediaSource.duration)) {
+            contentEnd = Math.min(contentEnd, mediaSource.duration);
+        }
+        if (e.seekTime < contentEnd) {
             return null;
         }
 
         const seekDurationBackoff = !isNaN(settings.get().streaming.seekDurationBackoff) ? settings.get().streaming.seekDurationBackoff : 0;
-        e.seekTime = Math.max(lastStream.getStartTime(), lastStreamEnd - seekDurationBackoff);
+        e.seekTime = Math.max(lastStream.getStartTime(), contentEnd - seekDurationBackoff);
 
         // Corrective internal seek: move the video element to the clamped target as well, instead of leaving it
         // wherever the browser clamped the original overshooting seek (usually the exact MediaSource duration).

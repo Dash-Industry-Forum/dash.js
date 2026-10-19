@@ -15,7 +15,10 @@ export async function checkIsProgressing(playerAdapter) {
 
 export async function checkIsNotProgressing(playerAdapter) {
     const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_NOT_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-    expect(isProgressing, `expected playback to not progress, currentTime is ${playerAdapter.getCurrentTime()}`).to.be.false;
+    // Only read currentTime on failure: player.time() throws while no view is attached (e.g. preload)
+    if (isProgressing) {
+        expect.fail(`expected playback to not progress, currentTime is ${playerAdapter.getCurrentTime()}`);
+    }
 }
 
 export function checkNoCriticalErrors(playerAdapter) {

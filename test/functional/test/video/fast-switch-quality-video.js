@@ -13,8 +13,6 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
     let lowestVideoBitrate = NaN;
     let bufferInformation = {
-        currentTime: NaN,
-        forwardBuffer: NaN,
         currentRepresentation: null
     };
 
@@ -35,9 +33,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                         liveDelay: Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.LIVE_DELAY
                     },
                     buffer: {
-                        bufferTimeDefault: Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.TARGET_BUFFER,
-                        bufferTimeAtTopQuality: Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.TARGET_BUFFER,
-                        bufferTimeAtTopQualityLongForm: Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.TARGET_BUFFER,
+                        bufferTimeDefault: Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.BUFFER_TIME,
+                        bufferTimeAtTopQuality: Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.BUFFER_TIME,
+                        bufferTimeAtTopQualityLongForm: Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.BUFFER_TIME,
                     },
                 }
             })
@@ -106,12 +104,10 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             if (skipSuite) {
                 this.skip();
             }
-            bufferInformation.currentTime = playerAdapter.getCurrentTime();
-            bufferInformation.forwardBuffer = playerAdapter.getBufferLengthByType(Constants.DASH_JS.MEDIA_TYPES.VIDEO);
             bufferInformation.currentRepresentation = playerAdapter.getCurrentRepresentationForType(Constants.DASH_JS.MEDIA_TYPES.VIDEO);
         });
 
-        it(`Enable fast ABR quality switching and expect buffer to be replaced`, async function () {
+        it(`Enable fast quality switching, switch to the highest quality and expect buffer to be replaced`, async function () {
             if (skipSuite) {
                 this.skip();
             }
@@ -121,19 +117,28 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                         fastSwitchEnabled: true,
                     },
                     abr: {
-                        autoSwitchBitrate: {
-                            video: true
-                        },
                         maxBitrate: {
                             video: -1
                         }
                     },
                 }
             })
-            const replacedBuffer = await playerAdapter.replacedSegmentsInBuffer(
+
+            // dash.js only replaces buffered segments if the buffer exceeds 1.5 segment durations (see StreamProcessor._prepareForFastQualitySwitch)
+            const fragmentDuration = bufferInformation.currentRepresentation.fragmentDuration;
+            const safeBufferLevel = 1.5 * (!isNaN(fragmentDuration) ? fragmentDuration : 1);
+            await reachedTargetForwardBuffer(playerAdapter, safeBufferLevel + Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.SAFE_BUFFER_MARGIN, 0);
+
+            // Switch manually instead of waiting for the ABR rules, their decision timing is not deterministic
+            const highestRepresentation = playerAdapter.getRepresentationsByType(Constants.DASH_JS.MEDIA_TYPES.VIDEO).reduce((highest, rep) => {
+                return rep.bitrateInKbit > highest.bitrateInKbit ? rep : highest;
+            });
+            const replacedBufferPromise = playerAdapter.replacedSegmentsInBuffer(
                 Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.MAX_NUMBER_OF_SEGMENT_DOWNLOADS_TO_WAIT,
                 Constants.TEST_TIMEOUT_THRESHOLDS.FAST_SWITCH_QUALITY_VIDEO,
                 bufferInformation)
+            playerAdapter.setRepresentationForTypeById(Constants.DASH_JS.MEDIA_TYPES.VIDEO, highestRepresentation.id);
+            const replacedBuffer = await replacedBufferPromise;
             expect(replacedBuffer).to.be.true;
         });
         it(`Expect no critical errors to be thrown`, function () {

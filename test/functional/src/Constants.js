@@ -106,7 +106,9 @@ const TEST_INPUTS = {
     },
     LATENCY_CATCHUP: {
         DELAY: 12,
-        TOLERANCE: 0.1
+        TOLERANCE: 0.1,
+        PLAYBACK_RATE_MIN: -0.5,
+        PLAYBACK_RATE_MAX: 0.5
     },
     ATTACH_WITH_POSIX: {
         DELAY: 30,
@@ -122,7 +124,10 @@ const TEST_INPUTS = {
         TARGET_BUFFER: 10,
         TARGET_BUFFER_TOLERANCE: 10,
         LIVE_DELAY: 12,
-        MAX_NUMBER_OF_SEGMENT_DOWNLOADS_TO_WAIT: 5
+        MAX_NUMBER_OF_SEGMENT_DOWNLOADS_TO_WAIT: 5,
+        BUFFER_OVERLAP_TOLERANCE: 0.1,
+        BUFFER_TIME: 20,
+        SAFE_BUFFER_MARGIN: 1
     }
 };
 
