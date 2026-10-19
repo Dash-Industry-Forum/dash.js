@@ -30,12 +30,14 @@
  */
 import Constants from '../../streaming/constants/Constants.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import {getTimeBasedSegment} from '../utils/SegmentsUtils.js';
 
 function RepresentationController(config) {
 
     config = config || {};
+    const context = this.context;
     const eventBus = config.eventBus;
     const events = config.events;
     const abrController = config.abrController;
@@ -52,9 +54,11 @@ function RepresentationController(config) {
         voAvailableRepresentations,
         currentVoRepresentation,
         hasSegmentData,
+        logger,
         segmentListLoads;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
@@ -144,7 +148,12 @@ function RepresentationController(config) {
             for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
                 const currentRep = voAvailableRepresentations[i];
                 const isSelected = currentRep.id === selectedRepresentationId || currentRep.id === dependentRepresentationId;
-                promises.push(_updateRepresentation(currentRep, isSelected));
+                const update = _updateRepresentation(currentRep, isSelected);
+                // Share the segment list load with loadSegmentList(). A failure here is not excluded, there is no other Representation selected yet to fall back to.
+                if (isSelected && !currentRep.hasSegments()) {
+                    _trackSegmentListLoad(currentRep, update, false);
+                }
+                promises.push(update);
             }
 
             Promise.all(promises)
@@ -339,26 +348,44 @@ function RepresentationController(config) {
      * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded or the load failed
      */
     function loadSegmentList(newRep) {
-        const rep = newRep ? getRepresentationById(newRep.id) : null;
-        if (!hasSegmentData || !rep || rep.hasSegments() || rep.segments) {
+        if (!isSegmentListMissing(newRep)) {
             return null;
         }
+        const rep = getRepresentationById(newRep.id);
         // Loaded once: a failed load is not retried, the Representation is excluded from ABR instead
         if (!segmentListLoads.has(rep)) {
-            const load = _updateRepresentation(rep, true)
-                .catch(() => {})
-                .then(() => {
-                    // Ignore loads that outlived a reset() or an updateData() with new Representations
-                    if (!rep.segments && voAvailableRepresentations.includes(rep)) {
-                        // Callers must not wait for a load that already failed
-                        segmentListLoads.set(rep, null);
-                        abrController.excludeRepresentation(rep);
-                    }
-                    return rep;
-                });
-            segmentListLoads.set(rep, load);
+            _trackSegmentListLoad(rep, _updateRepresentation(rep, true), true);
         }
         return segmentListLoads.get(rep);
+    }
+
+    function _trackSegmentListLoad(rep, update, excludeOnFailure) {
+        const load = update
+            .catch((e) => {
+                logger.warn(`Updating representation ${rep.id} for ${type} failed`, e);
+            })
+            .then(() => {
+                // Ignore loads that outlived a reset() or an updateData() with new Representations
+                if (!rep.segments && voAvailableRepresentations.includes(rep)) {
+                    // Callers must not wait for a load that already failed
+                    segmentListLoads.set(rep, null);
+                    if (excludeOnFailure) {
+                        abrController.excludeRepresentation(rep);
+                    }
+                }
+                return rep;
+            });
+        segmentListLoads.set(rep, load);
+    }
+
+    /**
+     * SegmentBase: true while the segment list of the Representation is not loaded yet, or could not be loaded
+     * @param newRep
+     * @return {boolean}
+     */
+    function isSegmentListMissing(newRep) {
+        const rep = newRep ? getRepresentationById(newRep.id) : null;
+        return hasSegmentData && !!rep && !rep.hasSegments() && !rep.segments;
     }
 
     function _setCurrentVoRepresentation(value) {
@@ -384,6 +411,7 @@ function RepresentationController(config) {
         getRepresentationById,
         getStreamId,
         getType,
+        isSegmentListMissing,
         loadSegmentList,
         prepareQualityChange,
         reset,

@@ -289,6 +289,43 @@ describe('StreamProcessor', function () {
             });
         });
 
+        it('should not restart scheduling once the segment list is loaded while a quality switch is prepared', function () {
+            let releaseSegmentList;
+            segmentBaseControllerMock.getSegmentList = function (e) {
+                segmentListRequestedFor.push(e.representation.id);
+                return new Promise(function (resolve) {
+                    releaseSegmentList = function () {
+                        resolve(segmentList);
+                    };
+                });
+            };
+            switchQuality(representations[1], representations[0]);
+            const load = streamProcessor.getRepresentationController().loadSegmentList(representations[1]);
+
+            return new Promise(function (resolve) {
+                setTimeout(resolve, 0);
+            }).then(function () {
+                eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {}, { streamId: 'streamId', mediaType: testType });
+
+                // A segment is still loading, so this switch waits and stays in progress
+                ongoingRequests = [{}];
+                switchQuality(representations[0], representations[1]);
+                startScheduleTimerCalls = 0;
+
+                releaseSegmentList();
+                return load;
+            }).then(function () {
+                return Promise.resolve();
+            }).then(function () {
+                expect(startScheduleTimerCalls).to.equal(0);
+            }).finally(function () {
+                segmentBaseControllerMock.getSegmentList = function (e) {
+                    segmentListRequestedFor.push(e.representation.id);
+                    return Promise.resolve(segmentList);
+                };
+            });
+        });
+
         it('should report an error if the segment list failed to load and there is no other Representation to switch to', function () {
             segmentBaseControllerMock.getSegmentList = function (e) {
                 segmentListRequestedFor.push(e.representation.id);
@@ -299,17 +336,27 @@ describe('StreamProcessor', function () {
                 excluded = rep.id;
             };
 
+            let errorCount = 0;
+            const reportError = errHandler.error;
+            errHandler.error = function (error) {
+                errorCount++;
+                reportError.call(errHandler, error);
+            };
+
+            // The load is started by the quality switch and fails before scheduling waits for it
             switchQuality(representations[1], representations[0]);
             const load = streamProcessor.getRepresentationController().loadSegmentList(representations[1]);
-            eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {}, { streamId: 'streamId', mediaType: testType });
 
             return load.then(function () {
-                return Promise.resolve();
-            }).then(function () {
+                eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {}, { streamId: 'streamId', mediaType: testType });
+                eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {}, { streamId: 'streamId', mediaType: testType });
+
                 expect(excluded).to.equal(representations[1].id);
                 expect(errHandler.errorCode).to.equal(Errors.SEGMENT_BASE_LOADER_ERROR_CODE);
-                // The failed load is not waited for again
-                expect(streamProcessor.getRepresentationController().loadSegmentList(representations[1])).to.be.null;
+                expect(errorCount).to.equal(1);
+                expect(executedRequests).to.be.empty;
+                // Buffering is not completed without a segment list
+                expect(streamProcessor.checkAndHandleCompletedBuffering()).to.be.false;
             }).finally(function () {
                 segmentBaseControllerMock.getSegmentList = function (e) {
                     segmentListRequestedFor.push(e.representation.id);
@@ -322,6 +369,34 @@ describe('StreamProcessor', function () {
             switchQuality(representations[1], representations[0]);
 
             expect(streamProcessor.checkAndHandleCompletedBuffering()).to.be.false;
+        });
+
+        it('should not start loading a segment list when checking whether buffering is completed', function () {
+            const representationController = streamProcessor.getRepresentationController();
+            representationController.prepareQualityChange = function (rep) {
+                // Switch without the early start of the segment list load
+                this.getCurrentRepresentation = () => this.getRepresentationById(rep.id);
+            };
+            switchQuality(representations[1], representations[0]);
+
+            expect(streamProcessor.checkAndHandleCompletedBuffering()).to.be.false;
+            expect(segmentListRequestedFor).to.deep.equal([representations[0].id]);
+        });
+
+        it('should use the duration of the new Representation for a fast switch once its segment list is loaded', function () {
+            const representationController = streamProcessor.getRepresentationController();
+            return representationController.loadSegmentList(representations[1]).then(function () {
+                fastSwitchEnabled = true;
+                playbackController.setTime(10);
+                requestQueries = [];
+                representationController.getRepresentationById(representations[0].id).fragmentDuration = 4;
+
+                // The Representations of ABR carry no duration
+                switchQuality(Object.assign({}, representations[1], { fragmentDuration: null }), representations[0]);
+
+                // 10 + 1.5 * 1 (segmentDuration of the new Representation) instead of 1.5 * 4 (old Representation)
+                expect(requestQueries[0].time).to.equal(11.5);
+            });
         });
 
         it('should restart scheduling on quota recovery while a default switch waits for an ongoing request', function () {

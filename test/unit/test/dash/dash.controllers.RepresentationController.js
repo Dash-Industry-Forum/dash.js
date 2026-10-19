@@ -263,6 +263,38 @@ describe('RepresentationController', function () {
                 });
         });
 
+        it('should share the segment list load of the selected Representation started by updateData()', function () {
+            const [repA] = segmentBaseRepresentations;
+            const originalUpdateSegmentData = segmentsControllerMock.updateSegmentData;
+            let releaseSegmentData;
+            // Hold the request and count every call, so a second request for the same Representation shows up
+            segmentsControllerMock.updateSegmentData = function (representation, hasSegments) {
+                if (hasSegments) {
+                    return Promise.resolve();
+                }
+                segmentDataLoadedFor.push(representation.id);
+                return new Promise(function (resolve) {
+                    releaseSegmentData = function () {
+                        representation.segments = [{ index: 0 }];
+                        resolve();
+                    };
+                });
+            };
+
+            const update = lazyRepresentationController.updateData(segmentBaseRepresentations, true, repA.id);
+            const load = lazyRepresentationController.loadSegmentList(repA);
+            expect(load).to.not.be.null;
+            releaseSegmentData();
+
+            return Promise.all([update, load])
+                .then(function () {
+                    expect(segmentDataLoadedFor).to.deep.equal([repA.id]);
+                })
+                .finally(function () {
+                    segmentsControllerMock.updateSegmentData = originalUpdateSegmentData;
+                });
+        });
+
         it('should keep the current Representation while the segment list of another one loads', function () {
             const [repA, repB] = segmentBaseRepresentations;
 

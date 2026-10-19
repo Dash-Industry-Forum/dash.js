@@ -348,6 +348,8 @@ export interface RepresentationController {
 
     getRepresentationForQuality(quality: number): object | null;
 
+    isSegmentListMissing(newRep: Representation): boolean;
+
     loadSegmentList(newRep: Representation): Promise<Representation> | null;
 
     prepareQualityChange(newRep: Representation): void;

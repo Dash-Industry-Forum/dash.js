@@ -91,6 +91,7 @@ function StreamProcessor(config) {
         pendingSwitchToVoRepresentation,
         qualityChangeInProgress,
         representationController,
+        reportedSegmentListFailureId,
         scheduleController,
         segmentListLoad,
         segmentsController,
@@ -220,6 +221,7 @@ function StreamProcessor(config) {
         enhancementStreamProcessor = null;
         trackSwitchInProgress = false;
         segmentListLoad = null;
+        reportedSegmentListFailureId = null;
         _resetPendingSwitchToRepresentation();
     }
 
@@ -559,48 +561,51 @@ function StreamProcessor(config) {
 
     /**
      * SegmentBase: the segment list of a Representation is only loaded once we need its media segments.
-     * @return {boolean} true while the segment list of the current Representation is not available
-     * @private
-     */
-    function _loadSegmentListIfMissing() {
-        return representationController.loadSegmentList(representationController.getCurrentRepresentation());
-    }
-
-    /**
-     * Restarts scheduling as soon as the segment list of the current Representation was loaded.
-     * @return {boolean} true while the segment list of the current Representation is loading
+     * Scheduling restarts as soon as the segment list of the current Representation was loaded.
+     * @return {boolean} true if no media segment can be requested yet
      * @private
      */
     function _waitForSegmentList() {
-        const load = _loadSegmentListIfMissing();
-        if (!load) {
+        const representation = representationController.getCurrentRepresentation();
+        if (!representationController.isSegmentListMissing(representation)) {
             return false;
+        }
+
+        const load = representationController.loadSegmentList(representation);
+        if (!load) {
+            // The segment list could not be loaded. Report once, then keep scheduling so ABR can still switch to another Representation.
+            if (reportedSegmentListFailureId !== representation.id) {
+                reportedSegmentListFailureId = representation.id;
+                errHandler.error(new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE));
+            }
+            _noValidRequest();
+            return true;
         }
         if (load !== segmentListLoad) {
             segmentListLoad = load;
-            load.then((rep) => {
+            load.then(() => {
                 // Superseded by a reset or a load for another Representation
                 if (segmentListLoad !== load) {
                     return;
                 }
                 segmentListLoad = null;
-                // The load failed and ABR had nothing left to switch to
-                if (!rep.segments && representationController.getCurrentRepresentation()?.id === rep.id) {
-                    errHandler.error(new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE));
+                // A quality switch in preparation restarts scheduling once it is done
+                if (!qualityChangeInProgress) {
+                    scheduleController.startScheduleTimer(0);
                 }
-                scheduleController.startScheduleTimer(0);
             });
         }
         return true;
     }
 
     function checkAndHandleCompletedBuffering() {
-        // Without a segment list the last segment can not have been requested
-        if (_loadSegmentListIfMissing()) {
+        const representation = representationController.getCurrentRepresentation();
+
+        // SegmentBase: without a segment list the last segment can not have been requested. Loading it is left to scheduling.
+        if (representationController.isSegmentListMissing(representation)) {
             return false;
         }
 
-        const representation = representationController.getCurrentRepresentation();
         const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
 
         if (isLastSegmentRequested) {
@@ -996,9 +1001,12 @@ function StreamProcessor(config) {
     function _prepareForFastQualitySwitch(newRepresentation, oldRepresentation) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         const time = playbackController.getTime();
-        // SegmentBase: the duration of the new Representation is unknown until its segment list was loaded, use the one of the old Representation instead
+        // The Representations handed in by ABR carry no fragmentDuration, the ones of the RepresentationController do.
+        // SegmentBase: the duration is unknown until the segment list was loaded, use the one of the old Representation instead.
         const isValidDuration = (duration) => isFinite(duration) && duration > 0;
-        const fragmentDuration = isValidDuration(newRepresentation.fragmentDuration) ? newRepresentation.fragmentDuration : isValidDuration(oldRepresentation?.fragmentDuration) ? oldRepresentation.fragmentDuration : 1;
+        const newDuration = representationController.getRepresentationById(newRepresentation.id)?.fragmentDuration;
+        const oldDuration = oldRepresentation ? representationController.getRepresentationById(oldRepresentation.id)?.fragmentDuration : NaN;
+        const fragmentDuration = isValidDuration(newDuration) ? newDuration : isValidDuration(oldDuration) ? oldDuration : 1;
         let safeBufferLevel = 1.5 * fragmentDuration;
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
