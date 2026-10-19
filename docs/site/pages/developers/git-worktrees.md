@@ -15,7 +15,7 @@ directory, so they cannot overwrite each other's files.
 ## Prerequisites
 
 * A clone of dash.js
-* Git 2.5 or newer
+* Git 2.17 or newer
 * The [GitHub CLI](https://cli.github.com/) (`gh`), if you want to push changes back to a pull request
 * Optional: [Claude Code](https://docs.claude.com/en/docs/claude-code/overview)
 
