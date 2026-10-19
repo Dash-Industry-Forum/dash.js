@@ -167,7 +167,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            scheduling: {
  *                defaultTimeout: 500,
  *                lowLatencyTimeout: 0,
- *                scheduleWhilePaused: true
+ *                scheduleWhilePaused: true,
+ *                segmentListRetryDelay: 10000
  *            },
  *            text: {
  *                defaultEnabled: true,
@@ -639,6 +640,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Default timeout between two consecutive low-latency segment scheduling attempts
  * @property {boolean} [scheduleWhilePaused=true]
  * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
+ * @property {number} [segmentListRetryDelay=10000]
+ * SegmentBase: Time in milliseconds after which the segment list (sidx) of a Representation is requested again once loading it failed.
+ * In the meantime the Representation is excluded from ABR decisions. The delay doubles with every failure in a row, up to eight times this value.
  */
 
 /**
@@ -1361,7 +1365,8 @@ function Settings() {
             scheduling: {
                 defaultTimeout: 500,
                 lowLatencyTimeout: 0,
-                scheduleWhilePaused: true
+                scheduleWhilePaused: true,
+                segmentListRetryDelay: 10000
             },
             text: {
                 defaultEnabled: true,

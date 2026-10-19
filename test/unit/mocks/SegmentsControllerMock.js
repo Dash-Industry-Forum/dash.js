@@ -7,6 +7,9 @@ class SegmentsControllerMock {
     updateSegmentData() {
         return Promise.resolve();
     }
+
+    getMediaFinishedInformation() {
+    }
 }
 
 export default SegmentsControllerMock;
