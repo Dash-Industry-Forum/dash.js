@@ -326,7 +326,7 @@ describe('StreamProcessor', function () {
             });
         });
 
-        it('should not restart scheduling once the segment list is loaded while the buffer is pruned', function () {
+        it('should resume scheduling once pruning is done if the segment list was loaded while the buffer was pruned', function () {
             let releaseSegmentList;
             segmentBaseControllerMock.getSegmentList = function (e) {
                 segmentListRequestedFor.push(e.representation.id);
@@ -354,6 +354,18 @@ describe('StreamProcessor', function () {
                 return Promise.resolve();
             }).then(function () {
                 expect(startScheduleTimerCalls).to.equal(0);
+
+                // Ordinary pruning, not caused by a QuotaExceededError
+                bufferController.getIsPruningInProgress = () => false;
+                const finishPruning = function () {
+                    eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10, hasEnoughSpaceToAppend: true, quotaExceeded: false }, { streamId: 'streamId', mediaType: testType });
+                };
+                finishPruning();
+                expect(startScheduleTimerCalls).to.equal(1);
+
+                // Only once
+                finishPruning();
+                expect(startScheduleTimerCalls).to.equal(1);
             }).finally(function () {
                 segmentBaseControllerMock.getSegmentList = function (e) {
                     segmentListRequestedFor.push(e.representation.id);

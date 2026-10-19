@@ -96,6 +96,7 @@ function StreamProcessor(config) {
         segmentListLoad,
         segmentsController,
         shouldRepeatRequest,
+        shouldScheduleAfterPruning,
         shouldUseExplicitTimeForRequest,
         trackSwitchInProgress;
 
@@ -221,6 +222,7 @@ function StreamProcessor(config) {
         enhancementStreamProcessor = null;
         trackSwitchInProgress = false;
         segmentListLoad = null;
+        shouldScheduleAfterPruning = false;
         reportedSegmentListFailureId = null;
         _resetPendingSwitchToRepresentation();
     }
@@ -593,10 +595,16 @@ function StreamProcessor(config) {
                     // Loaded on a retry, report the next failure again
                     reportedSegmentListFailureId = null;
                 }
-                // Quality and track switches as well as buffer pruning restart scheduling themselves once they are done
-                if (!qualityChangeInProgress && !trackSwitchInProgress && !bufferController.getIsPruningInProgress()) {
-                    scheduleController.startScheduleTimer(0);
+                // Quality and track switches restart scheduling themselves once they are done
+                if (qualityChangeInProgress || trackSwitchInProgress) {
+                    return;
                 }
+                if (bufferController.getIsPruningInProgress()) {
+                    // Restarted in _onBufferCleared() once pruning is done
+                    shouldScheduleAfterPruning = true;
+                    return;
+                }
+                scheduleController.startScheduleTimer(0);
             });
         }
         return true;
@@ -701,8 +709,11 @@ function StreamProcessor(config) {
             setExplicitBufferingTime(e.from);
         }
 
-        // (Re)start schedule once buffer has been pruned after a QuotaExceededError
-        if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
+        // (Re)start schedule once buffer has been pruned after a QuotaExceededError, or after pruning that interrupted waiting for a segment list
+        const restartAfterQuotaExceeded = e.quotaExceeded && e.hasEnoughSpaceToAppend;
+        const restartAfterPruning = shouldScheduleAfterPruning && !e.quotaExceeded;
+        if (restartAfterQuotaExceeded || restartAfterPruning) {
+            shouldScheduleAfterPruning = false;
             scheduleController.startScheduleTimer();
         }
     }
