@@ -5,17 +5,17 @@ import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 
 export async function checkIsPlaying(playerAdapter, expectedState) {
     const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-    expect(isPlaying).to.equal(expectedState);
+    expect(isPlaying, `expected isPlaying to be ${expectedState}, currentTime is ${playerAdapter.getCurrentTime()}`).to.equal(expectedState);
 }
 
 export async function checkIsProgressing(playerAdapter) {
     const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-    expect(isProgressing).to.be.true;
+    expect(isProgressing, `expected playback to progress by at least ${Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING}s within ${Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING}ms, currentTime is ${playerAdapter.getCurrentTime()}`).to.be.true;
 }
 
 export async function checkIsNotProgressing(playerAdapter) {
     const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_NOT_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-    expect(isProgressing).to.be.false;
+    expect(isProgressing, `expected playback to not progress, currentTime is ${playerAdapter.getCurrentTime()}`).to.be.false;
 }
 
 export function checkNoCriticalErrors(playerAdapter) {
@@ -83,23 +83,39 @@ export async function seekAndEndedEvent(playerAdapter, seekOffset) {
 
 export async function reachedTargetForwardBuffer(playerAdapter, targetBuffer, tolerance) {
     const reachedBuffer = await playerAdapter.reachedTargetForwardBuffer(Constants.TEST_TIMEOUT_THRESHOLDS.TARGET_BUFFER_REACHED, targetBuffer, tolerance);
-    expect(reachedBuffer).to.be.true;
+    const currentBuffer = playerAdapter.getBufferLengthByType();
+    expect(reachedBuffer, `expected forward buffer to reach ${targetBuffer}s (tolerance ${tolerance}s) within ${Constants.TEST_TIMEOUT_THRESHOLDS.TARGET_BUFFER_REACHED}ms, buffer is ${currentBuffer}s`).to.be.true;
+}
+
+export async function checkIsKeepingForwardBufferTarget(playerAdapter, timeoutValue, target, tolerance) {
+    const isKeepingForwardBufferTarget = await playerAdapter.isKeepingForwardBufferTarget(timeoutValue, target, tolerance);
+    const currentBuffer = playerAdapter.getBufferLengthByType();
+    expect(isKeepingForwardBufferTarget, `expected forward buffer to stay within ${target}s (tolerance ${tolerance}s) for ${timeoutValue}ms, buffer is ${currentBuffer}s when the check ended`).to.be.true;
+}
+
+export async function checkIsKeepingBackwardsBufferTarget(playerAdapter, timeoutValue, target, tolerance) {
+    const isKeepingBackwardsBufferTarget = await playerAdapter.isKeepingBackwardsBufferTarget(timeoutValue, target, tolerance);
+    const currentTime = playerAdapter.getCurrentTime();
+    const bufferStart = playerAdapter.getBufferStartForCurrentTime(currentTime);
+    expect(isKeepingBackwardsBufferTarget, `expected backwards buffer to stay within ${target}s (tolerance ${tolerance}s), currentTime is ${currentTime}, bufferStart is ${bufferStart} (behind: ${currentTime - bufferStart}s)`).to.be.true;
 }
 
 export function checkLiveDelay(playerAdapter, lowerThreshold, upperThreshold) {
     const liveDelay = playerAdapter.getCurrentLiveLatency();
-    expect(liveDelay).to.be.at.least(lowerThreshold);
-    expect(liveDelay).to.be.below(upperThreshold);
+    expect(liveDelay, `expected live delay to be within [${lowerThreshold}, ${upperThreshold}), actual live delay is ${liveDelay}`).to.be.at.least(lowerThreshold);
+    expect(liveDelay, `expected live delay to be within [${lowerThreshold}, ${upperThreshold}), actual live delay is ${liveDelay}`).to.be.below(upperThreshold);
 }
 
 export function checkTimeWithinThresholdForDvrWindow(playerAdapter, seekTime, allowedDifference) {
+    const currentTime = playerAdapter.getCurrentTimeWithinDvrWindow();
     const timeIsWithinThreshold = playerAdapter.timeWithinThresholdForDvrWindow(seekTime, allowedDifference);
-    expect(timeIsWithinThreshold).to.be.true;
+    expect(timeIsWithinThreshold, `expected currentTime (${currentTime}) to be within ${allowedDifference}s of seekTime (${seekTime})`).to.be.true;
 }
 
 export function checkTimeWithinThreshold(playerAdapter, seekTime, allowedDifference) {
+    const currentTime = playerAdapter.getCurrentTime();
     const timeIsWithinThreshold = playerAdapter.timeWithinThreshold(seekTime, allowedDifference);
-    expect(timeIsWithinThreshold).to.be.true;
+    expect(timeIsWithinThreshold, `expected currentTime (${currentTime}) to be within ${allowedDifference}s of seekTime (${seekTime})`).to.be.true;
 }
 
 export function initializeDashJsAdapter(item, mpd, settings = null) {

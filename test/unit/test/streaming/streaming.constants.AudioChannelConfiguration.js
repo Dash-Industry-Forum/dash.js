@@ -1,7 +1,37 @@
+import DashParser from '../../../../src/dash/parser/DashParser.js';
+import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
+import DebugMock from '../../mocks/DebugMock.js';
 import getNChanFromAudioChannelConfig from '../../../../src/streaming/utils/AudioChannelConfiguration.js';
 import {expect} from 'chai';
 
 describe('AudioChannelConfiguration', function () {
+
+    [
+        ['tag:dolby.com,2015:dash:audio_channel_configuration:2015', '000003', 3],
+        ['tag:dolby.com,2015:dash:audio_channel_configuration:2015', '800000', 24],
+        ['urn:mpeg:dash:23003:3:audio_channel_configuration:2011', '02', 2],
+        ['urn:mpeg:mpegB:cicp:ChannelConfiguration', '02', 2],
+        ['urn:mpeg:mpegB:cicp:ChannelConfiguration', '+2', 2],
+        ['urn:mpeg:mpegB:cicp:ChannelConfiguration', '2e0', 2],
+        ['urn:mpeg:mpegB:cicp:ChannelConfiguration', '0x2', undefined],
+        ['urn:mpeg:mpegB:cicp:ChannelConfiguration', ' 2 ', undefined],
+        ['urn:mpeg:mpegB:cicp:ChannelConfiguration', '2junk', undefined],
+        ['urn:mpeg:mpegB:cicp:ChannelConfiguration', '2.5', undefined]
+    ].forEach(([schemeIdUri, value, channels]) => {
+        it(`should interpret ${schemeIdUri} value ${value} before and after parsing`, () => {
+            const parser = DashParser({}).create({ debug: new DebugMock() });
+            const manifest = parser.parse(`<MPD><Period><AdaptationSet>
+                <AudioChannelConfiguration schemeIdUri="${schemeIdUri}" value="${value}"/>
+            </AdaptationSet></Period></MPD>`);
+            const raw = manifest.Period[0].AdaptationSet[0].AudioChannelConfiguration[0];
+            const descriptor = new DescriptorType();
+            descriptor.init(raw);
+
+            expect(getNChanFromAudioChannelConfig({ schemeIdUri, value })).to.equal(channels);
+            expect(getNChanFromAudioChannelConfig(raw)).to.equal(channels);
+            expect(getNChanFromAudioChannelConfig(descriptor)).to.equal(channels);
+        });
+    });
     it('shall return undefined if no descriptor is provided', () => {
         expect(getNChanFromAudioChannelConfig()).to.equal(undefined);
     });

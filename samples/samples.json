@@ -894,6 +894,28 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "CMCD v2 error codes",
+                "description": "Shows how dash.js buffers player error codes (ec) per CMCD v2 report destination and reports each code once with the next report.",
+                "href": "cmcd/cmcd-v2-error-codes.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "CMCD custom keys",
+                "description": "Shows how to add custom keys, such as the player name and version from the SVTA CMCD custom keys registry, to CMCD reports.",
+                "href": "cmcd/cmcd-custom-keys.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },

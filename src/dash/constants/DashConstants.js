@@ -128,6 +128,7 @@ export default {
     ORDER: 'order',
     ORIGINAL_MPD_ID: 'mpdId',
     ORIGINAL_PUBLISH_TIME: 'originalPublishTime',
+    OUTPUT_PROTECTION: 'OutputProtection',
     PATCH_LOCATION: 'PatchLocation',
     PERIOD: 'Period',
     PRESELECTION: 'Preselection',
