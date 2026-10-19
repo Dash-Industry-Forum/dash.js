@@ -282,7 +282,8 @@ function AbrController() {
     }
 
     function _isExcluded(rep) {
-        const excludedUntil = excludedRepresentationIds[rep.mediaInfo.streamInfo.id]?.[rep.mediaInfo.type]?.get(rep.id);
+        // An unresolved dependentRepresentation is a placeholder without mediaInfo
+        const excludedUntil = excludedRepresentationIds[rep.mediaInfo?.streamInfo?.id]?.[rep.mediaInfo?.type]?.get(rep.id);
         return excludedUntil !== undefined && Date.now() < excludedUntil;
     }
 

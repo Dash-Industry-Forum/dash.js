@@ -151,8 +151,8 @@ function DashHandler(config) {
             return false;
         }
 
-        // SegmentBase: without a segment list (not loaded yet or failed) the last segment can not have been requested
-        if (representation.segmentInfoType === DashConstants.SEGMENT_BASE && !representation.segments) {
+        // SegmentBase and BaseURL: without a segment list (not loaded yet or failed) the last segment can not have been requested
+        if (!representation.hasSegments() && !representation.segments) {
             return false;
         }
 

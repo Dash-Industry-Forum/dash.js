@@ -512,6 +512,24 @@ describe('AbrController', function () {
             expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['other']);
         });
 
+        it('should keep Representations whose dependentRepresentation could not be resolved', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            // Placeholder created by DashManifestModel for a dependencyId, without mediaInfo
+            const placeholder = { id: 'missing-base', mediaInfo: null };
+            const representations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'enhancement', dependentRepresentation: placeholder },
+                { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'low' }
+            ];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+
+            abrCtrl.excludeRepresentation(representations[1]);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['enhancement']);
+        });
+
         it('should only exclude the Representation of the given media type if ids are reused across types', function () {
             const mediaInfo = streamProcessor.getMediaInfo();
             mediaInfo.streamInfo = streamProcessor.getStreamInfo();
