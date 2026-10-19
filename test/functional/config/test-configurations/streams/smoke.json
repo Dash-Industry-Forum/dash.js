@@ -191,7 +191,8 @@
         "playback/seek-ended",
         "playback/seek-to-presentation-time",
         "playback-advanced/attach-at-non-zero",
-        "playback-advanced/preload"
+        "playback-advanced/preload",
+        "playback-advanced/segment-base-lazy-sidx"
       ]
     },
     {
@@ -203,7 +204,8 @@
         "playback/seek-ended",
         "playback/seek-to-presentation-time",
         "playback-advanced/attach-at-non-zero",
-        "playback-advanced/preload"
+        "playback-advanced/preload",
+        "playback-advanced/segment-base-lazy-sidx"
       ]
     },
     {
@@ -212,9 +214,9 @@
       "url": "/base/test/functional/content/gap/video_positive_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "advanced/no-reload-after-seek",
         "playback-advanced/attach-at-non-zero",
-        "playback-advanced/preload"
+        "playback-advanced/preload",
+        "playback-advanced/segment-base-lazy-sidx"
       ]
     },
     {
@@ -223,9 +225,9 @@
       "url": "/base/test/functional/content/gap/audio_positive_ept_delta.mpd",
       "excludedTestfiles": [
         "playback/seek",
-        "advanced/no-reload-after-seek",
         "playback-advanced/attach-at-non-zero",
-        "playback-advanced/preload"
+        "playback-advanced/preload",
+        "playback-advanced/segment-base-lazy-sidx"
       ]
     },
     {

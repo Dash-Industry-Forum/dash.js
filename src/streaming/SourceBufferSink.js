@@ -64,6 +64,7 @@ function SourceBufferSink(config) {
 
     let callbacks = [];
     let appendQueue = [];
+    let appendingChunk = null;
     let isAppendingInProgress = false;
     let mediaSource = config.mediaSource;
     let lastRequestAppended = null;
@@ -264,6 +265,7 @@ function SourceBufferSink(config) {
                 removeEventListeners();
                 isAppendingInProgress = false;
                 appendQueue = [];
+                appendingChunk = null;
                 if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
                     logger.debug(`Removing sourcebuffer from media source`);
                     mediaSource.removeSourceBuffer(buffer);
@@ -382,9 +384,11 @@ function SourceBufferSink(config) {
             isAppendingInProgress = true;
             const nextChunk = appendQueue[0];
             appendQueue.splice(0, 1);
+            appendingChunk = nextChunk;
 
             const afterSuccess = function () {
                 isAppendingInProgress = false;
+                appendingChunk = null;
                 if (appendQueue.length > 0) {
                     _appendNextInQueue.call(this);
                 }
@@ -417,6 +421,7 @@ function SourceBufferSink(config) {
                 }
             } catch (err) {
                 logger.fatal('SourceBuffer append failed "' + err + '"');
+                appendingChunk = null;
                 if (appendQueue.length > 0) {
                     _appendNextInQueue();
                 } else {
@@ -429,10 +434,23 @@ function SourceBufferSink(config) {
         }
     }
 
+    /**
+     * Checks if a media segment covering the given time is queued or currently being appended
+     * @param {number} time
+     * @return {boolean}
+     */
+    function hasPendingMediaAppendAtTime(time) {
+        const pendingChunks = appendingChunk ? [appendingChunk].concat(appendQueue) : appendQueue;
+        return pendingChunks.some(({ data }) => {
+            return data && data.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE && time >= data.start && time < data.end;
+        });
+    }
+
     function abort() {
         return new Promise((resolve) => {
             try {
                 appendQueue = [];
+                appendingChunk = null;
                 if (mediaSource.readyState === 'open') {
                     _waitForUpdateEnd(() => {
                         try {
@@ -507,6 +525,7 @@ function SourceBufferSink(config) {
         getAllBufferRanges,
         getBuffer,
         getType,
+        hasPendingMediaAppendAtTime,
         initializeForFirstUse,
         initializeForStreamSwitch,
         remove,

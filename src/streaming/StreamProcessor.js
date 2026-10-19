@@ -295,7 +295,9 @@ function StreamProcessor(config) {
             // If we seek to a buffered area we can keep requesting where we left before the seek
             // If we seek back then forwards buffering will stop until we are below our buffer goal
             // If we seek forwards then pruneBuffer() will make sure that the bufferToKeep setting is respected
-            const hasBufferAtTargetTime = bufferController.hasBufferAtTime(e.seekTime);
+            // The same applies if the segment for the target time is currently loading or waiting to be appended, e.g. for the
+            // internal seek at startup when the other media type starts later. Aborting it would only download the same segment again.
+            const hasBufferAtTargetTime = bufferController.hasBufferAtTime(e.seekTime) || bufferController.hasPendingAppendAtTime(e.seekTime) || _isMediaSegmentLoadingForTime(e.seekTime);
             if (hasBufferAtTargetTime) {
                 bufferController.pruneBuffer();
                 const continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
@@ -357,6 +359,16 @@ function StreamProcessor(config) {
                 });
 
         })
+    }
+
+    function _isMediaSegmentLoadingForTime(time) {
+        // Init segments have no start time and are never matched for a numeric time
+        const loadingRequests = fragmentModel.getRequests({
+            state: FragmentModel.FRAGMENT_MODEL_LOADING,
+            time,
+            threshold: 0
+        });
+        return loadingRequests.some((request) => !!request);
     }
 
     function _shouldSetBufferingComplete(continuousBufferTime) {

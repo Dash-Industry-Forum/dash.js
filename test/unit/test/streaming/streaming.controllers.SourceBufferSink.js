@@ -1,6 +1,7 @@
 import SourceBufferSink from '../../../../src/streaming/SourceBufferSink.js';
 import FactoryMaker from '../../../../src/core/FactoryMaker.js';
 import Errors from '../../../../src/core/errors/Errors.js';
+import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 
 import TextSourceBufferMock from '../../mocks/TextSourceBufferMock.js';
 import TextControllerMock from '../../mocks/TextControllerMock.js';
@@ -219,6 +220,28 @@ describe('SourceBufferSink', function () {
                     done();
                 });
 
+        });
+
+        it('should report a media segment as pending until it has been appended', function (done) {
+            const appended = sink.append({ bytes: 'toto', segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, start: 2, end: 8 });
+
+            expect(sink.hasPendingMediaAppendAtTime(4)).to.be.true;
+            expect(sink.hasPendingMediaAppendAtTime(8)).to.be.false;
+
+            appended
+                .then(() => {
+                    expect(sink.hasPendingMediaAppendAtTime(4)).to.be.false;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        });
+
+        it('should not report init segments as pending media appends', function () {
+            sink.append({ bytes: 'toto', segmentType: HTTPRequest.INIT_SEGMENT_TYPE, start: 2, end: 8 });
+
+            expect(sink.hasPendingMediaAppendAtTime(4)).to.be.false;
         });
 
     });

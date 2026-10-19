@@ -689,6 +689,10 @@ function BufferController(config) {
         }
     }
 
+    function hasPendingAppendAtTime(time) {
+        return !!sourceBufferSink && sourceBufferSink.hasPendingMediaAppendAtTime(time);
+    }
+
     function getRangeAt(time, tolerance) {
         if (!sourceBufferSink) {
             return null;
@@ -1124,6 +1128,7 @@ function BufferController(config) {
         getStreamId,
         getType,
         hasBufferAtTime,
+        hasPendingAppendAtTime,
         initialize,
         prepareForAbandonQualitySwitch,
         prepareForDefaultQualitySwitch,

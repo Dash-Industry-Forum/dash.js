@@ -115,12 +115,6 @@ class DashJsAdapter {
      */
     _registerInternalEvents() {
         this.player.on(MediaPlayer.events.FRAGMENT_LOADING_STARTED, this._onFragmentLoadedHandler);
-        const v = this.videoElement;
-        const buf = (sb) => JSON.stringify(Array.from({length: sb.length}, (_, i) => [+sb.start(i).toFixed(3), +sb.end(i).toFixed(3)]));
-        const st = () => 'ct ' + v.currentTime.toFixed(3) + ' paused ' + v.paused + ' rs ' + v.readyState + ' buf ' + buf(v.buffered);
-        ['playbackSeeking', 'playbackSeeked', 'playbackWaiting', 'playbackStalled', 'gapCausedInternalSeek', 'fragmentLoadingStarted', 'fragmentLoadingCompleted', 'fragmentLoadingAbandoned', 'bufferLevelStateChanged', 'error', 'bufferEmpty', 'bufferLoaded'].forEach((ev) => this.player.on(ev, (e) => console.log('[STALL] ev ' + ev + ' ' + (e.mediaType || (e.request && e.request.mediaType) || '') + ' ' + (e.request ? 'idx ' + e.request.index + ' st ' + e.request.startTime + ' type ' + e.request.type : '') + (e.seekTime !== undefined ? ' seekTime ' + e.seekTime : '') + (e.state ? ' state ' + e.state : '') + ' | ' + st())));
-        ['seeking', 'seeked', 'waiting', 'playing', 'stalled', 'canplay'].forEach((ev) => v.addEventListener(ev, () => console.log('[STALL] video ' + ev + ' | ' + st())));
-        let n = 0; const iv = setInterval(() => { console.log('[STALL] poll | ' + st()); if (++n > 20) clearInterval(iv); }, 1000);
         this.player.on(MediaPlayer.events.LOG, this._onLogEvent);
         this.player.on(MediaPlayer.events.ERROR, this._onErrorEvent);
     }
