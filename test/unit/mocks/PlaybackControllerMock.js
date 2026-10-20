@@ -58,6 +58,10 @@ class PlaybackControllerMock {
         return this.seeking;
     }
 
+    getIsManifestUpdateInProgress() {
+        return false;
+    }
+
     seek() {
         this.seeking = true;
     }

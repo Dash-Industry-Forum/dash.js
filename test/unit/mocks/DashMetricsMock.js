@@ -57,6 +57,9 @@ function DashMetricsMock() {
     this.addRepresentationSwitch = function () {
     };
 
+    this.pushPlayListTraceMetrics = function () {
+    };
+
     this.addDVRInfo = function (type, time, manifestInfo, range) {
         this.currentDVRInfo = {
             type: type,

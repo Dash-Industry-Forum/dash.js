@@ -348,6 +348,10 @@ export interface RepresentationController {
 
     getRepresentationForQuality(quality: number): object | null;
 
+    isSegmentListMissing(newRep: Representation): boolean;
+
+    loadSegmentList(newRep: Representation): Promise<Representation> | null;
+
     prepareQualityChange(newRep: Representation): void;
 
     reset(): void;
@@ -1774,7 +1778,8 @@ export class MediaPlayerSettingClass {
         scheduling?: {
             defaultTimeout?: number,
             lowLatencyTimeout?: number,
-            scheduleWhilePaused?: boolean
+            scheduleWhilePaused?: boolean,
+            segmentListRetryDelay?: number
         },
         text?: {
             defaultEnabled?: boolean,
@@ -1962,6 +1967,7 @@ export class MediaPlayerSettingClass {
             cid?: string | null,
             rtp?: number | null,
             rtpSafetyFactor?: number,
+            maxBufferedErrorCodes?: number,
             mode?: 'query' | 'header',
             enabledKeys?: Array<string>,
             includeInRequests?: Array<string>,
@@ -1972,8 +1978,12 @@ export class MediaPlayerSettingClass {
                 events?: Array<string>,
                 interval?: number,
                 enabledKeys?: Array<string>,
-                includeInRequests?: Array<string>,
+                responseReceivedTypes?: Array<string>,
                 batchSize?: number
+            }>,
+            customKeys?: Array<{
+                key: string,
+                value: string | number | boolean
             }>
         },
         cmsd?: {
@@ -2970,7 +2980,7 @@ export interface Constants {
     CMCD_MODE_HEADERS: 'headers',
     CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
     CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
-    CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+    CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other', 'license'],
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
     TEXT_HIDDEN: 'hidden',
@@ -3114,6 +3124,7 @@ export interface ProtectionConstants {
     WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
     PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
     PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+    PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING: 'com.microsoft.playready.recommendation.3000',
     WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
     PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
     CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
@@ -3158,6 +3169,8 @@ export interface AbrController {
     checkPlaybackQuality(type: string, streamId: string | number): boolean;
 
     clearDataForStream(streamId: string): void;
+
+    excludeRepresentation(representation: Representation, duration?: number): void;
 
     getAbandonmentStateFor(streamId: string, type: string): any | null;
 

@@ -220,3 +220,6 @@ docs/site/.vitepress/cache
 *.tgz
 .playwright-mcp
 .opencode
+
+# Git worktrees (see docs/site/pages/developers/git-worktrees.md)
+.claude/worktrees/
