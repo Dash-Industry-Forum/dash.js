@@ -20,6 +20,11 @@ describe('KeySystemMetadata', function () {
             ]);
         });
 
+        it('should use the defaults if the systemStringPriority is empty', function () {
+            expect(KeySystemMetadata.getSystemStringsToApply(playReady, { systemStringPriority: [] }))
+                .to.deep.equal(ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[playReady.systemString]);
+        });
+
         it('should fall back to the key system string if no defaults exist', function () {
             const widevine = { systemString: ProtectionConstants.WIDEVINE_KEYSTEM_STRING };
             expect(KeySystemMetadata.getSystemStringsToApply(widevine, null))

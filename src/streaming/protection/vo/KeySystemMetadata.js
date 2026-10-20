@@ -54,7 +54,9 @@ class KeySystemMetadata {
      * @return {Array.<string>}
      */
     static getSystemStringsToApply(ks, protData) {
-        return (protData && protData.systemStringPriority) ||
+        // An empty systemStringPriority would leave nothing to request, so it falls back to the defaults
+        return (protData && protData.systemStringPriority && protData.systemStringPriority.length > 0 &&
+                protData.systemStringPriority) ||
             ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[ks.systemString] ||
             [ks.systemString];
     }
