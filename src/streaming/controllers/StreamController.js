@@ -231,7 +231,8 @@ function StreamController() {
     }
 
     /**
-     * Setup the stream objects after the stream start and each MPD reload. This function is called after the UTC sync has been done (TIME_SYNCHRONIZATION_COMPLETED)
+     * Setup the stream objects after the stream start and each MPD reload. This function is called after the UTC sync
+     * has been done (TIME_SYNCHRONIZATION_COMPLETED)
      * @private
      */
     function _composePeriods() {
@@ -276,7 +277,8 @@ function StreamController() {
                 .then(() => {
                     eventBus.trigger(Events.STREAMS_COMPOSED);
                     _handlePendingDynamicToStaticUpdate();
-                    // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
+                    // Additional periods might have been added after an MPD update. Check again if we can start
+                    // prebuffering.
                     _checkIfPrebufferingCanStart();
                 })
                 .catch((e) => {
@@ -291,7 +293,8 @@ function StreamController() {
     }
 
     /**
-     * The stream transitioned from dynamic to static. Once the final static manifest has been applied and the streams have been recomposed, update the MediaSource duration and the seekable range.
+     * The stream transitioned from dynamic to static. Once the final static manifest has been applied and the streams
+     * have been recomposed, update the MediaSource duration and the seekable range.
      * @private
      */
     function _onDynamicToStatic() {
@@ -314,12 +317,14 @@ function StreamController() {
         _setMediaDuration();
         // Recalculate the range using the final static manifest instead of the previous live DVR window.
         addDVRMetric();
-        // With a finite duration the seekable range is derived from the duration, the live seekable range only applies while the duration is Infinity. Clear it so it does not linger.
+        // With a finite duration the seekable range is derived from the duration, the live seekable range only applies
+        // while the duration is Infinity. Clear it so it does not linger.
         mediaSourceController.clearSeekableRange();
     }
 
     /**
-     * Called for each stream when composition is performed. Either a new instance of Stream is created or the existing one is updated.
+     * Called for each stream when composition is performed. Either a new instance of Stream is created or the existing
+     * one is updated.
      * @param {object} streamInfo
      * @private
      */
@@ -327,7 +332,8 @@ function StreamController() {
         let stream = getStreamById(streamInfo.id);
 
         // If the Stream object does not exist we probably loaded the manifest the first time or it was
-        // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
+        // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization
+        // operations
         if (!stream) {
             stream = Stream(context).create({
                 manifestModel,
@@ -393,7 +399,9 @@ function StreamController() {
 
             // Compute and set the live delay. The live edge is in the last period of the MPD.
             if (adapter.getIsDynamic()) {
-                const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(streamsInfo[streamsInfo.length - 1]);
+                const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(
+                    streamsInfo[streamsInfo.length - 1]
+                );
                 playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
             }
 
@@ -466,7 +474,8 @@ function StreamController() {
      */
     function _switchStream(targetStream, previousStream, seekTime) {
         try {
-            if (isStreamSwitchingInProgress || !targetStream || (previousStream === targetStream && targetStream.getIsActive())) {
+            if (isStreamSwitchingInProgress || !targetStream ||
+                (previousStream === targetStream && targetStream.getIsActive())) {
                 return;
             }
 
@@ -501,7 +510,9 @@ function StreamController() {
             // Determine seek time when switching to new period
             // - seek at given seek time
             // - or seek at period start if upcoming period is not prebuffered
-            seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? targetStream.getStreamInfo().start : NaN);
+            seekTime = !isNaN(seekTime)
+                ? seekTime
+                : (!keepBuffers && previousStream ? targetStream.getStreamInfo().start : NaN);
             logger.info(`Switch to stream ${targetStream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
 
             preloadingStreams = preloadingStreams.filter((s) => {
@@ -589,12 +600,20 @@ function StreamController() {
      */
     function _activateStream(inputParameters) {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
-        activeStream.activate(mediaSource, inputParameters.sourceBufferSinksFromPreviousPeriod, representationsFromPreviousPeriod)
+        activeStream.activate(
+            mediaSource,
+            inputParameters.sourceBufferSinksFromPreviousPeriod,
+            representationsFromPreviousPeriod
+        )
             .then(() => {
 
                 // Set the initial time for this stream in the StreamProcessor
                 if (!isNaN(inputParameters.seekTime)) {
-                    eventBus.trigger(Events.SEEK_TARGET, { time: inputParameters.seekTime }, { streamId: activeStream.getId() });
+                    eventBus.trigger(
+                        Events.SEEK_TARGET,
+                        { time: inputParameters.seekTime },
+                        { streamId: activeStream.getId() }
+                    );
                     playbackController.seek(inputParameters.seekTime, false, true);
                     activeStream.startScheduleControllers();
                 }
@@ -631,7 +650,8 @@ function StreamController() {
     }
 
     /**
-     * A playback seeking event was triggered. We need to disable the preloading streams and call the respective seeking handler.
+     * A playback seeking event was triggered. We need to disable the preloading streams and call the respective seeking
+     * handler.
      * We distinguish between inner period seeks and outer period seeks
      * @param {object} e
      * @private
@@ -652,7 +672,8 @@ function StreamController() {
             _handleOuterPeriodSeek(e, seekToStream);
         }
 
-        // The timer is stopped once PLAYBACK_ENDED was fired for the last stream. A seek can resume playback afterwards.
+        // The timer is stopped once PLAYBACK_ENDED was fired for the last stream. A seek can resume playback
+        // afterwards.
         _startPlaybackEndedTimerInterval();
         _createPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
@@ -661,7 +682,8 @@ function StreamController() {
      * A seek to a time at or beyond the end of the last period is not assigned to any stream. Route it to the last
      * stream and clamp the seek target to slightly before the end of the content, so playback can end there.
      * A playhead resting exactly at the (post endOfStream) MediaSource duration is in the "ended" state, where play()
-     * restarts from the beginning instead of finishing playback, and seeking to the exact duration does not complete reliably.
+     * restarts from the beginning instead of finishing playback, and seeking to the exact duration does not complete
+     * reliably.
      * Static manifests only: on a dynamic manifest with a finite announced duration (planned-end live event) the last
      * period's end can lie beyond the current live edge, and clamping would actively park the playhead in a region
      * without segments. Live seek targets are constrained by the DVR window logic instead.
@@ -682,7 +704,9 @@ function StreamController() {
             return null;
         }
 
-        const seekDurationBackoff = !isNaN(settings.get().streaming.seekDurationBackoff) ? settings.get().streaming.seekDurationBackoff : 0;
+        const seekDurationBackoff = !isNaN(settings.get().streaming.seekDurationBackoff)
+            ? settings.get().streaming.seekDurationBackoff
+            : 0;
         e.seekTime = Math.max(lastStream.getStartTime(), lastStreamEnd - seekDurationBackoff);
 
         // Corrective internal seek: move the video element to the clamped target as well, instead of leaving it
@@ -741,7 +765,8 @@ function StreamController() {
     }
 
     /**
-     * Handle an outer period seek. Dispatch the corresponding event to be handled in the BufferControllers and the ScheduleControllers
+     * Handle an outer period seek. Dispatch the corresponding event to be handled in the BufferControllers and the
+     * ScheduleControllers
      * @param {object} e
      * @param {object} seekToStream
      * @private
@@ -771,15 +796,18 @@ function StreamController() {
      * @private
      */
     function _onCurrentTrackChanged(e) {
-        // Track was changed in non-active stream. No need to do anything, this only happens when a stream starts preloading
+        // Track was changed in non-active stream. No need to do anything, this only happens when a stream starts
+        // preloading
         if (e.newMediaInfo.streamInfo.id !== activeStream.getId()) {
             return;
         }
 
-        // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
+        // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered
+        // stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
         _deactivateAllPreloadingStreams();
 
-        if (settings.get().streaming.buffer.resetSourceBuffersForTrackSwitch && e.oldMediaInfo && e.oldMediaInfo.codec !== e.newMediaInfo.codec) {
+        if (settings.get().streaming.buffer.resetSourceBuffersForTrackSwitch && e.oldMediaInfo &&
+            e.oldMediaInfo.codec !== e.newMediaInfo.codec) {
             const seekTime = playbackController.getTime();
             activeStream.deactivate(false);
             _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
@@ -801,9 +829,11 @@ function StreamController() {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method is implemented
-            // TODO: If the codec family is the same or if there is period connectivity we can also use the same SourceBuffer
+            // TODO: If the codec family is the same or if there is period connectivity we can also use the same
+            // SourceBuffer
             return (settings.get().streaming.buffer.reuseExistingSourceBuffers
-                && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched)
+                && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo())
+                    || firstLicenseIsFetched)
                 && (capabilities.supportsChangeType() && settings.get().streaming.buffer.useChangeType));
         } catch (e) {
             return false;
@@ -862,7 +892,8 @@ function StreamController() {
     }
 
     /**
-     * Add the DVR window to the metric list. We need the DVR window to restrict the seeking and calculate the right start time.
+     * Add the DVR window to the metric list. We need the DVR window to restrict the seeking and calculate the right
+     * start time.
      */
     function addDVRMetric() {
         try {
@@ -889,8 +920,10 @@ function StreamController() {
     }
 
     /**
-     * The buffer level for a certain media type has been updated. If this is the initial playback and we want to autoplay the content we check if we can start playback now.
-     * For livestreams we might have a drift of the target live delay compared to the current live delay because reaching the initial buffer level took time.
+     * The buffer level for a certain media type has been updated. If this is the initial playback and we want to
+     * autoplay the content we check if we can start playback now.
+     * For livestreams we might have a drift of the target live delay compared to the current live delay because
+     * reaching the initial buffer level took time.
      * @param {object} e
      * @private
      */
@@ -900,7 +933,9 @@ function StreamController() {
         if (initialPlayback && autoPlay) {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
             const excludedStreamProcessors = [Constants.TEXT];
-            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel(excludedStreamProcessors) || (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
+            if (isNaN(initialBufferLevel) ||
+                initialBufferLevel <= playbackController.getBufferLevel(excludedStreamProcessors) ||
+                (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
                 initialPlayback = false;
                 _createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();
@@ -913,7 +948,8 @@ function StreamController() {
     }
 
     /**
-     * When the quality is changed in the currently active stream we stop the prebuffering to avoid inconsistencies in the buffer settings like codec and append window
+     * When the quality is changed in the currently active stream we stop the prebuffering to avoid inconsistencies in
+     * the buffer settings like codec and append window
      * @param e
      * @private
      */
@@ -928,7 +964,8 @@ function StreamController() {
     }
 
     /**
-     * A setting related to the live delay was updated. Check if one of the latency values changed. If so, recalculate the live delay.
+     * A setting related to the live delay was updated. Check if one of the latency values changed. If so, recalculate
+     * the live delay.
      * @private
      */
     function _onLiveDelaySettingUpdated() {
@@ -956,7 +993,8 @@ function StreamController() {
     }
 
     /**
-     * Once playback starts add playlist metrics depending on whether this was the first playback or playback resumed after pause
+     * Once playback starts add playlist metrics depending on whether this was the first playback or playback resumed
+     * after pause
      * @private
      */
     function _onPlaybackStarted( /*e*/) {
@@ -992,7 +1030,8 @@ function StreamController() {
     }
 
     /**
-     * Callback once a stream/period is completely buffered. We can either signal the end of the stream or start prebuffering the next period.
+     * Callback once a stream/period is completely buffered. We can either signal the end of the stream or start
+     * prebuffering the next period.
      * @param {object} e
      * @private
      */
@@ -1031,7 +1070,8 @@ function StreamController() {
             const stream = upcomingStreams[i];
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
 
-            // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
+            // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we
+            // can start prebuffering this stream
             if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering()) {
                 _onStreamCanLoadNext(stream, previousStream);
             }
@@ -1046,7 +1086,8 @@ function StreamController() {
     function _startPlaybackEndedTimerInterval() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
-                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 && !playbackController.isSeeking()) {
+                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 &&
+                    !playbackController.isSeeking()) {
                     eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
@@ -1123,7 +1164,9 @@ function StreamController() {
                 logger.debug('StreamController no next stream found');
                 activeStream.setIsEndedEventSignaled(false);
             }
-            _flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
+            _flushPlaylistMetrics(
+                nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON
+            );
         }
         if (e && e.isLast) {
             _stopPlaybackEndedTimerInterval();
@@ -1132,8 +1175,10 @@ function StreamController() {
     }
 
     /**
-     * Returns the next stream to be played relative to the stream provided. If no stream is provided we use the active stream.
-     * In order to avoid rounding issues we should not use the duration of the periods. Instead find the stream with starttime closest to startTime of the previous stream.
+     * Returns the next stream to be played relative to the stream provided. If no stream is provided we use the active
+     * stream.
+     * In order to avoid rounding issues we should not use the duration of the periods. Instead find the stream with
+     * starttime closest to startTime of the previous stream.
      * @param {object} stream
      * @return {null|object}
      */
@@ -1252,12 +1297,14 @@ function StreamController() {
         // For dynamic stream, start by default at (live edge - live delay)
         const dvrInfo = dashMetrics.getCurrentDVRInfo();
         const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
-        // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
+        // we are already in the right start period. so time should not be smaller than period@start and should not be
+        // larger than period@end
         startTime = liveEdge - playbackController.getOriginalLiveDelay();
         // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
         const dvrWindow = dvrInfo ? dvrInfo.range : null;
         if (dvrWindow) {
-            // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
+            // If start time was provided by the application as part of the call to initialize() or attachSource() use
+            // this value
             if (!isNaN(providedStartTime) || providedStartTime.toString().indexOf('posix:') !== -1) {
                 logger.info(`Start time provided by the app: ${providedStartTime}`);
                 const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(true, providedStartTime)
@@ -1274,7 +1321,8 @@ function StreamController() {
                     startTime = Math.min(startTime, startTimeFromUri);
                 }
             }
-            // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
+            // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at
+            // dvrWindow.start. Apply a small offset to avoid this problem.
             const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
             startTime = Math.max(startTime, dvrWindow.start + offset);
         }
@@ -1288,7 +1336,8 @@ function StreamController() {
         const streamInfo = streams[0].getStreamInfo();
         let startTime = streamInfo.start;
 
-        // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
+        // If start time was provided by the application as part of the call to initialize() or attachSource() use this
+        // value
         if (!isNaN(providedStartTime)) {
             logger.info(`Start time provided by the app: ${providedStartTime}`);
             const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(false, providedStartTime)
@@ -1310,7 +1359,8 @@ function StreamController() {
     }
 
     /**
-     * 23009-1 Annex C.4 defines MPD anchors to use URI fragment syntax to start a presentation at a given time and a given state
+     * 23009-1 Annex C.4 defines MPD anchors to use URI fragment syntax to start a presentation at a given time and a
+     * given state
      * @param {boolean} isDynamic
      * @return {number}
      * @private
@@ -1328,7 +1378,8 @@ function StreamController() {
     }
 
     /**
-     * Calculate start time using the value that was provided via the application as part of attachSource() or initialize()
+     * Calculate start time using the value that was provided via the application as part of attachSource() or
+     * initialize()
      * @param {boolean} isDynamic
      * @param {number | string} providedStartTime
      * @return {number}
@@ -1354,7 +1405,9 @@ function StreamController() {
         const period = adapter.getRegularPeriods()[0];
         const targetString = targetValue.toString();
         const posix = targetString.indexOf('posix:') !== -1 ? targetString.substring(6) === 'now' ? Date.now() / 1000 : parseFloat(targetString.substring(6)) : NaN;
-        return (isDynamic && !isNaN(posix)) ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period) : parseFloat(targetString) + referenceTime;
+        return (isDynamic && !isNaN(posix))
+            ? timelineConverter.calcPresentationTimeFromWallTime(new Date(posix * 1000), period)
+            : parseFloat(targetString) + referenceTime;
     }
 
     /**
@@ -1395,7 +1448,8 @@ function StreamController() {
     }
 
     /**
-     * Callback handler after the manifest has been updated. Trigger an update in the adapter and filter unsupported stuff.
+     * Callback handler after the manifest has been updated. Trigger an update in the adapter and filter unsupported
+     * stuff.
      * Finally, attempt UTC sync
      * @param {object} e
      * @private
@@ -1404,25 +1458,30 @@ function StreamController() {
         if (!e.error) {
             logger.info('Manifest updated... updating data system wide.');
 
-            //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
+            //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if
+            //stream
             //is SegmentTimeline to avoid using time source
             const manifest = e.manifest;
             adapter.updatePeriods(manifest);
 
-            // It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong references in case we remove AdaptationSets.
+            // It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong
+            // references in case we remove AdaptationSets.
             capabilitiesFilter.filterUnsupportedFeatures(manifest)
                 .then(() => {
                     baseURLController.initialize(manifest);
 
                     let manifestUTCTimingSources = adapter.getUTCTimingSources();
-                    if (adapter.getIsDynamic() && (!manifestUTCTimingSources || manifestUTCTimingSources.length === 0)) {
+                    if (adapter.getIsDynamic() &&
+                        (!manifestUTCTimingSources || manifestUTCTimingSources.length === 0)) {
                         eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
                             level: ConformanceViolationConstants.LEVELS.WARNING,
                             event: ConformanceViolationConstants.EVENTS.NO_UTC_TIMING_ELEMENT
                         });
                     }
 
-                    let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
+                    let allUTCTimingSources = (!adapter.getIsDynamic())
+                        ? manifestUTCTimingSources
+                        : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
                     timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
                     extUrlQueryInfoController.createFinalQueryStrings(manifest);
                 });
@@ -1493,7 +1552,8 @@ function StreamController() {
                 }
             }
         })
-        // we observed that playback still stalls if we replace the buffer when playhead is at 0. Do a minimal seek to avoid this
+        // we observed that playback still stalls if we replace the buffer when playhead is at 0. Do a minimal seek to
+        // avoid this
         if (hasUnusableKey) {
             _handleUnusableKeyStall();
         }
@@ -1539,7 +1599,12 @@ function StreamController() {
         const stream = getStreamById(streamId);
 
         if (stream) {
-            stream.triggerProtectionError({ error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) })
+            stream.triggerProtectionError({
+                error: new DashJSError(
+                    ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE,
+                    ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE
+                )
+            })
         }
 
     }
@@ -1758,7 +1823,11 @@ function StreamController() {
 
         timeSyncController.reset();
 
-        _flushPlaylistMetrics(hasMediaError || hasInitialisationError ? PlayListTrace.FAILURE_STOP_REASON : PlayListTrace.USER_REQUEST_STOP_REASON);
+        _flushPlaylistMetrics(
+            hasMediaError || hasInitialisationError
+                ? PlayListTrace.FAILURE_STOP_REASON
+                : PlayListTrace.USER_REQUEST_STOP_REASON
+        );
 
         for (let i = 0, ln = streams ? streams.length : 0; i < ln; i++) {
             const stream = streams[i];

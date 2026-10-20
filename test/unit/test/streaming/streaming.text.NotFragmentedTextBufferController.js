@@ -80,7 +80,8 @@ describe('NotFragmentedTextBufferController', function () {
                 notFragmentedTextBufferController.createBufferSink(mockMediaInfo)
                     .then(() => {
                         let buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
-                        expect(objectUtils.areEqual(buffer, mediaSourceMock.buffers[0])).to.be.true; // jshint ignore:line
+                        const isEqual = objectUtils.areEqual(buffer, mediaSourceMock.buffers[0]);
+                        expect(isEqual).to.be.true; // jshint ignore:line
                         done();
                     })
                     .catch((e) => {

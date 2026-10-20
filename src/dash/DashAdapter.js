@@ -181,9 +181,11 @@ function DashAdapter() {
         const sameLang = mInfoOne.lang === mInfoTwo.lang;
         const sameRoles = JSON.stringify(mInfoOne.roles) === JSON.stringify(mInfoTwo.roles);
         const sameAccessibility = JSON.stringify(mInfoOne.accessibility) === JSON.stringify(mInfoTwo.accessibility);
-        const sameAudioChannelConfiguration = JSON.stringify(mInfoOne.audioChannelConfiguration) === JSON.stringify(mInfoTwo.audioChannelConfiguration);
+        const sameAudioChannelConfiguration = JSON.stringify(mInfoOne.audioChannelConfiguration) ===
+            JSON.stringify(mInfoTwo.audioChannelConfiguration);
 
-        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility &&
+            sameAudioChannelConfiguration);
     }
 
     function _getAllMediaInfo(manifest, period, streamInfo, adaptations, type, embeddedText) {
@@ -230,7 +232,11 @@ function DashAdapter() {
                                     if (!media) {
                                         media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
                                     }
-                                    convertVideoInfoToEmbeddedTextInfo(media, parts[j].substring(0, 3), parts[j].substring(4));
+                                    convertVideoInfoToEmbeddedTextInfo(
+                                        media,
+                                        parts[j].substring(0, 3),
+                                        parts[j].substring(4)
+                                    );
                                     mediaArr.push(media);
                                     media = null;
                                 }
@@ -301,14 +307,24 @@ function DashAdapter() {
         }
 
         const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
-        let adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo ? streamInfo.index : null, type);
+        let adaptationsForType = dashManifestModel.getAdaptationsForType(
+            manifest,
+            streamInfo ? streamInfo.index : null,
+            type
+        );
 
         mediaArr = _getAllMediaInfo(manifest, selectedVoPeriod, streamInfo, adaptationsForType, type);
 
         // Search for embedded text in video track
         if (type === constants.TEXT) {
-            adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo ? streamInfo.index : null, constants.VIDEO);
-            mediaArr = mediaArr.concat(_getAllMediaInfo(manifest, selectedVoPeriod, streamInfo, adaptationsForType, type, true));
+            adaptationsForType = dashManifestModel.getAdaptationsForType(
+                manifest,
+                streamInfo ? streamInfo.index : null,
+                constants.VIDEO
+            );
+            mediaArr = mediaArr.concat(
+                _getAllMediaInfo(manifest, selectedVoPeriod, streamInfo, adaptationsForType, type, true)
+            );
         }
 
         return mediaArr;
@@ -380,7 +396,13 @@ function DashAdapter() {
         id = mediaInfo ? mediaInfo.id : null;
 
         if (voPeriods.length > 0 && selectedVoPeriod) {
-            realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo ? mediaInfo.index : null, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
+            realAdaptation = id
+                ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index)
+                : dashManifestModel.getAdaptationForIndex(
+                    mediaInfo ? mediaInfo.index : null,
+                    voPeriods[0].mpd.manifest,
+                    selectedVoPeriod.index
+                );
         }
 
         return realAdaptation;
@@ -401,7 +423,13 @@ function DashAdapter() {
         id = mediaInfo ? mediaInfo.id : null;
 
         if (voPeriods.length > 0 && selectedVoPeriod) {
-            realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo ? mediaInfo.index : null, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
+            realAdaptation = id
+                ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index)
+                : dashManifestModel.getAdaptationForIndex(
+                    mediaInfo ? mediaInfo.index : null,
+                    voPeriods[0].mpd.manifest,
+                    selectedVoPeriod.index
+                );
         }
 
         if (!realAdaptation) {
@@ -466,7 +494,8 @@ function DashAdapter() {
     /**
      * Returns the fragment duration to be used for the live delay calculation for the period given by streamInfo.
      * For SSR/L3D content using partial segments (k > 1) the request unit at the live edge is the partial segment,
-     * so the effective duration is segmentDuration / k. Without partial segments streamInfo.manifestInfo.maxFragmentDuration is used.
+     * so the effective duration is segmentDuration / k. Without partial segments
+     * streamInfo.manifestInfo.maxFragmentDuration is used.
      * @param {object} streamInfo
      * @returns {number} fragment duration in seconds, or NaN
      * @memberOf module:DashAdapter
@@ -474,7 +503,9 @@ function DashAdapter() {
      */
     function getFragmentDurationForLiveDelayCalculation(streamInfo) {
         const manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
-        const fallbackFragmentDuration = manifestInfo && Number.isFinite(manifestInfo.maxFragmentDuration) ? manifestInfo.maxFragmentDuration : NaN;
+        const fallbackFragmentDuration = manifestInfo && Number.isFinite(manifestInfo.maxFragmentDuration)
+            ? manifestInfo.maxFragmentDuration
+            : NaN;
 
         try {
             let hasPartialSegments = false;
@@ -482,16 +513,20 @@ function DashAdapter() {
 
             const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
             dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod).forEach((voAdaptation) => {
-                if (voAdaptation.type !== Constants.VIDEO && voAdaptation.type !== Constants.AUDIO && voAdaptation.type !== Constants.TEXT) {
+                if (voAdaptation.type !== Constants.VIDEO && voAdaptation.type !== Constants.AUDIO &&
+                    voAdaptation.type !== Constants.TEXT) {
                     return;
                 }
                 dashManifestModel.getRepresentationsForAdaptation(voAdaptation).forEach((voRepresentation) => {
-                    if (voRepresentation && !isNaN(voRepresentation.segmentDuration) && voRepresentation.segmentDuration > 0) {
+                    if (voRepresentation && !isNaN(voRepresentation.segmentDuration) &&
+                        voRepresentation.segmentDuration > 0) {
                         if (voRepresentation.usesPartialSegments()) {
                             hasPartialSegments = true;
                         }
                         const effectiveSegmentDuration = voRepresentation.getEffectiveSegmentDuration();
-                        maxEffectiveSegmentDuration = isNaN(maxEffectiveSegmentDuration) ? effectiveSegmentDuration : Math.max(maxEffectiveSegmentDuration, effectiveSegmentDuration);
+                        maxEffectiveSegmentDuration = isNaN(maxEffectiveSegmentDuration)
+                            ? effectiveSegmentDuration
+                            : Math.max(maxEffectiveSegmentDuration, effectiveSegmentDuration);
                     }
                 });
             });
@@ -535,13 +570,16 @@ function DashAdapter() {
             const periodStart = voRepresentation.adaptation.period.start;
             const eventStream = eventStreams[schemeIdUri + '/' + value];
             // The PTO in voRepresentation is already specified in seconds
-            const presentationTimeOffset = !isNaN(voRepresentation.presentationTimeOffset) ? voRepresentation.presentationTimeOffset : !isNaN(eventStream.presentationTimeOffset) ? eventStream.presentationTimeOffset : 0;
+            const presentationTimeOffset = !isNaN(voRepresentation.presentationTimeOffset)
+                ? voRepresentation.presentationTimeOffset
+                : !isNaN(eventStream.presentationTimeOffset) ? eventStream.presentationTimeOffset : 0;
             // In case of version 1 events the presentation_time is parsed as presentation_time_delta
             let presentationTimeDelta = eventBox.presentation_time_delta / timescale;
             let calculatedPresentationTime;
 
             if (eventBox.version === 0) {
-                calculatedPresentationTime = periodStart + mediaStartTime - presentationTimeOffset + presentationTimeDelta;
+                calculatedPresentationTime = periodStart + mediaStartTime - presentationTimeOffset +
+                    presentationTimeDelta;
             } else {
                 calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
             }
@@ -568,7 +606,8 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the events for the given info object. info can either be an instance of StreamInfo, MediaInfo or Representation
+     * Returns the events for the given info object. info can either be an instance of StreamInfo, MediaInfo or
+     * Representation
      * @param {object} info
      * @param {object} voRepresentation
      * @returns {Array}
@@ -587,7 +626,11 @@ function DashAdapter() {
                 events = dashManifestModel.getEventsForPeriod(period);
             } else if (info instanceof MediaInfo) {
                 const period = getPeriodForStreamInfo(streamInfo, voPeriods)
-                events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info), period);
+                events = dashManifestModel.getEventStreamForAdaptationSet(
+                    manifest,
+                    getAdaptationForMediaInfo(info),
+                    period
+                );
             } else if (info instanceof Representation) {
                 const period = getPeriodForStreamInfo(streamInfo, voPeriods)
                 events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation, period);
@@ -970,7 +1013,8 @@ function DashAdapter() {
         // - MPD@publishTime < Patch@publishTime
         // - All values in comparison exist
         return !!(manifestId && patchManifestId && (manifestId == patchManifestId) &&
-            manifestPublishTime && originalManifestPublishTime && (manifestPublishTime.getTime() == originalManifestPublishTime.getTime()) &&
+            manifestPublishTime && originalManifestPublishTime &&
+            (manifestPublishTime.getTime() == originalManifestPublishTime.getTime()) &&
             patchPublishTime && (manifestPublishTime.getTime() < patchPublishTime.getTime()));
     }
 
@@ -1016,13 +1060,15 @@ function DashAdapter() {
 
                 // perform removal operation first, we have already capture the appropriate relative position
                 if (operation.action === 'remove' || operation.action === 'replace') {
-                    // note that we ignore the 'ws' attribute of patch operations as it does not effect parsed mpd operations
+                    // note that we ignore the 'ws' attribute of patch operations as it does not effect parsed mpd
+                    // operations
 
                     // purge the directly named entity
                     if (!Array.isArray(target[name])) {
                         delete target[name];
                     } else if (relativePosition != -1) {
-                        // if we did have a positional reference we need to purge from array set and restore X2JS proper semantics
+                        // if we did have a positional reference we need to purge from array set and restore X2JS
+                        // proper semantics
                         let targetArray = target[name];
                         targetArray.splice(relativePosition, 1);
                         if (targetArray.length > 0) {
@@ -1036,8 +1082,9 @@ function DashAdapter() {
 
                 // Perform any add/replace operations now, technically RFC5261 only allows a single element to take the
                 // place of a replaced element while the add case allows an arbitrary number of children.
-                // Due to the both operations requiring the same insertion logic they have been combined here and we will
-                // not enforce single child operations for replace, assertions should be made at patch parse time if necessary
+                // Due to the both operations requiring the same insertion logic they have been combined here and we
+                // will not enforce single child operations for replace, assertions should be made at patch parse time
+                // if necessary
                 if (operation.action === 'add' || operation.action === 'replace') {
                     // value will be an object with element name keys pointing to arrays of objects
                     Object.keys(operation.value).forEach((insert) => {
@@ -1055,12 +1102,14 @@ function DashAdapter() {
                             // compute the position we need to insert at, default to end of set
                             let position = updatedNodes.length;
                             if (insert == name && relativePosition != -1) {
-                                // if the inserted element matches the operation target (not leaf) and there is a relative position we
-                                // want the inserted position to be set such that our insertion is relative to original position
+                                // if the inserted element matches the operation target (not leaf) and there is a
+                                // relative position we want the inserted position to be set such that our insertion
+                                // is relative to original position
                                 // since replace has modified the array length we reduce the insert point by 1
                                 position = relativePosition + (insertBefore ? 0 : 1) + (operation.action === 'replace' ? -1 : 0);
                             } else {
-                                // otherwise we are in an add append/prepend case or replace case that removed the target name completely
+                                // otherwise we are in an add append/prepend case or replace case that removed the
+                                // target name completely
                                 position = insertBefore ? 0 : updatedNodes.length;
                             }
 
@@ -1117,13 +1166,16 @@ function DashAdapter() {
         }
 
         let mediaInfo = new MediaInfo();
-        const realAdaptation = adaptation.period.mpd.manifest.Period[adaptation.period.index].AdaptationSet[adaptation.index];
+        const realAdaptation =
+            adaptation.period.mpd.manifest.Period[adaptation.period.index].AdaptationSet[adaptation.index];
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         const enhancementCodecs = settings.get().streaming.enhancement.codecs;
-        mediaInfo.type = enhancementCodecs.some(codec => mediaInfo.codec?.includes(codec)) ? Constants.ENHANCEMENT : adaptation.type;
+        mediaInfo.type = enhancementCodecs.some(codec => mediaInfo.codec?.includes(codec))
+            ? Constants.ENHANCEMENT
+            : adaptation.type;
         mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
@@ -1139,9 +1191,12 @@ function DashAdapter() {
         })[0]) {
             mediaInfo.embeddedCaptions = true;
         }
-        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
-        if (mediaInfo.audioChannelConfiguration.length === 0 && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
-            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]);
+        mediaInfo.audioChannelConfiguration =
+            dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
+        if (mediaInfo.audioChannelConfiguration.length === 0 && realAdaptation.Representation &&
+            realAdaptation.Representation.length > 0) {
+            mediaInfo.audioChannelConfiguration =
+                dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]);
         }
         mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
@@ -1150,18 +1205,24 @@ function DashAdapter() {
         mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realAdaptation);
 
         if (mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0) {
-            mediaInfo.contentProtection = _applyContentProtectionReferencing(mediaInfo.contentProtection, adaptation.period.mpd.manifest);
+            mediaInfo.contentProtection = _applyContentProtectionReferencing(
+                mediaInfo.contentProtection,
+                adaptation.period.mpd.manifest
+            );
             mediaInfo.contentProtection = _applyDefaultKeyId(mediaInfo.contentProtection);
             mediaInfo.normalizedKeyIds = _getNormalizedKeyIds(mediaInfo.contentProtection);
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
-        mediaInfo.essentialProperties = dashManifestModel.getCombinedEssentialPropertiesForAdaptationSet(realAdaptation);
-        mediaInfo.supplementalProperties = dashManifestModel.getCombinedSupplementalPropertiesForAdaptationSet(realAdaptation);
+        mediaInfo.essentialProperties =
+            dashManifestModel.getCombinedEssentialPropertiesForAdaptationSet(realAdaptation);
+        mediaInfo.supplementalProperties =
+            dashManifestModel.getCombinedSupplementalPropertiesForAdaptationSet(realAdaptation);
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
         mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
-        mediaInfo.segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(realAdaptation);
+        mediaInfo.segmentSequenceProperties =
+            dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(realAdaptation);
 
         return mediaInfo;
     }
@@ -1172,7 +1233,8 @@ function DashAdapter() {
         }
 
         let mediaInfo = new MediaInfo();
-        const realPreselection = preselection.period.mpd.manifest.Period[preselection.period.index].Preselection[preselection.index];
+        const realPreselection =
+            preselection.period.mpd.manifest.Period[preselection.period.index].Preselection[preselection.index];
         const realAdaptation = preselection.period.mpd.manifest.Period[preselection.period.index].AdaptationSet;
 
         // initialize mediaInfo with properties from main adaptation set
@@ -1190,10 +1252,13 @@ function DashAdapter() {
             mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realPreselection);
             mediaInfo.viewpoint = dashManifestModel.getViewpointForAdaptation(realPreselection);
             mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realPreselection);
-            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realPreselection);
+            mediaInfo.audioChannelConfiguration =
+                dashManifestModel.getAudioChannelConfigurationForAdaptation(realPreselection);
             mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realPreselection);
-            mediaInfo.essentialProperties = dashManifestModel.getCombinedEssentialPropertiesForAdaptationSet(realPreselection);
-            mediaInfo.supplementalProperties = dashManifestModel.getCombinedSupplementalPropertiesForAdaptationSet(realPreselection);
+            mediaInfo.essentialProperties =
+                dashManifestModel.getCombinedEssentialPropertiesForAdaptationSet(realPreselection);
+            mediaInfo.supplementalProperties =
+                dashManifestModel.getCombinedSupplementalPropertiesForAdaptationSet(realPreselection);
         }
 
         return mediaInfo;
@@ -1230,7 +1295,8 @@ function DashAdapter() {
 
         return contentProtection.map((contentProtectionElement) => {
             if (contentProtectionElement.ref) {
-                const contentProtectionElementSource = contentProtectionElementsByRefId.get(contentProtectionElement.ref);
+                const contentProtectionElementSource =
+                    contentProtectionElementsByRefId.get(contentProtectionElement.ref);
                 if (contentProtectionElementSource) {
                     contentProtectionElement.mergeAttributesFromReference(contentProtectionElementSource)
                 }
@@ -1293,7 +1359,8 @@ function DashAdapter() {
         streamInfo.start = period.start;
         streamInfo.duration = period.duration;
         streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
-        streamInfo.isLast = period.mpd.manifest.Period.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+        streamInfo.isLast = period.mpd.manifest.Period.length === 1 ||
+            Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
         streamInfo.isEncrypted = period.isEncrypted;
 
         return streamInfo;
@@ -1341,10 +1408,14 @@ function DashAdapter() {
 
         if (period) {
             adaptationSetArray = period.AdaptationSet;
-            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+            for (adaptationSetArrayIndex = 0;
+                adaptationSetArrayIndex < adaptationSetArray.length;
+                adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
                 adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
                 representationArray = adaptationSet.Representation;
-                for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
+                for (representationArrayIndex = 0;
+                    representationArrayIndex < representationArray.length;
+                    representationArrayIndex = representationArrayIndex + 1) {
                     representation = representationArray[representationArrayIndex];
                     if (representationId === representation.id) {
                         if (returnIndex) {

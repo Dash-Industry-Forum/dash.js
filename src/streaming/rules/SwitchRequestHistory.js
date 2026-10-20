@@ -43,7 +43,8 @@ function SwitchRequestHistory() {
         const newRepresentation = switchRequest.newRepresentation;
 
         // Don`t compare quality switches between different periods or different AdaptationSets
-        if (currentRepresentation.mediaInfo.streamInfo.id !== newRepresentation.mediaInfo.streamInfo.id || newRepresentation.mediaInfo.id !== currentRepresentation.mediaInfo.id) {
+        if (currentRepresentation.mediaInfo.streamInfo.id !== newRepresentation.mediaInfo.streamInfo.id ||
+            newRepresentation.mediaInfo.id !== currentRepresentation.mediaInfo.id) {
             return;
         }
 
@@ -63,7 +64,8 @@ function SwitchRequestHistory() {
         }
 
         // Set switch details
-        let indexDiff = switchRequest.newRepresentation.absoluteIndex - switchRequest.currentRepresentation.absoluteIndex;
+        let indexDiff = switchRequest.newRepresentation.absoluteIndex -
+            switchRequest.currentRepresentation.absoluteIndex;
         let drop = (indexDiff < 0) ? 1 : 0;
         let dropSize = drop ? -indexDiff : 0;
         let noDrop = drop ? 0 : 1;
@@ -111,7 +113,8 @@ function SwitchRequestHistory() {
 
     function _adjustSwitchRequestHistory(streamId, mediaType) {
         // Shift the earliest switch off srHistory and readjust to keep depth of running totals constant
-        if (switchRequestHistory[streamId][mediaType].length > settings.get().streaming.abr.rules.switchHistoryRule.parameters.sampleSize) {
+        if (switchRequestHistory[streamId][mediaType].length >
+            settings.get().streaming.abr.rules.switchHistoryRule.parameters.sampleSize) {
             return switchRequestHistory[streamId][mediaType].shift();
         }
 

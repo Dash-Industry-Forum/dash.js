@@ -97,12 +97,15 @@ function ThroughputModel(config) {
 
             // Get estimated throughput (etp, in kbits/s) from CMSD response headers
             if (httpRequest.cmsd) {
-                const etp = httpRequest.cmsd.dynamic && httpRequest.cmsd.dynamic.etp ? httpRequest.cmsd.dynamic.etp : null;
+                const etp = httpRequest.cmsd.dynamic && httpRequest.cmsd.dynamic.etp
+                    ? httpRequest.cmsd.dynamic.etp
+                    : null;
                 if (etp) {
                     // Apply weight ratio on etp
                     const etpWeightRatio = settings.get().streaming.cmsd.abr.etpWeightRatio;
                     if (etpWeightRatio > 0 && etpWeightRatio <= 1) {
-                        throughputValues.value = (throughputValues.value * (1 - etpWeightRatio)) + (etp * etpWeightRatio);
+                        throughputValues.value = (throughputValues.value * (1 - etpWeightRatio)) +
+                            (etp * etpWeightRatio);
                     }
                 }
             }
@@ -123,7 +126,13 @@ function ThroughputModel(config) {
             eventBus.trigger(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, { throughputValues })
 
             if (httpRequest.type !== HTTPRequest.MPD_TYPE) {
-                _updateEwmaValues(ewmaThroughputDict[mediaType], throughputValues.value, settings.get().streaming.abr.throughput.ewma.weightDownloadTimeMultiplicationFactor * throughputValues.downloadTimeInMs, ewmaHalfLife.bandwidthHalfLife);
+                _updateEwmaValues(
+                    ewmaThroughputDict[mediaType],
+                    throughputValues.value,
+                    settings.get().streaming.abr.throughput.ewma.weightDownloadTimeMultiplicationFactor *
+                        throughputValues.downloadTimeInMs,
+                    ewmaHalfLife.bandwidthHalfLife
+                );
                 _updateEwmaValues(ewmaLatencyDict[mediaType], latencyInMs, 1, ewmaHalfLife.latencyHalfLife);
             }
         } catch (e) {
@@ -193,29 +202,38 @@ function ThroughputModel(config) {
         // Calculate the throughput using the ResourceTimingAPI if available
         if (settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues) {
             downloadedBytes = httpRequest._resourceTimingValues.transferSize;
-            downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd - httpRequest._resourceTimingValues.responseStart;
+            downloadTimeInMs = httpRequest._resourceTimingValues.responseEnd -
+                httpRequest._resourceTimingValues.responseStart;
             deriveThroughputViaResourceTimingApi = true;
         }
 
         // Use the standard throughput calculation if we can not use the Resource Timing API
         else {
-            // We need at least two entries in the traces. The first entry includes the latency and the XHR progress event was thrown once bytes have already been received.
-            // The second progress event can be set in relation to the first progress event and therefor gives us more accurate values
+            // We need at least two entries in the traces. The first entry includes the latency and the XHR progress
+            // event was thrown once bytes have already been received.
+            // The second progress event can be set in relation to the first progress event and therefor gives us more
+            // accurate values
             if (httpRequest.trace.length <= 1) {
                 return { throughput: NaN, downloadTimeInMs: NaN }
             }
             downloadedBytes = httpRequest.trace.reduce((prev, curr) => prev + curr.b[0], 0) - httpRequest.trace[0].b[0];
-            downloadTimeInMs = Math.max(httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0) - httpRequest.trace[0].d, 1);
+            downloadTimeInMs = Math.max(
+                httpRequest.trace.reduce((prev, curr) => prev + curr.d, 0) - httpRequest.trace[0].d,
+                1
+            );
         }
 
         // If available and enabled use the Network Information API
         let throughputInKbit = NaN;
-        if (!deriveThroughputViaResourceTimingApi && settings.get().streaming.abr.throughput.useNetworkInformationApi.xhr) {
+        if (!deriveThroughputViaResourceTimingApi &&
+            settings.get().streaming.abr.throughput.useNetworkInformationApi.xhr) {
             throughputInKbit = _deriveThroughputFromNetworkApi()
         }
 
         if (isNaN(throughputInKbit)) {
-            const referenceTimeInMs = settings.get().streaming.abr.throughput.useDeadTimeLatency ? downloadTimeInMs : downloadTimeInMs + latencyInMs;
+            const referenceTimeInMs = settings.get().streaming.abr.throughput.useDeadTimeLatency
+                ? downloadTimeInMs
+                : downloadTimeInMs + latencyInMs;
             throughputInKbit = Math.round((8 * downloadedBytes) / referenceTimeInMs) // bits/ms = kbits/s
         }
 
@@ -232,8 +250,10 @@ function ThroughputModel(config) {
      * @private
      */
     function _deriveThroughputFromNetworkApi() {
-        // NetworkInformation.downlink: Returns the effective bandwidth estimate in megabits per second, rounded to the nearest multiple of 25 kilobits per seconds.
-        if (navigator && navigator.connection && !isNaN(navigator.connection.downlink) && navigator.connection.downlink > 0) {
+        // NetworkInformation.downlink: Returns the effective bandwidth estimate in megabits per second, rounded to the
+        // nearest multiple of 25 kilobits per seconds.
+        if (navigator && navigator.connection && !isNaN(navigator.connection.downlink) &&
+            navigator.connection.downlink > 0) {
             return navigator.connection.downlink * 1000
         }
 
@@ -251,7 +271,8 @@ function ThroughputModel(config) {
     function _isCachedResponse(mediaType, cacheReferenceTime, httpRequest) {
 
         if (settings.get().streaming.abr.throughput.useResourceTimingApi && httpRequest._resourceTimingValues) {
-            return httpRequest._resourceTimingValues.transferSize === 0 && httpRequest._resourceTimingValues.decodedBodySize > 0
+            return httpRequest._resourceTimingValues.transferSize === 0 &&
+                httpRequest._resourceTimingValues.decodedBodySize > 0
         }
 
         if (isNaN(cacheReferenceTime)) {
@@ -293,11 +314,13 @@ function ThroughputModel(config) {
      * @private
      */
     function _cleanupDict(mediaType) {
-        if (throughputDict[mediaType].length > settings.get().streaming.abr.throughput.sampleSettings.maxMeasurementsToKeep) {
+        if (throughputDict[mediaType].length >
+            settings.get().streaming.abr.throughput.sampleSettings.maxMeasurementsToKeep) {
             throughputDict[mediaType].shift();
         }
 
-        if (latencyDict[mediaType].length > settings.get().streaming.abr.throughput.sampleSettings.maxMeasurementsToKeep) {
+        if (latencyDict[mediaType].length >
+            settings.get().streaming.abr.throughput.sampleSettings.maxMeasurementsToKeep) {
             latencyDict[mediaType].shift();
         }
     }

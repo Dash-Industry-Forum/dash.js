@@ -51,11 +51,13 @@ function PlaybackApi() {
     }
 
     /**
-     * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
+     * The play method initiates playback of the media defined by the
+     * {@link module:MediaPlayer#attachSource attachSource()} method.
      * This method will call play on the native Video Element.
      *
      * @see {@link module:MediaPlayer#attachSource attachSource()}
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -71,7 +73,8 @@ function PlaybackApi() {
     /**
      * This method will call pause on the native Video Element.
      *
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -85,7 +88,8 @@ function PlaybackApi() {
     /**
      * Returns a Boolean that indicates whether the Video Element is paused.
      * @return {boolean}
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -100,11 +104,15 @@ function PlaybackApi() {
      * Sets the currentTime property of the attached video element.  If it is a live stream with a
      * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
      *
-     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
-     * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this function should be relative to DVRWindow.start.
+     * @param {number} value - A relative time, in seconds, based on the return value of the
+     * {@link module:MediaPlayer#duration duration()} method is expected.
+     * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this
+     * function should be relative to DVRWindow.start.
      * @see {@link module:MediaPlayer#getDvrSeekOffset getDvrSeekOffset()}
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number
+     * type or is NaN.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -135,12 +143,15 @@ function PlaybackApi() {
     }
 
     /**
-     * Sets the currentTime property of the attached video element. Compared to the seek() function this function does not add the DVR window offset. Instead, it takes a presentation time relative to the availability start time.
+     * Sets the currentTime property of the attached video element. Compared to the seek() function this function does
+     * not add the DVR window offset. Instead, it takes a presentation time relative to the availability start time.
      * For VoD this function behaves similar to the seek() function.
 
      * @param {number} value - A presentation time in seconds
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number
+     * type or is NaN.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -167,7 +178,9 @@ function PlaybackApi() {
 
         // For live, take live delay into account
         if (state.playbackController.getIsDynamic()) {
-            const type = state.streamController && state.streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+            const type = state.streamController && state.streamController.hasVideoTrack()
+                ? Constants.VIDEO
+                : Constants.AUDIO;
             let metric = state.dashMetrics.getCurrentDVRInfo(type);
             if (!metric) {
                 return;
@@ -182,7 +195,8 @@ function PlaybackApi() {
     }
 
     /**
-     * Seeks back to the original live edge (live edge as calculated at playback start). Only applies to live streams, for VoD streams this call will be ignored.
+     * Seeks back to the original live edge (live edge as calculated at playback start). Only applies to live streams,
+     * for VoD streams this call will be ignored.
      */
     function seekToOriginalLive() {
         if (!state.playbackInitialized || !isDynamic()) {
@@ -195,7 +209,8 @@ function PlaybackApi() {
     /**
      * Returns a Boolean that indicates whether the media is in the process of seeking to a new position.
      * @return {boolean}
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -209,7 +224,8 @@ function PlaybackApi() {
     /**
      * Returns a Boolean that indicates whether the media is in the process of dynamic.
      * @return {boolean}
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -254,10 +270,12 @@ function PlaybackApi() {
     }
 
     /**
-     * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
+     * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is
+     * muted. true if the audio is muted and false otherwise.
      * @param {boolean} value
      * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean
+     * type.
      * @instance
      */
     function setMute(value) {
@@ -279,7 +297,8 @@ function PlaybackApi() {
      * A double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest).
      * @param {number} value
      * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type, or is NaN or not between 0 and 1.
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number
+     * type, or is NaN or not between 0 and 1.
      * @instance
      */
     function setVolume(value) {
@@ -318,7 +337,9 @@ function PlaybackApi() {
         const types = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
         if (!type) {
             const buffer = types.map(
-                t => mediaPlayer.getTracksFor(t).length > 0 ? state.dashMetrics.getCurrentBufferLevel(t) : Number.MAX_VALUE
+                t => mediaPlayer.getTracksFor(t).length > 0
+                    ? state.dashMetrics.getCurrentBufferLevel(t)
+                    : Number.MAX_VALUE
             ).reduce(
                 (p, c) => Math.min(p, c)
             );
@@ -336,17 +357,21 @@ function PlaybackApi() {
 
     /**
      * This method should only be used with a live stream that has a valid timeShiftBufferLength (DVR Window).
-     * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the {@link module:MediaPlayer#seek seek()} method
+     * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the
+     * {@link module:MediaPlayer#seek seek()} method
      * which will calculate this value for you and set the video element's currentTime property all in one simple call.
      *
-     * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
+     * @param {number} value - A relative time, in seconds, based on the return value of the
+     * {@link module:MediaPlayer#duration duration()} method is expected.
      * @returns {number} A value that is relative the available range within the timeShiftBufferLength (DVR Window).
      * @see {@link module:MediaPlayer#seek seek()}
      * @memberof module:MediaPlayer
      * @instance
      */
     function getDvrSeekOffset(value) {
-        const type = state.streamController && state.streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        const type = state.streamController && state.streamController.hasVideoTrack()
+            ? Constants.VIDEO
+            : Constants.AUDIO;
         let metric = state.dashMetrics.getCurrentDVRInfo(type);
         if (!metric) {
             return 0;
@@ -384,11 +409,14 @@ function PlaybackApi() {
      * Current playhead time in seconds.
      *
      * If called with no arguments then the returned value is the current time of the video element.
-     * However, if a period ID is supplied then time is relative to the start of that period, or is null if there is no such period id in the manifest.
+     * However, if a period ID is supplied then time is relative to the start of that period, or is null if there is no
+     * such period id in the manifest.
      *
-     * @param {string} periodId - The ID of a period that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first period or the AST.
+     * @param {string} periodId - The ID of a period that the returned playhead time must be relative to the start of.
+     * If undefined, then playhead time is relative to the first period or the AST.
      * @returns {number} The current playhead time of the media, or null.
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -409,7 +437,8 @@ function PlaybackApi() {
      * Returns the current playhead time relative to the start of the DVR window.
      * For VoD this method returns the same value as time()
      * @returns {number} The current playhead time of the media relative to the start of the DVR window
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -423,7 +452,9 @@ function PlaybackApi() {
         }
 
         let t = mediaPlayer.getVideoElement().currentTime;
-        const type = state.streamController && state.streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        const type = state.streamController && state.streamController.hasVideoTrack()
+            ? Constants.VIDEO
+            : Constants.AUDIO;
         let metric = state.dashMetrics.getCurrentDVRInfo(type);
         t = (metric === null || t === 0) ? 0 : Math.max(0, (t - metric.range.start));
 
@@ -439,7 +470,9 @@ function PlaybackApi() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
 
-        const type = state.streamController && state.streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        const type = state.streamController && state.streamController.hasVideoTrack()
+            ? Constants.VIDEO
+            : Constants.AUDIO;
         let metric = state.dashMetrics.getCurrentDVRInfo(type);
 
         if (!metric) {
@@ -463,9 +496,11 @@ function PlaybackApi() {
     /**
      * Total duration of the media in seconds.
      *
-     * @returns {number} The total duration of the media. For a dynamic stream this will return DVRWindow.end - DVRWindow.start
+     * @returns {number} The total duration of the media. For a dynamic stream this will return DVRWindow.end -
+     * DVRWindow.start
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @instance
      */
     function duration() {
@@ -475,7 +510,9 @@ function PlaybackApi() {
         let d = mediaPlayer.getVideoElement().duration;
 
         if (state.playbackController.getIsDynamic()) {
-            const type = state.streamController && state.streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+            const type = state.streamController && state.streamController.hasVideoTrack()
+                ? Constants.VIDEO
+                : Constants.AUDIO;
             let metric = state.dashMetrics.getCurrentDVRInfo(type);
             d = metric ? (metric.range.end - metric.range.start) : 0;
         }
@@ -484,10 +521,12 @@ function PlaybackApi() {
 
     /**
      * Use this method to get the current playhead time as an absolute value in seconds since midnight UTC, Jan 1 1970.
-     * Note - this property only has meaning for live streams and is NaN for VoD content. If called before play() has begun, it will return a value of NaN.
+     * Note - this property only has meaning for live streams and is NaN for VoD content. If called before play() has
+     * begun, it will return a value of NaN.
      *
      * @returns {number} The current playhead time as UTC timestamp.
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -500,7 +539,9 @@ function PlaybackApi() {
             return NaN
         }
 
-        const type = state.streamController && state.streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        const type = state.streamController && state.streamController.hasVideoTrack()
+            ? Constants.VIDEO
+            : Constants.AUDIO;
         let metric = state.dashMetrics.getCurrentDVRInfo(type);
         let availabilityStartTime,
             utcValue;
@@ -520,7 +561,8 @@ function PlaybackApi() {
      * @default true
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#attachView attachView()}
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean
+     * type.
      * @instance
      *
      */
@@ -541,8 +583,10 @@ function PlaybackApi() {
     /**
      * @memberof module:MediaPlayer
      * @instance
-     * @returns {number|NaN} Current live stream latency in seconds. It is the difference between now time and time position at the playback head.
-     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+     * @returns {number|NaN} Current live stream latency in seconds. It is the difference between now time and time
+     * position at the playback head.
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if
+     * called before initialize function
      */
     function getCurrentLiveLatency() {
         if (!state.mediaPlayerInitialized) {

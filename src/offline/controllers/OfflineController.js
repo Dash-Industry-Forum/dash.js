@@ -42,7 +42,8 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 /**
  * @module OfflineController
  * @param {Object} config - dependencies
- * @description Provides access to offline stream recording and playback functionality. This module can be accessed using the MediaPlayer API getOfflineController()
+ * @description Provides access to offline stream recording and playback functionality. This module can be accessed
+ * using the MediaPlayer API getOfflineController()
  */
 function OfflineController(config) {
 

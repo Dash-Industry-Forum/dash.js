@@ -69,12 +69,17 @@ function LifecycleApi() {
      * ALL arguments are optional and there are individual methods to set each argument later on.
      * The args in this method are just for convenience and should only be used for a simple player setup.
      *
-     * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
-     * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
+     * @param {HTML5MediaElement=} view - Optional arg to set the video element.
+     * {@link module:MediaPlayer#attachView attachView()}
+     * @param {string=} source - Optional arg to set the media source.
+     * {@link module:MediaPlayer#attachSource attachSource()}
      * @param {boolean=} autoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
-     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first
+     * period.
      * For live content
-     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated
+     * Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of
+     * seconds may be optionally specified down to the millisecond level.
      * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
@@ -174,14 +179,17 @@ function LifecycleApi() {
     }
 
     /**
-     * Causes the player to begin streaming the media as set by the {@link module:MediaPlayer#attachSource attachSource()}
-     * method in preparation for playing. It specifically does not require a view to be attached with {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
+     * Causes the player to begin streaming the media as set by the
+     * {@link module:MediaPlayer#attachSource attachSource()}
+     * method in preparation for playing. It specifically does not require a view to be attached with
+     * {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
      * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
      *
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#attachView attachView()}
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
+     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before
+     * attachSource function
      * @instance
      */
     function preload() {
@@ -199,7 +207,8 @@ function LifecycleApi() {
      * Returns instance of Video Element that was attached by calling attachView()
      * @returns {Object}
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
+     * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before
+     * attachView function
      * @instance
      */
     function getVideoElement() {
@@ -214,7 +223,8 @@ function LifecycleApi() {
      *
      * @param {Object} element - An HTMLMediaElement that has already been defined in the DOM (or equivalent stub).
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if
+     * called before initialize function
      * @instance
      */
     function attachView(element) {
@@ -286,7 +296,8 @@ function LifecycleApi() {
     }
 
     /**
-     * Allows application to retrieve a manifest.  Manifest loading is asynchronous and requires the app-provided callback function
+     * Allows application to retrieve a manifest.  Manifest loading is asynchronous and requires the app-provided
+     * callback function
      *
      * @param {string} url - url the manifest url
      * @param {function} callback - A Callback function provided when retrieving manifests
@@ -332,12 +343,16 @@ function LifecycleApi() {
      *
      * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
      * parsed manifest object.
-     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+     * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first
+     * period.
      * For live content
-     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+     * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated
+     * Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of
+     * seconds may be optionally specified down to the millisecond level.
      * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      *
-     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if
+     * called before initialize function
      *
      * @memberof module:MediaPlayer
      * @instance

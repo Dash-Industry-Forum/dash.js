@@ -64,7 +64,8 @@ function TextApi() {
 
     /**
      * Enable/disable text
-     * When enabling dash will keep downloading and process fragmented text tracks even if all tracks are in mode "hidden"
+     * When enabling dash will keep downloading and process fragmented text tracks even if all tracks are in mode
+     * "hidden"
      *
      * @param {boolean} enable - true to enable text streaming even if all text tracks are hidden.
      * @memberof module:MediaPlayer
@@ -98,11 +99,14 @@ function TextApi() {
     }
 
     /**
-     * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
+     * Use this method to change the current text track for both external time text files and fragmented text tracks.
+     * There is no need to
      * set the track mode on the video object to switch a track when using this method.
-     * @param {number} idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
+     * @param {number} idx - Index of track based on the order of the order the tracks are added Use -1 to disable all
+     * tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
      * @see {@link MediaPlayerEvents#event:TEXT_TRACK_ADDED dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
-     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
+     * initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -143,9 +147,11 @@ function TextApi() {
     /**
      * Use this method to attach an HTML5 div for dash.js to render rich TTML subtitles.
      *
-     * @param {HTMLDivElement} div - An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
+     * @param {HTMLDivElement} div - An unstyled div placed after the video element. It will be styled to match the
+     * video size and overlay z-order.
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
+     * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before
+     * attachView function
      * @instance
      */
     function attachTTMLRenderingDiv(div) {

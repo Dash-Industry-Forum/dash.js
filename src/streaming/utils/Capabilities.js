@@ -79,7 +79,8 @@ function Capabilities() {
     }
 
     function areKeyIdsUsable(mediaInfo) {
-        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds || mediaInfo.normalizedKeyIds.size === 0) {
+        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds ||
+            mediaInfo.normalizedKeyIds.size === 0) {
             return true
         }
 
@@ -87,7 +88,8 @@ function Capabilities() {
     }
 
     function areKeyIdsExpired(mediaInfo) {
-        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds || mediaInfo.normalizedKeyIds.size === 0) {
+        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds ||
+            mediaInfo.normalizedKeyIds.size === 0) {
             return false
         }
 
@@ -139,7 +141,8 @@ function Capabilities() {
         }
 
         if (settings.get().streaming.enhancement.enabled && _isEnhancementCodec(basicConfiguration.codec)) {
-            // Remove enhancement codecs from tested configurations so that they can be re-tested if the enhancement settings change
+            // Remove enhancement codecs from tested configurations so that they can be re-tested if the enhancement
+            // settings change
             testedCodecConfigurations = testedCodecConfigurations.filter((configuration) => {
                 return !_isEnhancementCodec(configuration.mediaSourceCodecString);
             });
@@ -187,16 +190,21 @@ function Capabilities() {
     }
 
     /**
-     * MediaCapabilitiesAPI throws an error if one of the attribute is missing. We only use it if we have all required information.
+     * MediaCapabilitiesAPI throws an error if one of the attribute is missing. We only use it if we have all required
+     * information.
      * @return {boolean}
      * @private
      */
     function _canUseMediaCapabilitiesApi(basicConfiguration, type) {
-        return _isMediaCapabilitiesApiSupported() && ((basicConfiguration.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && basicConfiguration.codec && basicConfiguration.width && basicConfiguration.height && basicConfiguration.bitrate && basicConfiguration.framerate));
+        return _isMediaCapabilitiesApiSupported() &&
+            ((basicConfiguration.codec && type === Constants.AUDIO) ||
+                (type === Constants.VIDEO && basicConfiguration.codec && basicConfiguration.width &&
+                    basicConfiguration.height && basicConfiguration.bitrate && basicConfiguration.framerate));
     }
 
     function _isMediaCapabilitiesApiSupported() {
-        return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo
+        return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities &&
+            navigator.mediaCapabilities.decodingInfo
     }
 
 
@@ -300,9 +308,14 @@ function Capabilities() {
                 return;
             }
                 
-            // If a systemStringPriority is defined by the application we use these values. Otherwise, we use the default system string
-            // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
-            const protDataSystemStringPriority = keySystemMetadata.protData && keySystemMetadata.protData.systemStringPriority ? keySystemMetadata.protData.systemStringPriority : null;
+            // If a systemStringPriority is defined by the application we use these values. Otherwise, we use the
+            // default system string
+            // This is useful for DRM systems such as Playready for which multiple system strings are possible for
+            // instance com.microsoft.playready and com.microsoft.playready.recommendation
+            const protDataSystemStringPriority = keySystemMetadata.protData &&
+                keySystemMetadata.protData.systemStringPriority
+                ? keySystemMetadata.protData.systemStringPriority
+                : null;
             let systemString = keySystemMetadata.ks.systemString;
 
             // Use the default values in case no values are provided by the application
@@ -320,8 +333,12 @@ function Capabilities() {
                     robustnessLevel = ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO;
                 }
                 const protData = keySystemMetadata.protData;
-                const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
-                const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+                const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0)
+                    ? protData.audioRobustness
+                    : robustnessLevel;
+                const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0)
+                    ? protData.videoRobustness
+                    : robustnessLevel;
 
                 if (type === Constants.AUDIO) {
                     curr.keySystemConfiguration[type] = { robustness: audioRobustness }
@@ -477,7 +494,8 @@ function Capabilities() {
 
         // we already took care of these descriptors with the codecs check
         // let's bypass them here
-        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
+        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi &&
+            settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
             supportedEssentialProps = _addProperties(supportedEssentialProps,
                 [
                     { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI },
@@ -486,8 +504,12 @@ function Capabilities() {
                 ]
             );
         }
-        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
-            supportedEssentialProps = _addProperties(supportedEssentialProps, [{ schemeIdUri: Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI }]);
+        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi &&
+            settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
+            supportedEssentialProps = _addProperties(
+                supportedEssentialProps,
+                [{ schemeIdUri: Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI }]
+            );
         }
 
         try {

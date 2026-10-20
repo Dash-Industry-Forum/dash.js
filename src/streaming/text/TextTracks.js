@@ -195,7 +195,9 @@ function TextTracks(config) {
                 const videoTextTrack = getTrackByIdx(idx);
                 if (videoTextTrack) {
                     const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
-                    videoTextTrack.mode = (idx === defaultIndex && !dispatchForManualRendering) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
+                    videoTextTrack.mode = (idx === defaultIndex && !dispatchForManualRendering)
+                        ? Constants.TEXT_SHOWING
+                        : Constants.TEXT_HIDDEN;
                     videoTextTrack.manualMode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                 }
             }
@@ -350,14 +352,23 @@ function TextTracks(config) {
                 use80Percent = true;
             }
 
-            const realVideoSize = getVideoVisibleVideoSize.call(this, clientWidth, clientHeight, videoWidth, videoHeight, aspectRatio, use80Percent);
+            const realVideoSize = getVideoVisibleVideoSize.call(
+                this,
+                clientWidth,
+                clientHeight,
+                videoWidth,
+                videoHeight,
+                aspectRatio,
+                use80Percent
+            );
 
             const newVideoWidth = realVideoSize.w;
             const newVideoHeight = realVideoSize.h;
             const newVideoLeft = realVideoSize.x;
             const newVideoTop = realVideoSize.y;
 
-            if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop || forceDrawing) {
+            if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight ||
+                newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop || forceDrawing) {
                 actualVideoLeft = newVideoLeft + videoOffsetLeft;
                 actualVideoTop = newVideoTop + videoOffsetTop;
                 actualVideoWidth = newVideoWidth;
@@ -370,7 +381,9 @@ function TextTracks(config) {
                         containerStyle.top = actualVideoTop + 'px';
                         containerStyle.width = actualVideoWidth + 'px';
                         containerStyle.height = actualVideoHeight + 'px';
-                        containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
+                        containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop
+                            ? topZIndex
+                            : null;
                         eventBus.trigger(MediaPlayerEvents.CAPTION_CONTAINER_RESIZE);
                     }
                 }
@@ -404,7 +417,8 @@ function TextTracks(config) {
                     if (activeCue.linePadding.hasOwnProperty(key)) {
                         const valueLinePadding = activeCue.linePadding[key];
                         replaceValue = (valueLinePadding * cellUnit[0]).toString();
-                        // Compute the CellResolution unit in order to process properties using sizing (fontSize, linePadding, etc).
+                        // Compute the CellResolution unit in order to process properties using sizing (fontSize,
+                        // linePadding, etc).
                         const elementsSpan = document.getElementsByClassName('spanPadding');
                         for (let i = 0; i < elementsSpan.length; i++) {
                             elementsSpan[i].style.cssText = elementsSpan[i].style.cssText.replace(/(padding-left\s*:\s*)[\d.,]+(?=\s*px)/gi, '$1' + replaceValue);
@@ -567,9 +581,11 @@ function TextTracks(config) {
 
         for (const existingCue of adjacentCues) {
             // Check if cues are adjacent and have identical content
-            if (_areCuesAdjacent(newCue, existingCue) && _cuesContentAreEqual(newCue, existingCue, CUE_PROPS_TO_COMPARE)) {
+            if (_areCuesAdjacent(newCue, existingCue) &&
+                _cuesContentAreEqual(newCue, existingCue, CUE_PROPS_TO_COMPARE)) {
                 return existingCue;
-            } else if (_areCuesAdjacent(existingCue, newCue) && _cuesContentAreEqual(newCue, existingCue, CUE_PROPS_TO_COMPARE)) {
+            } else if (_areCuesAdjacent(existingCue, newCue) &&
+                _cuesContentAreEqual(newCue, existingCue, CUE_PROPS_TO_COMPARE)) {
                 return existingCue;
             }
         }
@@ -762,7 +778,8 @@ function TextTracks(config) {
             }
         };
 
-        // For imsc subs, this could be reassigned to not do anything if there is a cue that immediately follows this one
+        // For imsc subs, this could be reassigned to not do anything if there is a cue that immediately follows this
+        // one
         cue.onexit = function () {
             if (captionContainer) {
                 const divs = captionContainer.childNodes;
@@ -952,7 +969,13 @@ function TextTracks(config) {
 
     function getTrackByIdx(idx) {
         return idx >= 0 && textTrackInfos[idx] ?
-            videoModel.getTextTrack(textTrackInfos[idx].kind, textTrackInfos[idx].id, textTrackInfos[idx].lang, textTrackInfos[idx].isTTML, textTrackInfos[idx].isEmbedded) : null;
+            videoModel.getTextTrack(
+                textTrackInfos[idx].kind,
+                textTrackInfos[idx].id,
+                textTrackInfos[idx].lang,
+                textTrackInfos[idx].isTTML,
+                textTrackInfos[idx].isEmbedded
+            ) : null;
     }
 
     function getCurrentTrackIdx() {
@@ -1014,7 +1037,8 @@ function TextTracks(config) {
         if (!cue) {
             return false
         }
-        return (isNaN(start) || (strict ? cue.startTime : cue.endTime) >= start) && (isNaN(end) || (strict ? cue.endTime : cue.startTime) <= end);
+        return (isNaN(start) || (strict ? cue.startTime : cue.endTime) >= start) &&
+            (isNaN(end) || (strict ? cue.endTime : cue.startTime) <= end);
     }
 
     function _deleteTrackCues(track, start, end, strict = true) {

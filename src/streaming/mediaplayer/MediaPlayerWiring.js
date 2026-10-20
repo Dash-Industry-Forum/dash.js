@@ -186,7 +186,8 @@ function MediaPlayerWiring() {
         }
 
         if (!capabilities.supportsMediaSource()) {
-            errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE, Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
+            errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE,
+                Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
             return false;
         }
         return true;

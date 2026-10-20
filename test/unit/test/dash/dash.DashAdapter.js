@@ -921,7 +921,8 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray).to.be.instanceOf(Array);
                     expect(mediaInfoArray.length).equals(1);
 
-                    // Note: MediaInfo picks those AudioChannelConfig descriptor present on that Representation with lowest bandwidth
+                    // Note: MediaInfo picks those AudioChannelConfig descriptor present on that Representation with
+                    // lowest bandwidth
                     expect(mediaInfoArray[0].audioChannelConfiguration).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].audioChannelConfiguration.length).equals(4);
                     expect(mediaInfoArray[0].audioChannelConfiguration[0]).to.be.instanceOf(DescriptorType);
@@ -1503,7 +1504,9 @@ describe('DashAdapter', function () {
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
-                expect(manifest.Period).to.deep.equal([originalPeriods[0], addedPeriod, originalPeriods[1], originalPeriods[2]]);
+                expect(manifest.Period).to.deep.equal(
+                    [originalPeriods[0], addedPeriod, originalPeriods[1], originalPeriods[2]]
+                );
             });
 
             it('applies add after operation with siblings', function () {
@@ -1521,7 +1524,9 @@ describe('DashAdapter', function () {
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
-                expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[1], addedPeriod, originalPeriods[2]]);
+                expect(manifest.Period).to.deep.equal(
+                    [originalPeriods[0], originalPeriods[1], addedPeriod, originalPeriods[2]]
+                );
             });
 
             it('applies add attribute operation', function () {

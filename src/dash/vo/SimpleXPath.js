@@ -64,7 +64,8 @@ class SimpleXPath {
 
                         // check for single and double quoted attribute values
                         if (['\'', '"'].indexOf(parsed.attribute.value[0]) != -1) {
-                            parsed.attribute.value = parsed.attribute.value.substring(1, parsed.attribute.value.length - 1);
+                            parsed.attribute.value = parsed.attribute.value
+                                .substring(1, parsed.attribute.value.length - 1);
                         }
                     } else {
                         // positional access in xpath is 1-based index

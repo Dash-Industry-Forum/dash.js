@@ -105,7 +105,8 @@ function ServiceDescriptionController() {
             return;
         }
 
-        const supportedServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => SUPPORTED_SCHEMES.includes(sd.schemeIdUri));
+        const supportedServiceDescriptions = manifestInfo.serviceDescriptions
+            .filter(sd => SUPPORTED_SCHEMES.includes(sd.schemeIdUri));
         const allClientsServiceDescriptions = manifestInfo.serviceDescriptions.filter(sd => sd.schemeIdUri == null);
         let sd = (supportedServiceDescriptions.length > 0)
             ? supportedServiceDescriptions[supportedServiceDescriptions.length - 1]
@@ -182,7 +183,9 @@ function ServiceDescriptionController() {
      */
     function _getStandardServiceDescriptionLatencyParameters(sd) {
         const liveDelay = sd.latency.target / 1000;
-        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
+        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target
+            ? (sd.latency.max - sd.latency.target + 500) / 1000
+            : NaN;
         const referenceId = sd.latency.referenceId || NaN;
 
         return {
@@ -200,7 +203,9 @@ function ServiceDescriptionController() {
      */
     function _getDvbServiceDescriptionLatencyParameters(sd) {
         const liveDelay = sd.latency.target / 1000;
-        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target ? (sd.latency.max - sd.latency.target + 500) / 1000 : NaN;
+        let maxDrift = !isNaN(sd.latency.max) && sd.latency.max > sd.latency.target
+            ? (sd.latency.max - sd.latency.target + 500) / 1000
+            : NaN;
         const referenceId = sd.latency.referenceId || NaN;
 
         return {
@@ -242,7 +247,8 @@ function ServiceDescriptionController() {
     function _applyServiceDescriptionOperatingBandwidth(sd) {
 
         // Aggregation of media types is not supported yet
-        if (!sd || !sd.operatingBandwidth || !sd.operatingBandwidth.mediaType || sd.operatingBandwidth.mediaType === MEDIA_TYPES.ALL) {
+        if (!sd || !sd.operatingBandwidth || !sd.operatingBandwidth.mediaType ||
+            sd.operatingBandwidth.mediaType === MEDIA_TYPES.ALL) {
             return;
         }
 
@@ -254,7 +260,8 @@ function ServiceDescriptionController() {
 
         const mediaTypesToApply = [];
 
-        if (sd.operatingBandwidth.mediaType === MEDIA_TYPES.VIDEO || sd.operatingBandwidth.mediaType === MEDIA_TYPES.AUDIO) {
+        if (sd.operatingBandwidth.mediaType === MEDIA_TYPES.VIDEO ||
+            sd.operatingBandwidth.mediaType === MEDIA_TYPES.AUDIO) {
             mediaTypesToApply.push(sd.operatingBandwidth.mediaType);
         } else if (sd.operatingBandwidth.mediaType === MEDIA_TYPES.ANY) {
             mediaTypesToApply.push(MEDIA_TYPES.AUDIO);
@@ -343,7 +350,9 @@ function ServiceDescriptionController() {
                             const prts = adapter.getProducerReferenceTimes(streamInfo, mediaInfo);
                             prts.forEach((prt) => {
                                 const voRepresentations = adapter.getVoRepresentations(mediaInfo);
-                                if (voRepresentations && voRepresentations.length > 0 && voRepresentations[0].adaptation && voRepresentations[0].segmentInfoType === DashConstants.SEGMENT_TEMPLATE) {
+                                if (voRepresentations && voRepresentations.length > 0 &&
+                                    voRepresentations[0].adaptation &&
+                                    voRepresentations[0].segmentInfoType === DashConstants.SEGMENT_TEMPLATE) {
                                     const voRep = voRepresentations[0];
                                     const d = new Date(prt[DashConstants.WALL_CLOCK_TIME]);
                                     const wallClockTime = d.getTime() / 1000;
@@ -353,7 +362,10 @@ function ServiceDescriptionController() {
                                     // ii) convert this time to seconds by dividing by ST@timescale
                                     // iii) Add this to start time of period that contains PRT.
                                     // N.B presentationTimeOffset is already divided by timescale at this point
-                                    const prt0 = wallClockTime - (((prt[DashConstants.PRESENTATION_TIME] / voRep[DashConstants.TIMESCALE]) - voRep[DashConstants.PRESENTATION_TIME_OFFSET]) + streamInfo.start);
+                                    const prt0 = wallClockTime - (
+                                        ((prt[DashConstants.PRESENTATION_TIME] / voRep[DashConstants.TIMESCALE]) -
+                                            voRep[DashConstants.PRESENTATION_TIME_OFFSET]) + streamInfo.start
+                                    );
                                     // 2) Calculate TO between PRT at the start of MPD timeline and the AST
                                     const to = astInSeconds - prt0;
                                     // 3) Not applicable as liveLatency does not consider ST@availabilityTimeOffset

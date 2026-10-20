@@ -121,11 +121,13 @@ function MediaPlayer() {
      * <li>If you set override to false your object will completely replace the dash.js object.
      * (Note: This is how it was in 1.x of Dash.js with Dijon).</li>
      * </ol>
-     * <b>When you extend you get access to this.context, this.factory and this.parent to operate with in your custom object.</b>
+     * <b>When you extend you get access to this.context, this.factory and this.parent to operate with in your custom
+     * object.</b>
      * <ul>
      * <li><b>this.context</b> - can be used to pass context for singleton access.</li>
      * <li><b>this.factory</b> - can be used to call factory.getSingletonInstance().</li>
-     * <li><b>this.parent</b> - is the reference of the parent object to call other public methods. (this.parent is excluded if you extend with override set to false or option 2)</li>
+     * <li><b>this.parent</b> - is the reference of the parent object to call other public methods. (this.parent is
+     * excluded if you extend with override set to false or option 2)</li>
      * </ul>
      * <b>You must call extend before you call initialize</b>
      * @see {@link module:MediaPlayer#initialize initialize()}

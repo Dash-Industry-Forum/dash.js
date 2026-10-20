@@ -152,7 +152,10 @@ describe('DashHandler', function () {
         });
 
         it('it returns a segment request', () => {
-            const mediaSegment = dashHandler.getNextSegmentRequest({}, {segmentInfoType: DashConstants.SEGMENT_TEMPLATE, adaptation: {index: 1} });
+            const mediaSegment = dashHandler.getNextSegmentRequest({}, {
+                segmentInfoType: DashConstants.SEGMENT_TEMPLATE,
+                adaptation: {index: 1}
+            });
             expect(mediaSegment).not.to.be.null; // jshint ignore:line
         });
 
@@ -160,7 +163,10 @@ describe('DashHandler', function () {
             it(`isLastSegmentRequested returns false for a ${segmentInfoType} Representation without a segment list`, () => {
                 const dashHandler = DashHandler(context).create(config);
                 // Sets the last requested segment
-                dashHandler.getNextSegmentRequest({}, { segmentInfoType: DashConstants.SEGMENT_TEMPLATE, adaptation: { index: 1 } });
+                dashHandler.getNextSegmentRequest({}, {
+                    segmentInfoType: DashConstants.SEGMENT_TEMPLATE,
+                    adaptation: { index: 1 }
+                });
                 const representation = new Representation();
                 representation.segmentInfoType = segmentInfoType;
                 representation.adaptation = { period: { duration: 30 } };
@@ -175,7 +181,11 @@ describe('DashHandler', function () {
 
         it('returns null if the next segment is after @endNumber', () => {
             const dashHandler = DashHandler(context).create(config);
-            const representation = {segmentInfoType: DashConstants.SEGMENT_TEMPLATE, adaptation: {index: 1}, endNumber: 2 };
+            const representation = {
+                segmentInfoType: DashConstants.SEGMENT_TEMPLATE,
+                adaptation: {index: 1},
+                endNumber: 2
+            };
             dashHandler.initialize(streamProcessor);
             dashHandler.getNextSegmentRequest({}, representation);
             dashHandler.getNextSegmentRequest({}, representation);
@@ -201,7 +211,8 @@ describe('DashHandler', function () {
 
         beforeEach(() => {
             segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').callsFake((representation, time) => {
-                if (time < representation.adaptation.period.start || time > representation.adaptation.period.start + representation.adaptation.period.duration) {
+                if (time < representation.adaptation.period.start ||
+                    time > representation.adaptation.period.start + representation.adaptation.period.duration) {
                     return null;
                 }
                 const segNumber = Math.floor(time / representation.segmentDuration);

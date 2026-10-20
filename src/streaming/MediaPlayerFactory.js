@@ -10,10 +10,11 @@ function MediaPlayerFactory() {
     let logger;
 
     /**
-     *  A new MediaPlayer is instantiated for the supplied videoElement and optional source and context.  If no context is provided,
-     *  a default DashContext is used. If no source is provided, the videoElement is interrogated to extract the first source whose
-     *  type is application/dash+xml.
-     * The autoplay property of the videoElement is preserved. Any preload attribute is ignored. This method should be called after the page onLoad event is dispatched.
+     *  A new MediaPlayer is instantiated for the supplied videoElement and optional source and context.  If no context
+     *  is provided, a default DashContext is used. If no source is provided, the videoElement is interrogated to
+     *  extract the first source whose type is application/dash+xml.
+     * The autoplay property of the videoElement is preserved. Any preload attribute is ignored. This method should be
+     * called after the page onLoad event is dispatched.
      * @param {HTMLMediaElement} video
      * @param {HTMLSourceElement} source
      * @param {Object} context
@@ -58,11 +59,14 @@ function MediaPlayerFactory() {
     }
 
     /**
-     * Searches the provided scope for all instances of the indicated selector. If no scope is provided, document is used. If no selector is
-     * specified, [data-dashjs-player] is used. The declarative setup also looks for source elements with the type attribute set to 'application/dash+xml'.
-     * It then looks for those video elements which have a source element defined with a type matching 'application/dash+xml'.
+     * Searches the provided scope for all instances of the indicated selector. If no scope is provided, document is
+     * used. If no selector is specified, [data-dashjs-player] is used. The declarative setup also looks for source
+     * elements with the type attribute set to 'application/dash+xml'.
+     * It then looks for those video elements which have a source element defined with a type matching
+     * 'application/dash+xml'.
      * A new MediaPlayer is instantiated for each matching video element and the appropriate source is assigned.
-     * The autoplay property of the video element is preserved. Any preload attribute is ignored. This method should be called after the page onLoad event is dispatched.
+     * The autoplay property of the video element is preserved. Any preload attribute is ignored. This method should be
+     * called after the page onLoad event is dispatched.
      * Returns an array holding all the MediaPlayer instances that were added by this method.
      * @param {string} selector - CSS selector
      * @param {Object} scope

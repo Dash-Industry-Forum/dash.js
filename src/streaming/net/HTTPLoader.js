@@ -140,7 +140,8 @@ function HTTPLoader(cfg) {
     function _internalLoad(config, remainingAttempts) {
 
         /**
-         * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort, timeout or error).
+         * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort, timeout
+         * or error).
          */
         const _onloadend = function () {
             _onRequestEnd();
@@ -153,12 +154,14 @@ function HTTPLoader(cfg) {
         const _onprogress = function (event) {
             const currentTime = new Date();
 
-            // If we did not transfer all data yet and this is the first time we are getting a progress event we use this time as firstByteDate.
+            // If we did not transfer all data yet and this is the first time we are getting a progress event we use
+            // this time as firstByteDate.
             if (firstProgress) {
                 firstProgress = false;
                 // event.loaded: the amount of data currently transferred
                 // event.total: the total amount of data to be transferred.
-                // If lengthComputable is false within the XMLHttpRequestProgressEvent, that means the server never sent a Content-Length header in the response.
+                // If lengthComputable is false within the XMLHttpRequestProgressEvent, that means the server never sent
+                // a Content-Length header in the response.
                 if (!event.lengthComputable ||
                     (event.lengthComputable && event.total !== event.loaded)) {
                     requestObject.firstByteDate = currentTime;
@@ -166,7 +169,8 @@ function HTTPLoader(cfg) {
                 }
             }
 
-            // lengthComputable indicating if the resource concerned by the ProgressEvent has a length that can be calculated. If not, the ProgressEvent.total property has no significant value.
+            // lengthComputable indicating if the resource concerned by the ProgressEvent has a length that can be
+            // calculated. If not, the ProgressEvent.total property has no significant value.
             if (event.lengthComputable) {
                 requestObject.bytesLoaded = commonMediaResponse.length = event.loaded;
                 requestObject.bytesTotal = commonMediaResponse.resourceTiming.encodedBodySize = event.total;
@@ -178,7 +182,9 @@ function HTTPLoader(cfg) {
                 traces.push({
                     s: lastTraceTime,
                     d: event.time ? event.time : currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0], // event.loaded: When downloading a resource using HTTP, this value is specified in bytes (not bits), and only represents the part of the content itself, not headers and other overhead
+                    // event.loaded: When downloading a resource using HTTP, this value is specified in bytes
+                    // (not bits), and only represents the part of the content itself, not headers and other overhead
+                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0],
                     t: event.throughput
                 });
 
@@ -268,18 +274,26 @@ function HTTPLoader(cfg) {
                 const hasUsableBody = !!commonMediaResponse.data || requestObject.method === HTTPRequest.POST;
                 if (commonMediaResponse.status >= 200 && commonMediaResponse.status <= 299 && hasUsableBody) {
                     if (config.success) {
-                        config.success(commonMediaResponse.data, commonMediaResponse.statusText, commonMediaResponse.url);
+                        config.success(
+                            commonMediaResponse.data,
+                            commonMediaResponse.statusText,
+                            commonMediaResponse.url
+                        );
                     }
 
                     if (config.complete) {
                         config.complete(requestObject, commonMediaResponse.statusText);
                     }
                 } else {
-                    // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
+                    // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync
+                    // in the background.
                     try {
-                        if (commonMediaResponse.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                        if (commonMediaResponse.status === 404 &&
+                            settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError &&
+                            requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
                             // Only trigger a sync if the loading failed for the first time
-                            const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+                            const initialNumberOfAttempts =
+                                mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
                             if (initialNumberOfAttempts === remainingAttempts) {
                                 eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
                             }
@@ -300,7 +314,8 @@ function HTTPLoader(cfg) {
 
         const _updateResourceTimingInfo = function () {
             commonMediaResponse.resourceTiming.responseEnd = performance.now();
-            commonMediaResponse.resourceTiming.duration = commonMediaResponse.resourceTiming.responseEnd - commonMediaResponse.resourceTiming.startTime;
+            commonMediaResponse.resourceTiming.duration =
+                commonMediaResponse.resourceTiming.responseEnd - commonMediaResponse.resourceTiming.startTime;
 
             // If enabled the ResourceTimingApi we add the corresponding information to the request object.
             // These values are more accurate and can be used by the ThroughputController later
@@ -507,12 +522,22 @@ function HTTPLoader(cfg) {
 
     function _addHttpRequestMetric(httpRequest, httpResponse, traces) {
         const requestObject = httpRequest.customData.request;
-        const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(httpResponse.headers, requestObject.mediaType) : null;
-        dashMetrics.addHttpRequest(requestObject, httpResponse.url, httpResponse.status, httpResponse.headers, traces, cmsd);
+        const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled
+            ? cmsdModel.parseResponseHeaders(httpResponse.headers, requestObject.mediaType)
+            : null;
+        dashMetrics.addHttpRequest(
+            requestObject,
+            httpResponse.url,
+            httpResponse.status,
+            httpResponse.headers,
+            traces,
+            cmsd
+        );
     }
 
     /**
-     * Adds the values from the Resource Timing API, see https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API/Using_the_Resource_Timing_API
+     * Adds the values from the Resource Timing API, see
+     * https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API/Using_the_Resource_Timing_API
      * @param requestObject
      * @private
      */
@@ -520,7 +545,8 @@ function HTTPLoader(cfg) {
         if (!settings.get().streaming.abr.throughput.useResourceTimingApi) {
             return;
         }
-        // Check performance support. We do not support range requests, needs to figure out how to find the right resource here.
+        // Check performance support. We do not support range requests, needs to figure out how to find the right
+        // resource here.
         if (typeof performance === 'undefined' || httpRequest.range) {
             return;
         }
@@ -543,8 +569,10 @@ function HTTPLoader(cfg) {
         }
 
         // Check if PerformanceResourceTiming values are usable
-        // Note: to allow seeing cross-origin timing information, the Timing-Allow-Origin HTTP response header needs to be set
-        // See https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming#cross-origin_timing_information
+        // Note: to allow seeing cross-origin timing information, the Timing-Allow-Origin HTTP response header needs to
+        // be set
+        // See
+        // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming#cross-origin_timing_information
         if (!_areResourceTimingValuesUsable(resource)) {
             return;
         }

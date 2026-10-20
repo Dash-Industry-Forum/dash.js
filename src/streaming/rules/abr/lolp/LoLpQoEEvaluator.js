@@ -71,7 +71,8 @@ function LoLpQoeEvaluator() {
          * bitrateReward:           segment duration, e.g. 0.5s
          * bitrateSwitchPenalty:    0.02s or 1s if the bitrate switch is too important
          * rebufferPenalty:         max encoding bitrate, e.g. 1000kbps
-         * latencyPenalty:          if L ≤ 1.1 seconds then = min encoding bitrate * 0.05, otherwise = max encoding bitrate * 0.1
+         * latencyPenalty:          if L ≤ 1.1 seconds then = min encoding bitrate * 0.05, otherwise = max encoding
+         *                          bitrate * 0.1
          * playbackSpeedPenalty:    min encoding bitrate, e.g. 200kbps
          */
 
@@ -117,7 +118,13 @@ function LoLpQoeEvaluator() {
 
     function logSegmentMetrics(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed) {
         if (voPerSegmentQoeInfo) {
-            _logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, voPerSegmentQoeInfo);
+            _logMetricsInQoeInfo(
+                segmentBitrate,
+                segmentRebufferTime,
+                currentLatency,
+                currentPlaybackSpeed,
+                voPerSegmentQoeInfo
+            );
         }
     }
 
@@ -127,7 +134,8 @@ function LoLpQoeEvaluator() {
 
         // Update: bitrateSwitch Weighted Sum value
         if (qoeInfo.lastBitrate) {
-            qoeInfo.bitrateSwitchWSum += (qoeInfo.weights.bitrateSwitchPenalty * Math.abs(bitrate - qoeInfo.lastBitrate));
+            qoeInfo.bitrateSwitchWSum +=
+                (qoeInfo.weights.bitrateSwitchPenalty * Math.abs(bitrate - qoeInfo.lastBitrate));
         }
         qoeInfo.lastBitrate = bitrate;
 
@@ -147,7 +155,8 @@ function LoLpQoeEvaluator() {
         qoeInfo.playbackSpeedWSum += (qoeInfo.weights.playbackSpeedPenalty * Math.abs(1 - playbackSpeed));
 
         // Update: Total Qoe value
-        qoeInfo.totalQoe = qoeInfo.bitrateWSum - qoeInfo.bitrateSwitchWSum - qoeInfo.rebufferWSum - qoeInfo.latencyWSum - qoeInfo.playbackSpeedWSum;
+        qoeInfo.totalQoe = qoeInfo.bitrateWSum - qoeInfo.bitrateSwitchWSum - qoeInfo.rebufferWSum -
+            qoeInfo.latencyWSum - qoeInfo.playbackSpeedWSum;
     }
 
     // Returns current Per Segment QoeInfo
@@ -165,7 +174,13 @@ function LoLpQoeEvaluator() {
         }
 
         if (singleUseQoeInfo) {
-            _logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, singleUseQoeInfo);
+            _logMetricsInQoeInfo(
+                segmentBitrate,
+                segmentRebufferTime,
+                currentLatency,
+                currentPlaybackSpeed,
+                singleUseQoeInfo
+            );
             return singleUseQoeInfo.totalQoe;
         } else {
             // Something went wrong..

@@ -39,7 +39,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.
- * @see {@link module:Settings~PlayerSettings PlayerSettings} for further information about the supported configuration properties.
+ * @see {@link module:Settings~PlayerSettings PlayerSettings} for further information about the supported configuration
+ * properties.
  */
 
 
@@ -287,7 +288,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                 },
  *                 throughput: {
  *                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,
- *                     lowLatencyDownloadTimeCalculationMode: Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
+ *                     lowLatencyDownloadTimeCalculationMode:
+ *                         Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
  *                     useResourceTimingApi: true,
  *                     useNetworkInformationApi: {
  *                         xhr: false,
@@ -338,7 +340,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                rtpSafetyFactor: 5,
  *                maxBufferedErrorCodes: 10,
  *                mode: Constants.CMCD_MODE_QUERY,
- *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+ *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid',
+ *                    'pr', 'sf', 'sid', 'st', 'v']
  *                includeInRequests: ['segment', 'mpd', 'license'],
  *                version: 1,
  *                eventTargets: [],
@@ -378,7 +381,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [calcFromSegmentTimeline=false]
  * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
  * @property {boolean} [fallbackToSegmentTimeline=true]
- * In case the MPD uses \<SegmentTimeline\ and no segment is found within the DVR window the DVR window is calculated based on the entries in \<SegmentTimeline\>.
+ * In case the MPD uses \<SegmentTimeline\ and no segment is found within the DVR window the DVR window is calculated
+ * based on the entries in \<SegmentTimeline\>.
  */
 
 /**
@@ -386,10 +390,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [eventControllerRefreshDelay=100]
  * Interval timer used by the EventController to check if events need to be triggered or removed.
  * @property {number} [deleteEventMessageDataTimeout=10000]
- * If this value is larger than -1 the EventController will delete the message data attributes of events after they have been started and dispatched to the application.
+ * If this value is larger than -1 the EventController will delete the message data attributes of events after they have
+ * been started and dispatched to the application.
  * This is to save memory in case events have a long duration and need to be persisted in the EventController.
  * This parameter defines the time in milliseconds between the start of an event and when the message data is deleted.
- * If an event is dispatched for the second time (e.g. when the user seeks back) the message data will not be included in the dispatched event if it has been deleted already.
+ * If an event is dispatched for the second time (e.g. when the user seeks back) the message data will not be included
+ * in the dispatched event if it has been deleted already.
  * Set this value to -1 to not delete any message data.
  */
 
@@ -398,10 +404,13 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [liveDelayFragmentCount=NaN]
  * Changing this value will lower or increase live stream latency.
  *
- * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
+ * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream
+ * from the live edge.
  *
- * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the maximum effective segment duration across all audio, video and fragmented text adaptation sets is used instead.
- * The effective segment duration is the partial segment duration (segment duration / k) for adaptation sets using partial segments, and the full segment duration otherwise.
+ * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the maximum effective segment duration across all
+ * audio, video and fragmented text adaptation sets is used instead.
+ * The effective segment duration is the partial segment duration (segment duration / k) for adaptation sets using
+ * partial segments, and the full segment duration otherwise.
  * Consequently, the partial segment duration is only applied if all these adaptation sets use partial segments.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
@@ -414,19 +423,22 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info.
  * @property {boolean} [useSuggestedPresentationDelay=true]
- * Set to true if you would like to overwrite the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
+ * Set to true if you would like to overwrite the default live delay and honor the SuggestedPresentationDelay attribute
+ * in by the manifest.
  */
 
 /**
  * @typedef {Object} Buffer
  * @property {boolean} [enableSeekDecorrelationFix=false]
  * Enables a workaround for playback start on some devices, e.g. WebOS 4.9.
- * It is necessary because some browsers do not support setting currentTime on video element to a value that is outside of current buffer.
+ * It is necessary because some browsers do not support setting currentTime on video element to a value that is outside
+ * of current buffer.
  *
  * If you experience unexpected seeking triggered by BufferController, you can try setting this value to false.
 
  * @property {boolean} [fastSwitchEnabled=null]
- * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
+ * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of
+ * the current buffer range it is requested and appended closer to the current time.
  *
  * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
  *
@@ -435,14 +447,18 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Note, When ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
  * higher quality media for as long as possible.
  *
- * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather just append at the end.
+ * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather
+ * just append at the end.
  * 1. When the buffer level is less than one fragment duration.
  * 2. The client is in an Abandonment State due to recent fragment abandonment event.
  *
  * Known issues:
- * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter or stall in playback.
+ * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the fragment may be
+ * appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter or stall in playback.
  * @property {boolean} [flushBufferAtTrackSwitch=false]
- * When enabled, after a track switch and in case buffer is being replaced, the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
+ * When enabled, after a track switch and in case buffer is being replaced, the video element is flushed (seek at
+ * current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play
+ * new track.
  *
  * This can be required on some devices like GoogleCast devices to make track switching functional.
  *
@@ -461,7 +477,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [bufferTimeAtTopQuality=30]
  * The time that the internal buffer target will be set to once playing the top quality.
  *
- * If there are multiple bitrates in your adaptation, and the media is playing at the highest bitrate, then we try to build a larger buffer at the top quality to increase stability and to maintain media quality.
+ * If there are multiple bitrates in your adaptation, and the media is playing at the highest bitrate, then we try to
+ * build a larger buffer at the top quality to increase stability and to maintain media quality.
  * @property {number} [bufferTimeAtTopQualityLongForm=60]
  * The time that the internal buffer target will be set to once playing the top quality for long form content.
  * @property {number} [longFormContentDurationThreshold=600]
@@ -471,11 +488,14 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [initialBufferLevel=NaN]
  * Initial buffer level before playback starts
  * @property {number} [stallThreshold=0.3]
- * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
+ * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer
+ * range to prune.
  * @property {number} [lowLatencyStallThreshold=0.3]
- * Low Latency stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
+ * Low Latency stall threshold used in BufferController.js to determine whether a track should still be changed and
+ * which buffer range to prune.
  * @property {boolean} [useAppendWindow=true]
- * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
+ * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from
+ * manifest.
  * @property {boolean} [setStallState=true]
  * Specifies if we fire manual waiting events once the stall threshold is reached.
  * @property {module:Settings~SyntheticStallSettings} [syntheticStallEvents]
@@ -483,15 +503,21 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [avoidCurrentTimeRangePruning=false]
  * Avoids pruning of the buffered range that contains the current playback time.
  *
- * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
+ * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and
+ * WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
  * @property {boolean} [useChangeType=true]
- * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different codec family.
- * Note that some platforms might not implement the changeType function. dash.js is checking for the availability before trying to call it.
+ * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different
+ * codec family.
+ * Note that some platforms might not implement the changeType function. dash.js is checking for the availability before
+ * trying to call it.
  * @property {boolean} [mediaSourceDurationInfinity=true]
- * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.
- * Some platforms such as WebOS 4.x have issues with seeking when duration is set to `Infinity`, setting this flag to false resolve this.
+ * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the
+ * duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.
+ * Some platforms such as WebOS 4.x have issues with seeking when duration is set to `Infinity`, setting this flag to
+ * false resolve this.
  * @property {boolean} [resetSourceBuffersForTrackSwitch=false]
- * When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This happens when we switch codecs on a system
+ * When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This
+ * happens when we switch codecs on a system
  * that does not properly implement "changeType()", such as webOS 4.0 and before.
  */
 
@@ -519,7 +545,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [logLevel=dashjs.Debug.LOG_LEVEL_WARNING]
  * Sets up the log level. The levels are cumulative.
  *
- * For example, if you set the log level to dashjs.Debug.LOG_LEVEL_WARNING all warnings, errors and fatals will be logged.
+ * For example, if you set the log level to dashjs.Debug.LOG_LEVEL_WARNING all warnings, errors and fatals will be
+ * logged.
  *
  * Possible values.
  *
@@ -552,7 +579,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {object} [recoverAttempts={mediaErrorDecode: 5}]
  * Defines the maximum number of recover attempts for specific media errors.
  *
- * For mediaErrorDecode the player will reset the MSE and skip the blacklisted segment that caused the decode error. The resulting gap will be handled by the GapController.
+ * For mediaErrorDecode the player will reset the MSE and skip the blacklisted segment that caused the decode error. The
+ * resulting gap will be handled by the GapController.
  */
 
 /**
@@ -574,19 +602,23 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [smallGapLimit=1.5]
  * Time in seconds for a gap to be considered small.
  * @property {number} [threshold=0.3]
- * Threshold at which the gap handling is executed. If currentRangeEnd - currentTime < threshold the gap jump will be triggered.
+ * Threshold at which the gap handling is executed. If currentRangeEnd - currentTime < threshold the gap jump will be
+ * triggered.
  * For live stream the jump might be delayed to keep a consistent live edge.
  * Note that the amount of buffer at which platforms automatically stall might differ.
  * @property {boolean} [enableSeekFix=true]
- * Enables the adjustment of the seek target once no valid segment request could be generated for a specific seek time. This can happen if the user seeks to a position for which there is a gap in the timeline.
+ * Enables the adjustment of the seek target once no valid segment request could be generated for a specific seek time.
+ * This can happen if the user seeks to a position for which there is a gap in the timeline.
  * @property {boolean} [enableStallFix=false]
- * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger playback again.
+ * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger
+ * playback again.
  * @property {number} [stallSeek=0.1]
  * Value to be used in case enableStallFix is set to true
  * @property {number} [seekOffset=0]
  * An additional offset in seconds that is applied when performing a seek to jump a gap.
  * @property {number} [checkInterval=250]
- * The interval in milliseconds at which the gap handler checks for gaps in the buffer. Lower values detect gaps faster but increase CPU usage. Default is 250ms.
+ * The interval in milliseconds at which the gap handler checks for gaps in the buffer. Lower values detect gaps faster
+ * but increase CPU usage. Default is 250ms.
  */
 
 /**
@@ -596,9 +628,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
- * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
+ * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as
+ * described.
  * @property {number} [backgroundAttempts=2]
- * Number of synchronization attempts to perform in the background after an initial synchronization request has been done. This is used to verify that the derived client-server offset is correct.
+ * Number of synchronization attempts to perform in the background after an initial synchronization request has been
+ * done. This is used to verify that the derived client-server offset is correct.
  *
  * The background requests are async and done in parallel to the start of the playback.
  *
@@ -606,9 +640,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [timeBetweenSyncAttempts=30]
  * The time in seconds between two consecutive sync attempts.
  *
- * Note: This value is used as an initial starting value. The internal value of the TimeSyncController is adjusted during playback based on the drift between two consecutive synchronization attempts.
+ * Note: This value is used as an initial starting value. The internal value of the TimeSyncController is adjusted
+ * during playback based on the drift between two consecutive synchronization attempts.
  *
- * Note: A sync is only performed after an MPD update. In case the @minimumUpdatePeriod is larger than this value the sync will be delayed until the next MPD update.
+ * Note: A sync is only performed after an MPD update. In case the @minimumUpdatePeriod is larger than this value the
+ * sync will be delayed until the next MPD update.
  * @property {number} [maximumTimeBetweenSyncAttempts=600]
  * The maximum time in seconds between two consecutive sync attempts.
  *
@@ -616,7 +652,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The minimum time in seconds between two consecutive sync attempts.
  *
  * @property {number} [timeBetweenSyncAttemptsAdjustmentFactor=2]
- * The factor used to multiply or divide the timeBetweenSyncAttempts parameter after a sync. The maximumAllowedDrift defines whether this value is used as a factor or a dividend.
+ * The factor used to multiply or divide the timeBetweenSyncAttempts parameter after a sync. The maximumAllowedDrift
+ * defines whether this value is used as a factor or a dividend.
  *
  * @property {number} [maximumAllowedDrift=100]
  * The maximum allowed drift specified in milliseconds between two consecutive synchronization attempts.
@@ -628,7 +665,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The default timing source to be used. The timing sources in the MPD take precedence over this one.
  *
  * @property {number} [artificialTimeOffsetToApply=0]
- * The offset defined in milliseconds that is applied on top of the offset that was derived after the time synchronization.
+ * The offset defined in milliseconds that is applied on top of the offset that was derived after the time
+ * synchronization.
  *
  * /
 
@@ -639,10 +677,13 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [lowLatencyTimeout=0]
  * Default timeout between two consecutive low-latency segment scheduling attempts
  * @property {boolean} [scheduleWhilePaused=true]
- * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
+ * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is
+ * paused.
  * @property {number} [segmentListRetryDelay=10000]
- * SegmentBase: Time in milliseconds after which the segment list (sidx) of a Representation is requested again once loading it failed.
- * In the meantime the Representation is excluded from ABR decisions. The delay doubles with every failure in a row, up to eight times this value.
+ * SegmentBase: Time in milliseconds after which the segment list (sidx) of a Representation is requested again once
+ * loading it failed.
+ * In the meantime the Representation is excluded from ABR decisions. The delay doubles with every failure in a row, up
+ * to eight times this value.
  */
 
 /**
@@ -650,7 +691,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
  * @property {boolean} [dispatchForManualRendering=false]
- * Enable/disable firing of CueEnter/CueExt events. This will disable the display of subtitles and should be used when you want to have full control about rendering them.
+ * Enable/disable firing of CueEnter/CueExt events. This will disable the display of subtitles and should be used when
+ * you want to have full control about rendering them.
  * @property {boolean} [extendSegmentedCues=true]
  * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
  * @property {boolean} [imsc.displayForcedOnlyMode=false]
@@ -659,7 +701,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [imsc.enableRollUp=true]
  * Enable/disable rollUp style display of IMSC captions.
  * @property {object} [webvtt.customRenderingEnabled=false]
- * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of dash.js.
+ * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of
+ * dash.js.
  * Custom WebVTT rendering requires the external library vtt.js that can be found in the contrib folder.
  */
 
@@ -668,7 +711,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [maxDrift=NaN]
  * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
  *
- * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live delay.
+ * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is
+ * higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live
+ * delay.
  *
  * LowLatencyMaxDriftBeforeSeeking should be provided in seconds.
  *
@@ -682,15 +727,20 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * The parameters are all percentages of the target latency. Where 1 is on target.
  *
- * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
+ * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target
+ * latency).
  *
- * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
+ * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200%
+ * of the target latency). It sets the point at which playback should return to unity (or stop catching up). This
+ * parameter prevents instability when using higher min and max playback rates and should be tuned to prevent
+ * overshooting the target.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate={min: NaN, max: NaN}]
  * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
  *
- * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
+ * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback
+ * rate respectively up to (+/-) the percentage defined with this method until target is reached.
  *
  * Valid values for min catch up rate are in the range -0.5 to 0 (-50% to 0% playback rate decrease)
  *
@@ -698,14 +748,18 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * Set min and max to NaN to turn off live catch up feature.
  *
- * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
+ * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If
+ * only one of the min/max properties is given a value, the property without a value will not fall back to a
+ * ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
  * @property {boolean} [liveThreshold=-1]
- * Accelerated playback is reset to 1.0 (no speed-up) once the latency difference (currentLatency - initiallyDefinedTargetLatency) is above the configured liveThreshold value. liveThreshold is disabled by setting the value to -1
+ * Accelerated playback is reset to 1.0 (no speed-up) once the latency difference (currentLatency -
+ * initiallyDefinedTargetLatency) is above the configured liveThreshold value. liveThreshold is disabled by setting the
+ * value to -1
  *
  * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
@@ -751,10 +805,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @typedef {Object} Protection
  * @property {boolean} [keepProtectionMediaKeys=false]
  * Set the value for the ProtectionController and MediaKeys life cycle.
- * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
+ * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the
+ * MediaPlayer lifetime.
  *
  * @property {number} [keepProtectionMediaKeysMaximumOpenSessions=-1]
- * Maximum number of open MediaKeySessions, when keepProtectionMediaKeys is enabled. If set, dash.js will close the oldest sessions when the limit is exceeded. -1 means unlimited.
+ * Maximum number of open MediaKeySessions, when keepProtectionMediaKeys is enabled. If set, dash.js will close the
+ * oldest sessions when the limit is exceeded. -1 means unlimited.
  *
  * @property {boolean} [ignoreEmeEncryptedEvent=false]
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
@@ -763,22 +819,28 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If set to true the player will use the raw unwrapped message from the Playready CDM
  *
  * @property {boolean} [ignoreKeyStatuses=false]
- * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
+ * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether
+ * the key is usable or not.
  *
 
 /**
  * @typedef {Object} Capabilities
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
- * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
+ * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\>
+ * element.
  * @property {Array.<string>} [supportedEssentialProperties]
  * List of supported \<EssentialProperty\> elements
  * @property {boolean} [useMediaCapabilitiesApi=true]
- * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
+ * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will
+ * be used instead.
  * @property {boolean} [filterVideoColorimetryEssentialProperties=true]
- * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
- * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
+ * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris:
+ * 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
+ * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking
+ * (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=true]
- * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
+ * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per
+ * schemeIdUri:'urn:dvb:dash:hdr-dmi').
  * @property {boolean} [filterAudioChannelConfiguration=false]
  * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
  */
@@ -790,17 +852,21 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [usePixelRatioInLimitBitrateByPortal=false]
  * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
  * @property {number} [limitBitrateByPortalMinimum=0]
- * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
+ * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be
+ * limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
  * @property {number} [hybridSwitchBufferTime=12]
- * When the throughput rule and the Bola rule are both active, this value defines the buffer level in seconds when the player will switch from throughput to Bola.
+ * When the throughput rule and the Bola rule are both active, this value defines the buffer level in seconds when the
+ * player will switch from throughput to Bola.
  *
  * @property {module:Settings~AbrRules} [rules]
- * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time we switch to a dynamic mode.
+ * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time
+ * we switch to a dynamic mode.
  * In the dynamic mode either ThroughputRule or BolaRule are active but not both at the same time.
  *
- * l2ARule and loLPRule are ABR rules that are designed for low latency streams. They are tested as standalone rules meaning the other rules should be deactivated when choosing these rules.
+ * l2ARule and loLPRule are ABR rules that are designed for low latency streams. They are tested as standalone rules
+ * meaning the other rules should be deactivated when choosing these rules.
  * @property {module:Settings~ThroughputSettings} [throughput]
  * Settings related to throughput calculation
  * @property {module:Settings~AudioVideoSettings} [maxBitrate={audio: -1, video: -1}]
@@ -858,8 +924,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {object} [parameters={throughputSafetyFactor=0.7, segmentIgnoreCount=2}]
  * Configures the rule specific parameters.
  *
- * - `throughputSafetyFactor`: The safety factor that is applied to the derived throughput, see example in the Description.
- * - `segmentIgnoreCount`: This rule is not taken into account until the first segmentIgnoreCount media segments have been appended to the buffer.
+ * - `throughputSafetyFactor`: The safety factor that is applied to the derived throughput, see example in the
+ * Description.
+ * - `segmentIgnoreCount`: This rule is not taken into account until the first segmentIgnoreCount media segments have
+ * been appended to the buffer.
  */
 
 /**
@@ -869,8 +937,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {object} [parameters={sampleSize=8, switchPercentageThreshold=0.075}]
  * Configures the rule specific parameters.
  *
- * - `sampleSize`: Number of switch requests ("no switch", because of the selected Representation is already playing or "actual switches") required before the rule is applied
- * - `switchPercentageThreshold`: Ratio of actual quality drops compared to no drops before a quality down-switch is triggered
+ * - `sampleSize`: Number of switch requests ("no switch", because of the selected Representation is already playing or
+ * "actual switches") required before the rule is applied
+ * - `switchPercentageThreshold`: Ratio of actual quality drops compared to no drops before a quality down-switch is
+ * triggered
  */
 
 /**
@@ -881,19 +951,24 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Configures the rule specific parameters.
  *
  * - `minimumSampleSize`: Sum of rendered and dropped frames required for each Representation before the rule kicks in.
- * - `droppedFramesPercentageThreshold`: Minimum percentage of dropped frames to trigger a quality down switch. Values are defined in the range of 0 - 1.
+ * - `droppedFramesPercentageThreshold`: Minimum percentage of dropped frames to trigger a quality down switch. Values
+ * are defined in the range of 0 - 1.
  */
 
 /**
  * @typedef {Object} AbandonRequestsRule
  * @property {boolean} [active=true]
  * Enable or disable the rule
- * @property {object} [parameters={abandonDurationMultiplier=1.8, minSegmentDownloadTimeThresholdInMs=500, minThroughputSamplesThreshold=6}]
+ * @property {object} [parameters={abandonDurationMultiplier=1.8, minSegmentDownloadTimeThresholdInMs=500,
+ * minThroughputSamplesThreshold=6}]
  * Configures the rule specific parameters.
  *
- * - `abandonDurationMultiplier`: Factor to multiply with the segment duration to compare against the estimated remaining download time of the current segment. See code example above.
- * - `minSegmentDownloadTimeThresholdInMs`: The AbandonRequestRule only kicks if the download time of the current segment exceeds this value.
- * - `minThroughputSamplesThreshold`: Minimum throughput samples (equivalent to number of progress events) required before the AbandonRequestRule kicks in.
+ * - `abandonDurationMultiplier`: Factor to multiply with the segment duration to compare against the estimated
+ * remaining download time of the current segment. See code example above.
+ * - `minSegmentDownloadTimeThresholdInMs`: The AbandonRequestRule only kicks if the download time of the current
+ * segment exceeds this value.
+ * - `minThroughputSamplesThreshold`: Minimum throughput samples (equivalent to number of progress events) required
+ * before the AbandonRequestRule kicks in.
  */
 
 /**
@@ -916,38 +991,55 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * For arithmetic and harmonic mean calculations we use a sliding window with the values defined in "sampleSettings"
  *
  * For exponential weighted moving average calculation the default values can be changed in "ewma"
- * @property {string} [lowLatencyDownloadTimeCalculationMode=Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING]
- * Defines the effective download time estimation method we use for low latency streams that utilize the Fetch API and chunked transfer coding
+ * @property {string}
+ * [lowLatencyDownloadTimeCalculationMode=Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING]
+ * Defines the effective download time estimation method we use for low latency streams that utilize the Fetch API and
+ * chunked transfer coding
  * @property {boolean} [useResourceTimingApi=true]
  * If set to true the ResourceTimingApi is used to derive the download time and the number of downloaded bytes.
- * This option has no effect for low latency streaming as the download time equals the segment duration in most of the cases and therefor does not provide reliable values
+ * This option has no effect for low latency streaming as the download time equals the segment duration in most of the
+ * cases and therefor does not provide reliable values
  * @property {object} [useNetworkInformationApi = { xhr=false, fetch=false}]
- * If set to true the NetworkInformationApi is used to derive the current throughput. Browser support is limited, only available in Chrome and Edge.
+ * If set to true the NetworkInformationApi is used to derive the current throughput. Browser support is limited, only
+ * available in Chrome and Edge.
  * Applies to standard (XHR requests) and/or low latency streaming (Fetch API requests).
  * @property {boolean} [useDeadTimeLatency=true]
- * If true, only the download portion will be considered part of the download bitrate and latency will be regarded as static.
+ * If true, only the download portion will be considered part of the download bitrate and latency will be regarded as
+ * static.
  *
  * If false, the reciprocal of the whole transfer time will be used.
  * @property {number} [bandwidthSafetyFactor=0.9]
  * Standard ABR throughput rules multiply the throughput by this value.
  *
  * It should be between 0 and 1, with lower values giving less rebuffering (but also lower quality)
- * @property {object} [sampleSettings = {live=3,vod=4,enableSampleSizeAdjustment=true,decreaseScale=0.7,increaseScale=1.3,maxMeasurementsToKeep=20,averageLatencySampleAmount=4}]
+ * @property {object} [sampleSettings =
+ * {live=3,vod=4,enableSampleSizeAdjustment=true,decreaseScale=0.7,increaseScale=1.3,maxMeasurementsToKeep=20,
+ * averageLatencySampleAmount=4}]
  * When deriving the throughput based on the arithmetic or harmonic mean these settings define:
  * - `live`: Number of throughput samples to use (sample size) for live streams
  * - `vod`: Number of throughput samples to use (sample size) for VoD streams
  * - `enableSampleSizeAdjustment`: Adjust the sample sizes if throughput samples vary a lot
- * - `decreaseScale`: Increase sample size by one if the ratio of current and previous sample is below or equal this value
- * - `increaseScale`: Increase sample size by one if the ratio of current and previous sample is higher or equal this value
+ * - `decreaseScale`: Increase sample size by one if the ratio of current and previous sample is below or equal this
+ * value
+ * - `increaseScale`: Increase sample size by one if the ratio of current and previous sample is higher or equal this
+ * value
  * - `maxMeasurementsToKeep`: Number of samples to keep before sliding samples out of the window
  * - `averageLatencySampleAmount`: Number of latency samples to use (sample size)
- * @property {object} [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,latencyFastHalfLifeCount=1, weightDownloadTimeMultiplicationFactor=0.0015}]
+ * @property {object}
+ * [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,
+ * latencyFastHalfLifeCount=1,
+ * weightDownloadTimeMultiplicationFactor=0.0015}]
  * When deriving the throughput based on the exponential weighted moving average these settings define:
- * - `throughputSlowHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
- * - `throughputFastHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
- * - `latencySlowHalfLifeCount`: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
- * - `latencyFastHalfLifeCount`: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
- * - `weightDownloadTimeMultiplicationFactor`: This value is multiplied with the download time in milliseconds to derive the weight for the EWMA calculation.
+ * - `throughputSlowHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see
+ * ThroughputModel._updateEwmaValues
+ * - `throughputFastHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see
+ * ThroughputModel._updateEwmaValues
+ * - `latencySlowHalfLifeCount`: Number by which the weight of the current latency is divided, see
+ * ThroughputModel._updateEwmaValues
+ * - `latencyFastHalfLifeCount`: Number by which the weight of the current latency is divided, see
+ * ThroughputModel._updateEwmaValues
+ * - `weightDownloadTimeMultiplicationFactor`: This value is multiplied with the download time in milliseconds to derive
+ * the weight for the EWMA calculation.
  */
 
 /**
@@ -976,11 +1068,13 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
  * @property {number} [maxBufferedErrorCodes=10]
  * The maximum number of error codes (ec) buffered per CMCD v2 report destination until its next report.
- * When the limit is reached, the oldest code is dropped. This bounds the buffer of a destination that does not report again.
+ * When the limit is reached, the oldest code is dropped. This bounds the buffer of a destination that does not report
+ * again.
  *
  * If not specified this value defaults to 10.
  * @property {number} [mode="query"]
- * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
+ * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http
+ * headers.
  *
  * If not specified this value defaults to 'query'.
  * @property {Array.<string>} [enabledKeys]
@@ -1017,7 +1111,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {string} [events]
  * The events that should trigger the CMCD reporting.
  * @property {number} [interval]
- * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
+ * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this
+ * parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
  * @property {Array.<string>} [responseReceivedTypes]
@@ -1048,7 +1143,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [applyMb=false]
  * Set to true if dash.js should apply CMSD maximum suggested bitrate in ABR logic.
  * @property {number} [etpWeightRatio=0]
- * Sets the weight ratio (between 0 and 1) that shall be applied on CMSD estimated throuhgput compared to measured throughput when calculating throughput.
+ * Sets the weight ratio (between 0 and 1) that shall be applied on CMSD estimated throuhgput compared to measured
+ * throughput when calculating throughput.
  */
 
 /**
@@ -1080,32 +1176,43 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * This will only take effect after an abandoned fragment event occurs.
  * @property {number} [seekDurationBackoff=0.5]
- * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of last period - seekDurationBackoff).
+ * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is
+ * redirected to (end of last period - seekDurationBackoff).
  *
- * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
- * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and seek to the exact end of the content.
+ * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the
+ * playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
+ * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and
+ * seek to the exact end of the content.
  * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
- * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
+ * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is
+ * still processed before downloading the next manifest once the minimumUpdatePeriod time has.
  * @property {number} [liveUpdateTimeThresholdInMilliseconds=0]
- * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during live streams on low end devices.
+ * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during
+ * live streams on low end devices.
  * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {number} [cacheInitSegmentsLimit=50]
- * Maximum number of entries to keep in the init segment cache. When the cache exceeds this limit, the least recently used entries are evicted.
+ * Maximum number of entries to keep in the init segment cache. When the cache exceeds this limit, the least recently
+ * used entries are evicted.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  * @property {boolean} [applyProducerReferenceTime=true]
- * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
+ * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with
+ * ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
  * @property {boolean} [ignoreFinalStaticManifestOnDynamicToStaticTransition=false]
- * Set to true if dash.js should ignore the final static manifest when a stream transitions from dynamic to static (legacy behavior up to v5.2.0). When set to false the duration, the seekable range and the segment information are derived from the final static manifest.
+ * Set to true if dash.js should ignore the final static manifest when a stream transitions from dynamic to static
+ * (legacy behavior up to v5.2.0). When set to false the duration, the seekable range and the segment information are
+ * derived from the final static manifest.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
- * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
+ * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations
+ * if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
- * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
+ * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization
+ * segments
  * @property {boolean} [parseInbandPrft=false]
  * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
@@ -1116,26 +1223,34 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {module:Settings~Capabilities} capabilities Capability related settings
  * @property {module:Settings~Buffer}  buffer Buffer related settings
  * @property {module:Settings~Gaps}  gaps Gap related settings
- * @property {module:Settings~UtcSynchronizationSettings} utcSynchronization Settings related to UTC clock synchronization
+ * @property {module:Settings~UtcSynchronizationSettings} utcSynchronization Settings related to UTC clock
+ * synchronization
  * @property {module:Settings~Scheduling} scheduling Settings related to segment scheduling
  * @property {module:Settings~Text} text Settings related to Subtitles and captions
  * @property {module:Settings~LiveCatchupSettings} liveCatchup  Settings related to live catchup.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
- * Set to false if you would like to disable the last known bit rate from being stored during playback and used to set the initial bit rate for subsequent playback within the expiration window.
+ * Set to false if you would like to disable the last known bit rate from being stored during playback and used to set
+ * the initial bit rate for subsequent playback within the expiration window.
  *
  * The default expiration is one hour, defined in milliseconds.
  *
- * If expired, the default initial bit rate (closest to 1000 kbps) will be used for that session and a new bit rate will be stored during that session.
+ * If expired, the default initial bit rate (closest to 1000 kbps) will be used for that session and a new bit rate will
+ * be stored during that session.
  * @property {module:Settings~CachingInfoSettings} [lastMediaSettingsCachingInfo={enabled: true, ttl: 360000}]
- * Set to false if you would like to disable the last media settings from being stored to localStorage during playback and used to set the initial track for subsequent playback within the expiration window.
+ * Set to false if you would like to disable the last media settings from being stored to localStorage during playback
+ * and used to set the initial track for subsequent playback within the expiration window.
  *
  * The default expiration is one hour, defined in milliseconds.
  * @property {boolean} [saveLastMediaSettingsForCurrentStreamingSession=true]
- * Set to true if dash.js should save media settings from last selected track for incoming track selection during current streaming session.
+ * Set to true if dash.js should save media settings from last selected track for incoming track selection during
+ * current streaming session.
  * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 10, audio: 5}]
- * For a given media type, the threshold which defines if the response to a fragment request is coming from browser cache or not.
+ * For a given media type, the threshold which defines if the response to a fragment request is coming from browser
+ * cache or not.
  * @property {module:Settings~AudioVideoSettings} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
- * For a given media type defines if existing segments in the buffer should be overwritten once the track is switched. For instance if the user switches the audio language the existing segments in the audio buffer will be replaced when setting this value to "alwaysReplace".
+ * For a given media type defines if existing segments in the buffer should be overwritten once the track is switched.
+ * For instance if the user switches the audio language the existing segments in the audio buffer will be replaced when
+ * setting this value to "alwaysReplace".
  *
  * Possible values
  *
@@ -1152,7 +1267,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * provides the option to include Preselections for initial track selection
  *
  * @property {} [ignoreSelectionPriority: false]
- * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
+ * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media
+ * settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
  *
  * @property {} [prioritizeRoleMain: true]
  * provides the option to disable prioritization of AdaptationSets with their Role set to Main
@@ -1161,7 +1277,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * when no Role descriptor is present, assume main per default
  *
  * @property {string} [selectionModeForInitialTrack="lowestStartupDelay"]
- * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
+ * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial
+ * media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
  * Possible values
  *
@@ -1179,8 +1296,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * @property {number} [blacklistExpiryTime=-1]
  * The time in seconds that a Service Location remains on the blacklist.
- * After this period expires, the Service Location becomes eligible for selection again during a subsequent failover. However, the system will not proactively switch back to it on its own.
- * When Content Steering is enabled, this setting is ignored: the blacklist duration is automatically set to the steering response’s TTL, and the steering algorithm may actively switch back to that Service Location as needed.
+ * After this period expires, the Service Location becomes eligible for selection again during a subsequent failover.
+ * However, the system will not proactively switch back to it on its own.
+ * When Content Steering is enabled, this setting is ignored: the blacklist duration is automatically set to the
+ * steering response’s TTL, and the steering algorithm may actively switch back to that Service Location as needed.
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
@@ -1507,7 +1626,8 @@ function Settings() {
                 },
                 throughput: {
                     averageCalculationMode: Constants.THROUGHPUT_CALCULATION_MODES.EWMA,
-                    lowLatencyDownloadTimeCalculationMode: Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
+                    lowLatencyDownloadTimeCalculationMode:
+                        Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING,
                     useResourceTimingApi: true,
                     useNetworkInformationApi: {
                         xhr: false,
@@ -1627,12 +1747,16 @@ function Settings() {
     /**
      * @func
      * @instance
-     * @param {object} settingsObj - This should be a partial object of the Settings.Schema type. That is, fields defined should match the path (e.g.
-     * settingsObj.streaming.abr.autoSwitchBitrate.audio -> defaultSettings.streaming.abr.autoSwitchBitrate.audio). Where an element's path does
+     * @param {object} settingsObj - This should be a partial object of the Settings.Schema type. That is, fields
+     * defined should match the path (e.g.
+     * settingsObj.streaming.abr.autoSwitchBitrate.audio -> defaultSettings.streaming.abr.autoSwitchBitrate.audio).
+     * Where an element's path does
      * not match it is ignored, and a warning is logged.
      *
-     * Use to change the settings object. Any new values defined will overwrite the settings and anything undefined will not change.
-     * Implementers of new settings should add it in an approriate namespace to the defaultSettings object and give it a default value (that is not undefined).
+     * Use to change the settings object. Any new values defined will overwrite the settings and anything undefined will
+     * not change.
+     * Implementers of new settings should add it in an approriate namespace to the defaultSettings object and give it a
+     * default value (that is not undefined).
      *
      */
     function update(settingsObj) {

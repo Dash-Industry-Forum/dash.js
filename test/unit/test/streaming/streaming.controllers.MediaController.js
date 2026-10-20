@@ -932,7 +932,9 @@ describe('MediaController', function () {
 
         describe('selectionPriority flag', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } });
+                settings.update({
+                    streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE }
+                });
             });
 
             it('should select track with highest priority per default', function () {
@@ -1072,7 +1074,9 @@ describe('MediaController', function () {
 
         describe('"highestSelectionPriority" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY } });
+                settings.update({
+                    streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY }
+                });
             });
 
             it('should select track with highest priority', function () {
@@ -1111,7 +1115,9 @@ describe('MediaController', function () {
 
         describe('"highestBitrate" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } });
+                settings.update({
+                    streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE }
+                });
             });
 
             it('should select track with highest bitrate', function () {
@@ -1141,7 +1147,9 @@ describe('MediaController', function () {
 
         describe('"firstTrack" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_FIRST_TRACK } });
+                settings.update({
+                    streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_FIRST_TRACK }
+                });
             });
 
             it('should select first track', function () {
@@ -1171,7 +1179,9 @@ describe('MediaController', function () {
 
         describe('"highestEfficiency" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY } });
+                settings.update({
+                    streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY }
+                });
             });
 
             it('should select track with highest priority', function () {
@@ -1293,7 +1303,9 @@ describe('MediaController', function () {
 
         describe('"widestRange" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_WIDEST_RANGE } });
+                settings.update({
+                    streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_WIDEST_RANGE }
+                });
             });
 
             it('should select track with most bitrates', function () {
@@ -1315,7 +1327,9 @@ describe('MediaController', function () {
 
         describe('"lowest startup delay" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY } });
+                settings.update({
+                    streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY }
+                });
             });
 
             it('should select first track if both tracks are identical', function () {
@@ -1402,7 +1416,9 @@ describe('MediaController', function () {
             });
 
             it('should return the track with the lowest bitrate', function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } });
+                settings.update({
+                    streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE }
+                });
 
                 function getTrackWithLowestBitrate(trackArr) {
                     let min = Infinity;

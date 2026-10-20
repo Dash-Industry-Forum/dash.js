@@ -188,7 +188,8 @@ describe('CapabilitiesFilter', function () {
                     .then(() => {
                         expect(removedEvents).to.have.lengthOf(2);
                         expect(removedEvents[0].adaptationSet.id).to.equal('1');
-                        expect(removedEvents[0].remainingAdaptationSets).to.deep.equal([adaptationSet2, adaptationSet3]);
+                        expect(removedEvents[0].remainingAdaptationSets)
+                            .to.deep.equal([adaptationSet2, adaptationSet3]);
                         expect(removedEvents[1].adaptationSet.id).to.equal('2');
                         expect(removedEvents[1].remainingAdaptationSets).to.deep.equal([adaptationSet3]);
 

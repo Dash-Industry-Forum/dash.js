@@ -176,7 +176,8 @@ function ThumbnailTracks(config) {
         let cache = [];
         const segments = _normalizeSegments(data, representation);
         representation.segments = segments;
-        representation.fragmentDuration = representation.segmentDuration || (representation.segments && representation.segments.length > 0 ? representation.segments[0].duration : NaN);
+        representation.fragmentDuration = representation.segmentDuration ||
+            (representation.segments && representation.segments.length > 0 ? representation.segments[0].duration : NaN);
         track.segmentDuration = representation.segments[0].duration; //assume all segments have the same duration
 
         track.readThumbnail = function (time, callback) {
@@ -261,7 +262,8 @@ function ThumbnailTracks(config) {
 
     function buildTemplateUrl(representation) {
         const templateUrl = urlUtils.isRelative(representation.media) ?
-            urlUtils.resolve(representation.media, baseURLController.resolve(representation.path).url) : representation.media;
+            urlUtils.resolve(representation.media, baseURLController.resolve(representation.path).url) :
+            representation.media;
 
         if (!templateUrl) {
             return '';

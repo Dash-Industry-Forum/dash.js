@@ -580,7 +580,9 @@ describe('EventController', function () {
             const manifestValidityExpiredHandler = function (event) {
                 expect(event.id).to.equal(manifestExpiredEventStub.id);
                 expect(event.validUntil).to.equal(manifestExpiredEventStub.calculatedPresentationTime);
-                expect(event.newDuration).to.equal((manifestExpiredEventStub.calculatedPresentationTime + manifestExpiredEventStub.duration));
+                expect(event.newDuration).to.equal((
+                    manifestExpiredEventStub.calculatedPresentationTime + manifestExpiredEventStub.duration
+                ));
 
                 eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
                 done();

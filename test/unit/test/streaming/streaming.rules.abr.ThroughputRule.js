@@ -77,7 +77,8 @@ describe('ThroughputRule', function () {
     });
 
     it('should switch and provide correct throughput and priority', function () {
-        // Current quality = 1 (1 Mbps). Provide throughput ~3 Mbps => should go to index 3 (3.5 Mbps) if safetyFactor * throughput > 3.5M? 3 Mbps * 0.9 = 2.7 < 3.5 so expect index 2 (2 Mbps).
+        // Current quality = 1 (1 Mbps). Provide throughput ~3 Mbps => should go to index 3 (3.5 Mbps) if
+        // safetyFactor * throughput > 3.5M? 3 Mbps * 0.9 = 2.7 < 3.5 so expect index 2 (2 Mbps).
         const throughput = 3000000;
         settings.update({
             streaming: {

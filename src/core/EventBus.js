@@ -135,8 +135,11 @@ function EventBus() {
                 if (filters.mediaType && handler.mediaType && handler.mediaType !== filters.mediaType) {
                     return false;
                 }
-                // This is used for dispatching DASH events. By default we use the onStart mode. Consequently we filter everything that has a non matching mode and the onReceive events for handlers that did not specify a mode.
-                if ((filters.mode && handler.mode && handler.mode !== filters.mode) || (!handler.mode && filters.mode && filters.mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE)) {
+                // This is used for dispatching DASH events. By default we use the onStart mode. Consequently we filter
+                // everything that has a non matching mode and the onReceive events for handlers that did not specify a
+                // mode.
+                if ((filters.mode && handler.mode && handler.mode !== filters.mode) ||
+                    (!handler.mode && filters.mode && filters.mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE)) {
                     return false;
                 }
                 return true;

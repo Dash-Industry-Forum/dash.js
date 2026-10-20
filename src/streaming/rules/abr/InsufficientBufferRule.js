@@ -60,7 +60,8 @@ function InsufficientBufferRule(config) {
 
 
     /**
-     * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest. Quality=0 until BUFFER_LOADED happens.
+     * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest. Quality=0 until BUFFER_LOADED
+     * happens.
      * Otherwise, InsufficientBufferRule gives a maximum bitrate depending on throughput and bufferLevel such that
      * a whole fragment can be downloaded before the buffer runs out, subject to a conservative safety factor of 0.5.
      * If the bufferLevel is low, then InsufficientBufferRule avoids rebuffering risk.
@@ -99,7 +100,8 @@ function InsufficientBufferRule(config) {
             const throughputController = rulesContext.getThroughputController();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
             const throughput = throughputController.getAverageThroughput(mediaType, null, NaN);
-            const safeThroughput = throughput * settings.get().streaming.abr.rules.insufficientBufferRule.parameters.throughputSafetyFactor;
+            const safeThroughput = throughput *
+                settings.get().streaming.abr.rules.insufficientBufferRule.parameters.throughputSafetyFactor;
             const bitrate = safeThroughput * bufferLevel / fragmentDuration
 
             if (isNaN(bitrate) || bitrate <= 0) {
@@ -123,7 +125,8 @@ function InsufficientBufferRule(config) {
     }
 
     function _resetInitialSettings() {
-        const segmentIgnoreCount = settings.get().streaming.abr.rules.insufficientBufferRule.parameters.segmentIgnoreCount
+        const segmentIgnoreCount =
+            settings.get().streaming.abr.rules.insufficientBufferRule.parameters.segmentIgnoreCount
         bufferStateDict = {};
         bufferStateDict[Constants.VIDEO] = { ignoreCount: segmentIgnoreCount };
         bufferStateDict[Constants.AUDIO] = { ignoreCount: segmentIgnoreCount };

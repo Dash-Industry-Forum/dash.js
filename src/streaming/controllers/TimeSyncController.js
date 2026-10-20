@@ -110,7 +110,8 @@ function TimeSyncController() {
     }
 
     /**
-     * Register the timing handler depending on the schemeIdUris. This method is called once when the StreamController is initialized
+     * Register the timing handler depending on the schemeIdUris. This method is called once when the StreamController
+     * is initialized
      */
     function initialize() {
         _resetInitialSettings();
@@ -170,17 +171,22 @@ function TimeSyncController() {
      * Does a synchronization in the background in case the last offset should be verified or a 404 occurs
      */
     function _onAttemptBackgroundSync() {
-        if (!settings.get().streaming.utcSynchronization.enabled || isSynchronizing || isBackgroundSynchronizing || !lastTimingSource || !lastTimingSource.value || !lastTimingSource.schemeIdUri || isNaN(lastOffset) || isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts)) {
+        if (!settings.get().streaming.utcSynchronization.enabled || isSynchronizing || isBackgroundSynchronizing ||
+            !lastTimingSource || !lastTimingSource.value || !lastTimingSource.schemeIdUri || isNaN(lastOffset) ||
+            isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts)) {
             return;
         }
 
-        if (timeOfLastBackgroundSync && ((Date.now() - timeOfLastBackgroundSync) / 1000) < DEFAULT_MINIMUM_TIME_BETWEEN_BACKGROUND_SYNC_ATTEMPTS) {
+        if (timeOfLastBackgroundSync &&
+            ((Date.now() - timeOfLastBackgroundSync) / 1000) < DEFAULT_MINIMUM_TIME_BETWEEN_BACKGROUND_SYNC_ATTEMPTS) {
             return;
         }
 
         backgroundSyncTimeOffsets = [];
         isBackgroundSynchronizing = true;
-        const backgroundAttempts = !isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts) ? settings.get().streaming.utcSynchronization.backgroundAttempts : DEFAULT_BACKGROUND_ATTEMPTS;
+        const backgroundAttempts = !isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts)
+            ? settings.get().streaming.utcSynchronization.backgroundAttempts
+            : DEFAULT_BACKGROUND_ATTEMPTS;
         _attemptBackgroundSync(backgroundAttempts);
     }
 
@@ -217,7 +223,8 @@ function TimeSyncController() {
     }
 
     /**
-     * Sync against a timing source. This method is called recursively if the time sync for the first entry in timingSources fails.
+     * Sync against a timing source. This method is called recursively if the time sync for the first entry in
+     * timingSources fails.
      * @param {number} sourceIndex
      */
     function _attemptRecursiveSync(sourceIndex = null) {
@@ -292,7 +299,9 @@ function TimeSyncController() {
             if (!isDynamic || !settings.get().streaming.utcSynchronization.enabled) {
                 return false;
             }
-            const timeBetweenSyncAttempts = !isNaN(internalTimeBetweenSyncAttempts) ? internalTimeBetweenSyncAttempts : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
+            const timeBetweenSyncAttempts = !isNaN(internalTimeBetweenSyncAttempts)
+                ? internalTimeBetweenSyncAttempts
+                : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
 
             if (!timeOfLastSync || !timeBetweenSyncAttempts || isNaN(timeBetweenSyncAttempts)) {
                 return true;
@@ -320,7 +329,8 @@ function TimeSyncController() {
     }
 
     /**
-     * Takes xsdatetime and returns milliseconds since UNIX epoch. May not be necessary as xsdatetime is very similar to ISO 8601 which is natively understood by javascript Date parser
+     * Takes xsdatetime and returns milliseconds since UNIX epoch. May not be necessary as xsdatetime is very similar
+     * to ISO 8601 which is natively understood by javascript Date parser
      * @param {string} xsdatetimeStr
      * @return {number}
      * @private
@@ -556,7 +566,9 @@ function TimeSyncController() {
         if (failed) {
             lastTimingSource = null;
             isSynchronizing = false;
-            errHandler.error(new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE));
+            errHandler.error(
+                new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE)
+            );
         }
 
         // Notify other classes
@@ -570,19 +582,38 @@ function TimeSyncController() {
     function _adjustTimeBetweenSyncAttempts(offset) {
         try {
             const isOffsetDriftWithinThreshold = _isOffsetDriftWithinThreshold(offset);
-            const timeBetweenSyncAttempts = !isNaN(internalTimeBetweenSyncAttempts) ? internalTimeBetweenSyncAttempts : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
-            const timeBetweenSyncAttemptsAdjustmentFactor = !isNaN(settings.get().streaming.utcSynchronization.timeBetweenSyncAttemptsAdjustmentFactor) ? settings.get().streaming.utcSynchronization.timeBetweenSyncAttemptsAdjustmentFactor : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS_ADJUSTMENT_FACTOR;
-            const maximumTimeBetweenSyncAttempts = !isNaN(settings.get().streaming.utcSynchronization.maximumTimeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.maximumTimeBetweenSyncAttempts : DEFAULT_MAXIMUM_TIME_BETWEEN_SYNC;
-            const minimumTimeBetweenSyncAttempts = !isNaN(settings.get().streaming.utcSynchronization.minimumTimeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.minimumTimeBetweenSyncAttempts : DEFAULT_MINIMUM_TIME_BETWEEN_SYNC;
+            const timeBetweenSyncAttempts = !isNaN(internalTimeBetweenSyncAttempts)
+                ? internalTimeBetweenSyncAttempts
+                : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
+            const timeBetweenSyncAttemptsAdjustmentFactor =
+                !isNaN(settings.get().streaming.utcSynchronization.timeBetweenSyncAttemptsAdjustmentFactor)
+                    ? settings.get().streaming.utcSynchronization.timeBetweenSyncAttemptsAdjustmentFactor
+                    : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS_ADJUSTMENT_FACTOR;
+            const maximumTimeBetweenSyncAttempts =
+                !isNaN(settings.get().streaming.utcSynchronization.maximumTimeBetweenSyncAttempts)
+                    ? settings.get().streaming.utcSynchronization.maximumTimeBetweenSyncAttempts
+                    : DEFAULT_MAXIMUM_TIME_BETWEEN_SYNC;
+            const minimumTimeBetweenSyncAttempts =
+                !isNaN(settings.get().streaming.utcSynchronization.minimumTimeBetweenSyncAttempts)
+                    ? settings.get().streaming.utcSynchronization.minimumTimeBetweenSyncAttempts
+                    : DEFAULT_MINIMUM_TIME_BETWEEN_SYNC;
             let adjustedTimeBetweenSyncAttempts;
 
             if (isOffsetDriftWithinThreshold) {
-                // The drift between the current offset and the last offset is within the allowed threshold. Increase sync time
-                adjustedTimeBetweenSyncAttempts = Math.min(timeBetweenSyncAttempts * timeBetweenSyncAttemptsAdjustmentFactor, maximumTimeBetweenSyncAttempts);
+                // The drift between the current offset and the last offset is within the allowed threshold.
+                // Increase sync time
+                adjustedTimeBetweenSyncAttempts = Math.min(
+                    timeBetweenSyncAttempts * timeBetweenSyncAttemptsAdjustmentFactor,
+                    maximumTimeBetweenSyncAttempts
+                );
                 logger.debug(`Increasing timeBetweenSyncAttempts to ${adjustedTimeBetweenSyncAttempts}`);
             } else {
-                // Drift between the current offset and the last offset is not within the allowed threshold. Decrease sync time
-                adjustedTimeBetweenSyncAttempts = Math.max(timeBetweenSyncAttempts / timeBetweenSyncAttemptsAdjustmentFactor, minimumTimeBetweenSyncAttempts);
+                // Drift between the current offset and the last offset is not within the allowed threshold.
+                // Decrease sync time
+                adjustedTimeBetweenSyncAttempts = Math.max(
+                    timeBetweenSyncAttempts / timeBetweenSyncAttemptsAdjustmentFactor,
+                    minimumTimeBetweenSyncAttempts
+                );
                 logger.debug(`Decreasing timeBetweenSyncAttempts to ${adjustedTimeBetweenSyncAttempts}`);
             }
 
@@ -625,7 +656,10 @@ function TimeSyncController() {
                 return true;
             }
 
-            const maxAllowedDrift = settings.get().streaming.utcSynchronization.maximumAllowedDrift && !isNaN(settings.get().streaming.utcSynchronization.maximumAllowedDrift) ? settings.get().streaming.utcSynchronization.maximumAllowedDrift : DEFAULT_MAXIMUM_ALLOWED_DRIFT;
+            const maxAllowedDrift = settings.get().streaming.utcSynchronization.maximumAllowedDrift &&
+                !isNaN(settings.get().streaming.utcSynchronization.maximumAllowedDrift)
+                ? settings.get().streaming.utcSynchronization.maximumAllowedDrift
+                : DEFAULT_MAXIMUM_ALLOWED_DRIFT;
             const lowerBound = lastOffset - maxAllowedDrift;
             const upperBound = lastOffset + maxAllowedDrift;
 

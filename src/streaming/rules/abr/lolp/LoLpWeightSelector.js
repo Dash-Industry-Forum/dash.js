@@ -69,7 +69,8 @@ function LoLpWeightSelector(config) {
     }
 
     /**
-     * Next, at each segment boundary, ABR to input current neurons and target state (only used in Method II) to find the desired weight vector
+     * Next, at each segment boundary, ABR to input current neurons and target state (only used in Method II) to find
+     * the desired weight vector
      * @param {array} neurons
      * @param {number} currentLatency
      * @param {number} currentBuffer
@@ -79,7 +80,9 @@ function LoLpWeightSelector(config) {
      * @return {number|null}
      * @private
      */
-    function findWeightVector(neurons, currentLatency, currentBuffer, currentRebuffer, currentThroughput, playbackRate) {
+    function findWeightVector(
+        neurons, currentLatency, currentBuffer, currentRebuffer, currentThroughput, playbackRate
+    ) {
         let maxQoE = null;
         let winnerWeights = null;
         let winnerBitrate = null;
@@ -117,12 +120,17 @@ function LoLpWeightSelector(config) {
                 if (weightsObj.latency === 0) {
                     wt = 10;
                 } else {
-                    wt = (1 / weightsObj.latency); // inverse the weight because wt and latency should have positive relationship, i.e., higher latency = higher wt
+                    // inverse the weight because wt and latency should have positive relationship, i.e., higher
+                    // latency = higher wt
+                    wt = (1 / weightsObj.latency);
                 }
                 let weightedLatency = wt * neuron.state.latency;
 
-                let totalQoE = qoeEvaluator.calculateSingleUseQoe(neuron.representation.bandwidth, weightedRebuffer, weightedLatency, playbackRate);
-                if ((maxQoE === null || totalQoE > maxQoE) && _checkConstraints(currentLatency, nextBuffer, deltaLatency)) {
+                let totalQoE = qoeEvaluator.calculateSingleUseQoe(
+                    neuron.representation.bandwidth, weightedRebuffer, weightedLatency, playbackRate
+                );
+                if ((maxQoE === null || totalQoE > maxQoE) &&
+                    _checkConstraints(currentLatency, nextBuffer, deltaLatency)) {
                     maxQoE = totalQoE;
                     winnerWeights = weightVector;
                     winnerBitrate = neuron.representation.bandwidth;

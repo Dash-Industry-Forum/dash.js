@@ -49,11 +49,15 @@ function PatchManifestModel() {
     }
 
     function getPublishTime(patch) {
-        return patch && patch.hasOwnProperty(DashConstants.PUBLISH_TIME) ? new Date(patch[DashConstants.PUBLISH_TIME]) : null;
+        return patch && patch.hasOwnProperty(DashConstants.PUBLISH_TIME)
+            ? new Date(patch[DashConstants.PUBLISH_TIME])
+            : null;
     }
 
     function getOriginalPublishTime(patch) {
-        return patch && patch.hasOwnProperty(DashConstants.ORIGINAL_PUBLISH_TIME) ? new Date(patch[DashConstants.ORIGINAL_PUBLISH_TIME]) : null;
+        return patch && patch.hasOwnProperty(DashConstants.ORIGINAL_PUBLISH_TIME)
+            ? new Date(patch[DashConstants.ORIGINAL_PUBLISH_TIME])
+            : null;
     }
 
     function getMpdId(patch) {

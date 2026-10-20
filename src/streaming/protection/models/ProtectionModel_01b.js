@@ -312,7 +312,9 @@ function ProtectionModel_01b(config) {
                 switch (event.type) {
                     case api.needkey:
                         let initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                        eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) });
+                        eventBus.trigger(events.NEED_KEY, {
+                            key: new NeedKey(initData, ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC)
+                        });
                         break;
 
                     case api.keyerror:
@@ -366,7 +368,8 @@ function ProtectionModel_01b(config) {
 
                         if (sessionToken) {
                             logger.debug('DRM: Key added.');
-                            eventBus.trigger(events.KEY_ADDED, { data: sessionToken });//TODO not sure anything is using sessionToken? why there?
+                            //TODO not sure anything is using sessionToken? why there?
+                            eventBus.trigger(events.KEY_ADDED, { data: sessionToken });
                         } else {
                             logger.debug('No session token found for key added');
                         }
@@ -396,7 +399,10 @@ function ProtectionModel_01b(config) {
                             sessionTokens.push(sessionToken);
 
                             if (pendingSessions.length !== 0) {
-                                errHandler.error(new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_MESSAGE));
+                                errHandler.error(new DashJSError(
+                                    ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_CODE,
+                                    ProtectionErrors.MEDIA_KEY_MESSAGE_ERROR_MESSAGE
+                                ));
                             }
                         }
 
@@ -407,7 +413,9 @@ function ProtectionModel_01b(config) {
                             // addKey method, so we always save it to the token since there is no
                             // way to tell which key system is in use
                             sessionToken.keyMessage = message;
-                            eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(sessionToken, message, event.defaultURL) });
+                            eventBus.trigger(events.INTERNAL_KEY_MESSAGE, {
+                                data: new KeyMessage(sessionToken, message, event.defaultURL)
+                            });
 
                         } else {
                             logger.warn('No session token found for key message');

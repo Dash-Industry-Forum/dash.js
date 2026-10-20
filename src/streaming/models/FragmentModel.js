@@ -75,7 +75,8 @@ function FragmentModel(config) {
         };
 
         const isEqualMedia = function (req1, req2) {
-            return !isNaN(req1.index) && (req1.startTime === req2.startTime) && (req1.adaptationIndex === req2.adaptationIndex) && (req1.type === req2.type);
+            return !isNaN(req1.index) && (req1.startTime === req2.startTime) &&
+                (req1.adaptationIndex === req2.adaptationIndex) && (req1.type === req2.type);
         };
 
         const isEqualInit = function (req1, req2) {
@@ -226,7 +227,8 @@ function FragmentModel(config) {
             const start = req.startTime;
             const end = start + req.duration;
             threshold = !isNaN(threshold) ? threshold : getRequestThreshold(req);
-            if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) || (isNaN(start) && isNaN(time))) {
+            if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) ||
+                (isNaN(start) && isNaN(time))) {
                 return req;
             }
         }

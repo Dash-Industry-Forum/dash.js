@@ -546,7 +546,8 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure usePixelRatioInLimitBitrateByPortal', function () {
-            let UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
+            let UsePixelRatioInLimitBitrateByPortal =
+                player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
             expect(UsePixelRatioInLimitBitrateByPortal).to.be.false;
 
             player.updateSettings({
@@ -557,7 +558,8 @@ describe('MediaPlayer', function () {
                 }
             });
 
-            UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
+            UsePixelRatioInLimitBitrateByPortal =
+                player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
             expect(UsePixelRatioInLimitBitrateByPortal).to.be.true;
         });
 
@@ -674,8 +676,10 @@ describe('MediaPlayer', function () {
             expect(player.addABRCustomRule.bind(player, 'unknownRuleType', 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(player.addABRCustomRule.bind(player, true, 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             expect(player.addABRCustomRule.bind(player, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(player.addABRCustomRule.bind(player, ABRRulesCollection.ABANDON_FRAGMENT_RULES, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(player.addABRCustomRule.bind(player, ABRRulesCollection.ABANDON_FRAGMENT_RULES, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            expect(player.addABRCustomRule.bind(player, ABRRulesCollection.ABANDON_FRAGMENT_RULES, 1))
+                .to.throw(Constants.BAD_ARGUMENT_ERROR);
+            expect(player.addABRCustomRule.bind(player, ABRRulesCollection.ABANDON_FRAGMENT_RULES, true))
+                .to.throw(Constants.BAD_ARGUMENT_ERROR);
         });
 
         it('should manage custom ABR rules', function () {
@@ -729,12 +733,14 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure useManifestDateHeaderTimeSource', function () {
-            let useManifestDateHeaderTimeSource = player.getSettings().streaming.utcSynchronization.useManifestDateHeaderTimeSource;
+            let useManifestDateHeaderTimeSource =
+                player.getSettings().streaming.utcSynchronization.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.true;
 
             player.updateSettings({ 'streaming': { utcSynchronization: { 'useManifestDateHeaderTimeSource': false } } });
 
-            useManifestDateHeaderTimeSource = player.getSettings().streaming.utcSynchronization.useManifestDateHeaderTimeSource;
+            useManifestDateHeaderTimeSource =
+                player.getSettings().streaming.utcSynchronization.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.false;
         });
 
@@ -784,7 +790,8 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure LongFormContentDurationThreshold', function () {
-            let LongFormContentDurationThreshold = player.getSettings().streaming.buffer.longFormContentDurationThreshold;
+            let LongFormContentDurationThreshold =
+                player.getSettings().streaming.buffer.longFormContentDurationThreshold;
             expect(LongFormContentDurationThreshold).to.equal(600);
 
             player.updateSettings({ 'streaming': { 'buffer': { 'longFormContentDurationThreshold': 50 } } });

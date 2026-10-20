@@ -79,7 +79,11 @@ function ScheduleController(config) {
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
-        eventBus.on(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING, _onManagedMediaSourceStartStreaming, instance);
+        eventBus.on(
+            MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING,
+            _onManagedMediaSourceStartStreaming,
+            instance
+        );
         eventBus.on(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING, _onManagedMediaSourceEndStreaming, instance);
     }
 
@@ -147,8 +151,10 @@ function ScheduleController(config) {
 
         let qualityChange = false;
         if (shouldCheckPlaybackQuality) {
-            // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation.
-            // The StreamProcessor will also start the schedule timer again once the quality switch has been prepared. Consequently, we only call _getNextFragment if the quality is not changed.
+            // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the
+            // currentRepresentation.
+            // The StreamProcessor will also start the schedule timer again once the quality switch has been prepared.
+            // Consequently, we only call _getNextFragment if the quality is not changed.
             qualityChange = abrController.checkPlaybackQuality(type, streamInfo.id);
         }
         if (!qualityChange) {
@@ -157,13 +163,15 @@ function ScheduleController(config) {
     }
 
     /**
-     * Triggers the events to start requesting an init or a media segment. This will be picked up by the corresponding StreamProcessor.
+     * Triggers the events to start requesting an init or a media segment. This will be picked up by the corresponding
+     * StreamProcessor.
      * @private
      */
     function _getNextFragment() {
         const currentRepresentation = representationController.getCurrentRepresentation();
 
-        // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
+        // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init
+        // segment
         if (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack) {
             _initFragmentNeeded(currentRepresentation)
         } else {
@@ -203,7 +211,10 @@ function ScheduleController(config) {
     function _shouldClearScheduleTimer() {
         try {
             return (((type === Constants.TEXT) && !textController.isTextEnabled()) ||
-                (playbackController.isPaused() && (!playbackController.getStreamController().getInitialPlayback() || !playbackController.getStreamController().getAutoPlay()) && !settings.get().streaming.scheduling.scheduleWhilePaused));
+                (playbackController.isPaused() &&
+                    (!playbackController.getStreamController().getInitialPlayback() ||
+                        !playbackController.getStreamController().getAutoPlay()) &&
+                    !settings.get().streaming.scheduling.scheduleWhilePaused));
         } catch (e) {
             return false;
         }
@@ -236,12 +247,15 @@ function ScheduleController(config) {
         if (!type || !currentRepresentation) {
             return true;
         }
-        let segmentDurationToAddToBufferLevel = currentRepresentation && currentRepresentation.segmentDuration && !isNaN(currentRepresentation.segmentDuration) ? currentRepresentation.segmentDuration : 0;
+        let segmentDurationToAddToBufferLevel = currentRepresentation && currentRepresentation.segmentDuration &&
+            !isNaN(currentRepresentation.segmentDuration) ? currentRepresentation.segmentDuration : 0;
         const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
         const bufferTarget = getBufferTarget();
 
-        // If the buffer target is smaller than the segment duration we do not take it into account. For low latency playback do not delay the buffering.
-        if (bufferTarget <= segmentDurationToAddToBufferLevel || playbackController.getLowLatencyModeEnabled() || (type === Constants.AUDIO && hasVideoTrack)) {
+        // If the buffer target is smaller than the segment duration we do not take it into account. For low latency
+        // playback do not delay the buffering.
+        if (bufferTarget <= segmentDurationToAddToBufferLevel || playbackController.getLowLatencyModeEnabled() ||
+            (type === Constants.AUDIO && hasVideoTrack)) {
             segmentDurationToAddToBufferLevel = 0;
         }
 
@@ -306,8 +320,12 @@ function ScheduleController(config) {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
             const currentRepresentation = representationController.getCurrentRepresentation();
             // For multiperiod we need to consider that audio and video segments might have different durations.
-            // This can lead to scenarios in which we completely buffered the video segments and the video buffer level for the current period is not changing anymore. However we might still need a small audio segment to finish buffering audio as well.
-            // If we set the buffer time of audio equal to the video buffer time scheduling for the remaining audio segment will only be triggered when audio fragmentDuration > videoBufferLevel. That will delay preloading of the upcoming period.
+            // This can lead to scenarios in which we completely buffered the video segments and the video buffer level
+            // for the current period is not changing anymore. However we might still need a small audio segment to
+            // finish buffering audio as well.
+            // If we set the buffer time of audio equal to the video buffer time scheduling for the remaining audio
+            // segment will only be triggered when audio fragmentDuration > videoBufferLevel. That will delay preloading
+            // of the upcoming period.
             // Should find a better solution than just adding 1
             if (isNaN(currentRepresentation.fragmentDuration)) {
                 return videoBufferLevel + 1;
@@ -331,8 +349,11 @@ function ScheduleController(config) {
                 representationController.getCurrentRepresentation();
             const streamInfo = currentRepresentation.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(currentRepresentation)) {
-                const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
-                return isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
+                const isLongFormContent = streamInfo.manifestInfo.duration >=
+                    settings.get().streaming.buffer.longFormContentDurationThreshold;
+                return isLongFormContent
+                    ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm
+                    : settings.get().streaming.buffer.bufferTimeAtTopQuality;
             } else {
                 return mediaPlayerModel.getBufferTimeDefaultUnadjusted();
             }
@@ -362,10 +383,15 @@ function ScheduleController(config) {
             })[0];
 
             if (item && playbackController.getTime() >= item.startTime) {
-                if ((!lastFragmentRequest.representation || (item.representation.mediaInfo.type === lastFragmentRequest.representation.mediaInfo.type && item.representation.mediaInfo.index !== lastFragmentRequest.representation.mediaInfo.index)) && triggerQualityChangeRenderedEvent) {
+                if ((!lastFragmentRequest.representation ||
+                    (item.representation.mediaInfo.type === lastFragmentRequest.representation.mediaInfo.type &&
+                        item.representation.mediaInfo.index !== lastFragmentRequest.representation.mediaInfo.index)) &&
+                    triggerQualityChangeRenderedEvent) {
                     _triggerTrackChangeRendered(item);
                 }
-                if ((!lastFragmentRequest.representation || (item.representation.id !== lastFragmentRequest.representation.id)) && triggerQualityChangeRenderedEvent) {
+                if ((!lastFragmentRequest.representation ||
+                    (item.representation.id !== lastFragmentRequest.representation.id)) &&
+                    triggerQualityChangeRenderedEvent) {
                     _triggerQualityChangeRendered(item);
                 }
                 lastFragmentRequest.representation = item.representation
@@ -377,7 +403,8 @@ function ScheduleController(config) {
         logger.debug(`Track change rendered for streamId ${streamInfo.id} and type ${type}`);
         eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
             mediaType: type,
-            oldMediaInfo: lastFragmentRequest && lastFragmentRequest.representation && lastFragmentRequest.representation.mediaInfo ? lastFragmentRequest.representation.mediaInfo : null,
+            oldMediaInfo: lastFragmentRequest && lastFragmentRequest.representation &&
+                lastFragmentRequest.representation.mediaInfo ? lastFragmentRequest.representation.mediaInfo : null,
             newMediaInfo: item.representation.mediaInfo,
             streamId: streamInfo.id
         });
@@ -445,7 +472,11 @@ function ScheduleController(config) {
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
-        eventBus.off(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING, _onManagedMediaSourceStartStreaming, instance);
+        eventBus.off(
+            MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING,
+            _onManagedMediaSourceStartStreaming,
+            instance
+        );
         eventBus.off(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING, _onManagedMediaSourceEndStreaming, instance);
 
         clearScheduleTimer();

@@ -23,8 +23,10 @@ describe('CustomParametersModel', function () {
         expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, 'string', true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, 'string', 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, 1, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, true, true))
+            .to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(customParametersModel.removeUTCTimingSource.bind(customParametersModel, 1, 1))
+            .to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
     it('Method addUTCTimingSource should throw an exception', () => {
@@ -32,8 +34,10 @@ describe('CustomParametersModel', function () {
         expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, 1, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, 'string', true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, 'string', 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, 1, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, true, true))
+            .to.throw(Constants.BAD_ARGUMENT_ERROR);
+        expect(customParametersModel.addUTCTimingSource.bind(customParametersModel, 1, 1))
+            .to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
     it('Should add custom initial track selection function', () => {

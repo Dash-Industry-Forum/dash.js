@@ -69,7 +69,8 @@ function AastLowLatencyThroughputModel() {
             sumX += chunkMeasurements[i].chunkDownloadTimeRelativeMS;
             sumY += chunkMeasurements[i].bufferLevel;
             sumXY += chunkMeasurements[i].chunkDownloadTimeRelativeMS * chunkMeasurements[i].bufferLevel;
-            sumXSq += chunkMeasurements[i].chunkDownloadTimeRelativeMS * chunkMeasurements[i].chunkDownloadTimeRelativeMS
+            sumXSq += chunkMeasurements[i].chunkDownloadTimeRelativeMS *
+                chunkMeasurements[i].chunkDownloadTimeRelativeMS
         }
 
         result.m = ((sumXY - sumX * sumY / N)) / (sumXSq - sumX * sumX / N)
@@ -83,7 +84,10 @@ function AastLowLatencyThroughputModel() {
     function isBufferSafeAndStable(lastMeasurements) {
         let isBufferSafeAndStable = true;
         let lastBitrate;
-        const aveBufferLevelLastSegements = lastMeasurements.reduce((prev, curr) => prev + curr.bufferLevelAtSegmentEnd, 0) / lastMeasurements.length;
+        const aveBufferLevelLastSegements = lastMeasurements.reduce(
+            (prev, curr) => prev + curr.bufferLevelAtSegmentEnd,
+            0
+        ) / lastMeasurements.length;
         lastMeasurements.forEach(m => {
             // inner segment buffer stability
             if (Math.abs(m.bufferLevelAtSegmentEnd / m.bufferLevelAtSegmentStart) < 0.95) {
@@ -117,15 +121,20 @@ function AastLowLatencyThroughputModel() {
 
         // calculate and remember the buffer level trend during the last fetched segment
         const lastChunkRelativeTimeMS = lastMeasurement.chunkMeasurements.slice(-1).pop().chunkDownloadTimeRelativeMS;
-        lastMeasurement.bufferLevelAtSegmentStart = lastMeasurement.getEstimatedBufferLevel(lastChunkRelativeTimeMS / 2);
+        lastMeasurement.bufferLevelAtSegmentStart =
+            lastMeasurement.getEstimatedBufferLevel(lastChunkRelativeTimeMS / 2);
         lastMeasurement.bufferLevelAtSegmentEnd = lastMeasurement.getEstimatedBufferLevel(lastChunkRelativeTimeMS);
 
         const isBufferStable = isBufferSafeAndStable(lastThreeMeasurements);
 
-        const selectedOptimisticFactor = isBufferStable ? LLTM_OPTIMISTIC_ESTIMATE_FACTOR : LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
+        const selectedOptimisticFactor = isBufferStable
+            ? LLTM_OPTIMISTIC_ESTIMATE_FACTOR
+            : LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
 
         // fetch duration was longer than segment duration, but buffer was stable
-        if (lastMeasurement.isBufferStable && lastMeasurement.segDurationMS * LLTM_SLOW_SEGMENT_DOWNLOAD_TOLERANCE < lastMeasurement.fetchDownloadDurationMS) {
+        if (lastMeasurement.isBufferStable &&
+            lastMeasurement.segDurationMS * LLTM_SLOW_SEGMENT_DOWNLOAD_TOLERANCE <
+            lastMeasurement.fetchDownloadDurationMS) {
             return lastMeasurement.fetchDownloadDurationMS;
         }
         // buffer is drying or fetch took too long
@@ -136,13 +145,16 @@ function AastLowLatencyThroughputModel() {
         // did we requested a fully available segment? -> most accurate throughput calculation
         // we use adjusted availability start time to decide
         // Note: this "download mode" usually happens at startup and if requests are delayed artificially
-        if (lastMeasurement.adjustedAvailabilityStartTimeMS <= (lastMeasurement.requestTimeMS + lastMeasurement.throughputCapacityDelayMS) - lastMeasurement.segDurationMS) {
+        if (lastMeasurement.adjustedAvailabilityStartTimeMS <=
+            (lastMeasurement.requestTimeMS + lastMeasurement.throughputCapacityDelayMS) -
+            lastMeasurement.segDurationMS) {
             return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
         }
 
         // get all chunks that have been downloaded before fetch reached bleeding live edge
         // the remaining chunks loaded at production rate we will approximated
-        const chunkAvailablePeriod = (lastMeasurement.requestTimeMS + lastMeasurement.throughputCapacityDelayMS) - lastMeasurement.adjustedAvailabilityStartTimeMS;
+        const chunkAvailablePeriod = (lastMeasurement.requestTimeMS + lastMeasurement.throughputCapacityDelayMS) -
+            lastMeasurement.adjustedAvailabilityStartTimeMS;
         let chunkBytesBBLE = 0; // BBLE -> Before bleeding live edge
         let chunkDownloadtimeMSBBLE = 0;
         let chunkCount = 0;
@@ -224,11 +236,14 @@ function AastLowLatencyThroughputModel() {
      * @param {*} requestTimeMS Timestamp at which the fetch was initiated
      * @param {*} throughputCapacityDelayMS An artificial delay that was used for this request
      */
-    function addMeasurement(request, fetchDownloadDurationMS, chunkMeasurements, requestTimeMS, throughputCapacityDelayMS) {
+    function addMeasurement(request, fetchDownloadDurationMS, chunkMeasurements, requestTimeMS,
+        throughputCapacityDelayMS) {
         if (request && request.mediaType && !measurements[request.mediaType]) {
             measurements[request.mediaType] = [];
         }
-        const bitrateEntry = request.representation.mediaInfo.bitrateList.find(item => item.id === request.representation.id);
+        const bitrateEntry = request.representation.mediaInfo.bitrateList.find(
+            item => item.id === request.representation.id
+        );
         measurements[request.mediaType].push({
             index: request.index,
             repId: request.representationId,
@@ -243,7 +258,8 @@ function AastLowLatencyThroughputModel() {
             chunkMeasurements,
             fetchDownloadDurationMS,
             throughputCapacityDelayMS,
-            getEstimatedBufferLevel: createBufferLevelTrendFunction(chunkMeasurements.slice(1)) // don't use first chunk's buffer level
+            // don't use first chunk's buffer level
+            getEstimatedBufferLevel: createBufferLevelTrendFunction(chunkMeasurements.slice(1))
         });
         // maintain only a maximum amount of most recent measurements
         if (measurements[request.mediaType].length > LLTM_MAX_MEASUREMENTS) {

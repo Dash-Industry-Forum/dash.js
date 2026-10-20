@@ -131,7 +131,8 @@ function BufferController(config) {
     }
 
     /**
-     * Returns the type of the BufferController. We distinguish between standard buffer controllers and buffer controllers related to texttracks.
+     * Returns the type of the BufferController. We distinguish between standard buffer controllers and buffer
+     * controllers related to texttracks.
      * @return {string}
      */
     function getBufferControllerType() {
@@ -279,7 +280,8 @@ function BufferController(config) {
                 logger.debug('PreBuffer discharge requested, but there were no media segments in the PreBuffer.');
             }
 
-            //A list of fragments to supress bytesAppended events for. This makes transferring from a prebuffer to a sourcebuffer silent.
+            //A list of fragments to supress bytesAppended events for. This makes transferring from a prebuffer to a
+            // sourcebuffer silent.
             dischargeFragments = [];
             let chunks = dischargeBuffer.discharge();
             for (let j = 0; j < chunks.length; j++) {
@@ -295,7 +297,8 @@ function BufferController(config) {
 
 
     /**
-     * Callback handler when init segment has been loaded. Based on settings, the init segment is saved to the cache, and appended to the buffer.
+     * Callback handler when init segment has been loaded. Based on settings, the init segment is saved to the cache,
+     * and appended to the buffer.
      * @param {object} e
      * @private
      */
@@ -309,7 +312,8 @@ function BufferController(config) {
     }
 
     /**
-     * Append the init segment for a certain representation to the buffer. If the init segment is cached we take the one from the cache. Otherwise the function returns false and the segment has to be requested again.
+     * Append the init segment for a certain representation to the buffer. If the init segment is cached we take the
+     * one from the cache. Otherwise the function returns false and the segment has to be requested again.
      * @param {string} representationId
      * @return {boolean}
      */
@@ -331,7 +335,8 @@ function BufferController(config) {
     }
 
     /**
-     * Calls the _appendToBuffer function to append the segment to the buffer. In case of a track switch the buffer might be cleared.
+     * Calls the _appendToBuffer function to append the segment to the buffer. In case of a track switch the buffer
+     * might be cleared.
      * @param {object} e
      */
     function _onMediaFragmentLoaded(e) {
@@ -422,7 +427,8 @@ function BufferController(config) {
     }
 
     function _handleAppendedError(e) {
-        // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the future.
+        // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the
+        // future.
         if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
             _handleQuotaExceededError();
         }
@@ -438,7 +444,8 @@ function BufferController(config) {
     }
 
     /**
-     * In some cases the segment we requested might start at a different time than we initially aimed for. segments timeline/template tolerance.
+     * In some cases the segment we requested might start at a different time than we initially aimed for. segments
+     * timeline/template tolerance.
      * We might need to do an internal seek if there is drift.
      * @private
      */
@@ -468,17 +475,21 @@ function BufferController(config) {
             return;
         }
 
-        if (settings.get().streaming.buffer.enableSeekDecorrelationFix && Math.abs(currentTime - seekTarget) > segmentDuration) {
-            // If current video model time is decorrelated from seek target (and appended buffer) then seek video element
-            // (in case of live streams on some browsers/devices for which we can't set video element time at unavalaible range)
+        if (settings.get().streaming.buffer.enableSeekDecorrelationFix &&
+            Math.abs(currentTime - seekTarget) > segmentDuration) {
+            // If current video model time is decorrelated from seek target (and appended buffer) then seek video
+            // element (in case of live streams on some browsers/devices for which we can't set video element time at
+            // unavalaible range)
 
             // Check if appended segment is not anterior from seek target (segments timeline/template tolerance)
             if (seekTarget <= range.end) {
-                // Seek video element to seek target or range start if appended buffer starts after seek target (segments timeline/template tolerance)
+                // Seek video element to seek target or range start if appended buffer starts after seek target
+                // (segments timeline/template tolerance)
                 playbackController.seek(Math.max(seekTarget, range.start), false, true);
             }
         } else if (currentTime < range.start) {
-            // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range start
+            // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range
+            // start
             playbackController.seek(range.start, false, true);
         }
     }
@@ -492,8 +503,14 @@ function BufferController(config) {
             // recalculate buffer lengths according to criticalBufferLevel
             const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
             const bufferAhead = criticalBufferLevel - bufferToKeep;
-            const bufferTimeAtTopQuality = Math.min(settings.get().streaming.buffer.bufferTimeAtTopQuality, bufferAhead * 0.9);
-            const bufferTimeAtTopQualityLongForm = Math.min(settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm, bufferAhead * 0.9);
+            const bufferTimeAtTopQuality = Math.min(
+                settings.get().streaming.buffer.bufferTimeAtTopQuality,
+                bufferAhead * 0.9
+            );
+            const bufferTimeAtTopQualityLongForm = Math.min(
+                settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm,
+                bufferAhead * 0.9
+            );
             const s = {
                 streaming: {
                     buffer: {
@@ -594,7 +611,8 @@ function BufferController(config) {
         }
 
         // we dont need change type for the codec change if we have the same mime type and codec family
-        if (newRepresentation && oldRepresentation && newRepresentation.mimeType === oldRepresentation.mimeType && newRepresentation.codecFamily === oldRepresentation.codecFamily) {
+        if (newRepresentation && oldRepresentation && newRepresentation.mimeType === oldRepresentation.mimeType &&
+            newRepresentation.codecFamily === oldRepresentation.codecFamily) {
             logger.debug(`Switching to new codec ${newRepresentation.codecs} without changeType as previous codec ${oldRepresentation.codecs} is compatible.`);
             return Promise.resolve();
         }
@@ -657,7 +675,9 @@ function BufferController(config) {
 
         return getPruningRanges(ranges, seekTime, {
             bufferToKeepBehind: bufferSettings.bufferToKeep,
-            bufferToKeepAhead: isLongFormContent ? bufferSettings.bufferTimeAtTopQualityLongForm : bufferSettings.bufferTimeAtTopQuality,
+            bufferToKeepAhead: isLongFormContent
+                ? bufferSettings.bufferTimeAtTopQualityLongForm
+                : bufferSettings.bufferTimeAtTopQuality,
             currentTimeRequest,
             avoidCurrentTimeRangePruning: bufferSettings.avoidCurrentTimeRangePruning,
             logger
@@ -714,7 +734,10 @@ function BufferController(config) {
             if (isPrebuffering) {
                 referenceTime = !isNaN(seekTarget) ? seekTarget : 0;
             }
-            const tolerance = settings.get().streaming.gaps.jumpGaps && !isNaN(settings.get().streaming.gaps.smallGapLimit) ? settings.get().streaming.gaps.smallGapLimit : NaN;
+            const tolerance = settings.get().streaming.gaps.jumpGaps &&
+                !isNaN(settings.get().streaming.gaps.smallGapLimit)
+                ? settings.get().streaming.gaps.smallGapLimit
+                : NaN;
             bufferLevel = Math.max(_getBufferLength(referenceTime, tolerance), 0);
             _triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
@@ -732,13 +755,16 @@ function BufferController(config) {
     }
 
     function checkIfSufficientBuffer() {
-        // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
+        // No need to check buffer if type is not audio or video (for example if several errors occur during text
+        // parsing, so that the buffer cannot be filled, no error must occur on video playback)
         if (type !== Constants.AUDIO && type !== Constants.VIDEO) {
             return;
         }
 
         //Set stall threshold based on player mode
-        const stallThreshold = playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.buffer.lowLatencyStallThreshold : settings.get().streaming.buffer.stallThreshold;
+        const stallThreshold = playbackController.getLowLatencyModeEnabled()
+            ? settings.get().streaming.buffer.lowLatencyStallThreshold
+            : settings.get().streaming.buffer.stallThreshold;
 
         if ((bufferLevel <= stallThreshold) && !isBufferingCompleted) {
             _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
@@ -749,7 +775,8 @@ function BufferController(config) {
 
     function _notifyBufferStateChanged(state) {
         if (bufferState === state ||
-            (state === MetricsConstants.BUFFER_EMPTY && playbackController.getTime() === 0) || // Don't trigger BUFFER_EMPTY if it's initial loading
+            // Don't trigger BUFFER_EMPTY if it's initial loading
+            (state === MetricsConstants.BUFFER_EMPTY && playbackController.getTime() === 0) ||
             (type === Constants.TEXT && !textController.isTextEnabled())) {
             return;
         }
@@ -929,7 +956,8 @@ function BufferController(config) {
 
     function updateBufferTimestampOffset(voRepresentation) {
         return new Promise((resolve) => {
-            if (!voRepresentation || voRepresentation.mseTimeOffset === undefined || !sourceBufferSink || !sourceBufferSink.updateTimestampOffset) {
+            if (!voRepresentation || voRepresentation.mseTimeOffset === undefined || !sourceBufferSink ||
+                !sourceBufferSink.updateTimestampOffset) {
                 resolve();
                 return;
             }

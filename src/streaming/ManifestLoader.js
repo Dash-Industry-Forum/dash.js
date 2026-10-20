@@ -207,14 +207,18 @@ function ManifestLoader(config) {
                         manifest.originalUrl = manifest.url;
                     }
 
-                    // If there is a mismatch between the manifest's specified duration and the total duration of all periods,
-                    // and the specified duration is greater than the total duration of all periods,
-                    // overwrite the manifest's duration attribute. This is a patch for if a manifest is generated incorrectly.
+                    // If there is a mismatch between the manifest's specified duration and the total duration of all
+                    // periods, and the specified duration is greater than the total duration of all periods,
+                    // overwrite the manifest's duration attribute. This is a patch for if a manifest is generated
+                    // incorrectly.
                     if (settings &&
                         settings.get().streaming.enableManifestDurationMismatchFix &&
                         manifest.mediaPresentationDuration &&
                         manifest.Period?.length > 1) {
-                        const sumPeriodDurations = manifest.Period.reduce((totalDuration, period) => totalDuration + period.duration, 0);
+                        const sumPeriodDurations = manifest.Period.reduce(
+                            (totalDuration, period) => totalDuration + period.duration,
+                            0
+                        );
                         if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
                             logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');
                             manifest.mediaPresentationDuration = sumPeriodDurations;

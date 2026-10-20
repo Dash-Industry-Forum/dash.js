@@ -124,14 +124,16 @@ function GapController() {
     }
 
     /**
-     *  If the track was changed in the current active period and the player might aggressively replace segments the buffer will be empty for a short period of time. Avoid gap jumping at that time.
+     *  If the track was changed in the current active period and the player might aggressively replace segments the
+     *  buffer will be empty for a short period of time. Avoid gap jumping at that time.
      *  We wait until the next media fragment of the target type has been appended before activating again
      * @param {object} e
      * @private
      */
     function _onBufferReplacementStarted(e) {
         try {
-            if (e.streamId !== streamController.getActiveStreamInfo().id || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
+            if (e.streamId !== streamController.getActiveStreamInfo().id ||
+                (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
                 return;
             }
 
@@ -190,7 +192,8 @@ function GapController() {
 
     /**
      * Returns if we are supposed to check for gaps
-     * @param {boolean} checkSeekingState - Usually we are not checking for gaps in the videolement is in seeking state. If this flag is set to true we check for a potential exceptions of this rule.
+     * @param {boolean} checkSeekingState - Usually we are not checking for gaps in the videolement is in seeking state.
+     * If this flag is set to true we check for a potential exceptions of this rule.
      * @return {boolean}
      * @private
      */
@@ -207,13 +210,18 @@ function GapController() {
         }
         const shouldIgnoreSeekingState = checkSeekingState ? _shouldIgnoreSeekingState() : false;
 
-        return !trackSwitchInProgress && settings.get().streaming.gaps.jumpGaps && streamController.getActiveStreamProcessors().length > 0 && (!playbackController.isSeeking() || shouldIgnoreSeekingState) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
+        return !trackSwitchInProgress && settings.get().streaming.gaps.jumpGaps &&
+            streamController.getActiveStreamProcessors().length > 0 &&
+            (!playbackController.isSeeking() || shouldIgnoreSeekingState) && !playbackController.isPaused() &&
+            !streamController.getIsStreamSwitchInProgress() &&
             !streamController.getHasMediaOrInitialisationError();
     }
 
     /**
-     * There are cases in which we never transition out of the seeking state and still need to jump a gap. For instance if the user seeks right before a gap and video element will not transition out of the seeking state.
-     * For now limit this to period boundaries. In this case the current period is completely buffered and we are right before the end of the period.
+     * There are cases in which we never transition out of the seeking state and still need to jump a gap. For instance
+     * if the user seeks right before a gap and video element will not transition out of the seeking state.
+     * For now limit this to period boundaries. In this case the current period is completely buffered and we are right
+     * before the end of the period.
      * @private
      */
     function _shouldIgnoreSeekingState() {
@@ -334,12 +342,14 @@ function GapController() {
 
         // Playback has stalled before period end. We seek to the end of the period
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
-        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && timeToStreamEnd < smallGapLimit) {
+        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) &&
+            timeToStreamEnd < smallGapLimit) {
             seekToPosition = parseFloat(playbackController.getStreamEndTime().toFixed(5));
             jumpToStreamEnd = true;
         }
 
-        if (enableStallFix && isNaN(seekToPosition) && playbackStalled && isNaN(nextRangeIndex) && _isTimeBuffered(ranges, currentTime)) {
+        if (enableStallFix && isNaN(seekToPosition) && playbackStalled && isNaN(nextRangeIndex) &&
+            _isTimeBuffered(ranges, currentTime)) {
             if (stallSeek === 0) {
                 logger.warn(`Toggle play pause to break stall`);
                 videoModel.pause();
@@ -350,7 +360,8 @@ function GapController() {
             }
         }
 
-        if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition && seekToPosition > currentTime && !jumpTimeoutHandler) {
+        if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition && seekToPosition > currentTime &&
+            !jumpTimeoutHandler) {
             const timeUntilGapEnd = seekToPosition - currentTime;
 
             if (jumpToStreamEnd) {

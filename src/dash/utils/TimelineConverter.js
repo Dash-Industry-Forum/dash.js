@@ -46,7 +46,9 @@ function TimelineConverter() {
 
     let instance,
         dashManifestModel,
-        timelineAnchorAvailabilityOffset, // In case we calculate the TSBD using _calcTimeShiftBufferWindowForDynamicTimelineManifest we use the segments as anchor times. We apply this offset when calculating if a segment is available or not.
+        // In case we calculate the TSBD using _calcTimeShiftBufferWindowForDynamicTimelineManifest we use the segments
+        // as anchor times. We apply this offset when calculating if a segment is available or not.
+        timelineAnchorAvailabilityOffset,
         clientServerTimeShift;
 
     function setup() {
@@ -85,7 +87,8 @@ function TimelineConverter() {
         return Date.now() - (timelineAnchorAvailabilityOffset * 1000) + (clientServerTimeShift * 1000);
     }
 
-    function _calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, calculateAvailabilityEndTime) {
+    function _calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic,
+        calculateAvailabilityEndTime) {
         let availabilityTime;
         let mpd = representation.adaptation.period.mpd;
         const availabilityStartTime = mpd.availabilityStartTime;
@@ -96,7 +99,9 @@ function TimelineConverter() {
             // When not present, the value is infinite.
             if (isDynamic && mpd.timeShiftBufferDepth !== Number.POSITIVE_INFINITY) {
                 // SAET = SAST + TSBD + seg@duration
-                availabilityTime = new Date(availabilityStartTime.getTime() + ((presentationEndTime + mpd.timeShiftBufferDepth) * 1000));
+                availabilityTime = new Date(
+                    availabilityStartTime.getTime() + ((presentationEndTime + mpd.timeShiftBufferDepth) * 1000)
+                );
             } else {
                 availabilityTime = mpd.availabilityEndTime;
             }
@@ -106,7 +111,9 @@ function TimelineConverter() {
                 // ASAST = SAST - ATO
                 const availabilityTimeOffset = representation.availabilityTimeOffset;
                 // presentationEndTime = Period@start + seg@presentationStartTime + Segment@duration
-                availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime - availabilityTimeOffset) * 1000);
+                availabilityTime = new Date(
+                    availabilityStartTime.getTime() + (presentationEndTime - availabilityTimeOffset) * 1000
+                );
             } else {
                 // in static mpd, all segments are available at the same time
                 availabilityTime = availabilityStartTime;
@@ -125,7 +132,8 @@ function TimelineConverter() {
     }
 
     function calcPresentationTimeFromWallTime(wallTime, period) {
-        return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) / 1000);
+        return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) /
+            1000);
     }
 
     function calcPresentationTimeFromMediaTime(mediaTime, representation) {
@@ -157,7 +165,8 @@ function TimelineConverter() {
     }
 
     /**
-     * Calculates the timeshiftbuffer range. This range might overlap multiple periods and is not limited to period boundaries. However, we make sure that the range is potentially covered by period.
+     * Calculates the timeshiftbuffer range. This range might overlap multiple periods and is not limited to period
+     * boundaries. However, we make sure that the range is potentially covered by period.
      * @param {Array} streams
      * @param {boolean} isDynamic
      * @return {}
@@ -221,7 +230,8 @@ function TimelineConverter() {
             range.end = NaN;
         }
 
-        // If we have SegmentTimeline as a reference we can verify that the calculated DVR window is at least partially included in the DVR window exposed by the timeline.
+        // If we have SegmentTimeline as a reference we can verify that the calculated DVR window is at least partially
+        // included in the DVR window exposed by the timeline.
         // If that is not the case we stick to the DVR window defined by SegmentTimeline
         if (settings.get().streaming.timeShiftBuffer.fallbackToSegmentTimeline) {
             const timelineRefData = _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
@@ -253,10 +263,12 @@ function TimelineConverter() {
                 voRepresentation = stream.getCurrentRepresentationForType(Constants.AUDIO)
             }
 
-            // If we still got not voRepresentation we are in the startup phase and nothing was selected yet. Use the default Representation
+            // If we still got not voRepresentation we are in the startup phase and nothing was selected yet. Use the
+            // default Representation
             if (!voRepresentation) {
                 const adapter = stream.getAdapter();
-                const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.VIDEO) || adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.AUDIO);
+                const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.VIDEO) ||
+                    adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.AUDIO);
                 const voRepresentations = adapter.getVoRepresentations(mediaInfo);
                 voRepresentation = voRepresentations[0];
             }
@@ -288,7 +300,10 @@ function TimelineConverter() {
         // if range is NaN all periods are in the future. we should return range.start > range.end in this case
         range.end = isNaN(adjustedEndTime) ? range.end : adjustedEndTime;
 
-        range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) && !isNaN(range.end) ? Math.max(range.end - voPeriod.mpd.timeShiftBufferDepth, range.start) : range.start;
+        range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth &&
+        !isNaN(voPeriod.mpd.timeShiftBufferDepth) && !isNaN(range.end)
+            ? Math.max(range.end - voPeriod.mpd.timeShiftBufferDepth, range.start)
+            : range.start;
         range.start = _adjustTimeBasedOnPeriodRanges(streams, range.start);
 
         return { range, now };
@@ -308,18 +323,24 @@ function TimelineConverter() {
                 const streamInfo = streams[i].getStreamInfo();
 
                 // We found a period which contains the target time.
-                if (streamInfo.start <= time && (!isFinite(streamInfo.duration) || (streamInfo.start + streamInfo.duration >= time))) {
+                if (streamInfo.start <= time &&
+                    (!isFinite(streamInfo.duration) || (streamInfo.start + streamInfo.duration >= time))) {
                     adjustedTime = time;
                     found = true;
                 }
 
-                // Adjust the time for the start of the DVR window. The current period starts after the target time. We use the starttime of this period as adjusted time
-                else if (!isEndOfDvrWindow && (streamInfo.start > time && (isNaN(adjustedTime) || streamInfo.start < adjustedTime))) {
+                // Adjust the time for the start of the DVR window. The current period starts after the target time.
+                // We use the starttime of this period as adjusted time
+                else if (!isEndOfDvrWindow &&
+                    (streamInfo.start > time && (isNaN(adjustedTime) || streamInfo.start < adjustedTime))) {
                     adjustedTime = streamInfo.start;
                 }
 
-                // Adjust the time for the end of the DVR window. The current period ends before the targettime. We use the end time of this period as the adjusted time
-                else if (isEndOfDvrWindow && ((streamInfo.start + streamInfo.duration) < time && (isNaN(adjustedTime) || (streamInfo.start + streamInfo.duration > adjustedTime)))) {
+                // Adjust the time for the end of the DVR window. The current period ends before the targettime.
+                // We use the end time of this period as the adjusted time
+                else if (isEndOfDvrWindow &&
+                    ((streamInfo.start + streamInfo.duration) < time &&
+                        (isNaN(adjustedTime) || (streamInfo.start + streamInfo.duration > adjustedTime)))) {
                     adjustedTime = streamInfo.start + streamInfo.duration;
                 }
 
@@ -333,7 +354,9 @@ function TimelineConverter() {
     }
 
     function _calcRangeForTimeline(voRepresentation) {
-        const adaptation = voRepresentation.adaptation.period.mpd.manifest.Period[voRepresentation.adaptation.period.index].AdaptationSet[voRepresentation.adaptation.index];
+        const adaptation = voRepresentation.adaptation.period.mpd.manifest
+            .Period[voRepresentation.adaptation.period.index]
+            .AdaptationSet[voRepresentation.adaptation.index];
         const representation = dashManifestModel.getRepresentationFor(voRepresentation.index, adaptation);
         const base = representation.SegmentTemplate || representation.SegmentList;
         const timeline = base.SegmentTimeline;

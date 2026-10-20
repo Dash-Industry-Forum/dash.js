@@ -364,7 +364,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no other parameters. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no other parameters. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                 }
@@ -387,7 +388,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no width. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no width. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                     height: 180,
@@ -414,7 +416,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no height. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no height. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                     width: 180,
@@ -441,7 +444,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no bitrate. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no bitrate. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                     height: 180,
@@ -468,7 +472,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no framerate. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no framerate. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                     height: 180,

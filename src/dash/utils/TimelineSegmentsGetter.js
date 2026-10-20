@@ -52,7 +52,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
             return null;
         }
         const safetyOffset = 0.01;
-        const requestedPresentationTime = lastSegment && !isNaN(lastSegment.presentationStartTime) ? lastSegment.presentationStartTime + lastSegment.duration + safetyOffset : 0;
+        const requestedPresentationTime = lastSegment && !isNaN(lastSegment.presentationStartTime)
+            ? lastSegment.presentationStartTime + lastSegment.duration + safetyOffset
+            : 0;
 
         return getSegmentByTime(representation, requestedPresentationTime);
     }
@@ -69,7 +71,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
 
         let segment = null;
-        const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedPresentationTime, representation);
+        const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(
+            requestedPresentationTime, representation
+        );
 
         _iterateSegments(representation, function (data) {
             // In some cases when requiredMediaTime = actual end time of the last segment
@@ -97,7 +101,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
             const mediaStartTime = mediaTime;
             const mediaEndTime = mediaTime + targetDurationInTimescale;
 
-            if (requiredMediaTimeInTimescaleUnits < mediaEndTime && requiredMediaTimeInTimescaleUnits >= mediaStartTime) {
+            if (requiredMediaTimeInTimescaleUnits < mediaEndTime &&
+                requiredMediaTimeInTimescaleUnits >= mediaStartTime) {
                 _onSegmentFound({
                     segmentBase,
                     segmentURL,
@@ -159,8 +164,10 @@ function TimelineSegmentsGetter(config, isDynamic) {
             return 0;
         }
 
-        const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
-            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+        const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index]
+            .AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
+            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index]
+                .AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
         const timeline = base.SegmentTimeline;
 
         let mediaTime = 0;
@@ -192,11 +199,14 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 mediaTimeInSeconds = mediaTime / fTimescale;
             }
 
-            // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
-            // next MPD update."
+            // This is a special case: "A negative value of the @r attribute of the S element indicates that the
+            // duration indicated in @d attribute repeats until the start of the next S element, the end of the Period
+            // or until the next MPD update."
             if (repeat < 0) {
                 const nextFrag = fragments[i + 1];
-                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, mediaTimeInSeconds);
+                repeat = _calculateRepeatCountForNegativeR(
+                    representation, nextFrag, frag, fTimescale, mediaTimeInSeconds
+                );
             }
 
             for (j = 0; j <= repeat; j++) {
@@ -243,11 +253,14 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 mediaTime = currentSElement.t;
             }
 
-            // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
-            // next MPD update."
+            // This is a special case: "A negative value of the @r attribute of the S element indicates that the
+            // duration indicated in @d attribute repeats until the start of the next S element, the end of the Period
+            // or until the next MPD update."
             if (repeat < 0) {
                 const nextFrag = parsedSElements[sElementCounter + 1];
-                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, currentSElement, fTimescale, mediaTime / fTimescale);
+                repeat = _calculateRepeatCountForNegativeR(
+                    representation, nextFrag, currentSElement, fTimescale, mediaTime / fTimescale
+                );
             }
 
             for (j = 0; j <= repeat && !breakIterator; j++) {
@@ -272,8 +285,10 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
 
     function _getSegmentBase(representation) {
-        return representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
-            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+        return representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index]
+            .AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
+            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index]
+                .AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
     }
 
     function _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime) {
@@ -284,9 +299,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
         } else {
             try {
                 let availabilityEnd = 0;
-                if (!isNaN(representation.adaptation.period.start) && !isNaN(representation.adaptation.period.duration) && isFinite(representation.adaptation.period.duration)) {
+                if (!isNaN(representation.adaptation.period.start) &&
+                    !isNaN(representation.adaptation.period.duration) &&
+                    isFinite(representation.adaptation.period.duration)) {
                     // use end of the Period
-                    availabilityEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
+                    availabilityEnd = representation.adaptation.period.start +
+                        representation.adaptation.period.duration;
                 } else {
                     // use DVR window
                     const dvrWindow = dashMetrics.getCurrentDVRInfo();
@@ -327,7 +345,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
 
     function _getSubNumberOfPartialSegmentToRequestByTime(data) {
-        if (!data || data.totalNumberOfPartialSegments === undefined || isNaN(data.totalNumberOfPartialSegments) || data.totalNumberOfPartialSegments < 1) {
+        if (!data || data.totalNumberOfPartialSegments === undefined || isNaN(data.totalNumberOfPartialSegments) ||
+            data.totalNumberOfPartialSegments < 1) {
             return undefined;
         }
         const {

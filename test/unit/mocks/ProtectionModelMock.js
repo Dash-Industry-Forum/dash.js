@@ -7,7 +7,12 @@ function ProtectionModelMock (config) {
     let nextId = 0;
 
     this.setServerCertificate = function (/*elt*/) {
-        config.eventBus.trigger(config.events.SERVER_CERTIFICATE_UPDATED, {error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE)});
+        config.eventBus.trigger(config.events.SERVER_CERTIFICATE_UPDATED, {
+            error: new DashJSError(
+                ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE,
+                ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE
+            )
+        });
     };
 
     this.setMediaElement = function () {

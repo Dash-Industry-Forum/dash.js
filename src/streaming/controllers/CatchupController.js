@@ -174,14 +174,16 @@ function CatchupController() {
     }
 
     /**
-     * While playback is progressing we check if we need to start or stop the catchup mechanism to reach the target latency
+     * While playback is progressing we check if we need to start or stop the catchup mechanism to reach the target
+     * latency
      * @private
      */
     function _onPlaybackProgression() {
         if (
             playbackController.getIsDynamic() &&
             mediaPlayerModel.getCatchupModeEnabled() &&
-            ((mediaPlayerModel.getCatchupPlaybackRates().max > 0) || (mediaPlayerModel.getCatchupPlaybackRates().min < 0)) &&
+            ((mediaPlayerModel.getCatchupPlaybackRates().max > 0) ||
+                (mediaPlayerModel.getCatchupPlaybackRates().min < 0)) &&
             !playbackController.isPaused() &&
             !playbackController.isSeeking() &&
             _shouldStartCatchUp()
@@ -233,21 +235,34 @@ function CatchupController() {
                 if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_LOLP) {
                     // Custom playback control: Based on buffer level
                     const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
-                    newRate = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, playbackBufferMin, bufferLevel);
+                    newRate = _calculateNewPlaybackRateLolP(
+                        liveCatchupPlaybackRates,
+                        currentLiveLatency,
+                        targetLiveDelay,
+                        playbackBufferMin,
+                        bufferLevel
+                    );
                 } else if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_STEP) {
                     // Custom playback control: Based on minimising playback rate changes
                     newRate = _calculateNewPlaybackRateStep(liveCatchupPlaybackRates, targetLiveDelay, bufferLevel);
                 } else {
                     // Default playback control: Based on target and current latency
-                    newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, bufferLevel);
+                    newRate = _calculateNewPlaybackRateDefault(
+                        liveCatchupPlaybackRates,
+                        currentLiveLatency,
+                        targetLiveDelay,
+                        bufferLevel
+                    );
                 }
 
                 // We adjust the min change linear, depending on the maximum catchup rate. Default is 0.02 for rate 0.5.
                 // For Safari we stick to a fixed value because of  https://bugs.webkit.org/show_bug.cgi?id=208142
                 const minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRates.max);
 
-                // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't overload element with playbackrate changes)
-                if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange || newRate == 1.0) { // non-null
+                // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't
+                // overload element with playbackrate changes)
+                // non-null
+                if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange || newRate == 1.0) {
                     logger.debug(`[CatchupController]: Setting playback rate to ${newRate}`);
                     videoModel.setPlaybackRate(newRate);
                 }
@@ -268,7 +283,8 @@ function CatchupController() {
     }
 
     /**
-     * Calculates the drift between the current latency and the absolute target latency specified in the service description or settings
+     * Calculates the drift between the current latency and the absolute target latency specified in the service
+     * description or settings
      * @return {number}
      * @private
      */
@@ -280,7 +296,8 @@ function CatchupController() {
     }
 
     /**
-     * Checks whether the catchup mechanism should be enabled. We use different subfunctions here depending on the catchup mode.
+     * Checks whether the catchup mechanism should be enabled. We use different subfunctions here depending on the
+     * catchup mode.
      * @return {boolean}
      */
     function _shouldStartCatchUp() {
@@ -326,7 +343,8 @@ function CatchupController() {
         if (settings.get().streaming.liveCatchup.mode === Constants.LIVE_CATCHUP_MODE_STEP) {
             catchupMode = Constants.LIVE_CATCHUP_MODE_STEP;
         }
-        else if (settings.get().streaming.liveCatchup.mode === Constants.LIVE_CATCHUP_MODE_LOLP && playbackBufferMin !== null && !isNaN(playbackBufferMin)) {
+        else if (settings.get().streaming.liveCatchup.mode === Constants.LIVE_CATCHUP_MODE_LOLP &&
+            playbackBufferMin !== null && !isNaN(playbackBufferMin)) {
             catchupMode = Constants.LIVE_CATCHUP_MODE_LOLP;
         }
 
@@ -441,7 +459,13 @@ function CatchupController() {
      * @return {number}
      * @private
      */
-    function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRates, currentLiveLatency, liveDelay, playbackBufferMin, bufferLevel) {
+    function _calculateNewPlaybackRateLolP(
+        liveCatchUpPlaybackRates,
+        currentLiveLatency,
+        liveDelay,
+        playbackBufferMin,
+        bufferLevel
+    ) {
         let newRate;
 
         // Hybrid: Buffer-based

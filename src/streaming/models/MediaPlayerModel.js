@@ -167,7 +167,9 @@ function MediaPlayerModel() {
         }
 
         const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.maxDrift) && serviceDescriptionSettings.liveCatchup.maxDrift >= 0) {
+        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup &&
+            !isNaN(serviceDescriptionSettings.liveCatchup.maxDrift) &&
+            serviceDescriptionSettings.liveCatchup.maxDrift >= 0) {
             return serviceDescriptionSettings.liveCatchup.maxDrift;
         }
 
@@ -190,7 +192,9 @@ function MediaPlayerModel() {
         }
 
         const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && (!isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.min) || !isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.max))) {
+        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup &&
+            (!isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.min) ||
+                !isNaN(serviceDescriptionSettings.liveCatchup.playbackRate.max))) {
             const sdPlaybackRate = serviceDescriptionSettings.liveCatchup.playbackRate;
             return {
                 min: _checkMinPlaybackRate(sdPlaybackRate.min, log),
@@ -213,7 +217,8 @@ function MediaPlayerModel() {
 
         const settingsStep = settings.get().streaming.liveCatchup.step;
 
-        if (!isNaN(settingsStep.start.min) || !isNaN(settingsStep.start.max) || !isNaN(settingsStep.stop.min) || !isNaN(settingsStep.stop.max)) {
+        if (!isNaN(settingsStep.start.min) || !isNaN(settingsStep.start.max) ||
+            !isNaN(settingsStep.stop.min) || !isNaN(settingsStep.stop.max)) {
             return {
                 start: {
                     min: _checkStepSettings(settingsStep.start.min, log),
@@ -263,7 +268,8 @@ function MediaPlayerModel() {
             }
 
             const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-            if (serviceDescriptionSettings && serviceDescriptionSettings[field] && !isNaN(serviceDescriptionSettings[field][mediaType])) {
+            if (serviceDescriptionSettings && serviceDescriptionSettings[field] &&
+                !isNaN(serviceDescriptionSettings[field][mediaType])) {
                 return serviceDescriptionSettings[field][mediaType];
             }
 
@@ -303,7 +309,9 @@ function MediaPlayerModel() {
      * @return {number}
      */
     function getBufferTimeDefaultUnadjusted() {
-        return settings.get().streaming.buffer.bufferTimeDefault > 0 ? settings.get().streaming.buffer.bufferTimeDefault : getFastSwitchEnabled() ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return settings.get().streaming.buffer.bufferTimeDefault > 0
+            ? settings.get().streaming.buffer.bufferTimeDefault
+            : getFastSwitchEnabled() ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     /**
@@ -312,9 +320,13 @@ function MediaPlayerModel() {
      * @return {number}
      */
     function getRetryAttemptsForType(type) {
-        const lowLatencyMultiplyFactor = !isNaN(settings.get().streaming.retryAttempts.lowLatencyMultiplyFactor) ? settings.get().streaming.retryAttempts.lowLatencyMultiplyFactor : LOW_LATENCY_MULTIPLY_FACTOR;
+        const lowLatencyMultiplyFactor = !isNaN(settings.get().streaming.retryAttempts.lowLatencyMultiplyFactor)
+            ? settings.get().streaming.retryAttempts.lowLatencyMultiplyFactor
+            : LOW_LATENCY_MULTIPLY_FACTOR;
 
-        return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.retryAttempts[type] * lowLatencyMultiplyFactor : settings.get().streaming.retryAttempts[type];
+        return playbackController.getLowLatencyModeEnabled()
+            ? settings.get().streaming.retryAttempts[type] * lowLatencyMultiplyFactor
+            : settings.get().streaming.retryAttempts[type];
     }
 
     /**
@@ -323,13 +335,18 @@ function MediaPlayerModel() {
      * @return {number}
      */
     function getRetryIntervalsForType(type) {
-        const lowLatencyReductionFactor = !isNaN(settings.get().streaming.retryIntervals.lowLatencyReductionFactor) ? settings.get().streaming.retryIntervals.lowLatencyReductionFactor : LOW_LATENCY_REDUCTION_FACTOR;
+        const lowLatencyReductionFactor = !isNaN(settings.get().streaming.retryIntervals.lowLatencyReductionFactor)
+            ? settings.get().streaming.retryIntervals.lowLatencyReductionFactor
+            : LOW_LATENCY_REDUCTION_FACTOR;
 
-        return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.retryIntervals[type] / lowLatencyReductionFactor : settings.get().streaming.retryIntervals[type];
+        return playbackController.getLowLatencyModeEnabled()
+            ? settings.get().streaming.retryIntervals[type] / lowLatencyReductionFactor
+            : settings.get().streaming.retryIntervals[type];
     }
 
     /**
-     * Returns whether the fast switch mode is defined in the settings options. If not we enable it by default but only for non low-latency playback.
+     * Returns whether the fast switch mode is defined in the settings options. If not we enable it by default but only
+     * for non low-latency playback.
      * @return {boolean}
      */
     function getFastSwitchEnabled() {
@@ -341,7 +358,9 @@ function MediaPlayerModel() {
     }
 
     function getScheduleTimeout() {
-        return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout
+        return playbackController.getLowLatencyModeEnabled()
+            ? settings.get().streaming.scheduling.lowLatencyTimeout
+            : settings.get().streaming.scheduling.defaultTimeout
     }
 
     function reset() {

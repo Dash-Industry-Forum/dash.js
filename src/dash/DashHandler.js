@@ -136,12 +136,26 @@ function DashHandler(config) {
         request.mediaType = mediaType;
         request.type = HTTPRequest.INIT_SEGMENT_TYPE;
         request.range = representation.range;
-        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, isDynamicManifest);
-        request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, representation, isDynamicManifest);
+        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+            presentationStartTime,
+            representation,
+            isDynamicManifest
+        );
+        request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+            presentationStartTime + period.duration,
+            representation,
+            isDynamicManifest
+        );
         request.representation = representation;
 
         if (_setRequestUrl(request, representation.initialization, representation)) {
-            request.url = processUriTemplate(request.url, representation.id, undefined, undefined, representation.bandwidth);
+            request.url = processUriTemplate(
+                request.url,
+                representation.id,
+                undefined,
+                undefined,
+                representation.bandwidth
+            );
             return request;
         }
     }
@@ -151,7 +165,8 @@ function DashHandler(config) {
             return false;
         }
 
-        // SegmentBase and BaseURL: without a segment list (not loaded yet or failed) the last segment can not have been requested
+        // SegmentBase and BaseURL: without a segment list (not loaded yet or failed) the last segment can not have
+        // been requested
         if (!representation.hasSegments() && !representation.segments) {
             return false;
         }
@@ -174,25 +189,41 @@ function DashHandler(config) {
         // Additional segment references may be added to the last period.
         // Additional periods may be added to the end of the MPD.
         // Segment references SHALL NOT be added to any period other than the last period.
-        // An MPD update MAY combine adding segment references to the last period with adding of new periods. An MPD update that adds content MAY be combined with an MPD update that removes content.
+        // An MPD update MAY combine adding segment references to the last period with adding of new periods.
+        // An MPD update that adds content MAY be combined with an MPD update that removes content.
         // The index of the last requested segment is higher than the number of available segments.
         // For SegmentTimeline and SegmentTemplate the index does not include the startNumber.
         // For SegmentList the index includes the startnumber which is why the numberOfSegments includes this as well
-        if (representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.numberOfSegments) && !isNaN(lastSegment.index) && lastSegment.index >= (representation.mediaFinishedInformation.numberOfSegments - 1)) {
-            // For static manifests and Template addressing we can compare the index against the number of available segments
+        if (representation.mediaFinishedInformation &&
+            !isNaN(representation.mediaFinishedInformation.numberOfSegments) &&
+            !isNaN(lastSegment.index) &&
+            lastSegment.index >= (representation.mediaFinishedInformation.numberOfSegments - 1)) {
+            // For static manifests and Template addressing we can compare the index against the number of available
+            // segments
             if (!isDynamicManifest || representation.segmentInfoType === DashConstants.SEGMENT_TEMPLATE) {
                 return true;
             }
             // For SegmentList we need to check if the next period is signaled
-            else if (isDynamicManifest && representation.segmentInfoType === DashConstants.SEGMENT_LIST && representation.adaptation.period.nextPeriodId) {
+            else if (isDynamicManifest &&
+                representation.segmentInfoType === DashConstants.SEGMENT_LIST &&
+                representation.adaptation.period.nextPeriodId) {
                 return true
             }
         }
 
-        // For dynamic SegmentTimeline manifests we need to check if the next period is already signaled and the segment we fetched before is the last one that is signaled.
+        // For dynamic SegmentTimeline manifests we need to check if the next period is already signaled and the
+        // segment we fetched before is the last one that is signaled.
         // We can not simply use the index, as numberOfSegments might have decreased after an MPD update
-        return !!(isDynamicManifest && representation.adaptation.period.nextPeriodId && representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && representation.mediaFinishedInformation &&
-            !isNaN(representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment) && lastSegment && !isNaN(lastSegment.mediaStartTime) && !isNaN(lastSegment.duration) && lastSegment.mediaStartTime + lastSegment.duration >= (representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment - 0.05));
+        return !!(isDynamicManifest &&
+            representation.adaptation.period.nextPeriodId &&
+            representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE &&
+            representation.mediaFinishedInformation &&
+            !isNaN(representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment) &&
+            lastSegment &&
+            !isNaN(lastSegment.mediaStartTime) &&
+            !isNaN(lastSegment.duration) &&
+            lastSegment.mediaStartTime + lastSegment.duration >=
+            (representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment - 0.05));
     }
 
 
@@ -254,7 +285,8 @@ function DashHandler(config) {
     }
 
     /**
-     * This function returns the next segment request without modifying any internal variables. Any class (e.g CMCD Model) that needs information about the upcoming request should use this method.
+     * This function returns the next segment request without modifying any internal variables. Any class
+     * (e.g CMCD Model) that needs information about the upcoming request should use this method.
      * @param {object} mediaInfo
      * @param {object} representation
      * @return {FragmentRequest|null}
@@ -297,7 +329,8 @@ function DashHandler(config) {
     }
 
     function _hasMediaFinished(representation) {
-        return representation && lastSegment && representation.endNumber && lastSegment.replacementNumber && lastSegment.replacementNumber >= representation.endNumber
+        return representation && lastSegment && representation.endNumber && lastSegment.replacementNumber &&
+            lastSegment.replacementNumber >= representation.endNumber
     }
 
     function _getIndicesToRequest(lastSegment) {
@@ -339,7 +372,8 @@ function DashHandler(config) {
         }
 
         const indexToRequest = lastSegment ? lastSegment.index : 0;
-        const subNumberOfPartialSegmentToRequest = lastSegment && lastSegment.isPartialSegment && !isNaN(lastSegment.replacementSubNumber) ? lastSegment.replacementSubNumber : NaN;
+        const subNumberOfPartialSegmentToRequest = lastSegment && lastSegment.isPartialSegment &&
+        !isNaN(lastSegment.replacementSubNumber) ? lastSegment.replacementSubNumber : NaN;
 
         return _getRequest(mediaInfo, representation, indexToRequest, subNumberOfPartialSegmentToRequest);
     }
@@ -372,7 +406,8 @@ function DashHandler(config) {
 
     /**
      * This function returns a time larger than the current time for which we can generate a request.
-     * This is useful in scenarios in which the user seeks into a gap in a dynamic Timeline manifest. We will not find a valid request then and need to adjust the seektime.
+     * This is useful in scenarios in which the user seeks into a gap in a dynamic Timeline manifest. We will not find
+     * a valid request then and need to adjust the seektime.
      * @param {number} time
      * @param {object} mediaInfo
      * @param {object} representation
@@ -403,7 +438,9 @@ function DashHandler(config) {
             }
 
             // If we have a duration look until the end of the duration, otherwise maximum 30 seconds
-            const end = isFinite(representation.adaptation.period.duration) ? representation.adaptation.period.start + representation.adaptation.period.duration : time + 30;
+            const end = isFinite(representation.adaptation.period.duration)
+                ? representation.adaptation.period.start + representation.adaptation.period.duration
+                : time + 30;
             let currentUpperTime = Math.min(time + targetThreshold, end);
             let adjustedTime = NaN;
             let targetRequest = null;
@@ -432,7 +469,8 @@ function DashHandler(config) {
                     return time;
                 }
 
-                if (!isNaN(targetRequest.startTime) && time < targetRequest.startTime && adjustedTime > targetRequest.startTime) {
+                if (!isNaN(targetRequest.startTime) && time < targetRequest.startTime &&
+                    adjustedTime > targetRequest.startTime) {
                     // Apply delta to segment start time to get around rounding issues
                     return targetRequest.startTime + SEGMENT_START_TIME_DELTA;
                 }

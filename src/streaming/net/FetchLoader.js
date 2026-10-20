@@ -55,7 +55,8 @@ function FetchLoader() {
 
     /**
      * Load request
-     * With HTTP responses that use chunked transfer encoding, the promise returned by fetch will resolve as soon as the response's headers are received.
+     * With HTTP responses that use chunked transfer encoding, the promise returned by fetch will resolve as soon as the
+     * response's headers are received.
      * @param {CommonMediaRequest} commonMediaRequest
      * @param {CommonMediaResponse} commonMediaResponse
      */
@@ -172,7 +173,8 @@ function FetchLoader() {
                 bytes: value.length
             });
 
-            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && lastChunkWasFinished) {
+            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING &&
+                lastChunkWasFinished) {
                 _findMoofBoxInChunkData();
             }
 
@@ -196,11 +198,13 @@ function FetchLoader() {
         }
 
         function _handleTopIsoBoxCompleted(boxesInfo) {
-            const endPositionOfLastTargetBox = boxesInfo.startOffsetOfLastFoundTargetBox + boxesInfo.sizeOfLastFoundTargetBox;
+            const endPositionOfLastTargetBox = boxesInfo.startOffsetOfLastFoundTargetBox +
+                boxesInfo.sizeOfLastFoundTargetBox;
             const data = _getDataForMediaSourceBufferAndAdjustReceivedData(endPositionOfLastTargetBox);
 
             // Store the end time of each chunk download  with its size in array EndTimeData
-            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && !lastChunkWasFinished) {
+            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING &&
+                !lastChunkWasFinished) {
                 lastChunkWasFinished = true;
                 mdatEndTimeData.push({
                     timestamp: _getCurrentTimestamp(),
@@ -244,7 +248,8 @@ function FetchLoader() {
         }
 
         function _handleNoCompletedTopIsoBox(boxesInfo) {
-            endPositionOfLastProcessedBoxInReceivedData = boxesInfo.startOffsetOfLastCompletedBox + boxesInfo.sizeOfLastCompletedBox;
+            endPositionOfLastProcessedBoxInReceivedData = boxesInfo.startOffsetOfLastCompletedBox +
+                boxesInfo.sizeOfLastCompletedBox;
             // Call progress, so it generates traces that will be later used to know when the first byte
             // were received
             if (!signaledFirstByte) {
@@ -397,7 +402,8 @@ function FetchLoader() {
             downloadedData = downloadedData.filter(data => data.bytes > ((bytesReceived / 4) / downloadedData.length));
             if (downloadedData.length > 1) {
                 let time = 0;
-                const avgTimeDistance = (downloadedData[downloadedData.length - 1].timestamp - downloadedData[0].timestamp) / downloadedData.length;
+                const avgTimeDistance = (downloadedData[downloadedData.length - 1].timestamp -
+                    downloadedData[0].timestamp) / downloadedData.length;
                 downloadedData.forEach((data, index) => {
                     // To be counted the data has to be over a threshold
                     const next = downloadedData[index + 1];
@@ -437,9 +443,13 @@ function FetchLoader() {
 
             for (let i = 0; i < filteredMoofStartTimeData.length; i++) {
                 if (filteredMoofStartTimeData[i] && filteredMdatEndTimeData[i]) {
-                    let chunkDownloadTime = filteredMdatEndTimeData[i].timestamp - filteredMoofStartTimeData[i].timestamp;
+                    let chunkDownloadTime = filteredMdatEndTimeData[i].timestamp -
+                        filteredMoofStartTimeData[i].timestamp;
                     if (chunkDownloadTime > 1) {
-                        const throughput = _getThroughputInBitPerMs(filteredMdatEndTimeData[i].bytes, chunkDownloadTime);
+                        const throughput = _getThroughputInBitPerMs(
+                            filteredMdatEndTimeData[i].bytes,
+                            chunkDownloadTime
+                        );
                         chunkThroughputValues.push(throughput);
                         shortDurationStartTime = 0;
                     } else {
@@ -450,7 +460,10 @@ function FetchLoader() {
                         let cumulatedChunkDownloadTime = filteredMdatEndTimeData[i].timestamp - shortDurationStartTime;
                         if (cumulatedChunkDownloadTime > 1) {
                             shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
-                            const throughput = _getThroughputInBitPerMs(shortDurationBytesReceived, cumulatedChunkDownloadTime);
+                            const throughput = _getThroughputInBitPerMs(
+                                shortDurationBytesReceived,
+                                cumulatedChunkDownloadTime
+                            );
                             chunkThroughputValues.push(throughput);
                             shortDurationStartTime = 0;
                         } else {

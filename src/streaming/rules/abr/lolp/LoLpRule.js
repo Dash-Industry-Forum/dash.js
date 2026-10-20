@@ -106,7 +106,8 @@ function LoLPRule(config) {
             }
 
             // QoE parameters
-            const possibleRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+            const possibleRepresentations =
+                abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
             let bandwidths = possibleRepresentations.map(r => r.bandwidth);
             let segmentDuration = rulesContext.getRepresentation().fragmentDuration;
             let minBitrateKbps = Math.min(...bandwidths) / 1000.0; // min bitrate level
@@ -117,7 +118,9 @@ function LoLPRule(config) {
             let currentBitrateKbps = currentBitrate / 1000.0;
             let httpRequest = dashMetrics.getCurrentHttpRequest(mediaType, true);
             let lastFragmentDownloadTime = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) / 1000;
-            let segmentRebufferTime = lastFragmentDownloadTime > segmentDuration ? lastFragmentDownloadTime - segmentDuration : 0;
+            let segmentRebufferTime = lastFragmentDownloadTime > segmentDuration
+                ? lastFragmentDownloadTime - segmentDuration
+                : 0;
             qoeEvaluator.setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps);
             qoeEvaluator.logSegmentMetrics(currentBitrateKbps, segmentRebufferTime, latency, playbackRate);
 

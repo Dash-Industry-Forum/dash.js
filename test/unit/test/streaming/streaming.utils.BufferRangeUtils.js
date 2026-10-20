@@ -61,13 +61,22 @@ describe('BufferRangeUtils', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
 
             [NaN, undefined, 'invalid'].forEach((invalidDuration) => {
-                expect(getPruningRanges(ranges, 50, { ...pruningOptions, bufferToKeepBehind: invalidDuration })).to.deep.equal([
+                expect(getPruningRanges(ranges, 50, {
+                    ...pruningOptions,
+                    bufferToKeepBehind: invalidDuration
+                })).to.deep.equal([
                     { start: 80, end: 100.5 }
                 ]);
-                expect(getPruningRanges(ranges, 50, { ...pruningOptions, bufferToKeepAhead: invalidDuration })).to.deep.equal([
+                expect(getPruningRanges(ranges, 50, {
+                    ...pruningOptions,
+                    bufferToKeepAhead: invalidDuration
+                })).to.deep.equal([
                     { start: 0, end: 30 }
                 ]);
-                expect(getPruningRanges(ranges, 50, { bufferToKeepBehind: invalidDuration, bufferToKeepAhead: invalidDuration })).to.deep.equal([]);
+                expect(getPruningRanges(ranges, 50, {
+                    bufferToKeepBehind: invalidDuration,
+                    bufferToKeepAhead: invalidDuration
+                })).to.deep.equal([]);
             });
         });
 

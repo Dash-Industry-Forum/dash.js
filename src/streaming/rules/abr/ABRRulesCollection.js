@@ -113,7 +113,8 @@ function ABRRulesCollection(config) {
     }
 
     function _handleRuleUpdate(ruleName, rulesCollection) {
-        // we use camel case in the settings while the rules start with a capital latter. Not ideal but convert between these formats
+        // we use camel case in the settings while the rules start with a capital latter. Not ideal but convert between
+        // these formats
         const attribute = ruleName.charAt(0).toLowerCase() + ruleName.slice(1);
         if (settings.get().streaming.abr.rules[attribute].active && !_arrayContainsRule(rulesCollection, ruleName)) {
             rulesCollection.push(
@@ -207,23 +208,29 @@ function ABRRulesCollection(config) {
         for (i = 0, len = srArray.length; i < len; i += 1) {
             currentSwitchRequest = srArray[i];
             if (currentSwitchRequest.representation !== SwitchRequest.NO_CHANGE) {
-                // We only use the new quality in case the bitrate is lower than the already saved one or if no new quality has been selected for the respective priority
+                // We only use the new quality in case the bitrate is lower than the already saved one or if no new
+                // quality has been selected for the respective priority
                 if (values[currentSwitchRequest.priority] === null ||
-                    (values[currentSwitchRequest.priority].representation !== SwitchRequest.NO_CHANGE && currentSwitchRequest.representation.bitrateInKbit < values[currentSwitchRequest.priority].representation.bitrateInKbit)) {
+                    (values[currentSwitchRequest.priority].representation !== SwitchRequest.NO_CHANGE &&
+                        currentSwitchRequest.representation.bitrateInKbit <
+                        values[currentSwitchRequest.priority].representation.bitrateInKbit)) {
                     values[currentSwitchRequest.priority] = currentSwitchRequest;
                 }
             }
         }
 
-        if (values[SwitchRequest.PRIORITY.WEAK] && values[SwitchRequest.PRIORITY.WEAK].representation !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.WEAK] &&
+            values[SwitchRequest.PRIORITY.WEAK].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.WEAK];
         }
 
-        if (values[SwitchRequest.PRIORITY.DEFAULT] && values[SwitchRequest.PRIORITY.DEFAULT].representation !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.DEFAULT] &&
+            values[SwitchRequest.PRIORITY.DEFAULT].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.DEFAULT];
         }
 
-        if (values[SwitchRequest.PRIORITY.STRONG] && values[SwitchRequest.PRIORITY.STRONG].representation !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.STRONG] &&
+            values[SwitchRequest.PRIORITY.STRONG].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.STRONG];
         }
 
@@ -238,12 +245,15 @@ function ABRRulesCollection(config) {
         const activeQualitySwitchRules = qualitySwitchRules.filter((rule) => {
             const ruleName = rule.getClassName();
 
-            if (ruleName !== Constants.QUALITY_SWITCH_RULES.BOLA_RULE && ruleName !== Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE) {
+            if (ruleName !== Constants.QUALITY_SWITCH_RULES.BOLA_RULE &&
+                ruleName !== Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE) {
                 return true
             }
             const mediaType = rulesContext.getMediaType();
 
-            return (shouldUseBolaRuleByMediaType[mediaType] && ruleName === Constants.QUALITY_SWITCH_RULES.BOLA_RULE) || (!shouldUseBolaRuleByMediaType[mediaType] && ruleName === Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE)
+            return (shouldUseBolaRuleByMediaType[mediaType] && ruleName === Constants.QUALITY_SWITCH_RULES.BOLA_RULE) ||
+                (!shouldUseBolaRuleByMediaType[mediaType] &&
+                    ruleName === Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE)
         })
         const switchRequestArray = activeQualitySwitchRules.map(rule => rule.getSwitchRequest(rulesContext));
         const activeRules = _getRulesWithChange(switchRequestArray);

@@ -433,7 +433,8 @@ describe('TextTracks', function () {
 
             clearTrack();
 
-            // Calling updateTextTrackWindow again doesn't affect a TextTrack that has been updated in the last 10 seconds
+            // Calling updateTextTrackWindow again doesn't affect a TextTrack that has been updated in the last 10
+            // seconds
             textTracks.updateTextTrackWindow(5);
             expect(track.cues.length).to.equal(0);
 

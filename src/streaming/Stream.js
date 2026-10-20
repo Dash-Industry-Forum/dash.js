@@ -291,9 +291,11 @@ function Stream(config) {
             MEDIA_TYPES.forEach((mediaType) => {
                 // If we are preloading without a video element we can not start texttrack handling.
                 if (!(mediaType === Constants.TEXT && !mediaSource) && (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName))))) {
-                    const representationFromPreviousPeriod = representationsFromPreviousPeriod.find((representation) => {
-                        return representation.mediaInfo.type === mediaType
-                    })
+                    const representationFromPreviousPeriod = representationsFromPreviousPeriod.find(
+                        (representation) => {
+                            return representation.mediaInfo.type === mediaType
+                        }
+                    )
                     promises.push(_initializeMediaForType(mediaType, mediaSource, representationFromPreviousPeriod));
                 }
             });
@@ -305,14 +307,19 @@ function Stream(config) {
                 .then((bufferSinks) => {
                     if (streamProcessors.length === 0) {
                         const msg = 'No streams to play.';
-                        errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
+                        errHandler.error(new DashJSError(
+                            Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE,
+                            msg,
+                            manifestModel.getValue()
+                        ));
                         logger.fatal(msg);
                     } else {
                         _initializationCompleted();
                     }
 
                     if (mediaSource) {
-                        // All mediaInfos for texttracks are added to the TextSourceBuffer by now. We can start creating the tracks
+                        // All mediaInfos for texttracks are added to the TextSourceBuffer by now. We can start creating
+                        // the tracks
                         textController.createTracks(streamInfo);
                     }
 
@@ -325,7 +332,8 @@ function Stream(config) {
     }
 
     /**
-     * We call this function if segments have been preloaded without a video element. Once the video element is attached MSE is available
+     * We call this function if segments have been preloaded without a video element. Once the video element is
+     * attached MSE is available
      * @param mediaSource
      * @returns {Promise<unknown>}
      */
@@ -428,21 +436,31 @@ function Stream(config) {
         let streamProcessor = _createStreamProcessor(allMediaForType, mediaSource, type);
 
         if (enhancementMediaInfoIndex >= 0) {
-            // An adaptation set, mapped to mediaInfo, of enhancement type was found so a stream processor shall be created for it
+            // An adaptation set, mapped to mediaInfo, of enhancement type was found so a stream processor shall be
+            // created for it
             // the enhancement stream processor will work in parallel to the media stream processor it enhances
             let enhancementMediaSource = new ExternalMediaSource(eventBus);
             enhancementMediaSource.open();
             enhancementMediaSource.duration = streamInfo.manifestInfo.duration;
-            let enhancementStreamProcessor = _createStreamProcessor(allMediaForType, enhancementMediaSource, Constants.ENHANCEMENT);
-            enhancementStreamProcessor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: allMediaForType[enhancementMediaInfoIndex] }));
+            let enhancementStreamProcessor = _createStreamProcessor(
+                allMediaForType,
+                enhancementMediaSource,
+                Constants.ENHANCEMENT
+            );
+            enhancementStreamProcessor.selectMediaInfo(new MediaInfoSelectionInput({
+                newMediaInfo: allMediaForType[enhancementMediaInfoIndex]
+            }));
             streamProcessor.setEnhancementStreamProcessor(enhancementStreamProcessor);
         }
 
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
 
         if (initialMediaInfo) {
-            // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
-            const newMediaInfo = type !== Constants.TEXT || !initialMediaInfo.isEmbedded ? initialMediaInfo : allMediaForType[0];
+            // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an
+            // embedded track
+            const newMediaInfo = type !== Constants.TEXT || !initialMediaInfo.isEmbedded
+                ? initialMediaInfo
+                : allMediaForType[0];
             const mediaInfoSelectionInput = new MediaInfoSelectionInput({
                 newMediaInfo,
                 previouslySelectedRepresentation: representationFromPreviousPeriod
@@ -468,8 +486,12 @@ function Stream(config) {
             return true;
         }
 
-        if (!!mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0 && !capabilities.supportsEncryptedMedia()) {
-            errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
+        if (!!mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0 &&
+            !capabilities.supportsEncryptedMedia()) {
+            errHandler.error(new DashJSError(
+                Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE,
+                Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE
+            ));
             return false;
         }
 
@@ -485,7 +507,9 @@ function Stream(config) {
      */
     function _createStreamProcessor(allMediaForType, mediaSource, streamProcessorMediaType) {
 
-        const mediaInfo = (allMediaForType && allMediaForType.length > 0) ? allMediaForType.filter(m => (m.type === streamProcessorMediaType))[0] : null;
+        const mediaInfo = (allMediaForType && allMediaForType.length > 0)
+            ? allMediaForType.filter(m => (m.type === streamProcessorMediaType))[0]
+            : null;
         let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
         const type = mediaInfo ? mediaInfo.type : null;
         const mimeType = mediaInfo ? mediaInfo.mimeType : null;
@@ -538,7 +562,9 @@ function Stream(config) {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
                 const spRepresentation = sp.getRepresentation();
-                const oldRepresentation = representationsFromPreviousPeriod.find((r) => r.mediaInfo.type === spRepresentation.mediaInfo.type);
+                const oldRepresentation = representationsFromPreviousPeriod.find(
+                    (r) => r.mediaInfo.type === spRepresentation.mediaInfo.type
+                );
                 return sp.createBufferSinks(previousSourceBufferSinks, oldRepresentation);
             });
 
@@ -567,7 +593,8 @@ function Stream(config) {
     }
 
     /**
-     * Partially resets some of the Stream elements. This function is called when preloading of streams is canceled or a stream switch occurs.
+     * Partially resets some of the Stream elements. This function is called when preloading of streams is canceled or
+     * a stream switch occurs.
      * @memberof Stream#
      * @param {boolean} keepBuffers
      */
@@ -615,7 +642,8 @@ function Stream(config) {
             Promise.all(promises)
                 .then(() => {
                     for (let i = 0; i < streamProcessors.length; i++) {
-                        //Adding of new tracks to a stream processor isn't guaranteed by the spec after the METADATA_LOADED state
+                        //Adding of new tracks to a stream processor isn't guaranteed by the spec after the
+                        //METADATA_LOADED state
                         //so do this after the buffers are created above.
                         streamProcessors[i].dischargePreBuffer();
                     }
@@ -734,7 +762,9 @@ function Stream(config) {
             return thumbnailController.getPossibleVoRepresentations();
         }
         const mediaInfo = _getMediaInfo(type);
-        return filterBySettings ? abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true) : abrController.getPossibleVoRepresentations(mediaInfo, true);
+        return filterBySettings
+            ? abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true)
+            : abrController.getPossibleVoRepresentations(mediaInfo, true);
     }
 
     /**
@@ -903,7 +933,8 @@ function Stream(config) {
         // if there is at least one buffer controller that has not completed buffering yet do nothing
         for (let i = 0; i < ln; i++) {
             //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
-            if (!processors[i].isBufferingCompleted() && (processors[i].getType() === Constants.AUDIO || processors[i].getType() === Constants.VIDEO)) {
+            if (!processors[i].isBufferingCompleted() &&
+                (processors[i].getType() === Constants.AUDIO || processors[i].getType() === Constants.VIDEO)) {
                 logger.debug('onBufferingCompleted - One streamProcessor has finished but', processors[i].getType(), 'one is not buffering completed');
                 return;
             }
@@ -958,7 +989,8 @@ function Stream(config) {
             streamProcessor = streamProcessors[i];
             type = streamProcessor.getType();
 
-            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT || type === Constants.ENHANCEMENT) {
+            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT ||
+                type === Constants.ENHANCEMENT) {
                 arr.push(streamProcessor);
             }
         }
@@ -998,7 +1030,9 @@ function Stream(config) {
                 if (allMediaForType) {
                     for (let j = 0; j < allMediaForType.length; j++) {
                         if (adapter.areMediaInfosEqual(currentMediaInfo, allMediaForType[j])) {
-                            promises.push(streamProcessor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: allMediaForType[j] })))
+                            promises.push(streamProcessor.selectMediaInfo(new MediaInfoSelectionInput({
+                                newMediaInfo: allMediaForType[j]
+                            })))
                         }
                     }
                 }

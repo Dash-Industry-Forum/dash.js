@@ -198,7 +198,9 @@ function LearningAbrController() {
         if (somBitrateNeurons) {
             for (let i = 0; i < somBitrateNeurons.length; i++) {
                 let n = somBitrateNeurons[i];
-                if (n.representation.bandwidth < currentNeuron.representation.bandwidth && n.representation.bandwidth > maxSuitableBitrate && currentThroughput > n.representation.bandwidth) {
+                if (n.representation.bandwidth < currentNeuron.representation.bandwidth &&
+                    n.representation.bandwidth > maxSuitableBitrate &&
+                    currentThroughput > n.representation.bandwidth) {
                     // possible downshiftable neuron
                     maxSuitableBitrate = n.representation.bandwidth;
                     result = n;
@@ -221,7 +223,16 @@ function LearningAbrController() {
      * @param {object} dynamicWeightsSelector
      * @return {null|*}
      */
-    function getNextQuality(abrController, mediaInfo, throughput, latency, currentBufferLevel, playbackRate, currentRepresentation, dynamicWeightsSelector) {
+    function getNextQuality(
+        abrController,
+        mediaInfo,
+        throughput,
+        latency,
+        currentBufferLevel,
+        playbackRate,
+        currentRepresentation,
+        dynamicWeightsSelector
+    ) {
         // For Dynamic Weights Selector
         let currentLatency = latency;
         let currentThroughput = throughput;
@@ -242,7 +253,8 @@ function LearningAbrController() {
         const throughputDelta = 10000;
 
         let currentNeuron = somBitrateNeurons.find(entry => entry.representation.id === currentRepresentation.id);
-        let downloadTime = (currentNeuron.representation.bandwidth * dynamicWeightsSelector.getSegmentDuration()) / currentThroughput;
+        let downloadTime = (currentNeuron.representation.bandwidth * dynamicWeightsSelector.getSegmentDuration()) /
+            currentThroughput;
         let rebuffer = Math.max(0, (downloadTime - currentBufferLevel));
 
         // check buffer for possible stall
@@ -259,10 +271,24 @@ function LearningAbrController() {
                 _randomWeightSelection();
                 break;
             case WEIGHT_SELECTION_MODES.DYNAMIC:
-                _dynamicWeightSelection(dynamicWeightsSelector, currentLatency, currentBufferLevel, rebuffer, currentThroughput, playbackRate);
+                _dynamicWeightSelection(
+                    dynamicWeightsSelector,
+                    currentLatency,
+                    currentBufferLevel,
+                    rebuffer,
+                    currentThroughput,
+                    playbackRate
+                );
                 break;
             default:
-                _dynamicWeightSelection(dynamicWeightsSelector, currentLatency, currentBufferLevel, rebuffer, currentThroughput, playbackRate);
+                _dynamicWeightSelection(
+                    dynamicWeightsSelector,
+                    currentLatency,
+                    currentBufferLevel,
+                    rebuffer,
+                    currentThroughput,
+                    playbackRate
+                );
 
         }
 
@@ -279,7 +305,11 @@ function LearningAbrController() {
                 somNeuronState.switch];
 
             let distanceWeights = weights.slice();
-            let nextBuffer = dynamicWeightsSelector.getNextBufferWithBitrate(somNeuron.representation.bandwidth, currentBufferLevel, currentThroughput);
+            let nextBuffer = dynamicWeightsSelector.getNextBufferWithBitrate(
+                somNeuron.representation.bandwidth,
+                currentBufferLevel,
+                currentThroughput
+            );
             let isBufferLow = nextBuffer < dynamicWeightsSelector.getMinBuffer();
             if (isBufferLow) {
                 logger.debug(`Buffer is low for bitrate=${somNeuron.representation.bandwidth} downloadTime=${downloadTime} currentBuffer=${currentBufferLevel} nextBuffer=${nextBuffer}`);
@@ -293,7 +323,11 @@ function LearningAbrController() {
             }
 
             // calculate the distance with the target
-            let distance = _getDistance(somData, [throughputNormalized, targetLatency, targetRebufferLevel, 0], distanceWeights);
+            let distance = _getDistance(
+                somData,
+                [throughputNormalized, targetLatency, targetRebufferLevel, 0],
+                distanceWeights
+            );
             if (minDistance === null || distance < minDistance) {
                 minDistance = distance;
                 targetRepresentation = somNeuron.representation;
@@ -303,7 +337,8 @@ function LearningAbrController() {
 
         // update current neuron and the neighbourhood with the calculated QoE
         // will punish current if it is not picked
-        let bitrateSwitch = Math.abs(currentNeuron.representation.bandwidth - winnerNeuron.representation.bandwidth) / bitrateNormalizationFactor;
+        let bitrateSwitch = Math.abs(currentNeuron.representation.bandwidth - winnerNeuron.representation.bandwidth) /
+            bitrateNormalizationFactor;
         _updateNeurons(currentNeuron, [throughputNormalized, latency, rebuffer, bitrateSwitch]);
 
         // update bmu and  neighbours with targetQoE=1, targetLatency=0
@@ -344,12 +379,26 @@ function LearningAbrController() {
      * @param {number} playbackRate
      * @private
      */
-    function _dynamicWeightSelection(dynamicWeightsSelector, currentLatency, currentBuffer, rebuffer, currentThroughput, playbackRate) {
+    function _dynamicWeightSelection(
+        dynamicWeightsSelector,
+        currentLatency,
+        currentBuffer,
+        rebuffer,
+        currentThroughput,
+        playbackRate
+    ) {
         if (!weights) {
             weights = sortedCenters[sortedCenters.length - 1];
         }
         // Dynamic Weights Selector (step 2/2: find weights)
-        let weightVector = dynamicWeightsSelector.findWeightVector(somBitrateNeurons, currentLatency, currentBuffer, rebuffer, currentThroughput, playbackRate);
+        let weightVector = dynamicWeightsSelector.findWeightVector(
+            somBitrateNeurons,
+            currentLatency,
+            currentBuffer,
+            rebuffer,
+            currentThroughput,
+            playbackRate
+        );
         if (weightVector !== null && weightVector !== -1) { // null: something went wrong, -1: constraints not met
             weights = weightVector;
         }
@@ -385,7 +434,10 @@ function LearningAbrController() {
     function _setSomBitrateNeurons(mediaInfo, abrController) {
         if (!somBitrateNeurons) {
             somBitrateNeurons = [];
-            const possibleRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+            const possibleRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(
+                mediaInfo,
+                true
+            );
             const bitrateList = possibleRepresentations.map((r) => r.bandwidth);
             minBitrate = Math.min(...bitrateList);
             bitrateNormalizationFactor = _getMagnitude(bitrateList);

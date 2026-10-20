@@ -65,7 +65,8 @@ function KeySystemPlayReady(config) {
         const parser = new DOMParser();
 
         if (settings && settings.get().streaming.protection.detectPlayreadyMessageFormat) {
-            // If message format configured/defaulted to utf-16 AND number of bytes is odd, assume 'unwrapped' raw CDM message.
+            // If message format configured/defaulted to utf-16 AND number of bytes is odd, assume 'unwrapped' raw CDM
+            // message.
             if (messageFormat === 'utf-16' && message && message.byteLength % 2 === 1) {
                 headers['Content-Type'] = 'text/xml; charset=utf-8';
                 return headers;
@@ -102,7 +103,8 @@ function KeySystemPlayReady(config) {
         const parser = new DOMParser();
 
         if (settings && settings.get().streaming.protection.detectPlayreadyMessageFormat) {
-            // If message format configured/defaulted to utf-16 AND number of bytes is odd, assume 'unwrapped' raw CDM message.
+            // If message format configured/defaulted to utf-16 AND number of bytes is odd, assume 'unwrapped' raw CDM
+            // message.
             if (messageFormat === 'utf-16' && message && message.byteLength % 2 === 1) {
                 return message;
             }
@@ -182,7 +184,8 @@ function KeySystemPlayReady(config) {
         // *   protection system data size (4) - length of decoded PROHeader
         // *   decoded PROHeader data from MPD file
         const PSSHBoxType = new Uint8Array([0x70, 0x73, 0x73, 0x68, 0x00, 0x00, 0x00, 0x00]); //'PSSH' 8 bytes
-        const playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86, 0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]);
+        const playreadySystemID = new Uint8Array([0x9a, 0x04, 0xf0, 0x79, 0x98, 0x40, 0x42, 0x86,
+            0xab, 0x92, 0xe6, 0x5b, 0xe0, 0x88, 0x5f, 0x95]);
 
         let byteCursor = 0;
         let uint8arraydecodedPROHeader = null;

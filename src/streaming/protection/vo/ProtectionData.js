@@ -42,8 +42,8 @@ class ProtectionData {
      * @param {string|Object} [config.serverURL] a license server URL to use with this key system.
      * When specified as a string, a single URL will be used regardless of message type.
      * When specified as an object, the object will have property names for each message
-     * type ({@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|message
-     * types defined here)} with the corresponding property value being the URL to use for
+     * type ({@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|message types defined here)} with
+     * the corresponding property value being the URL to use for
      * messages of that type
      * @param {Object} [config.httpRequestHeaders] headers to add to the license request
      * @param {Object} [config.clearkeys] defines a set of clear keys that are available to
@@ -56,7 +56,8 @@ class ProtectionData {
      * (see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemmediacapability-robustness})
      * @param {string} [config.videoRobustness] video robustness level
      * (see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemmediacapability-robustness})
-     * @param {string} [config.distinctiveIdentifier] distinctive identifier requirement: "required", "optional", or "not-allowed"
+     * @param {string} [config.distinctiveIdentifier] distinctive identifier requirement: "required", "optional", or
+     * "not-allowed"
      * (see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-distinctiveidentifier})
      * @param {string} [config.persistentState] persistent state requirement: "required", "optional", or "not-allowed"
      * (see {@link https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate})

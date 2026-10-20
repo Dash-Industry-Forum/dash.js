@@ -114,7 +114,8 @@ function CustomParametersModel() {
     }
 
     /**
-     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
+     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will
+     * overwrite a potentially existing function.
      * @param {function} customFunc - the custom function that returns the initial track
      */
     function setCustomInitialTrackSelectionFunction(customFunc) {
@@ -153,8 +154,10 @@ function CustomParametersModel() {
     }
 
     /**
-     * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter
+     * and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is
+     * completed.
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license request filter callback
      */
@@ -164,7 +167,8 @@ function CustomParametersModel() {
 
     /**
      * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is
+     * completed.
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license response filter callback
      */
@@ -205,8 +209,10 @@ function CustomParametersModel() {
     }
 
     /**
-     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or
+     * request data.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is
+     * completed.
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license request filter callback
      */
@@ -216,7 +222,8 @@ function CustomParametersModel() {
 
     /**
      * Registers a license response filter. This enables application to manipulate/overwrite the response data
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is
+     * completed.
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license response filter callback
      */
@@ -250,7 +257,8 @@ function CustomParametersModel() {
 
     /**
      * Registers a custom capabilities filter. This enables application to filter representations to use.
-     * The provided callback function shall return a boolean or promise resolving to a boolean based on whether or not to use the representation.
+     * The provided callback function shall return a boolean or promise resolving to a boolean based on whether or not
+     * to use the representation.
      * The filters are applied in the order they are registered.
      * @param {function} filter - the custom capabilities filter callback
      */
@@ -286,7 +294,8 @@ function CustomParametersModel() {
      * Rule will be apply on next stream if a stream is being played
      *
      * @param {string} type - rule type (one of ['qualitySwitchRules','abandonFragmentRules'])
-     * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added, then existing rule will be updated
+     * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added,
+     * then existing rule will be updated
      * @param {object} rule - the rule object instance
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
      */
@@ -345,8 +354,10 @@ function CustomParametersModel() {
     }
 
     /**
-     * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
-     * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
+     * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter
+     * and/or request data.
+     * The provided callback function shall return a promise with updated request that shall be resolved once the
+     * process of the request is completed.
      * The interceptors are applied in the order they are added.
      * @param {function} interceptor - the request interceptor callback
      */
@@ -356,7 +367,8 @@ function CustomParametersModel() {
 
     /**
      * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
-     * The provided callback function shall return a promise with updated response that shall be resolved once the process of the response is completed.
+     * The provided callback function shall return a promise with updated response that shall be resolved once the
+     * process of the response is completed.
      * The interceptors are applied in the order they are added.
      * @param {function} interceptor - the response interceptor callback
      */

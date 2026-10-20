@@ -99,9 +99,11 @@ function SegmentBaseController(config) {
 
     function getSegmentList(e) {
         if (isWebM(e.mimeType)) {
-            return webmSegmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null);
+            return webmSegmentBaseLoader.loadSegments(e.representation, e.mediaType,
+                e.representation ? e.representation.indexRange : null);
         } else {
-            return segmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null);
+            return segmentBaseLoader.loadSegments(e.representation, e.mediaType,
+                e.representation ? e.representation.indexRange : null);
         }
     }
 

@@ -188,8 +188,13 @@ function CmcdController() {
             return {
                 ...target,
                 transform: (data, request) => {
-                    // Only rr reports carry the request. Filter before attaching ec, so a dropped report keeps the buffered codes
-                    if (request && responseReceivedTypes && !cmcdModel.isIncludedInRequestFilter(request.customData?.request?.type, responseReceivedTypes)) {
+                    // Only rr reports carry the request. Filter before attaching ec, so a dropped report keeps the
+                    // buffered codes
+                    if (request && responseReceivedTypes &&
+                        !cmcdModel.isIncludedInRequestFilter(
+                            request.customData?.request?.type,
+                            responseReceivedTypes
+                        )) {
                         return null;
                     }
                     return _attachErrorCodes(errorCodes, data);
@@ -199,7 +204,8 @@ function CmcdController() {
 
         const reporter = new CmcdReporter({
             ...reporterConfig,
-            // Every decorated request carries the buffered error codes, i.e. every request that passes the request filter
+            // Every decorated request carries the buffered error codes, i.e. every request that passes the request
+            // filter
             transform: (data) => _attachErrorCodes(requestErrorCodes, data),
             eventTargets,
         }, _customRequester);
@@ -399,7 +405,8 @@ function CmcdController() {
     }
 
     /**
-     * The handler that is triggered for CMCD event mode events (e.g., play, pause, error). Note that response recevived (rr) events are handled by getCmcdResponseReceivedInterceptors.
+     * The handler that is triggered for CMCD event mode events (e.g., play, pause, error). Note that response recevived
+     * (rr) events are handled by getCmcdResponseReceivedInterceptors.
      * @param event
      * @param {object} [additionalData] - Keys to send with the event in addition to the event-mode data
      */

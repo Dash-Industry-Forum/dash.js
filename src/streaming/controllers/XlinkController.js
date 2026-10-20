@@ -130,11 +130,13 @@ function XlinkController(config) {
         // if the element resolved into content parse the content
         if (element.resolvedContent) {
             let index = 0;
-            // we add a parent elements so the converter is able to parse multiple elements of the same type which are not wrapped inside a container
+            // we add a parent elements so the converter is able to parse multiple elements of the same type which are
+            // not wrapped inside a container
             if (element.resolvedContent.indexOf('<?xml') === 0) {
                 index = element.resolvedContent.indexOf('?>') + 2; //find the closing position of the xml declaration, if it exists.
             }
-            mergedContent = element.resolvedContent.substr(0,index) + openingTag + element.resolvedContent.substr(index) + closingTag;
+            mergedContent = element.resolvedContent.substr(0,index) + openingTag +
+                element.resolvedContent.substr(index) + closingTag;
             element.resolvedContent = parser.parseXml(mergedContent).response;
         }
         if (isResolvingFinished(resolveObject)) {
@@ -159,10 +161,20 @@ function XlinkController(config) {
                     for (i = 0; i < manifest[DashConstants.PERIOD].length; i++) {
                         obj = manifest[DashConstants.PERIOD][i];
                         if (obj.hasOwnProperty(DashConstants.ADAPTATION_SET)) {
-                            elements = elements.concat(getElementsToResolve(obj[DashConstants.ADAPTATION_SET], obj, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD));
+                            elements = elements.concat(getElementsToResolve(
+                                obj[DashConstants.ADAPTATION_SET],
+                                obj,
+                                DashConstants.ADAPTATION_SET,
+                                RESOLVE_TYPE_ONLOAD
+                            ));
                         }
                         if (obj.hasOwnProperty(DashConstants.EVENT_STREAM)) {
-                            elements = elements.concat(getElementsToResolve(obj[DashConstants.EVENT_STREAM], obj, DashConstants.EVENT_STREAM, RESOLVE_TYPE_ONLOAD));
+                            elements = elements.concat(getElementsToResolve(
+                                obj[DashConstants.EVENT_STREAM],
+                                obj,
+                                DashConstants.EVENT_STREAM,
+                                RESOLVE_TYPE_ONLOAD
+                            ));
                         }
                     }
                     resolve(elements, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD);
@@ -207,7 +219,8 @@ function XlinkController(config) {
             i,
             j,
             k;
-        // Start merging back from the end because of index shifting. Note that the elements with the same parent have to be ordered by index ascending
+        // Start merging back from the end because of index shifting. Note that the elements with the same parent have
+        // to be ordered by index ascending
         for (i = resolveObject.elements.length - 1; i >= 0; i --) {
             element = resolveObject.elements[i];
             type = element.type;
@@ -221,7 +234,8 @@ function XlinkController(config) {
             // Element was successfully resolved
             else if (element.resolvedContent) {
                 for (j = 0; j < element.resolvedContent[type].length; j++) {
-                    //TODO Contains another Xlink attribute with xlink:actuate set to onload. Remove all xLink attributes
+                    //TODO Contains another Xlink attribute with xlink:actuate set to onload. Remove all xLink
+                    // attributes
                     obj = element.resolvedContent[type][j];
                     resolvedElements.push(obj);
                 }

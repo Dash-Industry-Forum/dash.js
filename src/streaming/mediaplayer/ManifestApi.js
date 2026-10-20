@@ -61,7 +61,8 @@ function ManifestApi() {
      * @param {Object} manifest
      * @returns {Array} list of {@link StreamInfo}
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function getStreamsFromManifest(manifest) {
@@ -78,7 +79,8 @@ function ManifestApi() {
      * @param {Object} streamInfo
      * @returns {Array}  list of {@link MediaInfo}
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function getTracksForTypeFromManifest(type, manifest, streamInfo) {
@@ -95,7 +97,8 @@ function ManifestApi() {
      * Returns the source string or manifest that was attached by calling attachSource()
      * @returns {string | manifest}
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
+     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before
+     * attachSource function
      * @instance
      */
     function getSource() {
@@ -154,7 +157,8 @@ function ManifestApi() {
     /**
      * This method returns the active stream
      *
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */

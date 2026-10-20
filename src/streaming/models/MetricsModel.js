@@ -194,7 +194,10 @@ function MetricsModel(config) {
         vo._serviceLocation = request.serviceLocation || null;
         vo._fileLoaderType = request.fileLoaderType;
         vo._resourceTimingValues = request.resourceTimingValues;
-        vo._streamId = request && request.representation && request.representation.mediaInfo && request.representation.mediaInfo.streamInfo ? request.representation.mediaInfo.streamInfo.id : null;
+        vo._streamId = (request && request.representation && request.representation.mediaInfo &&
+            request.representation.mediaInfo.streamInfo)
+            ? request.representation.mediaInfo.streamInfo.id
+            : null;
 
         if (traces) {
             traces.forEach(trace => {
@@ -273,7 +276,17 @@ function MetricsModel(config) {
         pushAndNotify(mediaType, MetricsConstants.DROPPED_FRAMES, vo);
     }
 
-    function addSchedulingInfo(mediaType, t, type, startTime, availabilityStartTime, duration, bandwidth, range, state) {
+    function addSchedulingInfo(
+        mediaType,
+        t,
+        type,
+        startTime,
+        availabilityStartTime,
+        duration,
+        bandwidth,
+        range,
+        state
+    ) {
         let vo = new SchedulingInfo();
 
         vo.mediaType = mediaType;

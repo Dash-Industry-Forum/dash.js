@@ -203,7 +203,8 @@ function SegmentBaseLoader() {
                     info.range.start = sidx.offset || info.range.start;
                     info.range.end = info.range.start + (sidx.size || extraBytes);
                 } else if (loadedLength < info.bytesLoaded) {
-                    // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
+                    // if we have reached a search limit or if we have reached the end of the file we have to stop
+                    // trying to find sidx
                     callback(null, representation, resolve);
                     return;
                 } else {
@@ -240,7 +241,8 @@ function SegmentBaseLoader() {
                             count++;
 
                             if (count >= len) {
-                                // http requests can be processed in a wrong order, so, we have to reorder segments with an ascending start Time order
+                                // http requests can be processed in a wrong order, so, we have to reorder segments with
+                                // an ascending start Time order
                                 segs.sort(function (a, b) {
                                     return a.startTime - b.startTime < 0 ? -1 : 0;
                                 });
@@ -279,7 +281,9 @@ function SegmentBaseLoader() {
         resolve({
             segments: segments,
             representation: representation,
-            error: segments ? undefined : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+            error: segments
+                ? undefined
+                : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
         });
     }
 

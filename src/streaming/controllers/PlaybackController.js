@@ -135,7 +135,9 @@ function PlaybackController() {
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
+        eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance, {
+            priority: EventBus.EVENT_PRIORITY_HIGH
+        });
         eventBus.on(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, instance);
         eventBus.on(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitch, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
@@ -447,7 +449,8 @@ function PlaybackController() {
             startTime;
         const MIN_BUFFER_TIME_FACTOR = 4;
         const FRAGMENT_DURATION_FACTOR = 4;
-        const adjustedFragmentDuration = !isNaN(fragmentDuration) && isFinite(fragmentDuration) ? fragmentDuration : NaN;
+        const adjustedFragmentDuration =
+            !isNaN(fragmentDuration) && isFinite(fragmentDuration) ? fragmentDuration : NaN;
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
         const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
@@ -458,16 +461,21 @@ function PlaybackController() {
         }
 
         // Live delay fragment count specified by the user
-        else if (settings.get().streaming.delay.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.delay.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
+        else if (settings.get().streaming.delay.liveDelayFragmentCount !== null &&
+            !isNaN(settings.get().streaming.delay.liveDelayFragmentCount) &&
+            !isNaN(adjustedFragmentDuration)) {
             delay = adjustedFragmentDuration * settings.get().streaming.delay.liveDelayFragmentCount;
         }
 
         // Live delay set via ServiceDescription element
-        else if (serviceDescriptionSettings && !isNaN(serviceDescriptionSettings.liveDelay) && serviceDescriptionSettings.liveDelay > 0) {
+        else if (serviceDescriptionSettings && !isNaN(serviceDescriptionSettings.liveDelay) &&
+            serviceDescriptionSettings.liveDelay > 0) {
             delay = serviceDescriptionSettings.liveDelay;
         }
         // Live delay set in the manifest using @suggestedPresentation Delay
-        else if (settings.get().streaming.delay.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
+        else if (settings.get().streaming.delay.useSuggestedPresentationDelay === true &&
+            suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) &&
+            suggestedPresentationDelay > 0) {
             delay = suggestedPresentationDelay;
         }
 
@@ -478,7 +486,9 @@ function PlaybackController() {
 
         // Fall back to @minBufferTime to calculate the live delay
         else {
-            delay = manifestInfo && !isNaN(manifestInfo.minBufferTime) ? manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR : streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
+            delay = manifestInfo && !isNaN(manifestInfo.minBufferTime) ?
+                manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR :
+                streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
         }
 
         startTime = adapter.getAvailabilityStartTime();
@@ -535,8 +545,10 @@ function PlaybackController() {
             return;
         }
 
-        // Note: In some cases we filter certain media types completely (for instance due to an unsupported video codec). This happens after the first entry to the DVR metric has been added.
-        // Now the DVR window for the filtered media type is not updated anymore. Consequently, always use a mediaType that is available to get a valid DVR window.
+        // Note: In some cases we filter certain media types completely (for instance due to an unsupported video
+        // codec). This happens after the first entry to the DVR metric has been added.
+        // Now the DVR window for the filtered media type is not updated anymore. Consequently, always use a mediaType
+        // that is available to get a valid DVR window.
         if (!mediaType) {
             mediaType = streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         }
@@ -569,7 +581,8 @@ function PlaybackController() {
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
 
-        } else if (currentTime > 0 && currentTime + 0.250 < DVRWindow.start && Math.abs(currentTime - DVRWindow.start) < 315360000) {
+        } else if (currentTime > 0 && currentTime + 0.250 < DVRWindow.start &&
+            Math.abs(currentTime - DVRWindow.start) < 315360000) {
 
             // Checking currentTime plus 250ms as the 'timeupdate' is fired with a frequency between 4Hz and 66Hz
             // https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate
@@ -670,8 +683,10 @@ function PlaybackController() {
         }
 
         let seekTime = getTime();
-        // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
-        // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
+        // On some browsers/devices, in case of live streams, setting current time on video element fails when there
+        // is no buffered data at requested time
+        // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see
+        // BufferContoller)
         if (!isNaN(seekTarget) && seekTarget !== seekTime) {
             seekTime = seekTarget;
         }
@@ -767,7 +782,8 @@ function PlaybackController() {
         // (video element doesn't call timeupdate when the playback is paused)
         if (getIsDynamic()) {
             const now = Date.now();
-            if (isNaN(lastLiveUpdateTime) || now > lastLiveUpdateTime + settings.get().streaming.liveUpdateTimeThresholdInMilliseconds) {
+            if (isNaN(lastLiveUpdateTime) ||
+                now > lastLiveUpdateTime + settings.get().streaming.liveUpdateTimeThresholdInMilliseconds) {
                 streamController.addDVRMetric();
                 if (isPaused()) {
                     _updateLivePlaybackTime();
@@ -792,7 +808,8 @@ function PlaybackController() {
     }
 
     /**
-     * Returns the combined minimum buffer level of all StreamProcessors. If a filter list is provided the types specified in the filter list are excluded.
+     * Returns the combined minimum buffer level of all StreamProcessors. If a filter list is provided the types
+     * specified in the filter list are excluded.
      * @param {array} filterList StreamProcessor types to exclude
      * @return {null}
      */
@@ -829,19 +846,24 @@ function PlaybackController() {
     }
 
     /**
-     * We enable low latency playback if for the current representation availabilityTimeComplete is set to false or there is a k value larger than 1 in the segment template
+     * We enable low latency playback if for the current representation availabilityTimeComplete is set to false or
+     * there is a k value larger than 1 in the segment template
      * @param e
      * @private
      */
     function _onRepresentationSwitch(e) {
         const activeStreamInfo = streamController.getActiveStreamInfo();
-        if (!e || !activeStreamInfo || !e.currentRepresentation || !e.streamId || e.streamId !== activeStreamInfo.id || !e.mediaType || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
+        if (!e || !activeStreamInfo || !e.currentRepresentation || !e.streamId || e.streamId !== activeStreamInfo.id ||
+            !e.mediaType || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
             return;
         }
 
-        lowLatencyModeEnabled = e.currentRepresentation.availabilityTimeComplete === false || e.currentRepresentation.k > 1;
+        lowLatencyModeEnabled = e.currentRepresentation.availabilityTimeComplete === false ||
+            e.currentRepresentation.k > 1;
 
-        // If we enable low latency mode for the first time we also enable the catchup mechanism. This can be deactivated again for instance if the user seeks within the DVR window. We leave deactivation up to the application but also do not activate automatically again.
+        // If we enable low latency mode for the first time we also enable the catchup mechanism. This can be
+        // deactivated again for instance if the user seeks within the DVR window. We leave deactivation up to the
+        // application but also do not activate automatically again.
         if (lowLatencyModeEnabled && !initialCatchupModeActivated) {
             initialCatchupModeActivated = true;
         }
@@ -875,7 +897,9 @@ function PlaybackController() {
 
     function _checkEnableLowLatency(mediaInfo) {
         if (mediaInfo && mediaInfo.supplementalProperties &&
-            mediaInfo.supplementalProperties.find(item => item.schemeIdUri === Constants.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME)) {
+            mediaInfo.supplementalProperties.find(
+                item => item.schemeIdUri === Constants.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME
+            )) {
             logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
             lowLatencyModeEnabled = true;
         }

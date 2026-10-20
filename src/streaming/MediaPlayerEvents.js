@@ -88,13 +88,15 @@ class MediaPlayerEvents extends EventsBase {
         this.DVB_FONT_DOWNLOAD_ADDED = 'dvbFontDownloadAdded';
 
         /**
-         * Triggered when a font signalled by a DVB Font Download has successfully downloaded and the FontFace can be used.
+         * Triggered when a font signalled by a DVB Font Download has successfully downloaded and the FontFace can be
+         * used.
          * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_COMPLETE
          */
         this.DVB_FONT_DOWNLOAD_COMPLETE = 'dvbFontDownloadComplete';
 
         /**
-         * Triggered when a font signalled by a DVB Font Download could not be successfully downloaded, so the FontFace will not be used.
+         * Triggered when a font signalled by a DVB Font Download could not be successfully downloaded, so the FontFace
+         * will not be used.
          * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_FAILED
          */
         this.DVB_FONT_DOWNLOAD_FAILED = 'dvbFontDownloadFailed';
@@ -128,7 +130,8 @@ class MediaPlayerEvents extends EventsBase {
         this.FRAGMENT_LOADING_STARTED = 'fragmentLoadingStarted';
 
         /**
-         * Triggered when a fragment download is abandoned due to detection of slow download base on the ABR abandon rule..
+         * Triggered when a fragment download is abandoned due to detection of slow download base on the ABR abandon
+         * rule..
          * @event MediaPlayerEvents#FRAGMENT_LOADING_ABANDONED
          */
         this.FRAGMENT_LOADING_ABANDONED = 'fragmentLoadingAbandoned';
@@ -453,7 +456,8 @@ class MediaPlayerEvents extends EventsBase {
         this.EVENT_MODE_ON_RECEIVE = 'eventModeOnReceive';
 
         /**
-         * Event that is dispatched whenever the player encounters a potential conformance validation that might lead to unexpected/not optimal behavior
+         * Event that is dispatched whenever the player encounters a potential conformance validation that might lead to
+         * unexpected/not optimal behavior
          * @event MediaPlayerEvents#CONFORMANCE_VIOLATION
          */
         this.CONFORMANCE_VIOLATION = 'conformanceViolation';
@@ -465,7 +469,8 @@ class MediaPlayerEvents extends EventsBase {
         this.REPRESENTATION_SWITCH = 'representationSwitch';
 
         /**
-         * Event that is dispatched whenever an adaptation set is removed due to all representations not being supported.
+         * Event that is dispatched whenever an adaptation set is removed due to all representations not being
+         * supported.
          * @event MediaPlayerEvents#ADAPTATION_SET_REMOVED_NO_CAPABILITIES
          */
         this.ADAPTATION_SET_REMOVED_NO_CAPABILITIES = 'adaptationSetRemovedNoCapabilities';

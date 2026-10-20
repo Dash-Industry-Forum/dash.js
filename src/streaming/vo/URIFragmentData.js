@@ -48,11 +48,16 @@ export default URIFragmentData;
 /*
     From Spec http://www.w3.org/TR/media-frags/
 
-    temporal (t)     - This dimension denotes a specific time range in the original media, such as "starting at second 10, continuing until second 20";
-    spatial  (xywh)  - this dimension denotes a specific range of pixels in the original media, such as "a rectangle with size (100,100) with its top-left at coordinate (10,10)";
-                       Media fragments support also addressing the media along two additional dimensions (in the advanced version defined in Media Fragments 1.0 URI (advanced)):
-    track    (track) - this dimension denotes one or more tracks in the original media, such as "the english audio and the video track";
-    id       (id)    - this dimension denotes a named temporal fragment within the original media, such as "chapter 2", and can be seen as a convenient way of specifying a temporal fragment.
+    temporal (t)     - This dimension denotes a specific time range in the original media, such as "starting at
+                       second 10, continuing until second 20";
+    spatial  (xywh)  - this dimension denotes a specific range of pixels in the original media, such as "a rectangle
+                       with size (100,100) with its top-left at coordinate (10,10)";
+                       Media fragments support also addressing the media along two additional dimensions (in the
+                       advanced version defined in Media Fragments 1.0 URI (advanced)):
+    track    (track) - this dimension denotes one or more tracks in the original media, such as "the english audio
+                       and the video track";
+    id       (id)    - this dimension denotes a named temporal fragment within the original media, such as "chapter
+                       2", and can be seen as a convenient way of specifying a temporal fragment.
 
 
     ## Note

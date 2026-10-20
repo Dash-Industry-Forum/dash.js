@@ -25,20 +25,23 @@ describe('TimelineConverter', function () {
         const expectedValue = 0;
         const mediaTime = 10;
 
-        expect(timelineConverter.calcPresentationTimeFromMediaTime(mediaTime, representation)).to.be.equal(expectedValue);
+        expect(timelineConverter.calcPresentationTimeFromMediaTime(mediaTime, representation))
+            .to.be.equal(expectedValue);
     });
 
     it('should calculate media time from representation time', function () {
         const expectedValue = 10;
         const representationTime = 0;
 
-        expect(timelineConverter.calcMediaTimeFromPresentationTime(representationTime, representation)).to.be.equal(expectedValue);
+        expect(timelineConverter.calcMediaTimeFromPresentationTime(representationTime, representation))
+            .to.be.equal(expectedValue);
     });
 
     it('should calculate presentation time from wall-clock time', function () {
         const expectedValue = 10;
         const wallClock = new Date(specHelper.getUnixTime().getTime() + expectedValue * 1000);
-        expect(timelineConverter.calcPresentationTimeFromWallTime(wallClock, representation.adaptation.period)).to.be.equal(expectedValue);
+        expect(timelineConverter.calcPresentationTimeFromWallTime(wallClock, representation.adaptation.period))
+            .to.be.equal(expectedValue);
     });
 
     describe('should calcAvailabilityStartTimeFromPresentationTime() for a segment and ', () => {
@@ -65,8 +68,11 @@ describe('TimelineConverter', function () {
                 representation.adaptation.period.duration = 100;
                 const presentationStartTime = representation.adaptation.period.start;
 
-                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, false);
-                expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
+                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+                    presentationStartTime, representation, false
+                );
+                expect(ast.getTime())
+                    .to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
             });
 
             it('an init segment and period@start > 0', function () {
@@ -74,8 +80,11 @@ describe('TimelineConverter', function () {
                 representation.adaptation.period.duration = 100;
                 const presentationStartTime = representation.adaptation.period.start;
 
-                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, false);
-                expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
+                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+                    presentationStartTime, representation, false
+                );
+                expect(ast.getTime())
+                    .to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
             });
 
             it('media segment with presentationEndTime inside period boundary and period start set to 0', function () {
@@ -83,8 +92,11 @@ describe('TimelineConverter', function () {
                 representation.adaptation.period.duration = 100;
                 const presentationEndTime = 8;
 
-                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, false);
-                expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
+                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+                    presentationEndTime, representation, false
+                );
+                expect(ast.getTime())
+                    .to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
             });
 
             it('media segment with presentationEndTime inside period boundary and period start > 0', function () {
@@ -92,8 +104,11 @@ describe('TimelineConverter', function () {
                 representation.adaptation.period.duration = 100;
                 const presentationEndTime = 20;
 
-                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, false);
-                expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
+                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+                    presentationEndTime, representation, false
+                );
+                expect(ast.getTime())
+                    .to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
             });
 
 
@@ -119,20 +134,29 @@ describe('TimelineConverter', function () {
             describe('SegmentTemplate and ', function () {
 
                 it('an init segment', function () {
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(
+                        new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000
+                    );
                     const presentationStartTime = representation.adaptation.period.start;
 
-                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, true);
-                    expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
+                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+                        presentationStartTime, representation, true
+                    );
+                    expect(ast.getTime())
+                        .to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
                 });
 
                 it('an init segment and period@start > 0', function () {
                     representation.adaptation.period.start = 10;
                     representation.adaptation.period.duration = 100;
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(
+                        new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000
+                    );
                     const presentationStartTime = representation.adaptation.period.start;
 
-                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, true);
+                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+                        presentationStartTime, representation, true
+                    );
                     const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
                     targetDate.setSeconds(targetDate.getSeconds() + presentationStartTime);
                     expect(ast.getTime()).to.be.equal(targetDate.getTime());
@@ -141,10 +165,14 @@ describe('TimelineConverter', function () {
                 it('a media segment and period@start > 0', function () {
                     representation.adaptation.period.start = 10;
                     representation.adaptation.period.duration = 100;
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(
+                        new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000
+                    );
                     const presentationEndTime = representation.adaptation.period.start + 8;
 
-                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+                        presentationEndTime, representation, true
+                    );
                     const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
                     targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime);
                     expect(ast.getTime()).to.be.equal(targetDate.getTime());
@@ -154,12 +182,18 @@ describe('TimelineConverter', function () {
                     representation.adaptation.period.start = 10;
                     representation.adaptation.period.duration = 100;
                     representation.availabilityTimeOffset = 10;
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(
+                        new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000
+                    );
                     const presentationEndTime = representation.adaptation.period.start + 8;
 
-                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+                        presentationEndTime, representation, true
+                    );
                     const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
-                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime - representation.availabilityTimeOffset);
+                    targetDate.setSeconds(
+                        targetDate.getSeconds() + presentationEndTime - representation.availabilityTimeOffset
+                    );
                     expect(ast.getTime()).to.be.equal(targetDate.getTime());
                 });
 
@@ -202,18 +236,24 @@ describe('TimelineConverter', function () {
             it('an init segment', function () {
                 representation.adaptation.period.start = 0;
                 representation.adaptation.period.duration = 100;
-                const presentationEndTime = representation.adaptation.period.start + representation.adaptation.period.start;
+                const presentationEndTime = representation.adaptation.period.start +
+                    representation.adaptation.period.start;
 
-                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, false);
+                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+                    presentationEndTime, representation, false
+                );
                 expect(aet).to.be.equal(representation.adaptation.period.mpd.availabilityEndTime);
             });
 
             it('an init segment and period@start > 0', function () {
                 representation.adaptation.period.start = 10;
                 representation.adaptation.period.duration = 100;
-                const presentationEndTime = representation.adaptation.period.start + representation.adaptation.period.start;
+                const presentationEndTime = representation.adaptation.period.start +
+                    representation.adaptation.period.start;
 
-                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, false);
+                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+                    presentationEndTime, representation, false
+                );
                 expect(aet).to.be.equal(representation.adaptation.period.mpd.availabilityEndTime);
             });
 
@@ -222,7 +262,9 @@ describe('TimelineConverter', function () {
                 representation.adaptation.period.duration = 100;
                 const presentationEndTime = 8;
 
-                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, false);
+                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+                    presentationEndTime, representation, false
+                );
                 expect(aet).to.be.equal(representation.adaptation.period.mpd.availabilityEndTime);
             });
 
@@ -231,7 +273,9 @@ describe('TimelineConverter', function () {
                 representation.adaptation.period.duration = 100;
                 const presentationEndTime = 20;
 
-                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, false);
+                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+                    presentationEndTime, representation, false
+                );
                 expect(aet).to.be.equal(representation.adaptation.period.mpd.availabilityEndTime);
             });
 
@@ -254,36 +298,59 @@ describe('TimelineConverter', function () {
             describe('SegmentTemplate and ', function () {
 
                 it('an init segment', function () {
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    const presentationEndTime = representation.adaptation.period.start + representation.adaptation.period.duration;
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(
+                        new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000
+                    );
+                    const presentationEndTime = representation.adaptation.period.start +
+                        representation.adaptation.period.duration;
 
-                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+                        presentationEndTime, representation, true
+                    );
                     const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
-                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime + representation.adaptation.period.mpd.timeShiftBufferDepth);
+                    targetDate.setSeconds(
+                        targetDate.getSeconds() + presentationEndTime +
+                        representation.adaptation.period.mpd.timeShiftBufferDepth
+                    );
                     expect(aet.getTime()).to.be.equal(targetDate.getTime());
                 });
 
                 it('an init segment and period@start > 0', function () {
                     representation.adaptation.period.start = 10;
                     representation.adaptation.period.duration = 100;
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    const presentationEndTime = representation.adaptation.period.start + representation.adaptation.period.duration;
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(
+                        new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000
+                    );
+                    const presentationEndTime = representation.adaptation.period.start +
+                        representation.adaptation.period.duration;
 
-                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+                        presentationEndTime, representation, true
+                    );
                     const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
-                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime + representation.adaptation.period.mpd.timeShiftBufferDepth);
+                    targetDate.setSeconds(
+                        targetDate.getSeconds() + presentationEndTime +
+                        representation.adaptation.period.mpd.timeShiftBufferDepth
+                    );
                     expect(aet.getTime()).to.be.equal(targetDate.getTime());
                 });
 
                 it('a media segment and period@start > 0', function () {
                     representation.adaptation.period.start = 10;
                     representation.adaptation.period.duration = 100;
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(
+                        new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000
+                    );
                     const presentationEndTime = representation.adaptation.period.start + 8;
 
-                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+                        presentationEndTime, representation, true
+                    );
                     const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
-                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime + representation.adaptation.period.mpd.timeShiftBufferDepth);
+                    targetDate.setSeconds(
+                        targetDate.getSeconds() + presentationEndTime +
+                        representation.adaptation.period.mpd.timeShiftBufferDepth
+                    );
                     expect(aet.getTime()).to.be.equal(targetDate.getTime());
                 });
 
@@ -291,12 +358,19 @@ describe('TimelineConverter', function () {
                     representation.adaptation.period.start = 10;
                     representation.adaptation.period.duration = 100;
                     representation.availabilityTimeOffset = 10;
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(
+                        new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000
+                    );
                     const presentationEndTime = representation.adaptation.period.start + 8;
 
-                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+                        presentationEndTime, representation, true
+                    );
                     const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
-                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime + representation.adaptation.period.mpd.timeShiftBufferDepth);
+                    targetDate.setSeconds(
+                        targetDate.getSeconds() + presentationEndTime +
+                        representation.adaptation.period.mpd.timeShiftBufferDepth
+                    );
                     expect(aet.getTime()).to.be.equal(targetDate.getTime());
                 });
 
@@ -1008,10 +1082,14 @@ describe('TimelineConverter', function () {
                     const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
 
                     // Remove t attribute(s) from segments
-                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
-                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
-                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
-                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0]
+                        .SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0]
+                        .SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0]
+                        .SegmentTemplate.SegmentTimeline.S[0].t
+                    delete dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0]
+                        .SegmentTemplate.SegmentTimeline.S[0].t
 
                     dummyRep.adaptation.period.start = 0;
                     dummyRep.adaptation.period.duration = Number.POSITIVE_INFINITY;;

@@ -114,7 +114,8 @@ function RepresentationController(config) {
     }
 
     /**
-     * Returns the combined effective Representation, i.e. the dependent representation plus its declared complementary representation.
+     * Returns the combined effective Representation, i.e. the dependent representation plus its declared
+     * complementary representation.
      * @return {object} Representation
      */
     function getCurrentCompositeRepresentation() {
@@ -142,19 +143,22 @@ function RepresentationController(config) {
             _setCurrentVoRepresentation(selectedRepresentation);
 
             // Non-fragmented text (e.g. a single WebVTT file) has no segment data to load
-            hasSegmentData = type === Constants.VIDEO || type === Constants.ENHANCEMENT || type === Constants.AUDIO || (type === Constants.TEXT && isFragmented);
+            hasSegmentData = type === Constants.VIDEO || type === Constants.ENHANCEMENT || type === Constants.AUDIO ||
+                (type === Constants.TEXT && isFragmented);
             if (!hasSegmentData) {
                 _endDataUpdate();
                 resolve();
                 return;
             }
 
-            // The dependent Representation is scheduled on as well (e.g. the base layer of an enhancement Representation)
+            // The dependent Representation is scheduled on as well
+            // (e.g. the base layer of an enhancement Representation)
             const dependentRepresentationId = selectedRepresentation?.dependentRepresentation?.id;
             const promises = [];
             for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
                 const currentRep = voAvailableRepresentations[i];
-                const isSelected = currentRep.id === selectedRepresentationId || currentRep.id === dependentRepresentationId;
+                const isSelected = currentRep.id === selectedRepresentationId ||
+                    currentRep.id === dependentRepresentationId;
                 const update = _updateRepresentation(currentRep, isSelected);
                 // Share the segment list load with loadSegmentList()
                 if (isSelected && !currentRep.hasSegments()) {
@@ -195,8 +199,11 @@ function RepresentationController(config) {
 
             promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
             // For SegmentBase streams the segment list is only fetched for the Representation we
-            // are about to play. The others are loaded by the ScheduleController via loadSegmentList() once scheduled on.
-            promises.push(isSelected ? segmentsController.updateSegmentData(currentRep, hasSegments) : Promise.resolve());
+            // are about to play. The others are loaded by the ScheduleController via loadSegmentList() once
+            // scheduled on.
+            promises.push(isSelected
+                ? segmentsController.updateSegmentData(currentRep, hasSegments)
+                : Promise.resolve());
 
             Promise.all(promises)
                 .then((data) => {
@@ -206,7 +213,9 @@ function RepresentationController(config) {
                     if (data[1] && !data[1].error) {
                         currentRep = _onSegmentDataUpdated(currentRep, data[1]);
                     }
-                    currentRep.fragmentDuration = currentRep.segmentDuration ? currentRep.segmentDuration : currentRep.segments && currentRep.segments.length > 0 ? currentRep.segments[0].duration : NaN;
+                    currentRep.fragmentDuration = currentRep.segmentDuration
+                        ? currentRep.segmentDuration
+                        : currentRep.segments && currentRep.segments.length > 0 ? currentRep.segments[0].duration : NaN;
                     _setMediaFinishedInformation(currentRep);
                     _onRepresentationUpdated(currentRep);
                     resolve();
@@ -276,7 +285,12 @@ function RepresentationController(config) {
         const now = new Date();
         const currentVideoTimeMs = playbackController.getTime() * 1000;
         if (currentRepresentation) {
-            dashMetrics.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
+            dashMetrics.addRepresentationSwitch(
+                currentRepresentation.adaptation.type,
+                now,
+                currentVideoTimeMs,
+                currentRepresentation.id
+            );
         }
 
         eventBus.trigger(MediaPlayerEvents.REPRESENTATION_SWITCH, {
@@ -334,7 +348,8 @@ function RepresentationController(config) {
     }
 
     /**
-     * We get the new selected Representation which will not hold the ranges and the segment references in case of SegmentBase.
+     * We get the new selected Representation which will not hold the ranges and the segment references in case of
+     * SegmentBase.
      * In any case use the id to find the right Representation instance in our array of Representations.
      * @param newRep
      */
@@ -352,14 +367,16 @@ function RepresentationController(config) {
      * Loads the segment list of a SegmentBase Representation that was skipped in updateData().
      * Concurrent calls for the same Representation share one request.
      * @param newRep
-     * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded or the load failed recently
+     * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to
+     * be loaded or the load failed recently
      */
     function loadSegmentList(newRep) {
         if (!isSegmentListMissing(newRep)) {
             return null;
         }
         const rep = getRepresentationById(newRep.id);
-        // A failed load is excluded from ABR and only retried after its retry delay, callers must not wait for it in the meantime
+        // A failed load is excluded from ABR and only retried after its retry delay, callers must not wait for it in
+        // the meantime
         const failure = segmentListFailures.get(rep);
         if (failure && Date.now() - failure.failedAt < failure.retryDelay) {
             return null;
@@ -379,7 +396,8 @@ function RepresentationController(config) {
                 // Ignore loads that outlived a reset() or an updateData() with new Representations
                 if (!rep.segments && voAvailableRepresentations.includes(rep)) {
                     const failureCount = (segmentListFailures.get(rep)?.failureCount || 0) + 1;
-                    const retryDelay = settings.get().streaming.scheduling.segmentListRetryDelay * Math.min(2 ** (failureCount - 1), MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR);
+                    const retryDelay = settings.get().streaming.scheduling.segmentListRetryDelay *
+                        Math.min(2 ** (failureCount - 1), MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR);
                     segmentListFailures.set(rep, { failureCount, failedAt: Date.now(), retryDelay });
                     segmentListLoads.delete(rep);
                     abrController.excludeRepresentation(rep, retryDelay);

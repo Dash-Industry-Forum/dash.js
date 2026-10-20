@@ -45,7 +45,8 @@ class HTTPRequest {
          */
         this.tcpid = null;
         /**
-         * This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
+         * This is an optional parameter and should not be included in HTTP request/response transactions for
+         * progressive download.
          * The type of the request:
          * - MPD
          * - XLink expansion

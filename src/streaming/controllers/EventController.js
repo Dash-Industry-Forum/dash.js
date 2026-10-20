@@ -156,7 +156,8 @@ function EventController() {
                 const currentVideoTime = playbackController.getTime();
                 let presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
 
-                // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events at once.
+                // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events
+                // at once.
                 presentationTimeThreshold = lastEventTimerCall > 0 ? Math.max(0, presentationTimeThreshold) : 0;
 
                 _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
@@ -174,7 +175,8 @@ function EventController() {
     }
 
     /**
-     * Iterate over a list of events and trigger the ones for which the presentation time is within the current timing interval
+     * Iterate over a list of events and trigger the ones for which the presentation time is within the current timing
+     * interval
      * @param {object} events
      * @param {number} presentationTimeThreshold
      * @param {number} currentVideoTime
@@ -186,9 +188,14 @@ function EventController() {
                 if (event !== undefined) {
                     const duration = !isNaN(event.duration) ? event.duration : 0;
                     // The event is either about to start or has already been started and we are within its duration
-                    if ((event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime)) {
+                    if ((event.calculatedPresentationTime <= currentVideoTime &&
+                        event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime)) {
                         _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_START);
-                    } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime) || _eventIsInvalid(event)) {
+                    } else if (_eventHasExpired(
+                        currentVideoTime,
+                        duration + presentationTimeThreshold,
+                        event.calculatedPresentationTime
+                    ) || _eventIsInvalid(event)) {
                         logger.debug(`Removing event ${event.id} from period ${event.eventStream.period.id} as it is expired or invalid`);
                         _removeEvent(events, event);
                     }
@@ -260,7 +267,8 @@ function EventController() {
 
     /**
      * Add EMSG events to the list of events
-     * Messages with the same id within the scope of the same scheme_id_uri and value pair are equivalent , i.e. processing of any one event message box with the same id is sufficient.
+     * Messages with the same id within the scope of the same scheme_id_uri and value pair are equivalent , i.e.
+     * processing of any one event message box with the same id is sufficient.
      * @param {Array.<Object>} values
      * @param {string} periodId
      */
@@ -353,12 +361,14 @@ function EventController() {
                 } else {
                     newDuration = event.calculatedPresentationTime + event.duration;
                 }
-                //logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
+                //logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' +
+                //    newDuration);
                 eventBus.trigger(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, {
                     id: event.id,
                     validUntil: validUntil,
                     newDuration: newDuration,
-                    newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
+                    //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
+                    newManifestValidAfter: NaN
                 }, {
                     mode: MediaPlayerEvents.EVENT_MODE_ON_START
                 });
@@ -374,7 +384,8 @@ function EventController() {
      */
     function _onStopEventController() {
         try {
-            // EventController might be stopped before the period is over. Before we stop the event controller we check for events that needs to be triggered at the period boundary.
+            // EventController might be stopped before the period is over. Before we stop the event controller we check
+            // for events that needs to be triggered at the period boundary.
             _triggerRemainingEvents(inbandEvents);
             _triggerRemainingEvents(inlineEvents);
         } catch (e) {
@@ -391,8 +402,10 @@ function EventController() {
         try {
             const currentTime = playbackController.getTime();
             const callback = function (event) {
-                const periodDuration = event.eventStream && event.eventStream.period && !isNaN(event.eventStream.period.duration) ? event.eventStream.period.duration : NaN;
-                const periodStart = event.eventStream && event.eventStream.period && !isNaN(event.eventStream.period.start) ? event.eventStream.period.start : NaN;
+                const periodDuration = event.eventStream && event.eventStream.period &&
+                    !isNaN(event.eventStream.period.duration) ? event.eventStream.period.duration : NaN;
+                const periodStart = event.eventStream && event.eventStream.period &&
+                    !isNaN(event.eventStream.period.start) ? event.eventStream.period.start : NaN;
 
                 if (isNaN(periodDuration) || isNaN(periodStart)) {
                     return;
@@ -441,7 +454,8 @@ function EventController() {
     }
 
     /**
-     * Checks if an event is expired. For instance if the presentationTime + the duration of an event are smaller than the current video time.
+     * Checks if an event is expired. For instance if the presentationTime + the duration of an event are smaller than
+     * the current video time.
      * @param {number} currentVideoTime
      * @param {number} threshold
      * @param {number} calculatedPresentationTimeInSeconds
@@ -458,7 +472,8 @@ function EventController() {
     }
 
     /**
-     * Checks if an event is invalid. This is the case if the end time of the parent period is smaller than the presentation time of the event.
+     * Checks if an event is invalid. This is the case if the end time of the parent period is smaller than the
+     * presentation time of the event.
      * @param {object} event
      * @return {boolean}
      * @private
@@ -496,15 +511,19 @@ function EventController() {
             }
 
             if (!event.triggeredStartEvent) {
-                if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
+                if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME &&
+                    event.eventStream.value == MPD_RELOAD_VALUE) {
                     //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
                     if (event.duration !== 0 || event.presentationTimeDelta !== 0) {
                         logger.debug(`Starting manifest refresh event ${eventId} at ${currentVideoTime}`);
                         _refreshManifest();
                     }
-                } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
+                } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME &&
+                    event.eventStream.value == MPD_CALLBACK_VALUE) {
                     logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
-                    const url = event.messageData instanceof Uint8Array ? Utils.uint8ArrayToString(event.messageData) : event.messageData;
+                    const url = event.messageData instanceof Uint8Array
+                        ? Utils.uint8ArrayToString(event.messageData)
+                        : event.messageData;
                     _sendCallbackRequest(url);
                 } else {
                     logger.debug(`Starting event ${eventId} from period ${event.eventStream.period.id} at ${currentVideoTime}`);
@@ -524,7 +543,8 @@ function EventController() {
     }
 
     /**
-     * Removes an event from the list. If this is the last event of type "schemeIdUri"  the corresponding schemeIdUri Object in the list of events is deleted.
+     * Removes an event from the list. If this is the last event of type "schemeIdUri"  the corresponding schemeIdUri
+     * Object in the list of events is deleted.
      * @param {object} events
      * @param {object} event
      * @private

@@ -65,7 +65,9 @@ function TrackApi() {
      * @instance
      */
     function getAverageLatency(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
-        return state.throughputController ? state.throughputController.getAverageLatency(type, calculationMode, sampleSize) : 0;
+        return state.throughputController
+            ? state.throughputController.getAverageLatency(type, calculationMode, sampleSize)
+            : 0;
     }
 
     /**
@@ -79,11 +81,14 @@ function TrackApi() {
      * @instance
      */
     function getAverageThroughput(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
-        return state.throughputController ? state.throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
+        return state.throughputController
+            ? state.throughputController.getAverageThroughput(type, calculationMode, sampleSize)
+            : 0;
     }
 
     /**
-     * Returns the safe average throughput computed in the ThroughputController in kbit/s. The safe average throughput is the average throughput multiplied by bandwidthSafetyFactor
+     * Returns the safe average throughput computed in the ThroughputController in kbit/s. The safe average throughput
+     * is the average throughput multiplied by bandwidthSafetyFactor
      *
      * @param {MediaType} type
      * @param {string} calculationMode
@@ -93,11 +98,14 @@ function TrackApi() {
      * @instance
      */
     function getSafeAverageThroughput(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
-        return state.throughputController ? state.throughputController.getSafeAverageThroughput(type, calculationMode, sampleSize) : 0;
+        return state.throughputController
+            ? state.throughputController.getSafeAverageThroughput(type, calculationMode, sampleSize)
+            : 0;
     }
 
     /**
-     *  Returns the raw throughput data without calculating the average. This can be used to calculate the current throughput yourself.
+     *  Returns the raw throughput data without calculating the average. This can be used to calculate the current
+     *  throughput yourself.
      *
      * @param {MediaType} type
      * @return {Array} value
@@ -117,7 +125,8 @@ function TrackApi() {
      * @returns {Representation | null} the quality index, 0 corresponding to the lowest bitrate
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#getCurrentRepresentationForType getCurrentRepresentationForType()}
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function getCurrentRepresentationForType(type) {
@@ -150,7 +159,8 @@ function TrackApi() {
      * @param {number} id , The ID of the Representation
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function setRepresentationForTypeById(type, id, forceReplace = false) {
@@ -172,7 +182,12 @@ function TrackApi() {
         } else {
             const representation = activeStream.getRepresentationForTypeById(type, id);
             if (representation) {
-                state.abrController.manuallySetPlaybackQuality(type, state.streamController.getActiveStreamInfo(), representation, { forceReplace });
+                state.abrController.manuallySetPlaybackQuality(
+                    type,
+                    state.streamController.getActiveStreamInfo(),
+                    representation,
+                    { forceReplace }
+                );
             }
         }
     }
@@ -180,14 +195,17 @@ function TrackApi() {
     /**
      * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
-     * Note that you need to specify a relative index based on the position of the target entry in the return value of getRepresentationsByType().
-     * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If you want to select a specific representation then use setRepresentationForTypeById() instead.
+     * Note that you need to specify a relative index based on the position of the target entry in the return value of
+     * getRepresentationsByType().
+     * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If
+     * you want to select a specific representation then use setRepresentationForTypeById() instead.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
      * @param {number} index - the quality index, 0 corresponding to the lowest possible index
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function setRepresentationForTypeByIndex(type, index, forceReplace = false) {
@@ -209,19 +227,26 @@ function TrackApi() {
         } else {
             const representation = activeStream.getRepresentationForTypeByIndex(type, index);
             if (representation) {
-                state.abrController.manuallySetPlaybackQuality(type, state.streamController.getActiveStreamInfo(), representation, { forceReplace });
+                state.abrController.manuallySetPlaybackQuality(
+                    type,
+                    state.streamController.getActiveStreamInfo(),
+                    representation,
+                    { forceReplace }
+                );
             }
         }
     }
 
     /**
-     * This method returns the list of all available representations for a given media type. The returned list is filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).
+     * This method returns the list of all available representations for a given media type. The returned list is
+     * filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).
      * If you want to get the unfiltered list of representations then use getRepresentationsByTypeUnfiltered() instead.
      * @param {MediaType} type
      * @param {string} streamId
      * @returns {Array}
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function getRepresentationsByType(type, streamId = null) {
@@ -229,13 +254,15 @@ function TrackApi() {
     }
 
     /**
-     * This method returns the list of all available representations for a given media type. The returned list is unfiltered and settings like max/min bitrate and limitBitrateByPortal are not taken into account.
+     * This method returns the list of all available representations for a given media type. The returned list is
+     * unfiltered and settings like max/min bitrate and limitBitrateByPortal are not taken into account.
      * If you want to get the filtered list of representations then use getRepresentationsByType() instead.
      * @param {MediaType} type
      * @param {string} streamId
      * @returns {Array}
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function getRepresentationsByTypeUnfiltered(type, streamId = null) {
@@ -255,7 +282,8 @@ function TrackApi() {
      * @param {MediaType} type
      * @returns {Array} list of {@link MediaInfo}
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function getTracksFor(type) {
@@ -270,7 +298,9 @@ function TrackApi() {
 
         const tracks = state.mediaController.getTracksFor(type, streamInfo.id);
         return tracks.filter((track) => {
-            return state.protectionController ? state.protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true
+            return state.protectionController
+                ? state.protectionController.areKeyIdsUsable(track.normalizedKeyIds)
+                : true
         })
     }
 
@@ -279,7 +309,8 @@ function TrackApi() {
      * @returns {Object|null} {@link MediaInfo}
      *
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function getCurrentTrackFor(type) {
@@ -295,15 +326,20 @@ function TrackApi() {
     }
 
     /**
-     * This method allows to set media settings that will be used to pick the initial track. The settings object supports the following properties:
+     * This method allows to set media settings that will be used to pick the initial track. The settings object
+     * supports the following properties:
      * <ul>
      * <li><code>lang</code>: a string primitive, a string object, or a RegExp object to match</li>
      * <li><code>index</code>: the index of the track</li>
      * <li><code>viewpoint</code>: object <code>{schemeIdUri, value}</code> or value-primitive</li>
-     * <li><code>audioChannelConfiguration</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')</li>
-     * <li><code>accessibility</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
-     * <li><code>role</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
-     * <li><code>codec</code>: full codec string as exposed in MediaInfo.codec, e.g. <code>'audio/mp4;codecs="ec-3"'</code>, compared with strict equality</li>
+     * <li><code>audioChannelConfiguration</code>: object <code>{schemeIdUri, value}</code> or value-primitive
+     * (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')</li>
+     * <li><code>accessibility</code>: object <code>{schemeIdUri, value}</code> or value-primitive
+     * (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+     * <li><code>role</code>: object <code>{schemeIdUri, value}</code> or value-primitive
+     * (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+     * <li><code>codec</code>: full codec string as exposed in MediaInfo.codec, e.g.
+     * <code>'audio/mp4;codecs="ec-3"'</code>, compared with strict equality</li>
      * </ul>
      *
      * @example
@@ -315,7 +351,8 @@ function TrackApi() {
      * @param {MediaType} type
      * @param {Object} value
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if
+     * called before initialize function
      * @instance
      */
     function setInitialMediaSettingsFor(type, value) {
@@ -343,7 +380,8 @@ function TrackApi() {
      * @param {MediaType} type
      * @returns {Object}
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if
+     * called before initialize function
      * @instance
      */
     function getInitialMediaSettingsFor(type) {
@@ -355,9 +393,11 @@ function TrackApi() {
 
     /**
      * @param {MediaInfo} track - instance of {@link MediaInfo}
-     * @param {boolean} [noSettingsSave] - specify if settings from the track must not be saved for incoming track selection
+     * @param {boolean} [noSettingsSave] - specify if settings from the track must not be saved for incoming track
+     * selection
      * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called
+     * before initializePlayback function
      * @instance
      */
     function setCurrentTrack(track, noSettingsSave = false) {
@@ -365,7 +405,9 @@ function TrackApi() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
 
-        const canUseTrack = state.protectionController ? state.protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true
+        const canUseTrack = state.protectionController
+            ? state.protectionController.areKeyIdsUsable(track.normalizedKeyIds)
+            : true
 
         if (!canUseTrack) {
             state.logger.error(`Can not switch to track with index ${track.index} because key is not usable`);
@@ -376,9 +418,12 @@ function TrackApi() {
     }
 
     /**
-     * Provide the thumbnail at time position. This can be asynchronous, so you must provide a callback ro retrieve thumbnails informations
-     * @param {number} time - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
-     * @param {function} callback - A Callback function provided when retrieving thumbnail the given time position. Thumbnail object is null in case there are is not a thumbnails representation or
+     * Provide the thumbnail at time position. This can be asynchronous, so you must provide a callback ro retrieve
+     * thumbnails informations
+     * @param {number} time - A relative time, in seconds, based on the return value of the
+     * {@link module:MediaPlayer#duration duration()} method is expected
+     * @param {function} callback - A Callback function provided when retrieving thumbnail the given time position.
+     * Thumbnail object is null in case there are is not a thumbnails representation or
      * if it doesn't contain a thumbnail for the given time position.
      * @memberof module:MediaPlayer
      * @instance

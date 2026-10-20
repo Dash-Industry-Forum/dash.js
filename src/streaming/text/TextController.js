@@ -222,7 +222,8 @@ function TextController(config) {
         const textDefaultEnabled = settings.get().streaming.text.defaultEnabled;
 
         if ((textDefaultEnabled === false && !isTextEnabled()) || disableTextBeforeTextTracksAdded) {
-            // disable text at startup if explicitly configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
+            // disable text at startup if explicitly configured with setTextDefaultEnabled(false) or if there is no
+            // defaultSettings (configuration or from domStorage)
             setTextTrack(streamId, -1);
         } else {
             const currentTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamId);
@@ -327,7 +328,8 @@ function TextController(config) {
             let suitableForcedSubtitleIndex = NaN;
             if (allTracksAreDisabled) {
                 suitableForcedSubtitleIndex = _getSuitableForceSubtitleTrackIndex(e.streamId);
-            } else if (_isForcedSubtitleTrack(currentTextTrackInfo) && e.currentMediaInfo.lang && e.currentMediaInfo.lang !== currentTextTrackInfo.lang) {
+            } else if (_isForcedSubtitleTrack(currentTextTrackInfo) && e.currentMediaInfo.lang &&
+                e.currentMediaInfo.lang !== currentTextTrackInfo.lang) {
                 suitableForcedSubtitleIndex = _getSuitableForceSubtitleTrackIndex(e.streamId);
                 if (isNaN(suitableForcedSubtitleIndex)) {
                     suitableForcedSubtitleIndex = -1;
@@ -374,7 +376,8 @@ function TextController(config) {
         return enabled;
     }
 
-    // when set to true ScheduleController will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
+    // when set to true ScheduleController will allow schedule of chunks even if tracks are all disabled. Allowing
+    // streaming to hidden track for external players to work with.
     function enableForcedTextStreaming(enable) {
         checkParameterType(enable, 'boolean');
         forceTextStreaming = enable;
@@ -387,7 +390,9 @@ function TextController(config) {
         allTracksAreDisabled = idx === -1;
 
         if (allTracksAreDisabled) {
-            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { mediaType: Constants.TEXT, bufferLevel: -1 }, { streamId, mediaType: Constants.TEXT });
+            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED,
+                { mediaType: Constants.TEXT, bufferLevel: -1 },
+                { streamId, mediaType: Constants.TEXT });
         }
 
         if (allTracksAreDisabled && mediaController) {
@@ -406,7 +411,13 @@ function TextController(config) {
         textTracks[streamId].invalidateCueWindow();
 
         let currentTrackInfo = textTracks[streamId].getCurrentTextTrackInfo();
-        let currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null;
+        let currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(
+            currentTrackInfo.kind,
+            currentTrackInfo.id,
+            currentTrackInfo.lang,
+            currentTrackInfo.isTTML,
+            currentTrackInfo.isEmbedded
+        ) : null;
 
         // Don't change disabled tracks - dvb font download for essential property failed or not complete
         if (currentNativeTrackInfo && (currentNativeTrackInfo.mode !== Constants.TEXT_DISABLED)) {
@@ -456,8 +467,9 @@ function TextController(config) {
                     textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
                     textSourceBuffers[streamId].setCurrentFragmentedTrackIdx(i);
                 } else if (oldTrackIdx === -1) {
-                    // in fragmented use case, if the user selects the older track (the one selected before disabled text track)
-                    // no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
+                    // in fragmented use case, if the user selects the older track (the one selected before disabled
+                    // text track) no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the
+                    // StreamProcessor is equal to the one we are selecting
                     // For that reason we reactivate the StreamProcessor and the ScheduleController
                     eventBus.trigger(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, {}, {
                         streamId,
