@@ -84,8 +84,8 @@ const ProtectionConstants = {
 ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = {
     [ProtectionConstants.PLAYREADY_KEYSTEM_STRING]: [
         ProtectionConstants.PLAYREADY_KEYSTEM_STRING,
+        ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING,
         ProtectionConstants.PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING,
-        ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING
     ]
 };
 
