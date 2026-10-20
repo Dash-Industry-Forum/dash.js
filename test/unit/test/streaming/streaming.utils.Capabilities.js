@@ -561,7 +561,7 @@ describe('Capabilities', function () {
             const stub = sinon.stub(navigator.mediaCapabilities, 'decodingInfo').callsFake((cfg) => {
                 const keySystem = cfg.keySystemConfiguration.keySystem;
                 return Promise.resolve({
-                    supported: keySystem === ProtectionConstants.PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING
+                    supported: keySystem === ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING
                 });
             });
             const config = {

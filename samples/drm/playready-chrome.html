@@ -81,7 +81,8 @@
             <input id="licenseUrl" type="text" class="form-control"
                    value="https://playready.ezdrm.com/cency/preauth.aspx?pX=E0183F">
             <label for="systemStrings" class="mt-2">systemStringPriority (comma separated, empty = player default):</label>
-            <input id="systemStrings" type="text" class="form-control" value="">
+            <input id="systemStrings" type="text" class="form-control"
+                   value="com.microsoft.playready.recommendation.3000">
             <button id="probeButton" class="btn btn-secondary mt-2">Probe key systems</button>
             <button id="loadButton" class="btn btn-primary mt-2">Load</button>
             <div class="sample-video-wrapper mt-3"><video></video></div>
@@ -316,7 +317,7 @@
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
     initSamplePage({
         title: 'PlayReady in Chrome',
-        description: 'Probes which PlayReady key system strings the browser supports and plays PlayReady protected content. Chrome on Windows only supports hardware PlayReady (SL3000) via <code>com.microsoft.playready.recommendation.3000</code>. Open via https or localhost, and run on a machine with hardware DRM (not a VM or RDP session).',
+        description: 'Probes which PlayReady key system strings the browser supports and plays PlayReady protected content. Chrome on Windows only supports hardware PlayReady (SL3000) via <code>com.microsoft.playready.recommendation.3000</code>, which is not in the player defaults and must be set via <code>systemStringPriority</code>. Open via https or localhost, and run on a machine with hardware DRM (not a VM or RDP session).',
         category: 'DRM',
         layout: 'custom',
         httpWarning: true,

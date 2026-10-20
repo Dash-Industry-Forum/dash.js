@@ -79,13 +79,13 @@ const ProtectionConstants = {
 
 // System strings tried in order by requestMediaKeySystemAccess if the application does not define a
 // systemStringPriority. Key systems without an entry only use their own system string.
-// PlayReady: Edge accepts the plain string, Chrome on Windows only supports SL3000 via '.recommendation.3000',
-// Firefox uses '.recommendation'
+// PlayReady: Edge accepts the plain string, Firefox uses '.recommendation'. Chrome on Windows only supports SL3000
+// via '.recommendation.3000'. It is opt-in via systemStringPriority, otherwise multi-DRM content would silently
+// switch from Widevine to PlayReady in Chrome.
 ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = {
     [ProtectionConstants.PLAYREADY_KEYSTEM_STRING]: [
         ProtectionConstants.PLAYREADY_KEYSTEM_STRING,
-        ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING,
-        ProtectionConstants.PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING,
+        ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING
     ]
 };
 
