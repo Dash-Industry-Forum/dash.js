@@ -43,14 +43,9 @@ import ProtectionErrors from '../errors/ProtectionErrors.js';
 import DashJSError from '../../vo/DashJSError.js';
 import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
+import KeySystemMetadata from '../vo/KeySystemMetadata.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
-
-const SYSTEM_STRING_PRIORITY = {};
-SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[ProtectionConstants.WIDEVINE_KEYSTEM_STRING] = [ProtectionConstants.WIDEVINE_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[ProtectionConstants.FAIRPLAY_KEYSTEM_STRING] = [ProtectionConstants.FAIRPLAY_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[ProtectionConstants.CLEARKEY_KEYSTEM_STRING] = [ProtectionConstants.CLEARKEY_KEYSTEM_STRING];
 
 function DefaultProtectionModel(config) {
 
@@ -161,15 +156,10 @@ function DefaultProtectionModel(config) {
             return;
         }
 
-        // If a systemStringPriority is defined by the application we use these values. Otherwise, we use the default system string
-        // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
-        const protDataSystemStringPriority = keySystemConfigurationsToRequest[idx].protData && keySystemConfigurationsToRequest[idx].protData.systemStringPriority ? keySystemConfigurationsToRequest[idx].protData.systemStringPriority : null;
         const configs = keySystemConfigurationsToRequest[idx].configs;
         const currentKeySystem = keySystemConfigurationsToRequest[idx].ks;
-        let systemString = currentKeySystem.systemString;
-
-        // Use the default values in case no values are provided by the application
-        const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : SYSTEM_STRING_PRIORITY[systemString] ? SYSTEM_STRING_PRIORITY[systemString] : [systemString];
+        const systemStringsToApply = KeySystemMetadata.getSystemStringsToApply(
+            currentKeySystem, keySystemConfigurationsToRequest[idx].protData);
 
         // Check all the available system strings and the available configurations for support
         _checkAccessForKeySystem(systemStringsToApply, configs)
