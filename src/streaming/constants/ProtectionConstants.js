@@ -82,11 +82,12 @@ const ProtectionConstants = {
 // PlayReady: Edge accepts the plain string, Firefox uses '.recommendation'. Chrome on Windows only supports SL3000
 // via '.recommendation.3000'. It is opt-in via systemStringPriority, otherwise multi-DRM content would silently
 // switch from Widevine to PlayReady in Chrome.
-ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = {
-    [ProtectionConstants.PLAYREADY_KEYSTEM_STRING]: [
+// Frozen as it is shared by all player instances
+ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = Object.freeze({
+    [ProtectionConstants.PLAYREADY_KEYSTEM_STRING]: Object.freeze([
         ProtectionConstants.PLAYREADY_KEYSTEM_STRING,
         ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING
-    ]
-};
+    ])
+});
 
 export default ProtectionConstants;

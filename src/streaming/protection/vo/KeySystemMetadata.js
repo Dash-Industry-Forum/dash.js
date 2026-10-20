@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
+
 /**
  * @classdesc A model class to save metadata about a key system
  * @ignore
@@ -42,6 +44,19 @@ class KeySystemMetadata {
         this.cdmData = config.cdmData;
         this.sessionId = config.sessionId;
         this.sessionType = config.sessionType;
+    }
+
+    /**
+     * Returns the system strings to try in order for a key system. A systemStringPriority defined by the application
+     * takes precedence over the defaults, e.g. com.microsoft.playready and com.microsoft.playready.recommendation
+     * @param {object} ks
+     * @param {object} protData
+     * @return {Array.<string>}
+     */
+    static getSystemStringsToApply(ks, protData) {
+        return (protData && protData.systemStringPriority) ||
+            ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[ks.systemString] ||
+            [ks.systemString];
     }
 }
 

@@ -82,7 +82,7 @@
                    value="https://playready.ezdrm.com/cency/preauth.aspx?pX=E0183F">
             <label for="systemStrings" class="mt-2">systemStringPriority (comma separated, empty = player default):</label>
             <input id="systemStrings" type="text" class="form-control"
-                   value="com.microsoft.playready.recommendation.3000">
+                   value="com.microsoft.playready, com.microsoft.playready.recommendation, com.microsoft.playready.recommendation.3000">
             <button id="probeButton" class="btn btn-secondary mt-2">Probe key systems</button>
             <button id="loadButton" class="btn btn-primary mt-2">Load</button>
             <div class="sample-video-wrapper mt-3"><video></video></div>
@@ -147,7 +147,7 @@
             if (e.error) {
                 log('Key system selection failed: ' + e.error.message, 'error');
             } else {
-                log('Key system selected: ' + e.data.keySystem.systemString, 'success');
+                log('Key system selected: ' + (e.data.selectedSystemString || e.data.keySystem.systemString), 'success');
             }
         });
         player.on(dashjs.Protection.events.LICENSE_REQUEST_COMPLETE, function (e) {
