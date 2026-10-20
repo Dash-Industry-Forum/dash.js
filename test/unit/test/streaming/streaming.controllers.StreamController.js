@@ -364,6 +364,46 @@ describe('StreamController', function () {
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
                 });
 
+                it('should ignore a MediaSource duration that is shorter than the start of the last period', function (done) {
+                    const mediaSourceController = MediaSourceController(context).getInstance();
+                    const createMediaSourceStub = sinon.stub(mediaSourceController, 'createMediaSource').returns({
+                        duration: staticStreamInfo.start / 2,
+                        addEventListener: () => {},
+                        removeEventListener: () => {}
+                    });
+                    const attachMediaSourceStub = sinon.stub(mediaSourceController, 'attachMediaSource').returns('blob:');
+                    const restore = () => {
+                        createMediaSourceStub.restore();
+                        attachMediaSourceStub.restore();
+                    };
+
+                    doneFn = function (err) {
+                        if (err) {
+                            restore();
+                            done(err);
+                            return;
+                        }
+                        setTimeout(() => {
+                            try {
+                                const seekTime = staticStreamInfo.start + staticStreamInfo.duration / 2;
+                                const seekEvent = { seekTime };
+                                eventBus.trigger(Events.PLAYBACK_SEEKING, seekEvent);
+                                expect(seekEvent.seekTime).to.equal(seekTime);
+                                restore();
+                                done();
+                            } catch (e) {
+                                restore();
+                                done(e);
+                            }
+                        }, 0);
+                    };
+
+                    expectedStartTime = staticStreamInfo.start;
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
                 it('should start static stream at #t', function (done) {
                     doneFn = done;
 

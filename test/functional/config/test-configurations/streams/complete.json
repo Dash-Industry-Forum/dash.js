@@ -763,48 +763,56 @@
       "name": "Segment Timeline with negative video EPT Delta",
       "type": "vod",
       "url": "/base/test/functional/content/gap/video_negative_ept_delta.mpd",
+      "includedTestfiles": [
+        "playback/*",
+        "advanced/no-reload-after-seek",
+        "video/fast-switch-quality-video"
+      ],
       "excludedTestfiles": [
         "playback/seek",
         "playback/seek-ended",
-        "playback/seek-to-presentation-time",
-        "playback-advanced/attach-at-non-zero",
-        "playback-advanced/preload",
-        "playback-advanced/segment-base-lazy-sidx"
+        "playback/seek-to-presentation-time"
       ]
     },
     {
       "name": "Segment Timeline with negative audio EPT Delta",
       "type": "vod",
       "url": "/base/test/functional/content/gap/audio_negative_ept_delta.mpd",
+      "includedTestfiles": [
+        "playback/*",
+        "advanced/no-reload-after-seek",
+        "video/fast-switch-quality-video"
+      ],
       "excludedTestfiles": [
         "playback/seek",
         "playback/seek-ended",
-        "playback/seek-to-presentation-time",
-        "playback-advanced/attach-at-non-zero",
-        "playback-advanced/preload",
-        "playback-advanced/segment-base-lazy-sidx"
+        "playback/seek-to-presentation-time"
       ]
     },
     {
       "name": "Segment Timeline with positive video EPT Delta",
       "type": "vod",
       "url": "/base/test/functional/content/gap/video_positive_ept_delta.mpd",
+      "includedTestfiles": [
+        "playback/*",
+        "advanced/no-reload-after-seek",
+        "video/fast-switch-quality-video"
+      ],
       "excludedTestfiles": [
-        "playback/seek",
-        "playback-advanced/attach-at-non-zero",
-        "playback-advanced/preload",
-        "playback-advanced/segment-base-lazy-sidx"
+        "playback/seek"
       ]
     },
     {
       "name": "Segment Timeline with positive audio EPT Delta",
       "type": "vod",
       "url": "/base/test/functional/content/gap/audio_positive_ept_delta.mpd",
+      "includedTestfiles": [
+        "playback/*",
+        "advanced/no-reload-after-seek",
+        "video/fast-switch-quality-video"
+      ],
       "excludedTestfiles": [
-        "playback/seek",
-        "playback-advanced/attach-at-non-zero",
-        "playback-advanced/preload",
-        "playback-advanced/segment-base-lazy-sidx"
+        "playback/seek"
       ]
     },
     {

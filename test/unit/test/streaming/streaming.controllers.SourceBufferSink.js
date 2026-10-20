@@ -238,6 +238,32 @@ describe('SourceBufferSink', function () {
                 });
         });
 
+        it('should continue with the next queued chunk if appending a chunk throws', function (done) {
+            const buffer = mediaSource.buffers[0];
+            const appendBuffer = buffer.appendBuffer.bind(buffer);
+            let appendCalls = 0;
+            buffer.appendBuffer = (chunk) => {
+                appendCalls++;
+                if (appendCalls === 1) {
+                    throw new Error('QuotaExceededError');
+                }
+                appendBuffer(chunk);
+            };
+
+            // Keep the buffer busy so that both chunks are queued before the first append attempt
+            buffer.updating = true;
+            sink.append({ bytes: 'first' }).catch(() => {});
+            sink.append({ bytes: 'second' })
+                .then(() => {
+                    expect(buffer.chunk).to.equal('second');
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+            buffer.updating = false;
+        });
+
         it('should not report init segments as pending media appends', function () {
             sink.append({ bytes: 'toto', segmentType: HTTPRequest.INIT_SEGMENT_TYPE, start: 2, end: 8 });
 

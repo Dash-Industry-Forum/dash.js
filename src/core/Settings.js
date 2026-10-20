@@ -1080,7 +1080,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * This will only take effect after an abandoned fragment event occurs.
  * @property {number} [seekDurationBackoff=0.5]
- * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of last period - seekDurationBackoff).
+ * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of content - seekDurationBackoff).
+ * The end of content is the end of the last period, or the MediaSource duration if that is shorter but still within the last period (e.g. after endOfStream() trimmed it to the buffered media).
  *
  * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
  * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and seek to the exact end of the content.

@@ -297,8 +297,13 @@ function StreamProcessor(config) {
             // If we seek forwards then pruneBuffer() will make sure that the bufferToKeep setting is respected
             // The same applies if the segment for the target time is currently loading or waiting to be appended, e.g. for the
             // internal seek at startup when the other media type starts later. Aborting it would only download the same segment again.
-            const hasBufferAtTargetTime = bufferController.hasBufferAtTime(e.seekTime) || bufferController.hasPendingAppendAtTime(e.seekTime) || _isMediaSegmentLoadingForTime(e.seekTime);
-            if (hasBufferAtTargetTime) {
+            const hasBufferAtTargetTime = bufferController.hasBufferAtTime(e.seekTime);
+            const hasPendingDataAtTargetTime = !hasBufferAtTargetTime && (bufferController.hasPendingAppendAtTime(e.seekTime) || _isMediaSegmentLoadingForTime(e.seekTime));
+            if (hasBufferAtTargetTime || hasPendingDataAtTargetTime) {
+                if (hasPendingDataAtTargetTime) {
+                    // The media might start after the seek target, e.g. with an EPT delta. Move the playhead once it has been appended.
+                    bufferController.setSeekTarget(e.seekTime);
+                }
                 bufferController.pruneBuffer();
                 const continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
                 if (_shouldSetBufferingComplete(continuousBufferTime)) {
@@ -362,13 +367,12 @@ function StreamProcessor(config) {
     }
 
     function _isMediaSegmentLoadingForTime(time) {
-        // Init segments have no start time and are never matched for a numeric time
-        const loadingRequests = fragmentModel.getRequests({
+        // A time filter returns a single entry, null if no request matches. Init segments have no start time and are never matched.
+        return !!fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_LOADING,
             time,
             threshold: 0
-        });
-        return loadingRequests.some((request) => !!request);
+        })[0];
     }
 
     function _shouldSetBufferingComplete(continuousBufferTime) {

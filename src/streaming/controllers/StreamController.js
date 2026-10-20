@@ -675,8 +675,9 @@ function StreamController() {
         const lastStream = streams[streams.length - 1];
         let contentEnd = parseFloat((lastStream.getStartTime() + lastStream.getDuration()).toFixed(5));
         // endOfStream() can shrink the MediaSource duration below the period end, e.g. to the end of the buffered media.
-        // MediaPlayer.seek() clamps to that duration, so treat it as the end of content as well.
-        if (mediaSource && !isNaN(mediaSource.duration)) {
+        // MediaPlayer.seek() clamps to that duration, so treat it as the end of content as well. Only within the last period,
+        // a shorter duration would otherwise route seeks to a stream whose start lies beyond the playable range.
+        if (mediaSource && !isNaN(mediaSource.duration) && mediaSource.duration >= lastStream.getStartTime()) {
             contentEnd = Math.min(contentEnd, mediaSource.duration);
         }
         if (e.seekTime < contentEnd) {

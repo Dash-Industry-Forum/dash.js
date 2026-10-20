@@ -422,10 +422,10 @@ function SourceBufferSink(config) {
             } catch (err) {
                 logger.fatal('SourceBuffer append failed "' + err + '"');
                 appendingChunk = null;
+                // Reset before continuing, otherwise _appendNextInQueue() returns immediately and the queue stalls
+                isAppendingInProgress = false;
                 if (appendQueue.length > 0) {
                     _appendNextInQueue();
-                } else {
-                    isAppendingInProgress = false;
                 }
 
                 delete nextChunk.data.bytes;
@@ -440,10 +440,10 @@ function SourceBufferSink(config) {
      * @return {boolean}
      */
     function hasPendingMediaAppendAtTime(time) {
-        const pendingChunks = appendingChunk ? [appendingChunk].concat(appendQueue) : appendQueue;
-        return pendingChunks.some(({ data }) => {
+        const coversTime = ({ data }) => {
             return data && data.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE && time >= data.start && time < data.end;
-        });
+        };
+        return (!!appendingChunk && coversTime(appendingChunk)) || appendQueue.some(coversTime);
     }
 
     function abort() {

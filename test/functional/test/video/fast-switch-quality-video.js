@@ -126,7 +126,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
             // dash.js only replaces buffered segments if the buffer exceeds 1.5 segment durations (see StreamProcessor._prepareForFastQualitySwitch)
             const fragmentDuration = bufferInformation.currentRepresentation.fragmentDuration;
-            const safeBufferLevel = 1.5 * (!isNaN(fragmentDuration) ? fragmentDuration : 1);
+            const safeBufferLevel = 1.5 * (Number.isFinite(fragmentDuration) ? fragmentDuration : 1);
             await reachedTargetForwardBuffer(playerAdapter, safeBufferLevel + Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.SAFE_BUFFER_MARGIN, 0);
 
             // Switch manually instead of waiting for the ABR rules, their decision timing is not deterministic
