@@ -69,6 +69,7 @@ Playback/runtime errors are **events** (`DashJSError` dispatched via `Events.ERR
 ## Conventions
 
 - **PRs target `development`**, not master.
+- **Max line length 120** — ESLint `max-len` (warn); WebStorm wraps on reformat via `.editorconfig`.
 - **BSD-3-Clause license header required** in every new source file (copy from any existing file).
 - **Two entry points:** `index.js` (full) and `index_mediaplayerOnly.js` (lightweight, no DRM/text/offline). Public export changes may need both.
 - **New settings** go in `src/core/Settings.js` (value + JSDoc) **and** `index.d.ts`.

@@ -306,7 +306,9 @@ function Capabilities() {
             let systemString = keySystemMetadata.ks.systemString;
 
             // Use the default values in case no values are provided by the application
-            const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[systemString] || [systemString];
+            const systemStringsToApply = protDataSystemStringPriority ||
+                ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[systemString] ||
+                [systemString];
 
             systemStringsToApply.forEach((systemString) => {
                 const curr = { ...genericConfiguration };

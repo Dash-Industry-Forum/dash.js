@@ -163,7 +163,9 @@ function DefaultProtectionModel(config) {
         let systemString = currentKeySystem.systemString;
 
         // Use the default values in case no values are provided by the application
-        const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[systemString] || [systemString];
+        const systemStringsToApply = protDataSystemStringPriority ||
+            ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[systemString] ||
+            [systemString];
 
         // Check all the available system strings and the available configurations for support
         _checkAccessForKeySystem(systemStringsToApply, configs)

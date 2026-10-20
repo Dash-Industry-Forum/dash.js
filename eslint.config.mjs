@@ -61,5 +61,12 @@ export default [{
             int32Hint: true,
         }],
         'no-unreachable': 'error',
+        'max-len': ['warn', {
+            code: 120,
+            ignoreUrls: true,
+            ignoreStrings: true,
+            ignoreTemplateLiterals: true,
+            ignoreRegExpLiterals: true,
+        }],
     },
 }];

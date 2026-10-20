@@ -77,9 +77,10 @@ const ProtectionConstants = {
     WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
 };
 
-// System strings tried in order by requestMediaKeySystemAccess if the application does not define a systemStringPriority.
-// Key systems without an entry only use their own system string.
-// PlayReady: Edge accepts the plain string, Chrome on Windows only supports SL3000 via '.recommendation.3000', Firefox uses '.recommendation'
+// System strings tried in order by requestMediaKeySystemAccess if the application does not define a
+// systemStringPriority. Key systems without an entry only use their own system string.
+// PlayReady: Edge accepts the plain string, Chrome on Windows only supports SL3000 via '.recommendation.3000',
+// Firefox uses '.recommendation'
 ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = {
     [ProtectionConstants.PLAYREADY_KEYSTEM_STRING]: [
         ProtectionConstants.PLAYREADY_KEYSTEM_STRING,

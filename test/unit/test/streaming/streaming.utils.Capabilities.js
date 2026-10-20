@@ -559,7 +559,10 @@ describe('Capabilities', function () {
             }
             settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true } } });
             const stub = sinon.stub(navigator.mediaCapabilities, 'decodingInfo').callsFake((cfg) => {
-                return Promise.resolve({ supported: cfg.keySystemConfiguration.keySystem === ProtectionConstants.PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING });
+                const keySystem = cfg.keySystemConfiguration.keySystem;
+                return Promise.resolve({
+                    supported: keySystem === ProtectionConstants.PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING
+                });
             });
             const config = {
                 codec: 'video/mp4;codecs="avc1.64001f"',
@@ -573,8 +576,10 @@ describe('Capabilities', function () {
             return capabilities.runCodecSupportCheck(config, Constants.VIDEO)
                 .then(() => {
                     const keySystems = stub.getCalls().map((call) => call.args[0].keySystemConfiguration.keySystem);
-                    expect(keySystems).to.deep.equal(ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING]);
-                    expect(capabilities.isCodecSupportedBasedOnTestedConfigurations(config, Constants.VIDEO)).to.be.true;
+                    const defaults = ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY;
+                    expect(keySystems).to.deep.equal(defaults[ProtectionConstants.PLAYREADY_KEYSTEM_STRING]);
+                    expect(capabilities.isCodecSupportedBasedOnTestedConfigurations(config, Constants.VIDEO))
+                        .to.be.true;
                 })
                 .finally(() => stub.restore());
         });
