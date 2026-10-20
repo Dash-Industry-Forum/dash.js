@@ -10,10 +10,62 @@
     <link href="../lib/sample.css" rel="stylesheet">
     <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
     <style>
+        .sample-metrics-header.with-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sample-metrics-header.with-action .btn {
+            font-size: 0.7rem;
+            padding: 0.1rem 0.5rem;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
         #trace {
-            height: 400px;
+            height: 340px;
             overflow-y: auto;
-            font-size: 0.8rem;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1px 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .log-time {
+            color: var(--rp-text-muted);
+            flex: 0 0 auto;
+        }
+
+        .log-detail {
+            padding-left: 1rem;
+            color: var(--rp-text-muted);
+        }
+
+        .log-success {
+            color: var(--rp-success);
+        }
+
+        .log-warn {
+            color: var(--rp-warning);
+        }
+
+        .log-error {
+            color: var(--rp-danger);
+        }
+
+        .probe-ok {
+            color: var(--rp-success);
+            font-weight: 600;
+        }
+
+        .probe-fail {
+            color: var(--rp-danger);
+            font-weight: 600;
         }
     </style>
 </head>
@@ -36,7 +88,28 @@
         </div>
         <div class="col-md-6">
             <div class="sample-metrics">
-                <div class="sample-metrics-header">Log</div>
+                <div class="sample-metrics-header">Key system support</div>
+                <div class="sample-metrics-body">
+                    <table class="sample-metric-table" id="probeTable">
+                        <thead>
+                        <tr>
+                            <th>Key system</th>
+                            <th>Scheme</th>
+                            <th>Supported</th>
+                            <th>Video robustness</th>
+                            <th>Audio robustness</th>
+                            <th>Notes</th>
+                        </tr>
+                        </thead>
+                        <tbody id="probeBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="sample-metrics mt-3">
+                <div class="sample-metrics-header with-action">
+                    <span>Event log</span>
+                    <button id="clearButton" class="btn btn-secondary">Clear</button>
+                </div>
                 <div class="sample-metrics-body">
                     <div class="sample-log" id="trace"></div>
                 </div>
@@ -52,6 +125,7 @@
         'com.microsoft.playready.recommendation.3000',
         'com.microsoft.playready.hardware'
     ];
+    var MAX_LOG_ENTRIES = 500;
     var player;
 
     async function init() {
@@ -62,27 +136,47 @@
         await createControlBar(player, video, document.querySelector('.sample-video-wrapper'));
 
         player.on(dashjs.Protection.events.KEY_SYSTEM_ACCESS_COMPLETE, function (e) {
-            log(e.error ? 'Key system access failed: ' + e.error : 'Key system access granted for <strong>' + e.data.selectedSystemString + '</strong>');
+            if (e.error) {
+                log('Key system access failed: ' + e.error, 'error');
+            } else {
+                log('Key system access granted for ' + e.data.selectedSystemString, 'success');
+            }
         });
         player.on(dashjs.Protection.events.KEY_SYSTEM_SELECTED, function (e) {
-            log(e.error ? 'Key system selection failed: ' + e.error.message : 'Key system selected: ' + e.data.keySystem.systemString);
+            if (e.error) {
+                log('Key system selection failed: ' + e.error.message, 'error');
+            } else {
+                log('Key system selected: ' + e.data.keySystem.systemString, 'success');
+            }
         });
         player.on(dashjs.Protection.events.LICENSE_REQUEST_COMPLETE, function (e) {
-            log(e.error ? 'License request failed: ' + e.error.message : 'License request completed');
+            if (e.error) {
+                log('License request failed: ' + e.error.message, 'error');
+            } else {
+                log('License request completed', 'success');
+            }
         });
         player.on(dashjs.MediaPlayer.events.ERROR, function (e) {
-            log('ERROR: ' + JSON.stringify(e.error));
+            var error = e.error || {};
+            var code = error.code !== undefined ? error.code : '?';
+            log('ERROR ' + code + ': ' + (error.message || 'unknown error'), 'error');
+            if (error.data) {
+                logDetail(stringify(error.data));
+            }
         });
         player.registerLicenseRequestFilter(function (request) {
-            log('License request (' + request.method + ') to ' + request.url);
+            log('License request ' + request.method + ' -> ' + hostOf(request.url), undefined, request.url);
             return Promise.resolve();
         });
 
         document.getElementById('probeButton').addEventListener('click', probe);
         document.getElementById('loadButton').addEventListener('click', load);
+        document.getElementById('clearButton').addEventListener('click', clearLog);
+        resetProbeTable('Click "Probe key systems" to check what this browser supports.');
     }
 
     function load() {
+        var mpdUrl = document.getElementById('mpdUrl').value;
         var prData = { serverURL: document.getElementById('licenseUrl').value };
         var systemStrings = document.getElementById('systemStrings').value.split(',').map(function (s) {
             return s.trim();
@@ -90,17 +184,22 @@
         if (systemStrings.length) {
             prData.systemStringPriority = systemStrings;
         }
-        log('Loading with protData ' + JSON.stringify(prData));
+        log('Loading ' + mpdUrl);
+        log('License server: ' + prData.serverURL);
+        log('systemStringPriority: ' + (systemStrings.length ? systemStrings.join(', ') : '(player default)'));
         player.setProtectionData({ 'com.microsoft.playready': prData });
-        player.attachSource(document.getElementById('mpdUrl').value);
+        player.attachSource(mpdUrl);
     }
 
     // Calls requestMediaKeySystemAccess directly for every PlayReady system string and encryption scheme
     async function probe() {
         if (!navigator.requestMediaKeySystemAccess) {
-            log('EME not available (insecure origin?)');
+            resetProbeTable('EME not available.');
+            log('EME not available (insecure origin?)', 'error');
             return;
         }
+        resetProbeTable();
+        log('Probing ' + PLAYREADY_SYSTEM_STRINGS.length + ' key systems...');
         for (var systemString of PLAYREADY_SYSTEM_STRINGS) {
             for (var scheme of ['cbcs', 'cenc']) {
                 var config = [{
@@ -113,21 +212,104 @@
                 }];
                 try {
                     var access = await navigator.requestMediaKeySystemAccess(systemString, config);
-                    log('&#10004; ' + systemString + ' (' + scheme + ') ' + JSON.stringify(access.getConfiguration()));
+                    var cfg = access.getConfiguration();
+                    var notes = 'di: ' + cfg.distinctiveIdentifier + ', ps: ' + cfg.persistentState +
+                        ', sessions: ' + (cfg.sessionTypes || []).join('/');
+                    addProbeRow(systemString, scheme, true, robustnessOf(cfg.videoCapabilities),
+                        robustnessOf(cfg.audioCapabilities), notes);
                 } catch (e) {
-                    log('&#10008; ' + systemString + ' (' + scheme + '): ' + e.message);
+                    addProbeRow(systemString, scheme, false, '-', '-', e.name + ': ' + e.message);
                 }
             }
         }
+        log('Probe finished');
     }
 
-    function log(msg) {
-        var tracePanel = document.getElementById('trace');
+    function resetProbeTable(placeholder) {
+        var body = document.getElementById('probeBody');
+        body.textContent = '';
+        if (placeholder) {
+            var row = body.insertRow();
+            var cell = row.insertCell();
+            cell.colSpan = 6;
+            cell.className = 'metric-label';
+            cell.textContent = placeholder;
+        }
+    }
+
+    function addProbeRow(systemString, scheme, supported, videoRobustness, audioRobustness, notes) {
+        var row = document.getElementById('probeBody').insertRow();
+        var nameCell = row.insertCell();
+        nameCell.textContent = systemString.replace('com.microsoft.', '');
+        nameCell.title = systemString;
+        row.insertCell().textContent = scheme;
+        var supportedCell = row.insertCell();
+        supportedCell.textContent = supported ? '✔' : '✘';
+        supportedCell.className = supported ? 'probe-ok' : 'probe-fail';
+        row.insertCell().textContent = videoRobustness;
+        row.insertCell().textContent = audioRobustness;
+        row.insertCell().textContent = notes;
+    }
+
+    function robustnessOf(capabilities) {
+        if (!capabilities || !capabilities.length) {
+            return '-';
+        }
+        return capabilities[0].robustness || '(empty)';
+    }
+
+    function hostOf(url) {
+        try {
+            return new URL(url, location.href).host;
+        } catch (e) {
+            return url;
+        }
+    }
+
+    function stringify(data) {
+        try {
+            return JSON.stringify(data);
+        } catch (e) {
+            return String(data);
+        }
+    }
+
+    function log(msg, level, title) {
         var logEntry = document.createElement('div');
-        logEntry.innerHTML = msg;
-        tracePanel.appendChild(logEntry);
-        tracePanel.scrollTop = tracePanel.scrollHeight;
+        logEntry.className = 'log-entry' + (level ? ' log-' + level : '');
+        if (title) {
+            logEntry.title = title;
+        }
+        var time = document.createElement('span');
+        time.className = 'log-time';
+        time.textContent = new Date().toLocaleTimeString();
+        logEntry.appendChild(time);
+        var text = document.createElement('span');
+        text.textContent = msg;
+        logEntry.appendChild(text);
+        appendLogEntry(logEntry);
         console.log(msg);
+    }
+
+    function logDetail(msg) {
+        var logEntry = document.createElement('div');
+        logEntry.className = 'log-entry log-detail';
+        logEntry.textContent = msg;
+        appendLogEntry(logEntry);
+        console.log(msg);
+    }
+
+    function appendLogEntry(logEntry) {
+        var tracePanel = document.getElementById('trace');
+        tracePanel.appendChild(logEntry);
+        while (tracePanel.childElementCount > MAX_LOG_ENTRIES) {
+            tracePanel.removeChild(tracePanel.firstChild);
+        }
+        tracePanel.scrollTop = tracePanel.scrollHeight;
+    }
+
+    function clearLog() {
+        document.getElementById('trace').textContent = '';
     }
 </script>
 <script type="module">
