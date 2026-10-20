@@ -413,6 +413,19 @@
                 ]
             },
             {
+                "title": "PlayReady in Chrome",
+                "description": "Probes the supported PlayReady key system strings and plays PlayReady protected content, e.g. in Chrome on Windows using com.microsoft.playready.recommendation.3000.",
+                "href": "drm/playready-chrome.html",
+                "image": "lib/img/tos-2.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "Fairplay DRM",
                 "description": "Shows how to use dash.js to play streams with Fairplay DRM protection.",
                 "href": "drm/fairplay.html",
