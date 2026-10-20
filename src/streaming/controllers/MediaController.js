@@ -295,6 +295,10 @@ function MediaController() {
                 delete settings.roles;
             }
 
+            if (settings.viewpoint) {
+                settings.viewpoint = settings.viewpoint[0];
+            }
+
             if (settings.accessibility) {
                 settings.accessibility = settings.accessibility[0];
             }

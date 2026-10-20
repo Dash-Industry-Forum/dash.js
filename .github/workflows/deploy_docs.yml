@@ -23,6 +23,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.repository == 'Dash-Industry-Forum/dash.js'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

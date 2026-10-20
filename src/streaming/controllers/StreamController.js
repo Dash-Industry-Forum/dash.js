@@ -391,9 +391,9 @@ function StreamController() {
                 serviceDescriptionController.applyServiceDescription(manifestInfo);
             }
 
-            // Compute and set the live delay
+            // Compute and set the live delay. The live edge is in the last period of the MPD.
             if (adapter.getIsDynamic()) {
-                const fragmentDuration = _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo);
+                const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(streamsInfo[streamsInfo.length - 1]);
                 playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
             }
 
@@ -933,12 +933,11 @@ function StreamController() {
      */
     function _onLiveDelaySettingUpdated() {
         if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0 && activeStream) {
-            const streamsInfo = adapter.getStreamsInfo()
-            if (streamsInfo.length > 0) {
-                const manifestInfo = streamsInfo[0].manifestInfo;
-                const fragmentDuration = _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo);
+            const streamInfo = activeStream.getStreamInfo();
+            if (streamInfo) {
+                const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(streamInfo);
 
-                playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
+                playbackController.computeAndSetLiveDelay(fragmentDuration, streamInfo.manifestInfo);
             }
         }
     }
@@ -1385,24 +1384,6 @@ function StreamController() {
             return shouldKeepStream;
         });
     }
-
-    /**
-     * In order to calculate the initial live delay we might require the duration of the segments.
-     * @param {object} manifestInfo
-     * @return {number}
-     * @private
-     */
-    function _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo) {
-        try {
-            if (manifestInfo && Number.isFinite(manifestInfo.maxFragmentDuration)) {
-                return manifestInfo.maxFragmentDuration;
-            }
-            return NaN;
-        } catch (e) {
-            return NaN;
-        }
-    }
-
 
     /**
      * Callback handler after the steering manifest was updated

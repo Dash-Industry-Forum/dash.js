@@ -28,7 +28,16 @@ describe('SegmentsController', function () {
     const debug = Debug(context).getInstance({settings: settings});
     const eventBus = EventBus(context).getInstance();
 
+    let getSegmentListCalls = 0;
+    const segmentBaseControllerMock = {
+        getSegmentList: function () {
+            getSegmentListCalls++;
+            return Promise.resolve({ segments: [] });
+        }
+    };
+
     const segmentsController = SegmentsController(context).create({
+        segmentBaseController: segmentBaseControllerMock,
         streamInfo: {streamId: 'streamId'},
         dashMetrics: dashMetricsMock,
         mediaPlayerModel: mediaPlayerModel,
@@ -65,6 +74,23 @@ describe('SegmentsController', function () {
 
         // Assert
         expect(s).to.be.null; // jshint ignore:line
+    });
+
+    it('updateSegmentData should fetch the segment list only while the representation does not hold one', function () {
+        const representation = {
+            'segmentInfoType': DashConstants.SEGMENT_BASE,
+            'segments': null
+        };
+
+        return segmentsController.updateSegmentData(representation, false)
+            .then(function () {
+                expect(getSegmentListCalls).to.equal(1);
+                representation.segments = [{ index: 0 }];
+                return segmentsController.updateSegmentData(representation, false);
+            })
+            .then(function () {
+                expect(getSegmentListCalls).to.equal(1);
+            });
     });
 
 });

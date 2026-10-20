@@ -159,18 +159,34 @@ class CueIntervalTree {
             return cue1.endTime - cue2.endTime;
         }
 
-        // Finally compare by text content
-        if (typeof VTTCue !== 'undefined' && cue1 instanceof VTTCue && cue2 instanceof VTTCue) {
-            return cue1.text.localeCompare(cue2.text);
+        // Compare by text content
+        const textComparison = (cue1.text || '').localeCompare(cue2.text || '');
+        if (textComparison !== 0) {
+            return textComparison;
         }
 
-        // For non-VTTCue objects, compare by text property if available
-        if (cue1.text && cue2.text) {
-            return cue1.text.localeCompare(cue2.text);
+        // IMSC/TTML cues carry their content in isd with an empty text;
+        // distinct captions at identical timing must not be treated as
+        // duplicates. Stringify only runs when timing and text already match.
+        if (cue1.isd || cue2.isd) {
+            const isdComparison = JSON.stringify(cue1.isd || null).localeCompare(JSON.stringify(cue2.isd || null));
+            if (isdComparison !== 0) {
+                return isdComparison;
+            }
         }
 
-        // If no text property, consider them equal if timing matches
-        return 0;
+        // CEA-608 (and other) HTML cues carry their rendered content in a DOM
+        // node (cueHTMLElement) and have an empty VTTCue text. Compare position
+        // (the element's own cssText holds the region placement) plus visible
+        // text, so the two rows of one 608 screen stay distinct while a
+        // re-parsed duplicate of the same caption still deduplicates. The
+        // element id / cueID is deliberately NOT compared: it embeds a
+        // monotonically increasing counter that differs on every re-parse of
+        // the same segment. The inner wrapper's style is also excluded because
+        // _scaleCue mutates it on activation.
+        const key1 = cue1.cueHTMLElement ? cue1.cueHTMLElement.style.cssText + '|' + cue1.cueHTMLElement.textContent : '';
+        const key2 = cue2.cueHTMLElement ? cue2.cueHTMLElement.style.cssText + '|' + cue2.cueHTMLElement.textContent : '';
+        return key1.localeCompare(key2);
     }
 
     /**
