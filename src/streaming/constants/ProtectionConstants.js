@@ -33,7 +33,7 @@
  * Protection Constants declaration
  * @ignore
  */
-export default {
+const ProtectionConstants = {
     CLEARKEY_KEYSTEM_STRING: 'org.w3.clearkey',
     CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
     ENCRYPTION_SCHEME_CBCS: 'cbcs',
@@ -61,6 +61,7 @@ export default {
     },
     PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
     PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+    PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING: 'com.microsoft.playready.recommendation.3000',
     PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
     ROBUSTNESS_STRINGS: {
         WIDEVINE: {
@@ -74,6 +75,17 @@ export default {
     W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
     WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
     WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
-}
+};
 
+// System strings tried in order by requestMediaKeySystemAccess if the application does not define a systemStringPriority.
+// Key systems without an entry only use their own system string.
+// PlayReady: Edge accepts the plain string, Chrome on Windows only supports SL3000 via '.recommendation.3000', Firefox uses '.recommendation'
+ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = {
+    [ProtectionConstants.PLAYREADY_KEYSTEM_STRING]: [
+        ProtectionConstants.PLAYREADY_KEYSTEM_STRING,
+        ProtectionConstants.PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING,
+        ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING
+    ]
+};
 
+export default ProtectionConstants;

@@ -4,6 +4,8 @@ import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 
 import {expect} from 'chai';
 import Constants from '../../../../src/streaming/constants/Constants.js';
+import ProtectionConstants from '../../../../src/streaming/constants/ProtectionConstants.js';
+import sinon from 'sinon';
 
 let settings;
 let capabilities;
@@ -550,6 +552,32 @@ describe('Capabilities', function () {
             })
         })
         */
+
+        it('should test all default PlayReady system strings with the Media Capabilities API', function () {
+            if (!navigator.mediaCapabilities) {
+                this.skip();
+            }
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true } } });
+            const stub = sinon.stub(navigator.mediaCapabilities, 'decodingInfo').callsFake((cfg) => {
+                return Promise.resolve({ supported: cfg.keySystemConfiguration.keySystem === ProtectionConstants.PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING });
+            });
+            const config = {
+                codec: 'video/mp4;codecs="avc1.64001f"',
+                width: 1280,
+                height: 720,
+                bitrate: 5000000,
+                framerate: '24',
+                keySystemsMetadata: [{ ks: { systemString: ProtectionConstants.PLAYREADY_KEYSTEM_STRING } }]
+            };
+
+            return capabilities.runCodecSupportCheck(config, Constants.VIDEO)
+                .then(() => {
+                    const keySystems = stub.getCalls().map((call) => call.args[0].keySystemConfiguration.keySystem);
+                    expect(keySystems).to.deep.equal(ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING]);
+                    expect(capabilities.isCodecSupportedBasedOnTestedConfigurations(config, Constants.VIDEO)).to.be.true;
+                })
+                .finally(() => stub.restore());
+        });
 
         it('should return true for enhancement codecs', function () {
             settings.update({ streaming: { enhancement: { enabled: true } } });

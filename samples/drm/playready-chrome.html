@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayReady in Chrome</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+    <style>
+        #trace {
+            height: 400px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sample-content-custom">
+    <div class="row mt-2">
+        <div class="col-md-6">
+            <label for="mpdUrl">Manifest:</label>
+            <input id="mpdUrl" type="text" class="form-control"
+                   value="https://ezdrm-support-2026.s3.us-east-1.amazonaws.com/sample/0912/multi-dash.mpd">
+            <label for="licenseUrl" class="mt-2">PlayReady license URL:</label>
+            <input id="licenseUrl" type="text" class="form-control"
+                   value="https://playready.ezdrm.com/cency/preauth.aspx?pX=E0183F">
+            <label for="systemStrings" class="mt-2">systemStringPriority (comma separated, empty = player default):</label>
+            <input id="systemStrings" type="text" class="form-control" value="">
+            <button id="probeButton" class="btn btn-secondary mt-2">Probe key systems</button>
+            <button id="loadButton" class="btn btn-primary mt-2">Load</button>
+            <div class="sample-video-wrapper mt-3"><video></video></div>
+        </div>
+        <div class="col-md-6">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Log</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-log" id="trace"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script class="code">
+    var PLAYREADY_SYSTEM_STRINGS = [
+        'com.microsoft.playready',
+        'com.microsoft.playready.recommendation',
+        'com.microsoft.playready.recommendation.3000',
+        'com.microsoft.playready.hardware'
+    ];
+    var player;
+
+    async function init() {
+        var video = document.querySelector('video');
+
+        player = dashjs.MediaPlayer().create();
+        player.initialize(video, null, true);
+        await createControlBar(player, video, document.querySelector('.sample-video-wrapper'));
+
+        player.on(dashjs.Protection.events.KEY_SYSTEM_ACCESS_COMPLETE, function (e) {
+            log(e.error ? 'Key system access failed: ' + e.error : 'Key system access granted for <strong>' + e.data.selectedSystemString + '</strong>');
+        });
+        player.on(dashjs.Protection.events.KEY_SYSTEM_SELECTED, function (e) {
+            log(e.error ? 'Key system selection failed: ' + e.error.message : 'Key system selected: ' + e.data.keySystem.systemString);
+        });
+        player.on(dashjs.Protection.events.LICENSE_REQUEST_COMPLETE, function (e) {
+            log(e.error ? 'License request failed: ' + e.error.message : 'License request completed');
+        });
+        player.on(dashjs.MediaPlayer.events.ERROR, function (e) {
+            log('ERROR: ' + JSON.stringify(e.error));
+        });
+        player.registerLicenseRequestFilter(function (request) {
+            log('License request (' + request.method + ') to ' + request.url);
+            return Promise.resolve();
+        });
+
+        document.getElementById('probeButton').addEventListener('click', probe);
+        document.getElementById('loadButton').addEventListener('click', load);
+    }
+
+    function load() {
+        var prData = { serverURL: document.getElementById('licenseUrl').value };
+        var systemStrings = document.getElementById('systemStrings').value.split(',').map(function (s) {
+            return s.trim();
+        }).filter(Boolean);
+        if (systemStrings.length) {
+            prData.systemStringPriority = systemStrings;
+        }
+        log('Loading with protData ' + JSON.stringify(prData));
+        player.setProtectionData({ 'com.microsoft.playready': prData });
+        player.attachSource(document.getElementById('mpdUrl').value);
+    }
+
+    // Calls requestMediaKeySystemAccess directly for every PlayReady system string and encryption scheme
+    async function probe() {
+        if (!navigator.requestMediaKeySystemAccess) {
+            log('EME not available (insecure origin?)');
+            return;
+        }
+        for (var systemString of PLAYREADY_SYSTEM_STRINGS) {
+            for (var scheme of ['cbcs', 'cenc']) {
+                var config = [{
+                    initDataTypes: ['cenc'],
+                    audioCapabilities: [{ contentType: 'audio/mp4;codecs="mp4a.40.2"', encryptionScheme: scheme }],
+                    videoCapabilities: [{ contentType: 'video/mp4;codecs="avc1.64001f"', encryptionScheme: scheme }],
+                    distinctiveIdentifier: 'optional',
+                    persistentState: 'optional',
+                    sessionTypes: ['temporary']
+                }];
+                try {
+                    var access = await navigator.requestMediaKeySystemAccess(systemString, config);
+                    log('&#10004; ' + systemString + ' (' + scheme + ') ' + JSON.stringify(access.getConfiguration()));
+                } catch (e) {
+                    log('&#10008; ' + systemString + ' (' + scheme + '): ' + e.message);
+                }
+            }
+        }
+    }
+
+    function log(msg) {
+        var tracePanel = document.getElementById('trace');
+        var logEntry = document.createElement('div');
+        logEntry.innerHTML = msg;
+        tracePanel.appendChild(logEntry);
+        tracePanel.scrollTop = tracePanel.scrollHeight;
+        console.log(msg);
+    }
+</script>
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    initSamplePage({
+        title: 'PlayReady in Chrome',
+        description: 'Probes which PlayReady key system strings the browser supports and plays PlayReady protected content. Chrome on Windows only supports hardware PlayReady (SL3000) via <code>com.microsoft.playready.recommendation.3000</code>. Open via https or localhost, and run on a machine with hardware DRM (not a VM or RDP session).',
+        category: 'DRM',
+        layout: 'custom',
+        httpWarning: true,
+        onInit: () => init()
+    });
+</script>
+</body>
+</html>

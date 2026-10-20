@@ -46,12 +46,6 @@ import KeySystemAccess from '../vo/KeySystemAccess.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const SYSTEM_STRING_PRIORITY = {};
-SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[ProtectionConstants.WIDEVINE_KEYSTEM_STRING] = [ProtectionConstants.WIDEVINE_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[ProtectionConstants.FAIRPLAY_KEYSTEM_STRING] = [ProtectionConstants.FAIRPLAY_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[ProtectionConstants.CLEARKEY_KEYSTEM_STRING] = [ProtectionConstants.CLEARKEY_KEYSTEM_STRING];
-
 function DefaultProtectionModel(config) {
 
     config = config || {};
@@ -169,7 +163,7 @@ function DefaultProtectionModel(config) {
         let systemString = currentKeySystem.systemString;
 
         // Use the default values in case no values are provided by the application
-        const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : SYSTEM_STRING_PRIORITY[systemString] ? SYSTEM_STRING_PRIORITY[systemString] : [systemString];
+        const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY[systemString] || [systemString];
 
         // Check all the available system strings and the available configurations for support
         _checkAccessForKeySystem(systemStringsToApply, configs)
