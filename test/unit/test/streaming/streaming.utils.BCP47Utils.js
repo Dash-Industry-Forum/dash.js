@@ -50,6 +50,11 @@ describe('BCP47Utils', function () {
             expect(normalizeBcp47('zh-min-nan')).to.equal('zh-nan');
             expect(normalizeBcp47('sgn-BE-FR')).to.equal('sgn-sfb');
             expect(normalizeBcp47('sgn-US')).to.equal('sgn-ase');
+            // aliases produced by deprecated region or ISO 639-2 replacement
+            expect(normalizeBcp47('sgn-DD')).to.equal('sgn-gsg');
+            expect(normalizeBcp47('sgn-FX')).to.equal('sgn-fsl');
+            expect(normalizeBcp47('nor-bok')).to.equal('nb');
+            expect(normalizeBcp47('chi-guoyu')).to.equal('zh-cmn');
             // no preferred value
             expect(normalizeBcp47('i-default')).to.equal('i-default');
             expect(normalizeBcp47('zh-min')).to.equal('zh-min');
@@ -86,7 +91,8 @@ describe('BCP47Utils', function () {
         });
 
         it('should be idempotent', () => {
-            ['zh-cmn-Hans-CN', 'sgn-US', 'en-u-ca-gregory-a-myext-x-foo', 'NLD-nl', 'i-klingon', 'de-DD', 'en--US']
+            ['zh-cmn-Hans-CN', 'sgn-US', 'en-u-ca-gregory-a-myext-x-foo', 'NLD-nl', 'i-klingon', 'de-DD', 'en--US',
+                'sgn-DD', 'sgn-FX', 'nor-bok', 'chi-guoyu', 'zho-min-nan']
                 .forEach(tag => expect(normalizeBcp47(normalizeBcp47(tag))).to.equal(normalizeBcp47(tag)));
         });
 

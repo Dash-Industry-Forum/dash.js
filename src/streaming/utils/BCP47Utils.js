@@ -132,28 +132,43 @@ const EXTLANG_PREFIXES = Object.create(null);
     ['sgn', 'ase bfi bzs csn dse dsl fsl gsg gss isg ise jsl mfs ncs nsl psr sfb sfs sgg ssp swl vgt']
 ].forEach(([prefix, extlangs]) => extlangs.split(' ').forEach(extlang => EXTLANG_PREFIXES[extlang] = prefix));
 
+// Grandfathered and redundant tags, longest match first (zh-min-nan before zh-min)
+function _replacePreferredTag(parts) {
+    for (let n = Math.min(3, parts.length); n > 1; n--) {
+        const preferredValue = TAG_PREFERRED_VALUES[parts.slice(0, n).join('-')];
+        if (preferredValue) {
+            return preferredValue.toLowerCase().split('-').concat(parts.slice(n));
+        }
+    }
+    return parts;
+}
+
 export function normalizeBcp47(tag) {
     if (!tag || typeof tag !== 'string') {
         return tag;
     }
-    let parts = tag.toLowerCase().split('-');
-
-    // Grandfathered and redundant tags, longest match first (zh-min-nan before zh-min)
-    for (let n = Math.min(3, parts.length); n > 1; n--) {
-        const preferredValue = TAG_PREFERRED_VALUES[parts.slice(0, n).join('-')];
-        if (preferredValue) {
-            parts = preferredValue.toLowerCase().split('-').concat(parts.slice(n));
-            break;
-        }
-    }
+    let parts = _replacePreferredTag(tag.toLowerCase().split('-'));
 
     // Private use (x-...) and irregular grandfathered tags without Preferred-Value (i-default) stay lowercase
     if (parts[0].length === 1) {
         return parts.join('-');
     }
 
-    // Language: deprecated subtags and ISO 639-2 to 639-1, then extlang form (cmn -> zh-cmn)
+    // Language: deprecated subtags and ISO 639-2 to 639-1
     parts[0] = DEPRECATED_LANGUAGES[parts[0]] || ISO_639_2_TO_1[parts[0]] || parts[0];
+
+    // Deprecated regions, up to the first singleton
+    for (let i = 1; i < parts.length && parts[i].length !== 1; i++) {
+        const region = DEPRECATED_REGIONS[parts[i].toUpperCase()];
+        if (parts[i].length === 2 && region) {
+            parts[i] = region.toLowerCase();
+        }
+    }
+
+    // The replacements above can produce a redundant tag (sgn-DD -> sgn-DE -> gsg), resolve it in the same call
+    parts = _replacePreferredTag(parts);
+
+    // Extlang form (cmn -> zh-cmn)
     if (EXTLANG_PREFIXES[parts[0]]) {
         parts.unshift(EXTLANG_PREFIXES[parts[0]]);
     }
@@ -166,8 +181,7 @@ export function normalizeBcp47(tag) {
             parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
         } else if (parts[i].length === 2 && /^[a-z]+$/.test(parts[i])) {
             // Region (2 alpha): uppercase (e.g. us -> US)
-            const region = parts[i].toUpperCase();
-            parts[i] = DEPRECATED_REGIONS[region] || region;
+            parts[i] = parts[i].toUpperCase();
         }
     }
 
