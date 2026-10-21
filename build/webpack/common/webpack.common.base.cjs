@@ -1,4 +1,5 @@
 const pkg = require('../../../package.json');
+const { IgnorePlugin } = require('webpack');
 
 const commonBaseConfig = {
     devtool: 'source-map',
@@ -19,11 +20,14 @@ const commonBaseConfig = {
             },
         ],
     },
-    resolve: {
-        fallback: {
-            stream: require.resolve('stream-browserify'),
-        },
-    },
+    plugins: [
+        // IMSC uses SAX's string parser, not its Node stream API. Ignoring stream
+        // lets SAX's try/catch select its browser fallback; stream: false does not.
+        new IgnorePlugin({
+            resourceRegExp: /^(stream|string_decoder)$/,
+            contextRegExp: /[/\\]sax[/\\]lib$/
+        })
+    ],
 }
 
 const prodEntries = {
