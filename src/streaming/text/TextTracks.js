@@ -82,6 +82,7 @@ function TextTracks(config) {
         previousISDState,
         topZIndex,
         resizeObserver,
+        videoResizeListener,
         hasRequestAnimationFrame,
         currentCaptionEventCue;
 
@@ -984,8 +985,17 @@ function TextTracks(config) {
             videoSizeCheckInterval = null;
         }
 
+        _removeVideoResizeListener();
+
         if (track && track.renderingType === 'html') {
             checkVideoSize.call(this, track, true);
+            // The element keeping its size does not mean the picture has one. WebKit
+            // reports videoWidth and videoHeight only once frames are decoded, after
+            // the first ResizeObserver callbacks, so a video in a fixed-size box would
+            // leave the caption container at 0x0. The media element's resize event
+            // fires exactly when the intrinsic size becomes known or changes.
+            videoResizeListener = () => checkVideoSize.call(this, track, true);
+            videoModel.addEventListener('resize', videoResizeListener);
             if (window.ResizeObserver) {
                 resizeObserver = new window.ResizeObserver(() => {
                     checkVideoSize.call(this, track, true);
@@ -995,6 +1005,13 @@ function TextTracks(config) {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
             }
         }
+    }
+
+    function _removeVideoResizeListener() {
+        if (videoResizeListener && videoModel) {
+            videoModel.removeEventListener('resize', videoResizeListener);
+        }
+        videoResizeListener = null;
     }
 
     function setCueStyleOnTrack(track) {
@@ -1081,6 +1098,7 @@ function TextTracks(config) {
             resizeObserver.unobserve(videoModel.getElement());
             resizeObserver = null;
         }
+        _removeVideoResizeListener();
         currentTrackIdx = -1;
         clearCaptionContainer.call(this);
 
