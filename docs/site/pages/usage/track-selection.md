@@ -118,7 +118,8 @@ Notes and Exceptions:
   3. The longest less specific track (`en-AU` selects `en`, `zh-Hant-TW` selects `zh-Hant`)
   4. Tracks with the same primary language subtag (`de-CH` selects `de-AT` and `de-DE`)
 - `lang` can also be an array of preferences. The matches for all entries are kept.
-- If `lang` is a `RegExp` it is applied to the `@lang` value as is.
+- If `lang` is a `RegExp` it is not normalized and is applied to the normalized `@lang` value. For instance,
+  `@lang="eng"` is matched as `en`, so use `/^en/` rather than `/^eng$/`.
 - If `accessibility` is not provided as parameter, dash.js prioritizes those AdaptationSets where no `Accessibility` 
   element is present
 
