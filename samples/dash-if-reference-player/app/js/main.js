@@ -200,9 +200,6 @@ function doLoad() {
         protData = selectedItem.protData;
     }
 
-    // Apply initial media settings
-    settingsController.applyInitialMediaSettings();
-
     // Reset chart
     chartController.clearAllData();
 
@@ -217,6 +214,9 @@ function doLoad() {
 
     // Load stream
     playerController.load(url, protData);
+
+    // Apply initial media settings after load: attaching a new source resets them
+    settingsController.applyInitialMediaSettings();
 
     // Re-apply control bar volume/mute state to the new source
     controlBar.syncMuteState();

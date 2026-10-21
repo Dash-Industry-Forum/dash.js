@@ -15,6 +15,19 @@ export class SettingsController {
         this._restoredProtData = null;
     }
 
+    // UI-only initial track fields (not dash.js settings): URL param -> input id
+    static get _INITIAL_MEDIA_PARAMS() {
+        return {
+            initRoleVideo: 'opt-init-role-video',
+            initLangAudio: 'opt-init-lang-audio',
+            initRoleAudio: 'opt-init-role-audio',
+            audioAccessibilityScheme: 'opt-audio-accessibility-scheme',
+            audioAccessibilityValue: 'opt-audio-accessibility-value',
+            initLangText: 'opt-init-lang-text',
+            initRoleText: 'opt-init-role-text'
+        };
+    }
+
     static get _ARRAY_SETTING_PATHS() {
         return new Set([
             'streaming.cmcd.enabledKeys',
@@ -323,6 +336,12 @@ export class SettingsController {
         if (this._isChecked('opt-autoload')) {
             params.set('autoLoad', 'true');
         }
+        for (const [param, id] of Object.entries(SettingsController._INITIAL_MEDIA_PARAMS)) {
+            const value = $(`#${id}`).value.trim();
+            if (value) {
+                params.set(param, value);
+            }
+        }
 
         const url = new URL(window.location.href.split('?')[0]);
         url.search = params.toString();
@@ -387,6 +406,12 @@ export class SettingsController {
         if (params.get('autoLoad') === 'true') {
             $('#opt-autoload').checked = true;
         }
+        const initialMediaParams = SettingsController._INITIAL_MEDIA_PARAMS;
+        for (const [param, id] of Object.entries(initialMediaParams)) {
+            if (params.has(param)) {
+                $(`#${id}`).value = params.get(param);
+            }
+        }
 
         // Handle DRM protection data
         const protDataParam = params.get('protData');
@@ -401,7 +426,7 @@ export class SettingsController {
         // Handle dash.js settings
         const settingsObj = {};
         for (const [key, value] of params.entries()) {
-            if (['stream', 'mpd', 'autoplay', 'autoPlay', 'loop', 'muted', 'autoLoad', 'protData'].includes(key)) {
+            if (['stream', 'mpd', 'autoplay', 'autoPlay', 'loop', 'muted', 'autoLoad', 'protData'].includes(key) || key in initialMediaParams) {
                 continue;
             }
             this._setNestedValue(settingsObj, key, this._coerceType(value));
