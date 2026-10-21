@@ -156,7 +156,7 @@ function WebmSegmentBaseLoader() {
         return cues;
     }
 
-    function parseSegments(data, segmentStart, segmentEnd, segmentDuration) {
+    function parseSegments(data, segmentStart, segmentEnd, segmentDuration, timescale) {
         let duration,
             parsed,
             segments,
@@ -186,7 +186,7 @@ function WebmSegmentBaseLoader() {
             // computed when all BaseURLs are resolved later
             segment.duration = duration;
             segment.startTime = parsed[i].CueTime;
-            segment.timescale = 1000; // hardcoded for ms
+            segment.timescale = timescale;
             start = parsed[i].CueTracks[0].ClusterPosition + segmentStart;
 
             if (i < parsed.length - 1) {
@@ -213,6 +213,7 @@ function WebmSegmentBaseLoader() {
             data: data
         });
         let duration,
+            timecodeScale,
             segments,
             segmentEnd,
             segmentStart;
@@ -240,7 +241,7 @@ function WebmSegmentBaseLoader() {
 
         // skip over any top level elements to get to the segment info
         while (ebmlParser.moreData() &&
-        !ebmlParser.consumeTagAndSize(WebM.Segment.Info, true)) {
+        !ebmlParser.consumeTag(WebM.Segment.Info, true)) {
             if (!(ebmlParser.skipOverElement(WebM.Segment.SeekHead, true) ||
                 ebmlParser.skipOverElement(WebM.Segment.Tracks, true) ||
                 ebmlParser.skipOverElement(WebM.Segment.Cues, true) ||
@@ -249,12 +250,25 @@ function WebmSegmentBaseLoader() {
             }
         }
 
-        // we only need one thing in segment info, duration
-        while (duration === undefined) {
+        const infoSize = ebmlParser.getMatroskaCodedNum();
+        const infoEnd = ebmlParser.getPos() + infoSize;
+
+        // Duration and TimecodeScale can occur in either order within Info.
+        while ((duration === undefined || timecodeScale === undefined) && ebmlParser.getPos() < infoEnd) {
             let infoTag = ebmlParser.getMatroskaCodedNum(true);
             let infoElementSize = ebmlParser.getMatroskaCodedNum();
 
+            if (ebmlParser.getPos() + infoElementSize > infoEnd) {
+                throw new Error('Element exceeds Info size');
+            }
+
             switch (infoTag) {
+                case WebM.Segment.Info.TimecodeScale.tag:
+                    timecodeScale = ebmlParser[WebM.Segment.Info.TimecodeScale.parse](infoElementSize);
+                    if (timecodeScale === 0) {
+                        throw new Error('TimecodeScale cannot be 0');
+                    }
+                    break;
                 case WebM.Segment.Info.Duration.tag:
                     duration = ebmlParser[WebM.Segment.Info.Duration.parse](infoElementSize);
                     break;
@@ -264,13 +278,17 @@ function WebmSegmentBaseLoader() {
             }
         }
 
+        if (duration === undefined) {
+            throw new Error('Mandatory duration not found');
+        }
+
         // once we have what we need from segment info, we jump right to the
         // cues
 
         request = _getFragmentRequest(info);
 
         const onload = function (response) {
-            segments = parseSegments(response, segmentStart, segmentEnd, duration);
+            segments = parseSegments(response, segmentStart, segmentEnd, duration, 1000000000 / (timecodeScale ?? 1000000));
             callback(segments);
         };
 
