@@ -32,7 +32,6 @@ import DashJSError from '../streaming/vo/DashJSError.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import URLLoader from '../streaming/net/URLLoader.js';
-import FullSegment from './vo/FullSegment.js';
 
 function SegmentBaseLoader() {
 
@@ -297,24 +296,29 @@ function SegmentBaseLoader() {
         let time = sidx.earliest_presentation_time;
         let start = info.range.start + sidx.offset + sidx.first_offset + sidx.size;
         const segments = [];
-        let segment,
-            end,
+        let end,
             duration,
             size;
 
         for (let i = 0; i < len; i++) {
             duration = refs[i].subsegment_duration;
             size = refs[i].referenced_size;
-
-            segment = new FullSegment();
-            // note that we don't explicitly set segment.media as this will be
-            // computed when all BaseURLs are resolved later
-            segment.duration = duration;
-            segment.startTime = time;
-            segment.timescale = timescale;
             end = start + size - 1;
-            segment.mediaRange = start + '-' + end;
-            segments.push(segment);
+
+            // Plain record rather than a FullSegment. This list is an intermediate: the only
+            // consumers, RepresentationController._onSegmentDataUpdated() and
+            // ThumbnailTracks._normalizeSegments(), read these five fields off each entry and
+            // then build the real Segment through getTimeBasedSegment().
+            // media stays null. The request URL is resolved later from the BaseURL, this record
+            // is not updated.
+            segments.push({
+                duration,
+                startTime: time,
+                timescale,
+                mediaRange: start + '-' + end,
+                media: null
+            });
+
             time += duration;
             start += size;
         }
