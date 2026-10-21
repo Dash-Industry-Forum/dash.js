@@ -200,7 +200,7 @@ function SegmentBaseLoader() {
 
             if (!sidx || !sidx.isComplete) {
                 if (sidx) {
-                    info.range.start = sidx.offset || info.range.start;
+                    info.range.start += sidx.offset;
                     info.range.end = info.range.start + (sidx.size || extraBytes);
                 } else if (loadedLength < info.bytesLoaded) {
                     // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
@@ -210,7 +210,7 @@ function SegmentBaseLoader() {
                     const lastBox = isoFile.getLastBox();
 
                     if (lastBox && lastBox.size) {
-                        info.range.start = lastBox.offset + lastBox.size;
+                        info.range.start += lastBox.offset + lastBox.size;
                         info.range.end = info.range.start + extraBytes;
                     } else {
                         info.range.end += extraBytes;
