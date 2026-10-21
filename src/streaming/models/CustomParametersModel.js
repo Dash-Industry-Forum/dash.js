@@ -68,6 +68,7 @@ function CustomParametersModel() {
         licenseResponseFilterRegistry,
         customCapabilitiesFilterRegistry,
         customInitialTrackSelectionFunction,
+        c2paContinuityValidator,
         externalSubtitles,
         customAbrRules,
         cmcdController;
@@ -91,6 +92,7 @@ function CustomParametersModel() {
         customCapabilitiesFilterRegistry = createCallbackRegistry();
         customAbrRules = [];
         customInitialTrackSelectionFunction = null;
+        c2paContinuityValidator = null;
         utcTimingSources = [];
 
         // Initialize request interceptors with default CMCD interceptors
@@ -126,6 +128,30 @@ function CustomParametersModel() {
      */
     function resetCustomInitialTrackSelectionFunction() {
         customInitialTrackSelectionFunction = null;
+    }
+
+    /**
+     * Registers a validator for a custom C2PA continuity method (C2PA 2.4 section 19.3).
+     * Only one validator is allowed. Calling this method overwrites an existing validator.
+     * @param {object} validator - an object with a `method` string and a `validate(assertionData, manifest)` function
+     */
+    function setC2paContinuityValidator(validator) {
+        c2paContinuityValidator = validator;
+    }
+
+    /**
+     * Removes the custom C2PA continuity validator
+     */
+    function resetC2paContinuityValidator() {
+        c2paContinuityValidator = null;
+    }
+
+    /**
+     * Returns the custom C2PA continuity validator
+     * @return {object|null}
+     */
+    function getC2paContinuityValidator() {
+        return c2paContinuityValidator;
     }
 
     /**
@@ -511,6 +537,7 @@ function CustomParametersModel() {
         addUTCTimingSource,
         clearDefaultUTCTimingSources,
         getAbrCustomRules,
+        getC2paContinuityValidator,
         getCertificateRequestFilters,
         getCertificateResponseFilters,
         getCustomCapabilitiesFilters,
@@ -535,9 +562,11 @@ function CustomParametersModel() {
         removeResponseInterceptor,
         removeUTCTimingSource,
         reset,
+        resetC2paContinuityValidator,
         resetCustomInitialTrackSelectionFunction,
         resetPlaybackSessionSpecificSettings,
         restoreDefaultUTCTimingSources,
+        setC2paContinuityValidator,
         setConfig,
         setCustomInitialTrackSelectionFunction,
         setXHRWithCredentialsForType,

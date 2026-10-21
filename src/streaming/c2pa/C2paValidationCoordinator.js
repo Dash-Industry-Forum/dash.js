@@ -110,6 +110,7 @@ function C2paValidationCoordinator(config) {
     const detector = config.detector;
     const isCryptoAvailable = config.isCryptoAvailable || _defaultCryptoAvailable;
     const now = config.now || Date.now;
+    const getContinuityValidator = config.getContinuityValidator || (() => null);
 
     let instance,
         logger,
@@ -366,9 +367,13 @@ function C2paValidationCoordinator(config) {
         const lastManifestId = state ? state.lastManifestId : null;
         const manifestBoxState = state ? state.manifestBoxState : undefined;
 
+        // A custom continuityMethod fails as unsupported unless the application registered its validator.
+        const continuityValidator = getContinuityValidator();
+        const options = continuityValidator ? { continuityValidator } : undefined;
+
         let outcome;
         try {
-            outcome = await engine.validateC2paManifestBoxSegment(input.bytes, lastManifestId, manifestBoxState);
+            outcome = await engine.validateC2paManifestBoxSegment(input.bytes, lastManifestId, manifestBoxState, options);
         } catch (e) {
             // Under a forced method a throw means the forced structure is absent; in auto
             // mode it is an unexpected engine failure surfaced as `unverified`.
