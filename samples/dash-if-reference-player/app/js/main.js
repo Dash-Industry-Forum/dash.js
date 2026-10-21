@@ -109,7 +109,9 @@ async function init() {
     playerController.on('playbackEnded', onPlaybackEnded);
     playerController.on('streamInitialized', () => {
         controlBar.enable();
-        // Needs an active stream, so it cannot be applied together with the initial media settings
+    });
+    // Needs an active stream but must be set before the text scheduler starts
+    playerController.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZING, () => {
         playerController.enableForcedTextStreaming($('#opt-force-text-streaming').checked);
     });
     playerController.on('manifestLoaded', (data) => {
