@@ -5576,6 +5576,7 @@ export interface DVRInfo {
 }
 
 export interface HTTPRequest {
+    _cmsd: object | null;
     _fileLoaderType: string;
     _mediaduration: number | null;
     _quality: number | null;
@@ -5585,7 +5586,6 @@ export interface HTTPRequest {
     _stream: MediaType;
     _tfinish: Date | null;
     actualurl: string | null;
-    cmsd: object;
     interval: number | null;
     range: any[];
     responsecode: number | null;

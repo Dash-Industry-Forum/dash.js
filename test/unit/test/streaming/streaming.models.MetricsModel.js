@@ -118,4 +118,26 @@ describe('MetricsModel', function () {
         eventBus.on(Events.METRIC_ADDED, onMetricAdded, this);
         metricsModel.addRepresentationSwitch(Constants.VIDEO, '', '', '');
     });
+
+    describe('addHttpRequest', function () {
+        const cmsd = { static: {}, dynamic: { etp: 5000 } };
+        const request = { mediaType: Constants.VIDEO, type: 'MediaSegment', url: 'http://a/seg.m4s' };
+
+        it('should store CMSD data in the private _cmsd field and not as part of the HttpList entry', function () {
+            metricsModel.addHttpRequest(request, { url: request.url, status: 200, headers: {} }, null, cmsd);
+            const entry = metricsModel.getMetricsFor(Constants.VIDEO).HttpList[0];
+
+            expect(entry._cmsd).to.equal(cmsd);
+            expect(entry).to.not.have.property('cmsd');
+        });
+
+        it('should not attach CMSD data to the redirect record', function () {
+            metricsModel.addHttpRequest(request, { url: 'http://b/seg.m4s', status: 200, headers: {} }, null, cmsd);
+            const httpList = metricsModel.getMetricsFor(Constants.VIDEO).HttpList;
+
+            expect(httpList).to.have.lengthOf(2);
+            expect(httpList[0]._cmsd).to.be.null;
+            expect(httpList[1]._cmsd).to.equal(cmsd);
+        });
+    });
 });
