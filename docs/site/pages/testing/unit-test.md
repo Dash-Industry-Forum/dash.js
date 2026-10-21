@@ -29,4 +29,18 @@ final result similar to this:
 
 ![controlbar](/assets/images/unit-tests-result.png)
 
+To execute a single test file without bundling the complete unit test suite, pass its path with `--test-file`:
+
+```bash
+npm run test -- --test-file test/unit/test/core/core.EventBus.js
+```
+
+The option also accepts a glob pattern. Quote the pattern so that Karma, rather than the shell, expands it:
+
+```bash
+npm run test -- --test-file 'test/unit/test/streaming/*Buffer*.js'
+```
+
+Use `--grep` to filter individual Mocha suites or tests by name. It can be combined with `--test-file`, but it does not
+reduce the files bundled by webpack on its own.
 
