@@ -232,6 +232,28 @@ function BoxParser(/*config*/) {
         return mdhdBox ? mdhdBox.timescale : NaN;
     }
 
+    /**
+     * Returns the four-character code of the first sample entry of the Sample Description
+     * Box (stsd) of an initialization segment, for example 'stpp' or 'wvtt'.
+     *
+     * This is what the samples of the track actually are, as opposed to what the manifest
+     * says they are, so it is the authority when the two disagree or when the manifest
+     * does not say.
+     *
+     * @param {ArrayBuffer} ab initialization segment
+     * @returns {string|null} the sample entry type, or null if there is none to read
+     */
+    function getSampleEntryTypeFromMoov(ab) {
+        const isoFile = parse(ab);
+        const stsdBox = isoFile ? isoFile.getBox('stsd') : undefined;
+
+        if (!stsdBox || !stsdBox.entries || stsdBox.entries.length === 0) {
+            return null;
+        }
+
+        return stsdBox.entries[0].type || null;
+    }
+
     function parseUint32(data, offset) {
         return data[offset + 3] >>> 0 |
             (data[offset + 2] << 8) >>> 0 |
@@ -277,6 +299,7 @@ function BoxParser(/*config*/) {
         findInitRange,
         findLastTopIsoBoxCompleted,
         getMediaTimescaleFromMoov,
+        getSampleEntryTypeFromMoov,
         getSamplesInfo,
         parse,
     };
