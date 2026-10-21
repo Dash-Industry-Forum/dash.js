@@ -20,6 +20,7 @@ import ContentSteeringControllerMock from '../../mocks/ContentSteeringController
 import TextControllerMock from '../../mocks/TextControllerMock.js';
 import ManifestUpdaterMock from '../../mocks/ManifestUpdaterMock.js';
 import ServiceDescriptionController from '../../../../src/dash/controllers/ServiceDescriptionController.js';
+import MediaSourceController from '../../../../src/streaming/controllers/MediaSourceController.js';
 
 import chai from 'chai';
 import spies from 'chai-spies';
@@ -311,6 +312,87 @@ describe('StreamController', function () {
                                 expect(seekEvent.seekTime).to.equal(expectedTime);
                                 done();
                             } catch (e) {
+                                done(e);
+                            }
+                        }, 0);
+                    };
+
+                    expectedStartTime = staticStreamInfo.start;
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should clamp a seek to a MediaSource duration that is shorter than the last period to that duration minus the seekDurationBackoff', function (done) {
+                    // endOfStream() sets the MediaSource duration to the end of the buffered media, slightly before the period end
+                    const mediaSourceDuration = staticStreamInfo.start + staticStreamInfo.duration - 0.008;
+                    const mediaSourceController = MediaSourceController(context).getInstance();
+                    const createMediaSourceStub = sinon.stub(mediaSourceController, 'createMediaSource').returns({
+                        duration: mediaSourceDuration,
+                        addEventListener: () => {},
+                        removeEventListener: () => {}
+                    });
+                    const attachMediaSourceStub = sinon.stub(mediaSourceController, 'attachMediaSource').returns('blob:');
+                    const restore = () => {
+                        createMediaSourceStub.restore();
+                        attachMediaSourceStub.restore();
+                    };
+
+                    doneFn = function (err) {
+                        if (err) {
+                            restore();
+                            done(err);
+                            return;
+                        }
+                        setTimeout(() => {
+                            try {
+                                const seekEvent = { seekTime: mediaSourceDuration };
+                                eventBus.trigger(Events.PLAYBACK_SEEKING, seekEvent);
+                                expect(seekEvent.seekTime).to.equal(mediaSourceDuration - settings.get().streaming.seekDurationBackoff);
+                                restore();
+                                done();
+                            } catch (e) {
+                                restore();
+                                done(e);
+                            }
+                        }, 0);
+                    };
+
+                    expectedStartTime = staticStreamInfo.start;
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should ignore a MediaSource duration that is shorter than the start of the last period', function (done) {
+                    const mediaSourceController = MediaSourceController(context).getInstance();
+                    const createMediaSourceStub = sinon.stub(mediaSourceController, 'createMediaSource').returns({
+                        duration: staticStreamInfo.start / 2,
+                        addEventListener: () => {},
+                        removeEventListener: () => {}
+                    });
+                    const attachMediaSourceStub = sinon.stub(mediaSourceController, 'attachMediaSource').returns('blob:');
+                    const restore = () => {
+                        createMediaSourceStub.restore();
+                        attachMediaSourceStub.restore();
+                    };
+
+                    doneFn = function (err) {
+                        if (err) {
+                            restore();
+                            done(err);
+                            return;
+                        }
+                        setTimeout(() => {
+                            try {
+                                const seekTime = staticStreamInfo.start + staticStreamInfo.duration / 2;
+                                const seekEvent = { seekTime };
+                                eventBus.trigger(Events.PLAYBACK_SEEKING, seekEvent);
+                                expect(seekEvent.seekTime).to.equal(seekTime);
+                                restore();
+                                done();
+                            } catch (e) {
+                                restore();
                                 done(e);
                             }
                         }, 0);

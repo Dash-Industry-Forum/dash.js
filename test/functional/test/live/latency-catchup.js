@@ -22,7 +22,12 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                         liveDelay: Constants.TEST_INPUTS.LATENCY_CATCHUP.DELAY
                     },
                     liveCatchup: {
-                        enabled: true
+                        enabled: true,
+                        // Explicit rates instead of the (possibly narrow) ServiceDescription values: converges within the timeout and exceeds Safari's minimum rate change
+                        playbackRate: {
+                            min: Constants.TEST_INPUTS.LATENCY_CATCHUP.PLAYBACK_RATE_MIN,
+                            max: Constants.TEST_INPUTS.LATENCY_CATCHUP.PLAYBACK_RATE_MAX
+                        }
                     }
                 }
             };

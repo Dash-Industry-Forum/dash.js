@@ -1,6 +1,7 @@
 import SourceBufferSink from '../../../../src/streaming/SourceBufferSink.js';
 import FactoryMaker from '../../../../src/core/FactoryMaker.js';
 import Errors from '../../../../src/core/errors/Errors.js';
+import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 
 import TextSourceBufferMock from '../../mocks/TextSourceBufferMock.js';
 import TextControllerMock from '../../mocks/TextControllerMock.js';
@@ -219,6 +220,54 @@ describe('SourceBufferSink', function () {
                     done();
                 });
 
+        });
+
+        it('should report a media segment as pending until it has been appended', function (done) {
+            const appended = sink.append({ bytes: 'toto', segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, start: 2, end: 8 });
+
+            expect(sink.hasPendingMediaAppendAtTime(4)).to.be.true;
+            expect(sink.hasPendingMediaAppendAtTime(8)).to.be.false;
+
+            appended
+                .then(() => {
+                    expect(sink.hasPendingMediaAppendAtTime(4)).to.be.false;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        });
+
+        it('should continue with the next queued chunk if appending a chunk throws', function (done) {
+            const buffer = mediaSource.buffers[0];
+            const appendBuffer = buffer.appendBuffer.bind(buffer);
+            let appendCalls = 0;
+            buffer.appendBuffer = (chunk) => {
+                appendCalls++;
+                if (appendCalls === 1) {
+                    throw new Error('QuotaExceededError');
+                }
+                appendBuffer(chunk);
+            };
+
+            // Keep the buffer busy so that both chunks are queued before the first append attempt
+            buffer.updating = true;
+            sink.append({ bytes: 'first' }).catch(() => {});
+            sink.append({ bytes: 'second' })
+                .then(() => {
+                    expect(buffer.chunk).to.equal('second');
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+            buffer.updating = false;
+        });
+
+        it('should not report init segments as pending media appends', function () {
+            sink.append({ bytes: 'toto', segmentType: HTTPRequest.INIT_SEGMENT_TYPE, start: 2, end: 8 });
+
+            expect(sink.hasPendingMediaAppendAtTime(4)).to.be.false;
         });
 
     });
