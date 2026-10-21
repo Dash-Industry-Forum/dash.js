@@ -44,8 +44,12 @@ Utils.getTestvectorsForTestcase(TESTCASE).filter((item) => CASES[item.url]).forE
 
         afterEach(() => {
             if (playerAdapter) {
-                checkNoCriticalErrors(playerAdapter);
-                playerAdapter.destroy();
+                try {
+                    checkNoCriticalErrors(playerAdapter);
+                } finally {
+                    playerAdapter.destroy();
+                    playerAdapter = null;
+                }
             }
         })
 
