@@ -971,6 +971,7 @@ describe('MediaController', function () {
         _testLanguageMatch('should prefer tracks more specific than the preference', 'cmn', ['zh-cmn-Hans-CN', 'zh-yue'], ['zh-cmn-Hans-CN']);
         _testLanguageMatch('should prefer the longest less specific track', 'zh-Hant-TW', ['zh-Hant', 'zh-Hans', 'zh'], ['zh-Hant']);
         _testLanguageMatch('should keep a missing preference', undefined, ['en'], undefined);
+        _testLanguageMatch('should ignore non-string entries in a preference array', [/^en/, 42, 'de'], ['en', 'de-DE'], ['de-DE']);
     });
 
     describe('Match Settings', function () {

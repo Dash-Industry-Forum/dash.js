@@ -453,7 +453,7 @@ function MediaController() {
         }
 
         function _getBestLanguageMatch(langs, pref_lang) {
-            if (!pref_lang) {
+            if (!pref_lang || typeof pref_lang !== 'string') {
                 return [];
             }
 
