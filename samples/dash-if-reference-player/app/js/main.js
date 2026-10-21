@@ -109,6 +109,8 @@ async function init() {
     playerController.on('playbackEnded', onPlaybackEnded);
     playerController.on('streamInitialized', () => {
         controlBar.enable();
+        // Needs an active stream, so it cannot be applied together with the initial media settings
+        playerController.enableForcedTextStreaming($('#opt-force-text-streaming').checked);
     });
     playerController.on('manifestLoaded', (data) => {
         // Show/hide CMSD metrics if enabled

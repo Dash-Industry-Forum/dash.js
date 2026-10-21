@@ -307,9 +307,6 @@ export class SettingsController {
         if (Object.keys(textSettings).length > 0) {
             this.playerController.setInitialMediaSettings('text', textSettings);
         }
-
-        // Forced text streaming
-        this.playerController.enableForcedTextStreaming(this._isChecked('opt-force-text-streaming'));
     }
 
     /**
@@ -335,6 +332,9 @@ export class SettingsController {
         }
         if (this._isChecked('opt-autoload')) {
             params.set('autoLoad', 'true');
+        }
+        if (this._isChecked('opt-force-text-streaming')) {
+            params.set('forceTextStreaming', 'true');
         }
         for (const [param, id] of Object.entries(SettingsController._INITIAL_MEDIA_PARAMS)) {
             const value = $(`#${id}`).value.trim();
@@ -406,6 +406,9 @@ export class SettingsController {
         if (params.get('autoLoad') === 'true') {
             $('#opt-autoload').checked = true;
         }
+        if (params.get('forceTextStreaming') === 'true') {
+            $('#opt-force-text-streaming').checked = true;
+        }
         const initialMediaParams = SettingsController._INITIAL_MEDIA_PARAMS;
         for (const [param, id] of Object.entries(initialMediaParams)) {
             if (params.has(param)) {
@@ -426,7 +429,7 @@ export class SettingsController {
         // Handle dash.js settings
         const settingsObj = {};
         for (const [key, value] of params.entries()) {
-            if (['stream', 'mpd', 'autoplay', 'autoPlay', 'loop', 'muted', 'autoLoad', 'protData'].includes(key) || key in initialMediaParams) {
+            if (['stream', 'mpd', 'autoplay', 'autoPlay', 'loop', 'muted', 'autoLoad', 'protData', 'forceTextStreaming'].includes(key) || key in initialMediaParams) {
                 continue;
             }
             this._setNestedValue(settingsObj, key, this._coerceType(value));
