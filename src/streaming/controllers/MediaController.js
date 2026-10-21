@@ -458,7 +458,6 @@ function MediaController() {
             }
 
             const pref = normalizeBcp47(pref_lang);
-            const normalized = langs.map(lang => normalizeBcp47(lang));
             const pick = fn => langs.filter((lang, i) => fn(normalized[i]));
 
             // 1. exact match
@@ -478,6 +477,7 @@ function MediaController() {
 
         const prefLang = settings.lang;
         const availableLanguages = _getAllLanguages(tracks);
+        const normalized = availableLanguages.map(lang => normalizeBcp47(lang));
 
         if (!prefLang || prefLang instanceof RegExp) {
             return prefLang;
