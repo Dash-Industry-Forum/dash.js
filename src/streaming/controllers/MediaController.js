@@ -457,17 +457,29 @@ function MediaController() {
                 return [];
             }
 
-            const normalizedPreference = normalizeBcp47(pref_lang);
-            let arr = langs.filter(i => normalizeBcp47(i) === normalizedPreference);
-            arr = arr.length ? arr : langs.filter(i => normalizeBcp47(i).split('-')[0] === normalizedPreference);
-            arr = arr.length ? arr : langs.filter(i => normalizeBcp47(i) === normalizedPreference.split('-')[0]);
-            return arr.length ? arr : langs.filter(i => normalizeBcp47(i).split('-')[0] === normalizedPreference.split('-')[0]);
+            const pref = normalizeBcp47(pref_lang);
+            const normalized = langs.map(lang => normalizeBcp47(lang));
+            const pick = fn => langs.filter((lang, i) => fn(normalized[i]));
+
+            // 1. exact match
+            let arr = pick(t => t === pref);
+            // 2. track is more specific than the preference (de -> de-AT, zh -> zh-cmn)
+            arr = arr.length ? arr : pick(t => t.startsWith(pref + '-'));
+            if (arr.length) {
+                return arr;
+            }
+            // 3. track is less specific than the preference, longest prefix wins (en-AU -> en, zh-Hant-TW -> zh-Hant)
+            const longestPrefix = Math.max(-1, ...normalized.filter(t => pref.startsWith(t + '-')).map(t => t.length));
+            arr = pick(t => t.length === longestPrefix && pref.startsWith(t + '-'));
+            // 4. same primary language subtag (de-CH -> de-AT, de-DE)
+            // ponytail: extlang families (zh-cmn, zh-yue) count as one language here, compare up to the extlang if that matters
+            return arr.length ? arr : pick(t => t.split('-')[0] === pref.split('-')[0]);
         }
 
         const prefLang = settings.lang;
         const availableLanguages = _getAllLanguages(tracks);
 
-        if (prefLang instanceof RegExp) {
+        if (!prefLang || prefLang instanceof RegExp) {
             return prefLang;
         }
 
@@ -477,10 +489,14 @@ function MediaController() {
 
     function matchSettingsLang(settings, track) {
         try {
-            return !settings.lang ||
-            (settings.lang instanceof RegExp) ?
-                (track.lang.match(settings.lang)) : track.lang !== '' ?
-                    (settings.lang.map(normalizeBcp47).filter(l => l === normalizeBcp47(track.lang)).length > 0) : false;
+            if (!settings.lang) {
+                return true;
+            }
+            if (settings.lang instanceof RegExp) {
+                return !!track.lang.match(settings.lang);
+            }
+            const trackLang = normalizeBcp47(track.lang);
+            return !!trackLang && [].concat(settings.lang).some(l => normalizeBcp47(l) === trackLang);
         } catch (e) {
             return false
         }
@@ -540,24 +556,7 @@ function MediaController() {
 
     function matchSettings(settings, track, isTrackActive = false) {
         try {
-            let matchLang = false;
-
-            // If there is no language defined in the target settings we got a match
-            if (!settings.lang) {
-                matchLang = true;
-            }
-
-            // If the target language is provided as a RegExp apply match function
-            else if (settings.lang instanceof RegExp) {
-                matchLang = track.lang.match(settings.lang);
-            }
-
-            // If the track has a language and we can normalize the target language check if we got a match
-            else if (track.lang !== '') {
-                const preferredLanguages = Array.isArray(settings.lang) ? settings.lang : [settings.lang];
-                matchLang = matchSettingsLang({lang: preferredLanguages}, track);
-            }
-
+            const matchLang = matchSettingsLang(settings, track);
             const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
             const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
                 return _compareDescriptorType(item, settings.viewpoint);

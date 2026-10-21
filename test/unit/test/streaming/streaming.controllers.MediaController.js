@@ -958,6 +958,19 @@ describe('MediaController', function () {
         _testLanguage('should select the correct track for prefered and available regional language code - 3', 'de-DE', 1);
         _testLanguage('should select the correct track for a prefered, but not available regional tag', 'es-AR', 1);
         _testLanguage('should not filter tracks when desired language is not available', 'fr', language_tags.length);
+        _testLanguage('should not filter tracks when no language is preferred', undefined, language_tags.length);
+
+        function _testLanguageMatch(name, pref, langs, expectedLangs) {
+            it(name, function () {
+                expect(mediaController.getAvailablePreferredLanguages(langs.map(_createTrack), { lang: pref })).to.deep.equal(expectedLangs);
+            });
+        }
+
+        _testLanguageMatch('should match an extlang track for its macrolanguage', 'zh', ['zh-cmn', 'en'], ['zh-cmn']);
+        _testLanguageMatch('should match a regional track for its language', 'nl', ['nl-NL', 'en'], ['nl-NL']);
+        _testLanguageMatch('should prefer tracks more specific than the preference', 'cmn', ['zh-cmn-Hans-CN', 'zh-yue'], ['zh-cmn-Hans-CN']);
+        _testLanguageMatch('should prefer the longest less specific track', 'zh-Hant-TW', ['zh-Hant', 'zh-Hans', 'zh'], ['zh-Hant']);
+        _testLanguageMatch('should keep a missing preference', undefined, ['en'], undefined);
     });
 
     describe('Match Settings', function () {
@@ -987,6 +1000,11 @@ describe('MediaController', function () {
 
         it('should not match a different regional language tag', function () {
             expect(mediaController.matchSettings({lang: 'en'}, createTrack('en-US'))).to.be.false;
+        });
+
+        it('should match a track without language when the resolved preference is empty', function () {
+            const lang = mediaController.getAvailablePreferredLanguages([createTrack('')], {lang: ''});
+            expect(mediaController.matchSettings({lang}, createTrack(''))).to.be.true;
         });
     });
 
