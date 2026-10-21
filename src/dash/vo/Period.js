@@ -41,6 +41,7 @@ class Period {
         this.mpd = null;
         this.nextPeriodId = null;
         this.isEncrypted = false;
+        this.isResolved = true;
     }
 }
 
