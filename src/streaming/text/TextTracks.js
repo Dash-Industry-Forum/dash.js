@@ -35,8 +35,8 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import Utils from '../../core/Utils.js';
-import {CueIntervalTree} from './CueIntervalTree.js';
-import {renderHTML} from 'imsc';
+import { CueIntervalTree } from './CueIntervalTree.js';
+import { renderHTML } from 'imsc';
 
 const CUE_PROPS_TO_COMPARE = [
     'text',
@@ -665,7 +665,7 @@ function TextTracks(config) {
 
             if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                 if (dispatchForManualRendering) {
-                    cue = _handleCaptionEvents(currentItem, timeOffset);
+                    cue = _handleCaptionEvents(currentItem, timeOffset, trackIdx);
                 } else if (_isHTMLCue(currentItem) && captionContainer) {
                     cue = _handleHtmlCaption(currentItem, timeOffset, track)
                 } else if (currentItem.data) {
@@ -698,10 +698,22 @@ function TextTracks(config) {
         invalidateCueWindow();
     }
 
-    function _handleCaptionEvents(currentItem, timeOffset) {
+    function _handleCaptionEvents(currentItem, timeOffset, trackIdx) {
         let cue = _getCueInformation(currentItem, timeOffset)
+        // Whether the enter event of this cue was dispatched, so that the exit event is only
+        // dispatched for cues the application knows about
+        let isDispatched = false;
 
         cue.onenter = function () {
+            // The cues of every track that is not disabled are added to their native TextTrack,
+            // so they keep firing after another track has been selected. Only the cues of the
+            // selected track may be dispatched, otherwise the application renders the cues of
+            // all tracks that have been selected during playback at the same time. This is the
+            // equivalent of the mode check the tracks rendered by dash.js itself are doing.
+            if (trackIdx !== currentTrackIdx) {
+                return;
+            }
+
             // HTML Tracks don't trigger the onexit event when a new cue is entered,
             // we need to manually trigger it
             if (_isHTMLCue(currentItem) && currentCaptionEventCue && currentCaptionEventCue.cueID !== cue.cueID) {
@@ -711,12 +723,23 @@ function TextTracks(config) {
             delete cue.type;
 
             currentCaptionEventCue = cue;
+            isDispatched = true;
             _triggerCueEnter(cue);
         }
 
         cue.onexit = function () {
+            // Cue ids are only unique within a track, so dispatching the exit event for a cue of
+            // another track would remove a cue of the selected track in the application
+            if (!isDispatched) {
+                return;
+            }
+
+            isDispatched = false;
             _triggerCueExit(cue);
-            currentCaptionEventCue = null;
+
+            if (currentCaptionEventCue === cue) {
+                currentCaptionEventCue = null;
+            }
         }
 
         return cue;
