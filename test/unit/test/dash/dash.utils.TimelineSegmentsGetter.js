@@ -61,6 +61,64 @@ describe('TimelineSegmentsGetter', () => {
         });
     });
 
+    describe('SegmentList with SegmentTimeline', () => {
+
+        function createSegmentListRepresentationMock() {
+            const voHelper = new VoHelper();
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.timescale = 90000;
+            representation.SegmentList = {
+                'timescale': 90000,
+                'SegmentTimeline': {
+                    'S': [{ 't': 0, 'd': 90000, 'r': 2 }, { 'd': 90000 }]
+                },
+                'SegmentURL': [
+                    { 'media': 'seg1.m4s', 'mediaRange': '0-999' },
+                    { 'media': 'seg2.m4s', 'mediaRange': '1000-1999' },
+                    { 'media': 'seg3.m4s', 'mediaRange': '2000-2999' },
+                    { 'media': 'seg4.m4s', 'mediaRange': '3000-3999' }
+                ]
+            };
+            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+            representation.adaptation.period.mpd.maxSegmentDuration = 5;
+            representation.adaptation.period.duration = 4;
+            representation.presentationTimeOffset = 0;
+
+            return representation;
+        }
+
+        it('should use a separate SegmentURL for each repeated segment', () => {
+            const representation = createSegmentListRepresentationMock();
+            const media = [0, 1, 2, 3].map((time) => {
+                return timelineSegmentsGetter.getSegmentByTime(representation, time).media;
+            });
+
+            expect(media).to.deep.equal(['seg1.m4s', 'seg2.m4s', 'seg3.m4s', 'seg4.m4s']);
+        });
+
+        it('should use the mediaRange of the matching SegmentURL', () => {
+            const representation = createSegmentListRepresentationMock();
+            const ranges = [0, 1, 2, 3].map((time) => {
+                return timelineSegmentsGetter.getSegmentByTime(representation, time).mediaRange;
+            });
+
+            expect(ranges).to.deep.equal(['0-999', '1000-1999', '2000-2999', '3000-3999']);
+        });
+
+        it('should walk the SegmentURL list when requesting consecutive segments', () => {
+            const representation = createSegmentListRepresentationMock();
+            const media = [];
+            let segment = null;
+
+            for (let i = 0; i < 4; i++) {
+                segment = timelineSegmentsGetter.getSegmentByIndex(representation, segment);
+                media.push(segment.media);
+            }
+
+            expect(media).to.deep.equal(['seg1.m4s', 'seg2.m4s', 'seg3.m4s', 'seg4.m4s']);
+        });
+    });
+
     describe('getMediaFinishedInformation', () => {
         it('should calculate the number of available segments correctly', () => {
             const representation = createRepresentationMock();
