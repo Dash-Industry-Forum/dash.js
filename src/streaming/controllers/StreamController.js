@@ -66,7 +66,8 @@ function StreamController() {
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
-        pendingDynamicToStaticUpdate;
+        pendingDynamicToStaticUpdate, expectedSourceDetach, lastKnownPlaybackTime,
+        boundVideoElement, pendingSourceOpenHandler, pendingPreloadStream;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -119,6 +120,8 @@ function StreamController() {
                 protectionController.setProtectionData(protectionData);
             }
         }
+
+        _bindVideoElementEmptied();
 
         registerEvents();
     }
@@ -541,9 +544,9 @@ function StreamController() {
             }
 
             logger.debug('MediaSource is open!');
-            window.URL.revokeObjectURL(sourceUrl);
-            mediaSource.removeEventListener('sourceopen', _onMediaSourceOpen);
-            mediaSource.removeEventListener('webkitsourceopen', _onMediaSourceOpen);
+            // _removePendingSourceOpenHandler() also revokes this attachment's
+            // object URL, the single revocation site for both outcomes.
+            _removePendingSourceOpenHandler();
 
             _setMediaDuration();
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
@@ -564,9 +567,27 @@ function StreamController() {
         }
 
         function _open() {
+            // A cold attachment that never reached sourceopen leaves its own
+            // callback registered: the early return above does not remove it,
+            // and the recovery path re-attaches the SAME MediaSource object, so
+            // without this the next sourceopen would run both callbacks and
+            // initialize the stream twice.
+            _removePendingSourceOpenHandler();
+            pendingSourceOpenHandler = { callback: _onMediaSourceOpen, source: mediaSource };
             mediaSource.addEventListener('sourceopen', _onMediaSourceOpen, false);
             mediaSource.addEventListener('webkitsourceopen', _onMediaSourceOpen, false);
+            // Attaching over an element that already holds a resource makes
+            // the load algorithm fire abort/emptied for dash.js's OWN source
+            // assignment; arm the suppression so that is not misread as an
+            // external detach. A fresh NETWORK_EMPTY element fires no emptied
+            // for this assignment, so do not arm there, where it would
+            // swallow the next real external detach instead.
+            const element = videoModel.getElement();
+            if (element && element.networkState !== 0) {
+                expectedSourceDetach = true;
+            }
             sourceUrl = mediaSourceController.attachMediaSource(videoModel);
+            pendingSourceOpenHandler.url = sourceUrl;
             logger.debug('MediaSource attached to element.  Waiting on open...');
         }
 
@@ -577,6 +598,7 @@ function StreamController() {
             if (inputParameters.keepBuffers) {
                 _activateStream(inputParameters);
             } else {
+                expectedSourceDetach = true;
                 mediaSourceController.detachMediaSource(videoModel);
                 _open();
             }
@@ -590,7 +612,10 @@ function StreamController() {
     function _activateStream(inputParameters) {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
         activeStream.activate(mediaSource, inputParameters.sourceBufferSinksFromPreviousPeriod, representationsFromPreviousPeriod)
-            .then(() => {
+            .then((result) => {
+                if (result && result.cancelled) {
+                    return;
+                }
 
                 // Set the initial time for this stream in the StreamProcessor
                 if (!isNaN(inputParameters.seekTime)) {
@@ -637,11 +662,20 @@ function StreamController() {
      * @private
      */
     function _onPlaybackSeeking(e) {
-        const newTime = e.seekTime;
-        let seekToStream = getStreamForTime(newTime);
+        let seekToStream = getStreamForTime(e.seekTime);
 
         if (!seekToStream) {
             seekToStream = _handleSeekBeyondEndOfContent(e);
+        }
+
+        // An explicit seek target is a valid resume position for
+        // _onVideoElementEmptied(), zero included; only the load algorithm's
+        // reset-to-zero must not overwrite the cache, and that never arrives
+        // through a seeking event. Read AFTER _handleSeekBeyondEndOfContent(),
+        // which adjusts e.seekTime in place, so an overshooting static seek
+        // caches the clamped target rather than a position past the end.
+        if (!isNaN(e.seekTime)) {
+            lastKnownPlaybackTime = e.seekTime;
         }
 
         if (!seekToStream || seekToStream === activeStream) {
@@ -717,6 +751,13 @@ function StreamController() {
      * @private
      */
     function _deactivateAllPreloadingStreams() {
+        // A preload still in flight is not in preloadingStreams yet (it is
+        // pushed on resolve); deactivating it bumps its activation epoch, so
+        // its initialization cancels itself and never reports preloaded.
+        if (pendingPreloadStream) {
+            pendingPreloadStream.deactivate(true);
+            pendingPreloadStream = null;
+        }
         if (preloadingStreams && preloadingStreams.length > 0) {
             preloadingStreams.forEach((s) => {
                 s.deactivate(true);
@@ -830,8 +871,15 @@ function StreamController() {
 
         const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
         const previousSourceBufferSinks = _getSourceBufferSinksFromPreviousPeriod(previousStream);
+        pendingPreloadStream = nextStream;
         nextStream.startPreloading(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod)
-            .then(() => {
+            .then((result) => {
+                if (pendingPreloadStream === nextStream) {
+                    pendingPreloadStream = null;
+                }
+                if (result && result.cancelled) {
+                    return;
+                }
                 preloadingStreams.push(nextStream);
             });
     }
@@ -947,6 +995,16 @@ function StreamController() {
      * @private
      */
     function _onPlaybackTimeUpdated(/*e*/) {
+        // Remember where playback was: when the element is reset from outside,
+        // its currentTime is already back at 0 by the time 'emptied' fires.
+        // Together with explicit seek targets recorded in _onPlaybackSeeking()
+        // this is the resume position for _onVideoElementEmptied(); zero is
+        // excluded HERE because the load algorithm fires a timeupdate while
+        // zeroing the clock, which is not playback progress.
+        const time = playbackController.getTime();
+        if (time !== null && !isNaN(time) && time > 0) {
+            lastKnownPlaybackTime = time;
+        }
         if (hasVideoTrack()) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
@@ -1450,6 +1508,7 @@ function StreamController() {
 
 
     function switchToVideoElement(seekTime) {
+        _bindVideoElementEmptied();
         if (activeStream) {
             playbackController.initialize(getActiveStreamInfo());
             _openMediaSource({ seekTime, keepBuffers: false, streamActivated: true });
@@ -1608,7 +1667,135 @@ function StreamController() {
         activeStream.deactivate(false);
 
         // Reset MSE
-        logger.info(`MediaSource has been resetted. Resuming playback from time ${seekTime}`);
+        logger.info(`MediaSource has been reset. Resuming playback from time ${seekTime}`);
+        _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
+    }
+
+    /**
+     * Cancels the source-open callback of an attachment that has not opened,
+     * and revokes that attachment's object URL, so a cancelled attachment
+     * neither initializes the stream a second time nor leaks its URL. Also
+     * the revocation site for the successful-open path.
+     * @private
+     */
+    function _removePendingSourceOpenHandler() {
+        if (!pendingSourceOpenHandler) {
+            return;
+        }
+        pendingSourceOpenHandler.source.removeEventListener('sourceopen', pendingSourceOpenHandler.callback);
+        pendingSourceOpenHandler.source.removeEventListener('webkitsourceopen', pendingSourceOpenHandler.callback);
+        if (pendingSourceOpenHandler.url) {
+            window.URL.revokeObjectURL(pendingSourceOpenHandler.url);
+        }
+        pendingSourceOpenHandler = null;
+    }
+
+    /**
+     * (Re)binds the emptied listener to the current view. VideoModel's
+     * add/removeEventListener are no-ops without an element, so a view
+     * attached after initialize(), or replacing an earlier one, would
+     * otherwise never get the listener; called from initialize() and from
+     * switchToVideoElement(), and remove-before-add keeps it idempotent.
+     * MediaPlayer.initialize() reaches switchToVideoElement() via attachView()
+     * before setConfig() has run, so bail out until videoModel is wired;
+     * initialize() rebinds later in that flow.
+     * @private
+     */
+    function _bindVideoElementEmptied() {
+        if (!videoModel) {
+            return;
+        }
+        // MediaPlayer.attachView() has already pointed videoModel at the NEW
+        // element by the time switchToVideoElement() runs, so going through
+        // videoModel alone can never unhook the previous element; track what
+        // was actually bound and remove from it directly.
+        const element = videoModel.getElement();
+        if (boundVideoElement && boundVideoElement !== element) {
+            boundVideoElement.removeEventListener('emptied', _onVideoElementEmptied);
+        }
+        videoModel.removeEventListener('emptied', _onVideoElementEmptied);
+        videoModel.addEventListener('emptied', _onVideoElementEmptied);
+        boundVideoElement = element || null;
+    }
+
+    /**
+     * Fired by the media element whenever the resource selection algorithm empties it.
+     * When that was not caused by dash.js itself, the MediaSource has been detached
+     * from outside (an external element.load(), a src write, or a UA-driven reload).
+     * A detached ManagedMediaSource is permanently closed and emits a final
+     * endstreaming, so without intervention the player silently never requests
+     * another byte. Recover the same way _handleMediaErrorDecode() does.
+     * @private
+     */
+    function _onVideoElementEmptied() {
+        if (expectedSourceDetach) {
+            expectedSourceDetach = false;
+            return;
+        }
+        if (!activeStream || !mediaSource) {
+            return;
+        }
+        if (mediaSource.readyState === 'open') {
+            return;
+        }
+        // Deliberately no isStreamSwitchingInProgress bail-out: a switch that is
+        // waiting on sourceopen of a source that just got detached never
+        // completes (_onMediaSourceOpen returns early on a non-open source), so
+        // the flag would stay true forever and block the only way out.
+        logger.error('The media element was emptied outside of dash.js and the MediaSource is detached: Resetting the MediaSource');
+        // Preloaded periods were initialized against the detached source, and
+        // Stream.activate() would reuse their processors and buffer sinks
+        // through the preloaded short-circuit; drop them (an in-flight preload
+        // aborts its requests through the same call) so the next period
+        // initializes against the recovered source.
+        _deactivateAllPreloadingStreams();
+        // The element's currentTime is already 0 here, so getTime() is useless;
+        // resume from the last position a timeupdate reported. If playback never
+        // established one, fall back to the live edge for dynamic streams, the
+        // way seekToCurrentLive() computes it, and to the start for static ones.
+        let seekTime = lastKnownPlaybackTime;
+        if (!isNaN(seekTime)) {
+            // A detach during a non-seamless period transition: _switchStream()
+            // makes the target period active before its MediaSource opens, so
+            // the cache can still hold a position from the previous period.
+            // Discard a position outside the active stream and let the
+            // fallbacks resume at the target period instead.
+            const activeStreamInfo = activeStream.getStreamInfo();
+            const activeStreamEnd = activeStreamInfo.start + activeStreamInfo.duration;
+            if (seekTime < activeStreamInfo.start || (!isNaN(activeStreamEnd) && seekTime > activeStreamEnd)) {
+                seekTime = NaN;
+            }
+        }
+        const isDynamic = playbackController.getIsDynamic();
+        const dvrInfo = isDynamic ? dashMetrics.getCurrentDVRInfo(hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO) : null;
+        if (isDynamic && !isNaN(seekTime) && (!dvrInfo || !dvrInfo.range || seekTime < dvrInfo.range.start || seekTime > dvrInfo.range.end)) {
+            // The cached position can slide out of the DVR window while the
+            // element sits emptied (a long pause on live); an expired position
+            // would seek outside the seekable range, so resume from the live
+            // edge instead.
+            seekTime = NaN;
+        }
+        if (isNaN(seekTime)) {
+            if (isDynamic) {
+                seekTime = dvrInfo && dvrInfo.range ? dvrInfo.range.end - playbackController.getLiveDelay() : NaN;
+            } else {
+                // Match _getInitialStartTimeForStaticStream(): the first period
+                // can start above zero and playback never starts earlier than
+                // that, so neither should the recovery.
+                const streamInfo = activeStream.getStreamInfo();
+                seekTime = streamInfo && !isNaN(streamInfo.start) ? streamInfo.start : 0;
+            }
+        }
+        if (isNaN(seekTime)) {
+            // A detach before playback established leaves no cached position
+            // and no DVR metrics either. Fall back to the same computation a
+            // cold start uses; a non-NaN seekTime here also makes
+            // _activateStream() start the schedule controllers, which nothing
+            // else does on this path.
+            seekTime = _getInitialStartTime();
+        }
+        activeStream.deactivate(false);
+        logger.info(`MediaSource has been reset. Resuming playback from time ${seekTime}`);
         _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
     }
 
@@ -1743,6 +1930,11 @@ function StreamController() {
         autoPlay = true;
         playbackEndedTimerInterval = null;
         pendingDynamicToStaticUpdate = false;
+        expectedSourceDetach = false;
+        lastKnownPlaybackTime = NaN;
+        boundVideoElement = null;
+        pendingSourceOpenHandler = null;
+        pendingPreloadStream = null;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
@@ -1777,8 +1969,17 @@ function StreamController() {
         initCache.reset();
 
         if (mediaSource) {
+            expectedSourceDetach = true;
+            _removePendingSourceOpenHandler();
             mediaSourceController.detachMediaSource(videoModel);
             mediaSource = null;
+        }
+        if (boundVideoElement) {
+            boundVideoElement.removeEventListener('emptied', _onVideoElementEmptied);
+            boundVideoElement = null;
+        }
+        if (videoModel) {
+            videoModel.removeEventListener('emptied', _onVideoElementEmptied);
         }
         videoModel = null;
         if (protectionController) {
