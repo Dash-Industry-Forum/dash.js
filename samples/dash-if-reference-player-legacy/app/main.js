@@ -2360,7 +2360,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             };
 
             const request = requestWindow[requestWindow.length - 1];
-            etp[type] = request.cmsd && request.cmsd.dynamic && request.cmsd.dynamic.etp ? request.cmsd.dynamic.etp : 0;
+            etp[type] = request._cmsd && request._cmsd.dynamic && request._cmsd.dynamic.etp ? request._cmsd.dynamic.etp : 0;
 
             return {
                 latency: latency,
