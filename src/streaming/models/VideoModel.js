@@ -143,11 +143,15 @@ function VideoModel() {
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime, stickToBuffered) {
+        // Only reflects an adjustment when the element already has metadata, otherwise the time is applied asynchronously.
+        let appliedTime = NaN;
+
         if (element) {
             if (setCurrentTimeReadyStateFunction && setCurrentTimeReadyStateFunction.func && setCurrentTimeReadyStateFunction.event) {
                 removeEventListener(setCurrentTimeReadyStateFunction.event, setCurrentTimeReadyStateFunction.func);
             }
             _currentTime = currentTime;
+            appliedTime = currentTime;
             setCurrentTimeReadyStateFunction = waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
                 if (!element) {
                     return;
@@ -167,6 +171,7 @@ function VideoModel() {
                 // setTimeout is used to workaround InvalidStateError in IE11
                 try {
                     _currentTime = stickToBuffered ? stickTimeToBuffered(_currentTime) : _currentTime;
+                    appliedTime = _currentTime;
                     if (!isNaN(_currentTime)) {
                         element.currentTime = _currentTime;
                     }
@@ -181,6 +186,8 @@ function VideoModel() {
                 }
             });
         }
+
+        return appliedTime;
     }
 
     function stickTimeToBuffered(time) {

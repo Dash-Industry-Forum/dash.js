@@ -38,6 +38,9 @@ import MetricsConstants from '../constants/MetricsConstants.js';
 
 const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
 
+// The element may clamp or round a requested seek position, so an internal seek is matched with a tolerance.
+const INTERNAL_SEEK_POSITION_TOLERANCE = 0.1;
+
 function PlaybackController() {
 
     const context = this.context;
@@ -48,7 +51,7 @@ function PlaybackController() {
         dashMetrics,
         initialCatchupModeActivated,
         instance,
-        internalSeek,
+        internalSeekTarget,
         isDynamic,
         lastLivePlaybackTime,
         lastLiveUpdateTime,
@@ -88,6 +91,7 @@ function PlaybackController() {
         lowLatencyModeEnabled = false;
         initialCatchupModeActivated = false;
         seekTarget = NaN;
+        internalSeekTarget = NaN;
         lastLiveUpdateTime = NaN;
 
         if (videoModel) {
@@ -130,7 +134,7 @@ function PlaybackController() {
         isDynamic = streamInfo.manifestInfo.isDynamic;
 
         playbackStalled = false;
-        internalSeek = false;
+        internalSeekTarget = NaN;
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
@@ -214,19 +218,25 @@ function PlaybackController() {
             return;
         }
 
-        internalSeek = (internal === true);
-
-        if (!internalSeek) {
+        if (internal === true) {
+            internalSeekTarget = time;
+        } else {
+            internalSeekTarget = NaN;
             seekTarget = time;
         }
-        logger.info('Requesting seek to time: ' + time + (internalSeek ? ' (internal)' : ''));
+        logger.info('Requesting seek to time: ' + time + (internal === true ? ' (internal)' : ''));
 
         // We adjust the current latency. If catchup is enabled we will maintain this new latency
         if (isDynamic && adjustLiveDelay) {
             _adjustLiveDelayAfterUserInteraction(time);
         }
 
-        videoModel.setCurrentTime(time, stickToBuffered);
+        const appliedTime = videoModel.setCurrentTime(time, stickToBuffered);
+
+        // With stickToBuffered, we won't necessarily get the time we asked for so adjust internalSeekTarget.
+        if (internal === true && !isNaN(appliedTime)) {
+            internalSeekTarget = appliedTime;
+        }
     }
 
     /**
@@ -654,7 +664,7 @@ function PlaybackController() {
 
     function _onPlaybackPlaying() {
         logger.info('Native video element event: playing');
-        internalSeek = false;
+        internalSeekTarget = NaN;
         eventBus.trigger(Events.PLAYBACK_PLAYING, { playingTime: getTime() });
     }
 
@@ -664,12 +674,19 @@ function PlaybackController() {
     }
 
     function _onPlaybackSeeking() {
-        // Check if internal seeking to be ignored
-        if (internalSeek) {
-            return;
+        let seekTime = getTime();
+
+        if (!isNaN(internalSeekTarget)) {
+            // If the seekTime has changed since the internal seek was started, we will think that it's a user seek.
+            // Because we're writing to the video element and then reading, it might get rounded
+            // so there's a tolerance to compare these.
+            if (Math.abs(internalSeekTarget - seekTime) <= INTERNAL_SEEK_POSITION_TOLERANCE) {
+                return;
+            }
+            // The element is not where the internal seek aimed for, so it was superseded by a seek from outside.
+            internalSeekTarget = NaN;
         }
 
-        let seekTime = getTime();
         // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
         // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
         if (!isNaN(seekTarget) && seekTarget !== seekTime) {
@@ -687,7 +704,7 @@ function PlaybackController() {
 
     function _onPlaybackSeeked() {
         logger.info('Native video element event: seeked');
-        internalSeek = false;
+        internalSeekTarget = NaN;
         eventBus.trigger(Events.PLAYBACK_SEEKED, {
             streamId: streamInfo.id
         });
