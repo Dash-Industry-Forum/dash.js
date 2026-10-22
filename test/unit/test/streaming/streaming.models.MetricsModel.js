@@ -131,6 +131,13 @@ describe('MetricsModel', function () {
             expect(entry).to.not.have.own.property('cmsd');
         });
 
+        it('should set _cmsd to null if no CMSD data is provided', function () {
+            metricsModel.addHttpRequest(request, { url: request.url, status: 200, headers: {} }, null);
+            const entry = metricsModel.getMetricsFor(Constants.VIDEO).HttpList[0];
+
+            expect(entry._cmsd).to.be.null;
+        });
+
         it('should expose CMSD data via the deprecated cmsd getter', function () {
             metricsModel.addHttpRequest(request, { url: request.url, status: 200, headers: {} }, null, cmsd);
             const entry = metricsModel.getMetricsFor(Constants.VIDEO).HttpList[0];
