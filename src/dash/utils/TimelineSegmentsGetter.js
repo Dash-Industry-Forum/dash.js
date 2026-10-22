@@ -166,7 +166,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         // A dynamic manifest can be read while the SegmentTimeline is absent or
         // carries no S elements yet. Report that nothing is available instead of
         // throwing; the next manifest refresh recovers.
-        if (!timeline || !timeline.S) {
+        if (!timeline || !timeline.S || timeline.S.length === 0) {
             return { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
         }
 
@@ -225,7 +225,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
         // Nothing to iterate while the timeline is absent or has no S elements
         // yet; leave the caller with no segment rather than throwing.
-        if (!segmentTimeline || !segmentTimeline.S) {
+        if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
             return;
         }
 

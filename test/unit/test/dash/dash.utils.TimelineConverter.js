@@ -759,6 +759,28 @@ describe('TimelineConverter', function () {
                     clock.restore();
                 });
 
+                it('with single period and a SegmentTimeline without S elements', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    const manifestRep = dummyRep.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0];
+
+                    manifestRep.SegmentTemplate = Object.assign({}, manifestRep.SegmentTemplate, { SegmentTimeline: {} });
+                    streamOneMock.setRepresentation(dummyRep);
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.NaN; // jshint ignore:line
+                    expect(range.end).to.be.NaN; // jshint ignore:line
+                    clock.restore();
+                });
+
                 it('with single period and period start greater than 0', function () {
                     const clock = sinon.useFakeTimers(new Date().getTime());
                     const tsbd = 30;

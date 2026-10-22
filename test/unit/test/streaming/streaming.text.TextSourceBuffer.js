@@ -4,8 +4,11 @@ import Errors from '../../../../src/core/errors/Errors.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import CustomTimeRanges from '../../../../src/streaming/utils/CustomTimeRanges.js';
+import BoxParser from '../../../../src/streaming/utils/BoxParser.js';
+import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 
 import chai from 'chai';
+import sinon from 'sinon';
 
 const expect = chai.expect;
 
@@ -115,6 +118,24 @@ describe('TextSourceBuffer', function () {
             // Buffered range is in presentation time: timestampOffset + cts / timescale
             expect(buffer.buffered.start(0)).to.equal(TIMESTAMP_OFFSET + BASE_MEDIA_DECODE_TIME / TIMESCALE);
             expect(buffer.buffered.end(0)).to.equal(TIMESTAMP_OFFSET + (BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
+        });
+    });
+
+    describe('embedded CEA-608', function () {
+        it('should not parse media segments when the init segment yields no timescale', function () {
+            const embeddedContext = {};
+            const getSamplesInfoSpy = sinon.spy(BoxParser(embeddedContext).getInstance(), 'getSamplesInfo');
+            const buffer = TextSourceBuffer(embeddedContext).create({ errHandler: errorHandlerMock, streamInfo: { id: 'streamId' } });
+            buffer.initialize();
+
+            // A WebM EBML header: not ISOBMFF, so no mdhd and a NaN timescale
+            const webmBytes = new Uint8Array([0x1A, 0x45, 0xDF, 0xA3, 0x9F, 0x42, 0x86, 0x81]).buffer;
+            const representation = { mediaInfo: { type: 'video', codec: 'video/webm;codecs="vp9"' } };
+            buffer.append(webmBytes, { segmentType: HTTPRequest.INIT_SEGMENT_TYPE, representation });
+            buffer.append(webmBytes, { segmentType: HTTPRequest.MEDIA_SEGMENT_TYPE, representation });
+
+            expect(getSamplesInfoSpy.called).to.be.false;
+            buffer.reset();
         });
     });
 });

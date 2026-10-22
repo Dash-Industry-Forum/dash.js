@@ -435,7 +435,7 @@ function TextSourceBuffer(config) {
 
         // Init segment
         if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
-            if (embeddedTimescale === 0) {
+            if (!embeddedTimescale) {
                 embeddedTimescale = boxParser.getMediaTimescaleFromMoov(bytes);
             }
         }
@@ -443,7 +443,7 @@ function TextSourceBuffer(config) {
         // MediaSegment
         else if (chunk.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
 
-            if (embeddedTimescale === 0) {
+            if (!embeddedTimescale) {
                 logger.warn('CEA-608: No timescale for embeddedTextTrack yet');
                 return;
             }

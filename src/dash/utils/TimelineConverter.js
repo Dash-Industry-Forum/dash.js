@@ -338,6 +338,13 @@ function TimelineConverter() {
         const base = representation.SegmentTemplate || representation.SegmentList;
         const timeline = base.SegmentTimeline;
         const timescale = base.timescale;
+
+        // A dynamic manifest can be read before its SegmentTimeline has any S
+        // elements. The caller ignores a NaN range.
+        if (!timeline || !timeline.S || timeline.S.length === 0) {
+            return { start: NaN, end: NaN };
+        }
+
         const segments = timeline.S;
         const range = { start: 0, end: 0 };
         const segmentTime = segments[0].t;

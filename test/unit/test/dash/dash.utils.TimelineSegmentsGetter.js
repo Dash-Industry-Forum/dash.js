@@ -312,6 +312,14 @@ describe('TimelineSegmentsGetter', () => {
             expect(info.numberOfSegments).to.equal(0);
         });
 
+        it('should report no last signaled segment when the S list is empty', () => {
+            const representation = representationWithTimeline({ S: [] });
+            const info = timelineSegmentsGetter.getMediaFinishedInformation(representation);
+
+            expect(info.numberOfSegments).to.equal(0);
+            expect(info.mediaTimeOfLastSignaledSegment).to.be.NaN; // jshint ignore:line
+        });
+
         it('should return null rather than throw when looking a segment up by time', () => {
             const representation = representationWithTimeline({});
             const seg = timelineSegmentsGetter.getSegmentByTime(representation, 1.0);
