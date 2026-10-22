@@ -8,6 +8,9 @@ import AbrControllerMock from '../../mocks/AbrControllerMock.js';
 import MediaPlayerModelMock from '../../mocks/MediaPlayerModelMock.js';
 import TextControllerMock from '../../mocks/TextControllerMock.js';
 import RepresentationControllerMock from '../../mocks/RepresentationControllerMock.js';
+import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
+import sinon from 'sinon';
 
 const voHelper = new VoHelper();
 import {expect} from 'chai';
@@ -213,4 +216,75 @@ describe('ScheduleController', function () {
         })
 
     })
+
+    describe('scheduling with a gap in the buffer', () => {
+        let clock, eventBus, fragmentNeededSpy;
+        const toRanges = (r) => ({ length: r.length, start: (i) => r[i][0], end: (i) => r[i][1] });
+
+        function createScheduleController(bufferingTime) {
+            streamInfo = voHelper.getDummyStreamInfo();
+            dashMetrics = new DashMetricsMock();
+            abrController = new AbrControllerMock();
+            mediaPlayerModel = new MediaPlayerModelMock();
+            representationController = new RepresentationControllerMock();
+
+            // Contiguous buffer level from currentTime 9 to the start of the gap at 16
+            dashMetrics.currentBufferLevel = 7;
+            abrController.handlePendingManualQualitySwitch = () => false;
+            abrController.isPlayingAtTopQuality = () => false;
+            mediaPlayerModel.getScheduleTimeout = () => 500;
+            mediaPlayerModel.getBufferTimeDefaultUnadjusted = () => 18;
+            representationController.getCurrentRepresentation = () => ({ id: 'v1', segmentDuration: 4, mediaInfo: { streamInfo } });
+
+            scheduleController = ScheduleController(context).create({
+                streamInfo,
+                type: Constants.VIDEO,
+                dashMetrics,
+                abrController,
+                mediaPlayerModel,
+                representationController,
+                settings,
+                bufferController: {
+                    getIsBufferingCompleted: () => false,
+                    getBuffer: () => ({ getAllBufferRanges: () => toRanges([[0, 16], [24, 40]]) })
+                },
+                playbackController: {
+                    getTime: () => 9,
+                    isPaused: () => false,
+                    getLowLatencyModeEnabled: () => false
+                },
+                getBufferingTime: () => bufferingTime
+            });
+            scheduleController.initialize(false);
+            scheduleController.setLastInitializedRepresentationId('v1');
+        }
+
+        beforeEach(() => {
+            clock = sinon.useFakeTimers();
+            eventBus = EventBus(context).getInstance();
+            fragmentNeededSpy = sinon.spy();
+            eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, fragmentNeededSpy);
+        });
+
+        afterEach(() => {
+            eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, fragmentNeededSpy);
+            clock.restore();
+        });
+
+        it('should not request more segments if the media behind the gap already reaches the buffer target', () => {
+            createScheduleController(40);
+            scheduleController.startScheduleTimer(0);
+            clock.tick(1);
+
+            expect(fragmentNeededSpy.notCalled).to.be.true;
+        });
+
+        it('should request more segments if the buffered media until the next request is below the buffer target', () => {
+            createScheduleController(16);
+            scheduleController.startScheduleTimer(0);
+            clock.tick(1);
+
+            expect(fragmentNeededSpy.calledOnce).to.be.true;
+        });
+    });
 });

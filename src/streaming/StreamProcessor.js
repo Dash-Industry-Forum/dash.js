@@ -185,6 +185,7 @@ function StreamProcessor(config) {
             bufferController,
             dashMetrics,
             fragmentModel,
+            getBufferingTime: () => bufferingTime,
             mediaController,
             mediaPlayerModel,
             mimeType,

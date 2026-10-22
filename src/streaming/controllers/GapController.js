@@ -254,6 +254,24 @@ function GapController() {
     }
 
     /**
+     * The buffered ranges of the video element are the intersection of all SourceBuffers. A gap in only one track hides the ranges of that track after the gap.
+     * Check the SourceBuffer of each track separately and return the furthest start of a range following a gap.
+     * @param {number} currentTime
+     * @private
+     * @return {number}
+     */
+    function _getNextRangeStartOfTracks(currentTime) {
+        return streamController.getActiveStreamProcessors()
+            .filter(sp => sp.getType() === Constants.VIDEO || sp.getType() === Constants.AUDIO)
+            .reduce((nextStart, sp) => {
+                const buffer = sp.getBuffer();
+                const trackRanges = buffer ? buffer.getAllBufferRanges() : null;
+                const idx = _getNextRangeIndex(trackRanges, currentTime);
+                return Number.isInteger(idx) ? Math.max(isNaN(nextStart) ? 0 : nextStart, trackRanges.start(idx)) : nextStart;
+            }, NaN);
+    }
+
+    /**
      * Check if the currentTime exist within the buffered range
      * @param {object} ranges
      * @param {number} currentTime
@@ -323,12 +341,16 @@ function GapController() {
 
         // Get the range just after current time position
         nextRangeIndex = _getNextRangeIndex(ranges, currentTime);
+        const isElementRange = Number.isInteger(nextRangeIndex);
+        const nextRangeStart = isElementRange ? ranges.start(nextRangeIndex) : _getNextRangeStartOfTracks(currentTime);
+        // A range of a single track is not part of the buffered ranges of the video element. The other tracks still need to load data for the new position, so we do a regular seek.
+        let isTrackRange = false;
 
-        if (!isNaN(nextRangeIndex)) {
-            const start = ranges.start(nextRangeIndex);
-            const gap = start - currentTime;
+        if (!isNaN(nextRangeStart)) {
+            const gap = nextRangeStart - currentTime;
             if (gap > 0 && (gap <= smallGapLimit || jumpLargeGaps)) {
-                seekToPosition = start;
+                seekToPosition = nextRangeStart;
+                isTrackRange = !isElementRange;
             }
         }
 
@@ -365,7 +387,7 @@ function GapController() {
                 const timeToWait = !isDynamic ? 0 : Math.max(0, timeUntilGapEnd - GAP_JUMP_WAITING_TIME_OFFSET) * 1000;
 
                 jumpTimeoutHandler = window.setTimeout(() => {
-                    playbackController.seek(seekToPosition + seekOffset, true, true);
+                    playbackController.seek(seekToPosition + seekOffset, !isTrackRange, !isTrackRange);
                     const activeStream = streamController.getActiveStream();
                     if (activeStream) {
                         logger.warn(`Jumping gap occuring in period ${activeStream.getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${(seekToPosition + seekOffset) - start}`);

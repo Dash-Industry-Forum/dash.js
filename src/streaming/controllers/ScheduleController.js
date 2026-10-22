@@ -46,6 +46,7 @@ function ScheduleController(config) {
     const dashMetrics = config.dashMetrics;
     const eventBus = EventBus(context).getInstance();
     const fragmentModel = config.fragmentModel;
+    const getBufferingTime = config.getBufferingTime || (() => NaN);
     const mediaPlayerModel = config.mediaPlayerModel;
     const playbackController = config.playbackController;
     const representationController = config.representationController
@@ -227,6 +228,32 @@ function ScheduleController(config) {
     }
 
     /**
+     * Returns the buffered time between the current playback time and the end of the last requested segment.
+     * In contrast to the buffer level this includes media behind a gap in the buffer, e.g. caused by segments without samples.
+     * Otherwise, we would continue buffering until the end of the content as the buffer level never reaches the buffer target.
+     * @return {number}
+     * @private
+     */
+    function _getBufferedTimeUntilBufferingTime() {
+        try {
+            const buffer = bufferController.getBuffer();
+            const ranges = buffer ? buffer.getAllBufferRanges() : null;
+            const bufferingTime = getBufferingTime();
+            if (!ranges || isNaN(bufferingTime)) {
+                return 0;
+            }
+            const currentTime = playbackController.getTime() || 0;
+            let bufferedTime = 0;
+            for (let i = 0; i < ranges.length; i++) {
+                bufferedTime += Math.max(0, Math.min(ranges.end(i), bufferingTime) - Math.max(ranges.start(i), currentTime));
+            }
+            return bufferedTime;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    /**
      * Check if the current buffer level is below our buffer target.
      * @return {boolean}
      * @private
@@ -237,7 +264,7 @@ function ScheduleController(config) {
             return true;
         }
         let segmentDurationToAddToBufferLevel = currentRepresentation && currentRepresentation.segmentDuration && !isNaN(currentRepresentation.segmentDuration) ? currentRepresentation.segmentDuration : 0;
-        const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+        const bufferLevel = Math.max(dashMetrics.getCurrentBufferLevel(type), _getBufferedTimeUntilBufferingTime());
         const bufferTarget = getBufferTarget();
 
         // If the buffer target is smaller than the segment duration we do not take it into account. For low latency playback do not delay the buffering.
