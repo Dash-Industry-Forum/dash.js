@@ -672,9 +672,6 @@ function ProtectionController(config) {
             return;
         }
 
-        // Enforce maximum number of open MediaKeySessions, if settings are provided
-        _enforceMediaKeySessionLimit();
-
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null);
         if (initDataForKS) {
 
@@ -688,6 +685,9 @@ function ProtectionController(config) {
                 return;
             }
 
+            // Enforce maximum number of open MediaKeySessions, if settings are provided
+            _enforceMediaKeySessionLimit();
+
             try {
                 keySystemMetadata.initData = initDataForKS;
                 protectionModel.createKeySession(keySystemMetadata);
@@ -698,6 +698,7 @@ function ProtectionController(config) {
                 });
             }
         } else if (keySystemMetadata && keySystemMetadata.initData) {
+            _enforceMediaKeySessionLimit();
             protectionModel.createKeySession(keySystemMetadata);
         } else {
             eventBus.trigger(events.KEY_SESSION_CREATED, {
@@ -712,7 +713,8 @@ function ProtectionController(config) {
      * reports every key ID referenced by this key system's PSSH as usable.
      * @description Deliberately conservative: unlike areKeyIdsUsable(), this never assumes a key
      * is usable when there is any uncertainty, since skipping incorrectly would prevent acquiring
-     * a still-missing key. Only an explicit 'usable' status for every referenced key ID skips the request.
+     * a still-missing key. Only an explicit 'usable' status for every referenced key ID, reported by a session
+     * that is still open, skips the request. The global keyStatusMap is not used as it keeps entries of closed sessions.
      * @param {object} keySystemMetadata
      * @return {boolean}
      * @private
@@ -723,11 +725,14 @@ function ProtectionController(config) {
         }
 
         const keyIds = CommonEncryption.getKeyIdsForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null);
-        if (!keyIds || keyIds.length === 0 || keyStatusMap.size === 0) {
+        if (!keyIds || keyIds.length === 0) {
             return false;
         }
 
-        const allKeyIdsUsable = keyIds.every((keyId) => keyStatusMap.get(keyId) === ProtectionConstants.MEDIA_KEY_STATUSES.USABLE);
+        const sessionTokens = protectionModel.getSessionTokens() || [];
+        const allKeyIdsUsable = keyIds.every((keyId) => sessionTokens.some((sessionToken) => {
+            return sessionToken.keyStatusMap && sessionToken.keyStatusMap.get(keyId) === ProtectionConstants.MEDIA_KEY_STATUSES.USABLE;
+        }));
         if (allKeyIdsUsable) {
             logger.debug('DRM: Skipping key session creation - all key IDs referenced by the init data are already usable');
         }
@@ -896,6 +901,10 @@ function ProtectionController(config) {
      */
     function closeKeySession(sessionToken) {
         _checkConfig();
+        // The token stays in the session list until the close completes, its keys must not count as usable meanwhile
+        if (sessionToken) {
+            sessionToken.keyStatusMap = null;
+        }
         protectionModel.closeKeySession(sessionToken);
     }
 
@@ -1486,6 +1495,9 @@ function ProtectionController(config) {
             }
 
             e.sessionToken.hasTriggeredKeyStatusMapUpdate = true;
+            // Each update carries the complete status list of the session, so the per-session map is replaced
+            const sessionKeyStatusMap = new Map();
+            e.sessionToken.keyStatusMap = sessionKeyStatusMap;
             const parsedKeyStatuses = e.parsedKeyStatuses;
             const ua = Utils.parseUserAgent();
             const isEdgeBrowser = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'edge';
@@ -1499,6 +1511,7 @@ function ProtectionController(config) {
                 const keyIdInHex = Utils.bufferSourceToHex(keyStatus.keyId).slice(0, 32);
                 if (keyIdInHex && keyIdInHex !== '') {
                     keyStatusMap.set(keyIdInHex, keyStatus.status);
+                    sessionKeyStatusMap.set(keyIdInHex, keyStatus.status);
                 }
             })
             eventBus.trigger(events.KEY_STATUSES_MAP_UPDATED, { keyStatusMap });

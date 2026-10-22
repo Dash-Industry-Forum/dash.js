@@ -230,33 +230,24 @@ class CommonEncryption {
 
             systemID = systemID.toLowerCase();
 
-            /* Version 1+ PSSH boxes signal an explicit list of key IDs before the data */
+            /* Version 1+ PSSH boxes signal an explicit list of key IDs before the data.
+             * A malformed key ID list only leaves keyIds empty, the box itself is still usable as init data */
             let keyIds = [];
-            if (version === 1) {
-                if (byteCursor + 4 > nextBox || byteCursor + 4 > dv.buffer.byteLength) {
-                    byteCursor = nextBox;
-                    continue;
-                }
+            if (version === 1 && byteCursor + 4 <= nextBox && byteCursor + 4 <= dv.buffer.byteLength) {
                 const kidCount = dv.getUint32(byteCursor);
                 byteCursor += 4;
 
                 const kidListEnd = byteCursor + (kidCount * 16);
-                if (kidListEnd > nextBox || kidListEnd > dv.buffer.byteLength) {
-                    byteCursor = nextBox;
-                    continue;
-                }
-
-                for (let k = 0; k < kidCount; k++) {
-                    const keyId = Utils.normalizeKeyId(new Uint8Array(dv.buffer, byteCursor, 16));
-                    if (keyId) {
-                        keyIds.push(keyId);
+                if (kidListEnd <= nextBox && kidListEnd <= dv.buffer.byteLength) {
+                    for (let k = 0; k < kidCount; k++) {
+                        const keyId = Utils.normalizeKeyId(new Uint8Array(dv.buffer, byteCursor, 16));
+                        if (keyId) {
+                            keyIds.push(keyId);
+                        }
+                        byteCursor += 16;
                     }
-                    byteCursor += 16;
                 }
             }
-
-            /* PSSH Data Size */
-            byteCursor += 4;
 
             /* PSSH Data */
             pssh[systemID] = {

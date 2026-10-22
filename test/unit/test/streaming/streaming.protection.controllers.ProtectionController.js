@@ -238,11 +238,15 @@ describe('ProtectionController', function () {
             return bytes;
         }
 
+        // Reports the status from a new open session, like the CDM does on keystatuseschange
         function setKeyStatus(keyId, status) {
+            const sessionToken = {};
+            protectionModelMock.getSessionTokens().push(sessionToken);
             protectionController.updateKeyStatusesMap({
-                sessionToken: {},
+                sessionToken,
                 parsedKeyStatuses: [{ keyId: hexToUint8Array(keyId), status }]
             });
+            return sessionToken;
         }
 
         beforeEach(function () {
@@ -252,6 +256,7 @@ describe('ProtectionController', function () {
             const protectionKeyControllerMock = new ProtectionKeyControllerMock();
             settingsMock = { get: () => ({ streaming: { protection: { skipLicenseRequestsForUsableKeys: true } } }) };
             protectionModelMock = new ProtectionModelMock({ events: ProtectionEvents, eventBus: eventBus });
+            sinon.spy(protectionModelMock, 'createKeySession');
             protectionController = ProtectionController(context).create({
                 protectionKeyController: protectionKeyControllerMock,
                 events: ProtectionEvents,
@@ -279,7 +284,7 @@ describe('ProtectionController', function () {
 
             protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
 
-            expect(protectionModelMock.getSessionTokens()).to.be.empty;
+            expect(protectionModelMock.createKeySession.called).to.be.false;
         });
 
         it('should create a session when one of several referenced key IDs is missing (multi-key case)', function () {
@@ -289,7 +294,7 @@ describe('ProtectionController', function () {
 
             protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
 
-            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
         });
 
         ['expired', 'output-restricted', 'status-pending', 'released', 'internal-error'].forEach((status) => {
@@ -300,7 +305,7 @@ describe('ProtectionController', function () {
 
                 protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
 
-                expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+                expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
             });
         });
 
@@ -310,7 +315,7 @@ describe('ProtectionController', function () {
 
             protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
 
-            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
         });
 
         it('should create a session when the selected key system has no matching PSSH box', function () {
@@ -319,7 +324,7 @@ describe('ProtectionController', function () {
 
             protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
 
-            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
         });
 
         it('should create a session when the key status map is still empty', function () {
@@ -328,7 +333,7 @@ describe('ProtectionController', function () {
 
             protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
 
-            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
         });
 
         it('should never skip when the setting is disabled, even if all keys are usable', function () {
@@ -339,7 +344,7 @@ describe('ProtectionController', function () {
 
             protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
 
-            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
         });
 
         it('should never skip when the setting is left unspecified in the config object', function () {
@@ -350,7 +355,7 @@ describe('ProtectionController', function () {
 
             protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
 
-            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
         });
 
         it('should leave FairPlay/sinf init data (no matching PSSH box) unaffected by the guard', function () {
@@ -362,7 +367,50 @@ describe('ProtectionController', function () {
 
             protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'fairplay-kid', sessionType: 'temporary' });
 
-            expect(protectionModelMock.getSessionTokens()).to.have.lengthOf(1);
+            expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
+        });
+    
+        it('should create a session when the usable keys belong to a session that has been closed', function () {
+            CommonEncryption.getKeyIdsForKeySystem = () => [KID_1];
+            const sessionToken = setKeyStatus(KID_1, 'usable');
+            // The real model drops the token from its list once session.closed resolves
+            protectionModelMock.getSessionTokens().splice(protectionModelMock.getSessionTokens().indexOf(sessionToken), 1);
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
+        });
+
+        it('should create a session when the usable keys belong to a session that is being closed', function () {
+            CommonEncryption.getKeyIdsForKeySystem = () => [KID_1];
+            const sessionToken = setKeyStatus(KID_1, 'usable');
+            // The mock model keeps the token in its list, just like the real model does until session.closed resolves
+            protectionModelMock.closeKeySession = () => {};
+            protectionController.closeKeySession(sessionToken);
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.createKeySession.calledOnce).to.be.true;
+        });
+
+        it('should not close the oldest session when the request is skipped', function () {
+            settingsMock.get = () => ({
+                streaming: {
+                    protection: {
+                        skipLicenseRequestsForUsableKeys: true,
+                        keepProtectionMediaKeys: true,
+                        keepProtectionMediaKeysMaximumOpenSessions: 1
+                    }
+                }
+            });
+            CommonEncryption.getKeyIdsForKeySystem = () => [KID_1];
+            setKeyStatus(KID_1, 'usable');
+            const closeSpy = sinon.spy(protectionModelMock, 'closeKeySession');
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: null, sessionType: 'temporary' });
+
+            expect(protectionModelMock.createKeySession.called).to.be.false;
+            expect(closeSpy.called).to.be.false;
         });
     });
 

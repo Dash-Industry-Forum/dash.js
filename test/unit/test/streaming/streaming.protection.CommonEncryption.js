@@ -271,21 +271,21 @@ describe('CommonEncryption', () => {
             expect(CommonEncryption.getKeyIdsForKeySystem(playreadyKeySystem, initData)).to.be.null;
         })
 
-        it('should skip a version 1 box whose key ID list overflows the box boundary', () => {
+        it('should keep a version 1 box whose key ID list overflows the box boundary, without key IDs', () => {
             const initData = buildPsshBox({ systemId: WIDEVINE_SYSTEM_ID, version: 1, keyIds: [KID_1] });
             // Box only has room for 1 key ID; claim there are 5 so the list overruns the box
             new DataView(initData).setUint32(28, 5);
 
-            expect(CommonEncryption.parsePSSHList(initData)).to.deep.equal({});
-            expect(CommonEncryption.getPSSHForKeySystem(widevineKeySystem, initData)).to.be.null;
-            expect(CommonEncryption.getKeyIdsForKeySystem(widevineKeySystem, initData)).to.be.null;
+            expect(CommonEncryption.getPSSHForKeySystem(widevineKeySystem, initData)).to.deep.equal(initData);
+            expect(CommonEncryption.getKeyIdsForKeySystem(widevineKeySystem, initData)).to.deep.equal([]);
         })
 
-        it('should skip a truncated version 1 box that cannot even hold the key ID count', () => {
+        it('should keep a truncated version 1 box that cannot even hold the key ID count, without key IDs', () => {
             const fullBox = buildPsshBox({ systemId: WIDEVINE_SYSTEM_ID, version: 1, keyIds: [KID_1] });
             const truncated = fullBox.slice(0, 29); // cuts into the KID_count field
 
-            expect(CommonEncryption.parsePSSHList(truncated)).to.deep.equal({});
+            expect(CommonEncryption.getPSSHForKeySystem(widevineKeySystem, truncated)).to.deep.equal(truncated);
+            expect(CommonEncryption.getKeyIdsForKeySystem(widevineKeySystem, truncated)).to.deep.equal([]);
         })
 
     });
