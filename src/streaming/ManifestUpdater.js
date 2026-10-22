@@ -119,7 +119,7 @@ function ManifestUpdater() {
     function resetInitialSettings() {
         refreshDelay = NaN;
         isUpdating = false;
-        isPaused = true;
+        isPaused = !settings.get().streaming.scheduling.scheduleWhilePaused;
         isStopped = false;
         _stopManifestRefreshTimer();
     }

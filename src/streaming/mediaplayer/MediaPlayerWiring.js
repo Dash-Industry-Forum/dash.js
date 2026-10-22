@@ -622,7 +622,8 @@ function MediaPlayerWiring() {
                 adapter: state.adapter,
                 manifestLoader,
                 errHandler,
-                contentSteeringController: state.contentSteeringController
+                contentSteeringController: state.contentSteeringController,
+                settings: state.settings
             });
 
             state.offlineController = detectedOfflineController(context).create({

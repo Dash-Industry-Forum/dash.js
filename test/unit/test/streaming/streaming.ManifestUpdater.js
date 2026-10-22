@@ -2,6 +2,7 @@ import ManifestUpdater from './../../../../src/streaming/ManifestUpdater.js';
 import Events from '../../../../src/core/events/Events.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Errors from '../../../../src/core/errors/Errors.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import Settings from '../../../../src/core/Settings.js';
 import DashConstants from '../../../../src/dash/constants/DashConstants.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
@@ -40,6 +41,17 @@ describe('ManifestUpdater', function () {
     });
 
     manifestUpdater.initialize();
+
+    // Manifest updates arm the refresh timer. Fake timers keep it from firing after a test has finished.
+    let clock;
+
+    beforeEach(function () {
+        clock = sinon.useFakeTimers();
+    });
+
+    afterEach(function () {
+        clock.restore();
+    });
 
     it('should not call MANIFEST_UPDATED if a loading error occurs, no error should be sent', function () {
         const spy = chai.spy();
@@ -261,6 +273,108 @@ describe('ManifestUpdater', function () {
 
             eventBus.off(Events.DYNAMIC_TO_STATIC, dynamicToStaticSpy);
             eventBus.off(Events.MANIFEST_UPDATED, manifestUpdatedSpy);
+        });
+    });
+
+    describe('manifest refresh timer', function () {
+        const refreshContext = {};
+        const refreshEventBus = EventBus(refreshContext).getInstance();
+        const refreshSettings = Settings(refreshContext).getInstance();
+        const refreshManifestLoaderMock = new ManifestLoaderMock();
+        const minimumUpdatePeriod = 2;
+        let refreshManifestUpdater, updatePeriodStub, loadStub;
+
+        // The initial pause state is derived from the settings, so they have to be applied before calling this function
+        function createManifestUpdater() {
+            refreshManifestUpdater = ManifestUpdater(refreshContext).create();
+            refreshManifestUpdater.setConfig({
+                adapter: adapterMock,
+                manifestModel: manifestModelMock,
+                manifestLoader: refreshManifestLoaderMock,
+                errHandler: errHandlerMock,
+                contentSteeringController: contentSteeringControllerMock,
+                settings: refreshSettings
+            });
+            refreshManifestUpdater.initialize();
+        }
+
+        function loadDynamicManifest() {
+            const manifest = { type: DashConstants.DYNAMIC, url: 'http://example.com/live.mpd', loadedTime: new Date() };
+            manifestModelMock.setValue(manifest);
+            refreshEventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest });
+        }
+
+        function disableScheduleWhilePaused() {
+            refreshSettings.update({ streaming: { scheduling: { scheduleWhilePaused: false } } });
+        }
+
+        beforeEach(function () {
+            updatePeriodStub = sinon.stub(adapterMock, 'getManifestUpdatePeriod').returns(minimumUpdatePeriod);
+            loadStub = sinon.stub(refreshManifestLoaderMock, 'load');
+        });
+
+        afterEach(function () {
+            refreshManifestUpdater.reset();
+            updatePeriodStub.restore();
+            loadStub.restore();
+            manifestModelMock.setValue(null);
+            refreshSettings.reset();
+        });
+
+        it('should refresh a dynamic manifest before playback has started if scheduleWhilePaused is enabled', function () {
+            createManifestUpdater();
+            loadDynamicManifest();
+
+            clock.tick(minimumUpdatePeriod * 1000);
+
+            expect(loadStub.calledOnceWith('http://example.com/live.mpd')).to.be.true;
+        });
+
+        it('should not refresh a dynamic manifest before playback has started if scheduleWhilePaused is disabled', function () {
+            disableScheduleWhilePaused();
+            createManifestUpdater();
+            loadDynamicManifest();
+
+            clock.tick(minimumUpdatePeriod * 1000);
+
+            expect(loadStub.called).to.be.false;
+        });
+
+        it('should keep refreshing during playback if scheduleWhilePaused is disabled', function () {
+            disableScheduleWhilePaused();
+            createManifestUpdater();
+            loadDynamicManifest();
+
+            refreshEventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
+            clock.tick(minimumUpdatePeriod * 1000);
+            refreshEventBus.trigger(Events.STREAMS_COMPOSED);
+            loadDynamicManifest();
+            clock.tick(minimumUpdatePeriod * 1000);
+
+            expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should keep refreshing while paused if scheduleWhilePaused is enabled', function () {
+            createManifestUpdater();
+            loadDynamicManifest();
+            refreshEventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
+
+            refreshEventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
+            clock.tick(minimumUpdatePeriod * 1000);
+
+            expect(loadStub.calledOnce).to.be.true;
+        });
+
+        it('should stop refreshing while paused if scheduleWhilePaused is disabled', function () {
+            disableScheduleWhilePaused();
+            createManifestUpdater();
+            loadDynamicManifest();
+            refreshEventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
+
+            refreshEventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
+            clock.tick(minimumUpdatePeriod * 1000);
+
+            expect(loadStub.called).to.be.false;
         });
     });
 
