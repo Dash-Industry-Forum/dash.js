@@ -34,7 +34,6 @@ import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import {normalizeBcp47} from '../utils/BCP47Utils.js';
-import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 import getNChanFromAudioChannelConfig from '../utils/AudioChannelConfiguration.js';
@@ -151,15 +150,15 @@ function MediaController() {
             logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, localSettings)
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, {lang: getAvailablePreferredLanguages(filteredTracks, localSettings)});
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, localSettings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, localSettings);
             if (!(type === Constants.AUDIO && !!lastSelectedTracks[type])) {
                 filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsRole, localSettings);
             }
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAccessibility, localSettings);
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, localSettings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsCodec, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, localSettings);
             logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
         }
 
@@ -201,7 +200,7 @@ function MediaController() {
                 return;
             }
         }
-        
+
         logger.info('addTrack with track.codec=\'' + track.codec + '\', track.type=\'' + track.type + '\', track.id=\'' + track.id + '\', track.index=' + track.index);
         mediaTracks.push(track);
     }
@@ -293,6 +292,10 @@ function MediaController() {
             if (settings.roles) {
                 settings.role = settings.roles[0];
                 delete settings.roles;
+            }
+
+            if (settings.viewpoint) {
+                settings.viewpoint = settings.viewpoint[0];
             }
 
             if (settings.accessibility) {
@@ -438,12 +441,62 @@ function MediaController() {
         return tracks;
     }
 
+    function getAvailablePreferredLanguages(tracks, settings) {
+        function _getAllLanguages(tracks) {
+            const languages = new Set();
+            tracks.forEach(track => {
+                if (track.lang) {
+                    languages.add(track.lang);
+                }
+            });
+            return Array.from(languages);
+        }
+
+        function _getBestLanguageMatch(langs, pref_lang) {
+            if (!pref_lang || typeof pref_lang !== 'string') {
+                return [];
+            }
+
+            const pref = normalizeBcp47(pref_lang);
+            const pick = fn => langs.filter((lang, i) => fn(normalized[i]));
+
+            // 1. exact match
+            let arr = pick(t => t === pref);
+            // 2. track is more specific than the preference (de -> de-AT, zh -> zh-cmn)
+            arr = arr.length ? arr : pick(t => t.startsWith(pref + '-'));
+            if (arr.length) {
+                return arr;
+            }
+            // 3. track is less specific than the preference, longest prefix wins (en-AU -> en, zh-Hant-TW -> zh-Hant)
+            const longestPrefix = Math.max(-1, ...normalized.filter(t => pref.startsWith(t + '-')).map(t => t.length));
+            arr = pick(t => t.length === longestPrefix && pref.startsWith(t + '-'));
+            // 4. same primary language subtag (de-CH -> de-AT, de-DE)
+            // ponytail: extlang families (zh-cmn, zh-yue) count as one language here, compare up to the extlang if that matters
+            return arr.length ? arr : pick(t => t.split('-')[0] === pref.split('-')[0]);
+        }
+
+        const prefLang = settings.lang;
+        const availableLanguages = _getAllLanguages(tracks);
+        const normalized = availableLanguages.map(lang => normalizeBcp47(lang));
+
+        if (!prefLang || prefLang instanceof RegExp) {
+            return prefLang;
+        }
+
+        const preferredLanguages = Array.isArray(prefLang) ? prefLang : [prefLang];
+        return [...new Set(preferredLanguages.flatMap(preference => _getBestLanguageMatch(availableLanguages, preference)))];
+    }
+
     function matchSettingsLang(settings, track) {
         try {
-            return !settings.lang ||
-            (settings.lang instanceof RegExp) ?
-                (track.lang.match(settings.lang)) : track.lang !== '' ?
-                    (extendedFilter(track.lang, normalizeBcp47(settings.lang)).length > 0) : false;
+            if (!settings.lang) {
+                return true;
+            }
+            if (settings.lang instanceof RegExp) {
+                return !!track.lang.match(settings.lang);
+            }
+            const trackLang = normalizeBcp47(track.lang);
+            return !!trackLang && [].concat(settings.lang).some(l => normalizeBcp47(l) === trackLang);
         } catch (e) {
             return false
         }
@@ -458,10 +511,9 @@ function MediaController() {
     }
 
     function matchSettingsViewPoint(settings, track) {
-        const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
+        return !settings.viewpoint || !!track.viewpoint.filter(function (item) {
             return _compareDescriptorType(item, settings.viewpoint);
         })[0];
-        return matchViewPoint;
     }
 
     function matchSettingsRole(settings, track, isTrackActive = false) {
@@ -493,10 +545,9 @@ function MediaController() {
     }
 
     function matchSettingsAudioChannelConfig(settings, track) {
-        let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
+        return !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
             return _compareDescriptorType(item, settings.audioChannelConfiguration);
         })[0];
-        return matchAudioChannelConfiguration;
     }
 
     function matchSettingsCodec(settings, track) {
@@ -505,26 +556,7 @@ function MediaController() {
 
     function matchSettings(settings, track, isTrackActive = false) {
         try {
-            let matchLang = false;
-
-            // If there is no language defined in the target settings we got a match
-            if (!settings.lang) {
-                matchLang = true;
-            }
-
-            // If the target language is provided as a RegExp apply match function
-            else if (settings.lang instanceof RegExp) {
-                matchLang = track.lang.match(settings.lang);
-            }
-
-            // If the track has a language and we can normalize the target language check if we got a match
-            else if (track.lang !== '') {
-                const normalizedSettingsLang = normalizeBcp47(settings.lang);
-                if (normalizedSettingsLang) {
-                    matchLang = extendedFilter(track.lang, normalizedSettingsLang).length > 0
-                }
-            }
-
+            const matchLang = matchSettingsLang(settings, track);
             const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
             const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
                 return _compareDescriptorType(item, settings.viewpoint);
@@ -904,9 +936,7 @@ function MediaController() {
     }
 
     function _trackSelectionModeHighestSelectionPriority(tracks) {
-        let tmpArr = getTracksWithHighestSelectionPriority(tracks);
-
-        return tmpArr;
+        return getTracksWithHighestSelectionPriority(tracks);
     }
 
     function _trackSelectionModeHighestBitrate(tracks) {
@@ -1003,6 +1033,8 @@ function MediaController() {
         addTrack,
         areTracksEqual,
         clearDataForStream,
+        filterTracksBySettings,
+        getAvailablePreferredLanguages,
         getCurrentTrackFor,
         getInitialSettings,
         getTracksFor,

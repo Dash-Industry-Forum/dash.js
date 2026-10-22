@@ -98,11 +98,6 @@ class HTTPRequest {
          * @public
          */
         this.trace = [];
-        /**
-         * The CMSD static and dynamic values retrieved from CMSD response headers.
-         * @public
-         */
-        this.cmsd = null;
 
         /**
          * Type of stream ("audio" | "video" etc..)
@@ -137,6 +132,20 @@ class HTTPRequest {
          * The values derived from the ResourceTimingAPI.
          */
         this._resourceTimingValues = null;
+        /**
+         * The CMSD static and dynamic values retrieved from CMSD response headers.
+         * Not part of the HttpList metric defined in ISO/IEC 23009-1 Annex D.4.3, hence private.
+         * @public
+         */
+        this._cmsd = null;
+    }
+
+    /**
+     * Prototype getter, so it is not serialised as part of the HttpList metric.
+     * @deprecated since 5.3.0, use `_cmsd` instead. Will be removed in v6.
+     */
+    get cmsd() {
+        return this._cmsd;
     }
 }
 

@@ -105,9 +105,12 @@ function SourceBufferSink(config) {
     }
 
     function _handleChangeTypeError(e) {
-        logger.error(e);
         if (typeof e?.name === 'string' && e.name === 'NotSupportedError') {
+            // Recoverable: disable changeType and reset the SourceBuffers for future track switches instead
+            logger.warn(e);
             settings.update({streaming: {buffer: {useChangeType: false, resetSourceBuffersForTrackSwitch: true}}});
+        } else {
+            logger.error(e);
         }
     }
 
@@ -145,7 +148,7 @@ function SourceBufferSink(config) {
 
         } catch (e) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-            if ((mediaInfo.type == Constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1) || (codec.indexOf('text/vtt') !== -1)) {
+            if ((mediaInfo.type === Constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1) || (codec.indexOf('text/vtt') !== -1)) {
                 return _initializeForText(streamInfo);
             }
             return Promise.reject(e);
@@ -302,18 +305,31 @@ function SourceBufferSink(config) {
 
     function abortBeforeAppend() {
         return new Promise((resolve) => {
-            _waitForUpdateEnd(() => {
-                // Save the append window, which is reset on abort().
-                const appendWindowStart = buffer.appendWindowStart;
-                const appendWindowEnd = buffer.appendWindowEnd;
-
-                if (buffer) {
-                    buffer.abort();
-                    buffer.appendWindowStart = appendWindowStart;
-                    buffer.appendWindowEnd = appendWindowEnd;
+            try {
+                if (mediaSource.readyState !== 'open') {
+                    resolve();
+                    return;
                 }
+                _waitForUpdateEnd(() => {
+                    try {
+                        // The MediaSource can transition out of 'open' while waiting for updateend
+                        if (buffer && mediaSource.readyState === 'open') {
+                            // Save the append window, which is reset on abort().
+                            const appendWindowStart = buffer.appendWindowStart;
+                            const appendWindowEnd = buffer.appendWindowEnd;
+
+                            buffer.abort();
+                            buffer.appendWindowStart = appendWindowStart;
+                            buffer.appendWindowEnd = appendWindowEnd;
+                        }
+                        resolve();
+                    } catch (e) {
+                        resolve();
+                    }
+                });
+            } catch (e) {
                 resolve();
-            });
+            }
         });
     }
 

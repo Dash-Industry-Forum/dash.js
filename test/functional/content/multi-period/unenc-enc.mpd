@@ -11,7 +11,7 @@
             <Representation id="1" mimeType="video/mp4" codecs="avc1.4d401f" width="1280" height="720" frameRate="24"
                             sar="1:1" startWithSAP="1" bandwidth="980104">
                 <SegmentTemplate timescale="12288" presentationTimeOffset="1024" duration="24576"
-                                 media="BBB_720_1M_video_$Number$.mp4" startNumber="1" endNumber="2"
+                                 media="BBB_720_1M_video_$Number$.mp4" startNumber="1"
                                  initialization="BBB_720_1M_video_init.mp4"/>
             </Representation>
         </AdaptationSet>
@@ -21,7 +21,6 @@
                 <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
                                            value="2"/>
                 <SegmentTemplate timescale="48000" duration="94175" media="BBB_32k_$Number$.mp4" startNumber="1"
-                                 endNumber="2"
                                  initialization="BBB_32k_init.mp4"/>
             </Representation>
         </AdaptationSet>

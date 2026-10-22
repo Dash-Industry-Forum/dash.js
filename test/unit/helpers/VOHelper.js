@@ -84,6 +84,12 @@ class VoHelper {
         return rep;
     }
 
+    createSegmentBaseRepresentation(type, index) {
+        const rep = this.createRepresentation(type, index);
+        rep.segmentInfoType = DashConstants.SEGMENT_BASE;
+        return rep;
+    }
+
     createTimelineRepresentation(type, index) {
         var rep = new Representation();
 

@@ -445,6 +445,199 @@ describe('AbrController', function () {
         });
     })
 
+    describe('excludeRepresentation()', function () {
+
+        it('should drop the Representation from the candidates and switch to the best one below it', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const representations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'high' },
+                { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'low' }
+            ];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+            streamProcessor.getRepresentationController = () => ({ getCurrentCompositeRepresentation: () => representations[0] });
+
+            const requested = [];
+            const onQualityChangeRequested = (e) => requested.push(e.newRepresentation.id);
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            abrCtrl.excludeRepresentation(representations[0]);
+            eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['low']);
+            expect(abrCtrl.getPossibleVoRepresentations(mediaInfo).map((rep) => rep.id)).to.have.members(['high', 'low']);
+            expect(requested).to.deep.equal(['low']);
+        });
+
+        it('should include an excluded Representation again once the exclusion expired', function () {
+            const clock = sinon.useFakeTimers();
+            try {
+                const mediaInfo = streamProcessor.getMediaInfo();
+                mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+                mediaInfo.type = Constants.VIDEO;
+                const representations = [
+                    { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'high' },
+                    { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'low' }
+                ];
+                adapterMock.getVoRepresentations = () => representations;
+                adapterMock.areMediaInfosEqual = () => true;
+
+                abrCtrl.excludeRepresentation(representations[0], 10000);
+                expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['low']);
+
+                clock.tick(10000);
+                expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.have.members(['high', 'low']);
+            } finally {
+                clock.restore();
+            }
+        });
+
+        it('should also drop Representations that depend on an excluded one', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const base = { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'base' };
+            const representations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'enhancement', dependentRepresentation: base },
+                { bitrateInKbit: 7, bandwidth: 7000, mediaInfo, id: 'other' },
+                base
+            ];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+
+            abrCtrl.excludeRepresentation(base);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['other']);
+        });
+
+        it('should keep Representations whose dependentRepresentation could not be resolved', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            // Placeholder created by DashManifestModel for a dependencyId, without mediaInfo
+            const placeholder = { id: 'missing-base', mediaInfo: null };
+            const representations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'enhancement', dependentRepresentation: placeholder },
+                { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'low' }
+            ];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+
+            abrCtrl.excludeRepresentation(representations[1]);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['enhancement']);
+        });
+
+        it('should only exclude the Representation of the given media type if ids are reused across types', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const audioMediaInfo = { streamInfo: mediaInfo.streamInfo, type: Constants.AUDIO };
+            const videoRepresentations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: '1' },
+                { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: '2' }
+            ];
+            const audioRepresentations = [
+                { bitrateInKbit: 2, bandwidth: 2000, mediaInfo: audioMediaInfo, id: '1' },
+                { bitrateInKbit: 1, bandwidth: 1000, mediaInfo: audioMediaInfo, id: '2' }
+            ];
+            adapterMock.getVoRepresentations = (info) => info === audioMediaInfo ? audioRepresentations : videoRepresentations;
+            adapterMock.areMediaInfosEqual = () => true;
+
+            abrCtrl.excludeRepresentation(videoRepresentations[0]);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['2']);
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(audioMediaInfo).map((rep) => rep.id)).to.have.members(['1', '2']);
+        });
+
+        it('should not override a newer selection when a Representation that is no longer selected is excluded', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const representations = [
+                { bitrateInKbit: 15, bandwidth: 15000, mediaInfo, id: 'C' },
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'B' },
+                { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'A' }
+            ];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+            // B's segment list load failed after we already switched to C
+            streamProcessor.getRepresentationController = () => ({ getCurrentCompositeRepresentation: () => representations[0] });
+
+            const requested = [];
+            const onQualityChangeRequested = (e) => requested.push(e.newRepresentation.id);
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            abrCtrl.excludeRepresentation(representations[1]);
+            eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.have.members(['C', 'A']);
+            expect(requested).to.be.empty;
+        });
+
+        it('should switch away if the current Representation depends on the excluded one', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const representations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'base' },
+                { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'low' }
+            ];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+            const enhancement = { id: 'enhancement', dependentRepresentation: representations[0] };
+            streamProcessor.getRepresentationController = () => ({ getCurrentCompositeRepresentation: () => enhancement });
+
+            const requested = [];
+            const onQualityChangeRequested = (e) => requested.push(e.newRepresentation.id);
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            abrCtrl.excludeRepresentation(representations[0]);
+            eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            expect(requested).to.deep.equal(['low']);
+        });
+
+        it('should keep the excluded Representation as a candidate if no other one is left', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const representations = [{ bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'only' }];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+
+            const requested = [];
+            const onQualityChangeRequested = (e) => requested.push(e.newRepresentation.id);
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            abrCtrl.excludeRepresentation(representations[0]);
+            eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['only']);
+            expect(abrCtrl.getOptimalRepresentationForBitrate(mediaInfo, 10).id).to.equal('only');
+            expect(requested).to.be.empty;
+        });
+
+        it('should apply the bitrate settings to the Representations that are not excluded', function () {
+            const mediaInfo = streamProcessor.getMediaInfo();
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+            const representations = [
+                { bitrateInKbit: 10, bandwidth: 10000, mediaInfo, id: 'high' },
+                { bitrateInKbit: 5, bandwidth: 5000, mediaInfo, id: 'low' }
+            ];
+            adapterMock.getVoRepresentations = () => representations;
+            adapterMock.areMediaInfosEqual = () => true;
+            settings.update({ streaming: { abr: { maxBitrate: { video: 7 } } } });
+
+            abrCtrl.excludeRepresentation(representations[1]);
+
+            expect(abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => rep.id)).to.deep.equal(['high']);
+        });
+    });
+
     describe('canPerformQualitySwitch()', function () {
 
         it('should return true if lastSegment is undefined', function() {

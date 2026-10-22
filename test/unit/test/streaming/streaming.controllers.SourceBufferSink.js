@@ -305,4 +305,56 @@ describe('SourceBufferSink', function () {
         });
     });
 
+    describe('Method abortBeforeAppend', function () {
+
+        beforeEach(function (done) {
+            let mediaInfo = {
+                codec: 'video/webm; codecs="vp8, vorbis"',
+                streamInfo
+            };
+
+            sink.initializeForFirstUse(mediaInfo)
+                .then(() => {
+                    expect(mediaSource.buffers).to.have.lengthOf(1);
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        });
+
+        it('should abort and restore the append window', function (done) {
+            let buffer = mediaSource.buffers[0];
+            buffer.appendWindowStart = 5;
+            buffer.appendWindowEnd = 42;
+
+            expect(buffer.aborted).to.be.false;
+            sink.abortBeforeAppend()
+                .then(() => {
+                    expect(buffer.aborted).to.be.true;
+                    expect(buffer.appendWindowStart).to.equal(5);
+                    expect(buffer.appendWindowEnd).to.equal(42);
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        });
+
+        it('should not abort if media source is not opened', function (done) {
+            mediaSource.readyState = 'closed';
+            let buffer = mediaSource.buffers[0];
+
+            expect(buffer.aborted).to.be.false;
+            sink.abortBeforeAppend()
+                .then(() => {
+                    expect(buffer.aborted).to.be.false;
+                    done();
+                })
+                .catch((e) => {
+                    done(e);
+                });
+        });
+    });
+
 });

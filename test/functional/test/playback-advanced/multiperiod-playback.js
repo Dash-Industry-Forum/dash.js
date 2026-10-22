@@ -44,6 +44,12 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             await checkIsProgressing(playerAdapter)
         });
 
+        it(`Seek back to the first period and check progressing state`, async () => {
+            // After the period transitions above we are in a later period, so this is a deterministic outer-period seek.
+            playerAdapter.seek(0);
+            await checkIsProgressing(playerAdapter)
+        });
+
         it(`Expect no critical errors to be thrown`, () => {
             checkNoCriticalErrors(playerAdapter)
         })

@@ -55,6 +55,7 @@ function TextSourceBuffer(config) {
     const ttmlParser = config.ttmlParser;
     const streamInfo = config.streamInfo;
     const settings = config.settings;
+    const timelineConverter = config.timelineConverter;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -473,7 +474,8 @@ function TextSourceBuffer(config) {
                     const fieldParser = embeddedCea608FieldParsers[fieldNr];
                     if (fieldParser) {
                         for (i = 0; i < ccData.length; i++) {
-                            fieldParser.addData(ccData[i][0] / embeddedTimescale, ccData[i][1]);
+                            const time = timelineConverter.calcPresentationTimeFromMediaTime(ccData[i][0] / embeddedTimescale, chunk.representation);
+                            fieldParser.addData(time, ccData[i][1]);
                         }
                     }
                 }

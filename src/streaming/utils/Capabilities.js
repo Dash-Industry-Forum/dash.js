@@ -31,6 +31,7 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../constants/Constants.js';
 import ProtectionConstants from '../constants/ProtectionConstants.js';
+import KeySystemMetadata from '../protection/vo/KeySystemMetadata.js';
 import ObjectUtils from './ObjectUtils.js';
 import Debug from '../../core/Debug.js';
 
@@ -130,7 +131,7 @@ function Capabilities() {
      * Check if a codec is supported by the MediaSource. We use the MediaCapabilities API or the MSE to check.
      * @param {object} basicConfiguration
      * @param {string} type
-     * @return {Promise<>}
+     * @return {Promise}
      */
     function runCodecSupportCheck(basicConfiguration, type) {
 
@@ -300,13 +301,8 @@ function Capabilities() {
                 return;
             }
                 
-            // If a systemStringPriority is defined by the application we use these values. Otherwise, we use the default system string
-            // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
-            const protDataSystemStringPriority = keySystemMetadata.protData && keySystemMetadata.protData.systemStringPriority ? keySystemMetadata.protData.systemStringPriority : null;
-            let systemString = keySystemMetadata.ks.systemString;
-
-            // Use the default values in case no values are provided by the application
-            const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : [systemString];
+            const systemStringsToApply = KeySystemMetadata.getSystemStringsToApply(
+                keySystemMetadata.ks, keySystemMetadata.protData);
 
             systemStringsToApply.forEach((systemString) => {
                 const curr = { ...genericConfiguration };

@@ -61,6 +61,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *        },
  *        streaming: {
  *            abandonLoadTimeout: 10000,
+ *            seekDurationBackoff: 0.5,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
@@ -159,15 +160,16 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                maximumAllowedDrift: 100,
  *                enableBackgroundSyncAfterSegmentDownloadError: true,
  *                defaultTimingSource: {
- *                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
- *                    value: 'http://time.akamai.com/?iso&ms'
+ *                    scheme: 'urn:mpeg:dash:utc:http-iso:2014',
+ *                    value: 'https://time.akamai.com/?iso&ms'
  *                },
  *                artificialTimeOffsetToApply: 0
  *            },
  *            scheduling: {
  *                defaultTimeout: 500,
  *                lowLatencyTimeout: 0,
- *                scheduleWhilePaused: true
+ *                scheduleWhilePaused: true,
+ *                segmentListRetryDelay: 10000
  *            },
  *            text: {
  *                defaultEnabled: true,
@@ -335,11 +337,13 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                cid: null,
  *                rtp: null,
  *                rtpSafetyFactor: 5,
+ *                maxBufferedErrorCodes: 10,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
- *                includeInRequests: ['segment', 'mpd'],
+ *                includeInRequests: ['segment', 'mpd', 'license'],
  *                version: 1,
- *                eventTargets: []
+ *                eventTargets: [],
+ *                customKeys: []
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -396,6 +400,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Changing this value will lower or increase live stream latency.
  *
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
+ *
+ * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the maximum effective segment duration across all audio, video and fragmented text adaptation sets is used instead.
+ * The effective segment duration is the partial segment duration (segment duration / k) for adaptation sets using partial segments, and the full segment duration otherwise.
+ * Consequently, the partial segment duration is only applied if all these adaptation sets use partial segments.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
  * @property {number} [liveDelay=NaN]
@@ -617,7 +625,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [enableBackgroundSyncAfterSegmentDownloadError=true]
  * Enables or disables the background sync after the player ran into a segment download error.
  *
- * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
+ * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-iso:2014',value: 'https://time.akamai.com/?iso&ms'}]
  * The default timing source to be used. The timing sources in the MPD take precedence over this one.
  *
  * @property {number} [artificialTimeOffsetToApply=0]
@@ -633,6 +641,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Default timeout between two consecutive low-latency segment scheduling attempts
  * @property {boolean} [scheduleWhilePaused=true]
  * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
+ * @property {number} [segmentListRetryDelay=10000]
+ * SegmentBase: Time in milliseconds after which the segment list (sidx) of a Representation is requested again once loading it failed.
+ * In the meantime the Representation is excluded from ABR decisions. The delay doubles with every failure in a row, up to eight times this value.
  */
 
 /**
@@ -968,6 +979,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
+ * @property {number} [maxBufferedErrorCodes=10]
+ * The maximum number of error codes (ec) buffered per CMCD v2 report destination until its next report.
+ * When the limit is reached, the oldest code is dropped. This bounds the buffer of a destination that does not report again.
+ *
+ * If not specified this value defaults to 10.
  * @property {number} [mode="query"]
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
@@ -977,13 +993,24 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {Array.<string>} [includeInRequests]
  * Specifies which HTTP GET requests shall carry parameters.
  *
- * If not specified this value defaults to ['segment', 'mpd].
+ * Possible values are 'segment', 'mpd', 'xlink', 'steering', 'other' and 'license'.
+ *
+ * If not specified this value defaults to ['segment', 'mpd', 'license'].
  * @property {number} [version=1]
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
  * @property {Array.<CmcdEventTarget>} [eventTargets]
  * List of CMCD reporting targets.
+ * @property {Array.<CmcdCustomKey>} [customKeys=[]]
+ * Custom CMCD keys to include in reports as persistent session data, e.g. [{ key: 'org.svta-p-n', value: 'dash.js' }].
+ *
+ * Per the CMCD specification, custom keys must carry a hyphenated prefix (reverse-DNS syntax recommended)
+ * to avoid namespace collisions, e.g. 'com.example-mykey'. Keys without a valid prefix are ignored.
+ * See the SVTA CMCD custom keys registry for registered keys.
+ *
+ * Note: event/response targets filter keys by their own enabledKeys; add custom keys there to include
+ * them in target reports.
  */
 
 /**
@@ -998,10 +1025,19 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {Array.<string>} [includeInRequests]
- * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {Array.<string>} [responseReceivedTypes]
+ * Types of requests whose responses trigger a response received (rr) report (e.g., 'mpd', 'segment').
+ * If not specified, rr is reported for every request type.
  * @property {number} [batchSize]
  * The batch size for the CMCD reporting.
+ */
+
+/**
+ * @typedef {Object} CmcdCustomKey
+ * @property {string} key
+ * The custom key name. Must carry a hyphenated prefix, e.g. 'com.example-mykey'.
+ * @property {string|number|boolean} value
+ * The value reported for the custom key.
  */
 
 /**
@@ -1048,6 +1084,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
+ * @property {number} [seekDurationBackoff=0.5]
+ * Offset in seconds that is applied when a seek targets a time at or beyond the end of the content. The seek is redirected to (end of last period - seekDurationBackoff).
+ *
+ * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
+ * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and seek to the exact end of the content.
  * @property {number} [wallclockTimeUpdateInterval=100]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {number} [manifestUpdateRetryInterval=100]
@@ -1219,6 +1260,7 @@ function Settings() {
         },
         streaming: {
             abandonLoadTimeout: 10000,
+            seekDurationBackoff: 0.5,
             wallclockTimeUpdateInterval: 100,
             manifestUpdateRetryInterval: 100,
             liveUpdateTimeThresholdInMilliseconds: 0,
@@ -1321,7 +1363,7 @@ function Settings() {
                 maximumAllowedDrift: 100,
                 enableBackgroundSyncAfterSegmentDownloadError: true,
                 defaultTimingSource: {
-                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+                    scheme: 'urn:mpeg:dash:utc:http-iso:2014',
                     value: 'https://time.akamai.com/?iso&ms'
                 },
                 artificialTimeOffsetToApply: 0,
@@ -1329,7 +1371,8 @@ function Settings() {
             scheduling: {
                 defaultTimeout: 500,
                 lowLatencyTimeout: 0,
-                scheduleWhilePaused: true
+                scheduleWhilePaused: true,
+                segmentListRetryDelay: 10000
             },
             text: {
                 defaultEnabled: true,
@@ -1519,11 +1562,13 @@ function Settings() {
                 cid: null,
                 rtp: null,
                 rtpSafetyFactor: 5,
+                maxBufferedErrorCodes: 10,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_KEYS,
-                includeInRequests: ['segment', 'mpd'],
+                includeInRequests: ['segment', 'mpd', 'license'],
                 version: 1,
-                eventTargets: []
+                eventTargets: [],
+                customKeys: []
             },
             cmsd: {
                 enabled: false,

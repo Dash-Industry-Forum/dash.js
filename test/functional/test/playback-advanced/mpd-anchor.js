@@ -38,13 +38,26 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
             let startTime = playerAdapter.generateValidStartPosition();
             startTime -= Constants.TEST_INPUTS.MPD_ANCHOR.VOD_RANDOM_SUBTRACT_OFFSET;
-            startTime = Math.max(startTime, 0);
+            // Floor at 1s, not 0: #t=0 equals the default start position, no seek is performed and PLAYBACK_SEEKED never fires
+            startTime = Math.max(startTime, 1);
             playerAdapter.attachSource(`${mpd}#t=${startTime}`);
 
             let seeked = await playerAdapter.waitForEvent(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME, dashjs.MediaPlayer.events.PLAYBACK_SEEKED);
             expect(seeked).to.be.true;
 
             checkTimeWithinThresholdForDvrWindow(playerAdapter, startTime, Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE);
+        });
+
+        it(`Attach with #t beyond duration and expect playback to end`, async function () {
+            if (item.type === Constants.CONTENT_TYPES.LIVE) {
+                this.skip();
+            }
+
+            // The start time is clamped to slightly before the end of the content, so playback ends after a short play-through
+            const endedPromise = playerAdapter.waitForEvent(Constants.TEST_INPUTS.SEEK_ENDED.EVENT_WAITING_TIME, dashjs.MediaPlayer.events.PLAYBACK_ENDED);
+            playerAdapter.attachSource(`${mpd}#t=999999999`);
+            const endedEventThrown = await endedPromise;
+            expect(endedEventThrown).to.be.true;
         });
 
         it(`Attach with #posix and expect live delay to correspond`, async function () {

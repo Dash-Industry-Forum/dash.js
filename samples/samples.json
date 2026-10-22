@@ -413,6 +413,19 @@
                 ]
             },
             {
+                "title": "PlayReady in Chrome",
+                "description": "Probes the supported PlayReady key system strings and plays PlayReady protected content, e.g. in Chrome on Windows using com.microsoft.playready.recommendation.3000.",
+                "href": "drm/playready-chrome.html",
+                "image": "lib/img/tos-2.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "Fairplay DRM",
                 "description": "Shows how to use dash.js to play streams with Fairplay DRM protection.",
                 "href": "drm/fairplay.html",
@@ -902,6 +915,28 @@
                 "title": "CMCD v2 reporting",
                 "description": "Shows how to use dash.js to enhance requests to the CDN with Common Media Client Data (CMCD - CTA-5004), including the CMCD v2 event mode.",
                 "href": "cmcd/cmcd-v2.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "CMCD v2 error codes",
+                "description": "Shows how dash.js buffers player error codes (ec) per CMCD v2 report destination and reports each code once with the next report.",
+                "href": "cmcd/cmcd-v2-error-codes.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "CMCD custom keys",
+                "description": "Shows how to add custom keys, such as the player name and version from the SVTA CMCD custom keys registry, to CMCD reports.",
+                "href": "cmcd/cmcd-custom-keys.html",
                 "image": "lib/img/bbb-1.jpg",
                 "labels": [
                     "VoD",

@@ -79,6 +79,14 @@ class Representation {
         this.width = NaN;
     }
 
+    usesPartialSegments() {
+        return this.k > 1;
+    }
+
+    getEffectiveSegmentDuration() {
+        return this.usesPartialSegments() ? this.segmentDuration / this.k : this.segmentDuration;
+    }
+
     hasInitialization() {
         return (this.initialization !== null || this.range !== null);
     }

@@ -91,9 +91,12 @@ function StreamProcessor(config) {
         pendingSwitchToVoRepresentation,
         qualityChangeInProgress,
         representationController,
+        reportedSegmentListFailureId,
         scheduleController,
+        segmentListLoad,
         segmentsController,
         shouldRepeatRequest,
+        shouldScheduleAfterPruning,
         shouldUseExplicitTimeForRequest,
         trackSwitchInProgress;
 
@@ -218,6 +221,9 @@ function StreamProcessor(config) {
         qualityChangeInProgress = false;
         enhancementStreamProcessor = null;
         trackSwitchInProgress = false;
+        segmentListLoad = null;
+        shouldScheduleAfterPruning = false;
+        reportedSegmentListFailureId = null;
         _resetPendingSwitchToRepresentation();
     }
 
@@ -440,6 +446,11 @@ function StreamProcessor(config) {
             return;
         }
 
+        // Scheduling continues once the segment list is there, see _waitForSegmentList()
+        if (_waitForSegmentList()) {
+            return;
+        }
+
         let request = _getFragmentRequest();
         if (request) {
             shouldUseExplicitTimeForRequest = false;
@@ -520,7 +531,8 @@ function StreamProcessor(config) {
             // If there is no valid target time ahead and the buffering time is within the duration of one segment we slightly adjust it.
             // Restrict the tail-time fallback to the final period — for any earlier period, an inter-period gap jump should advance into the
             // next period rather than seeking backward inside the current one.
-            if (streamInfo.isLast && isFinite(periodEnd) && bufferingTime < periodEnd && bufferingTime >= periodEnd - representation.segmentDuration) {
+            // <= : a seek to the exact stream end lands precisely on periodEnd and must be adjusted as well, otherwise the seek never completes.
+            if (streamInfo.isLast && isFinite(periodEnd) && bufferingTime <= periodEnd && bufferingTime >= periodEnd - representation.segmentDuration) {
                 adjustedTime = Math.max(period.start, bufferingTime - 0.1);
             }
         }
@@ -547,6 +559,55 @@ function StreamProcessor(config) {
                 _noValidRequest();
             }
         }
+    }
+
+    /**
+     * SegmentBase: the segment list of a Representation is only loaded once we need its media segments.
+     * Scheduling restarts as soon as the segment list of the current Representation was loaded.
+     * @return {boolean} true if no media segment can be requested yet
+     * @private
+     */
+    function _waitForSegmentList() {
+        const representation = representationController.getCurrentRepresentation();
+        if (!representationController.isSegmentListMissing(representation)) {
+            return false;
+        }
+
+        const load = representationController.loadSegmentList(representation);
+        if (!load) {
+            // The segment list could not be loaded. Report once, then keep scheduling so ABR can still switch to another Representation.
+            if (reportedSegmentListFailureId !== representation.id) {
+                reportedSegmentListFailureId = representation.id;
+                errHandler.error(new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE));
+            }
+            _noValidRequest();
+            return true;
+        }
+        if (load !== segmentListLoad) {
+            segmentListLoad = load;
+            load.then((rep) => {
+                // Superseded by a reset or a load for another Representation
+                if (segmentListLoad !== load) {
+                    return;
+                }
+                segmentListLoad = null;
+                if (rep.segments && reportedSegmentListFailureId === rep.id) {
+                    // Loaded on a retry, report the next failure again
+                    reportedSegmentListFailureId = null;
+                }
+                // Quality and track switches restart scheduling themselves once they are done
+                if (qualityChangeInProgress || trackSwitchInProgress) {
+                    return;
+                }
+                if (bufferController.getIsPruningInProgress()) {
+                    // Restarted in _onBufferCleared() once pruning is done
+                    shouldScheduleAfterPruning = true;
+                    return;
+                }
+                scheduleController.startScheduleTimer(0);
+            });
+        }
+        return true;
     }
 
     function checkAndHandleCompletedBuffering() {
@@ -648,8 +709,11 @@ function StreamProcessor(config) {
             setExplicitBufferingTime(e.from);
         }
 
-        // (Re)start schedule once buffer has been pruned after a QuotaExceededError
-        if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
+        // (Re)start schedule once buffer has been pruned after a QuotaExceededError, or after pruning that interrupted waiting for a segment list
+        const restartAfterQuotaExceeded = e.quotaExceeded && e.hasEnoughSpaceToAppend;
+        const restartAfterPruning = shouldScheduleAfterPruning && !e.quotaExceeded;
+        if (restartAfterQuotaExceeded || restartAfterPruning) {
+            shouldScheduleAfterPruning = false;
             scheduleController.startScheduleTimer();
         }
     }
@@ -946,7 +1010,13 @@ function StreamProcessor(config) {
     function _prepareForFastQualitySwitch(newRepresentation, oldRepresentation) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         const time = playbackController.getTime();
-        let safeBufferLevel = 1.5 * (!isNaN(newRepresentation.fragmentDuration) ? newRepresentation.fragmentDuration : 1);
+        // The Representations handed in by ABR carry no fragmentDuration, the ones of the RepresentationController do.
+        // SegmentBase: the duration is unknown until the segment list was loaded, use the one of the old Representation instead.
+        const isValidDuration = (duration) => isFinite(duration) && duration > 0;
+        const newDuration = representationController.getRepresentationById(newRepresentation.id)?.fragmentDuration;
+        const oldDuration = oldRepresentation ? representationController.getRepresentationById(oldRepresentation.id)?.fragmentDuration : NaN;
+        const fragmentDuration = isValidDuration(newDuration) ? newDuration : isValidDuration(oldDuration) ? oldDuration : 1;
+        let safeBufferLevel = 1.5 * fragmentDuration;
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: time + safeBufferLevel,
