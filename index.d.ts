@@ -5586,6 +5586,8 @@ export interface HTTPRequest {
     _stream: MediaType;
     _tfinish: Date | null;
     actualurl: string | null;
+    /** @deprecated since 5.3.0, use `_cmsd` instead. Will be removed in v6. */
+    readonly cmsd: object | null;
     interval: number | null;
     range: any[];
     responsecode: number | null;

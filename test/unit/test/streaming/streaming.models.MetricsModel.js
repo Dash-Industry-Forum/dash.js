@@ -128,7 +128,14 @@ describe('MetricsModel', function () {
             const entry = metricsModel.getMetricsFor(Constants.VIDEO).HttpList[0];
 
             expect(entry._cmsd).to.equal(cmsd);
-            expect(entry).to.not.have.property('cmsd');
+            expect(entry).to.not.have.own.property('cmsd');
+        });
+
+        it('should expose CMSD data via the deprecated cmsd getter', function () {
+            metricsModel.addHttpRequest(request, { url: request.url, status: 200, headers: {} }, null, cmsd);
+            const entry = metricsModel.getMetricsFor(Constants.VIDEO).HttpList[0];
+
+            expect(entry.cmsd).to.equal(cmsd);
         });
 
         it('should not attach CMSD data to the redirect record', function () {

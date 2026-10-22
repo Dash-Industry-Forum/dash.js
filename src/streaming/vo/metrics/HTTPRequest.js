@@ -139,6 +139,14 @@ class HTTPRequest {
          */
         this._cmsd = null;
     }
+
+    /**
+     * Prototype getter, so it is not serialised as part of the HttpList metric.
+     * @deprecated since 5.3.0, use `_cmsd` instead. Will be removed in v6.
+     */
+    get cmsd() {
+        return this._cmsd;
+    }
 }
 
 /**
