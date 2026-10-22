@@ -426,6 +426,22 @@
       }
     },
     {
+      "name": "Video segments without samples in the middle of the period",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/video_gap_mid_period.mpd",
+      "includedTestfiles": [
+        "advanced/play-into-gap"
+      ],
+      "testdata": {
+        "gaps": [
+          {
+            "start": 16,
+            "end": 24
+          }
+        ]
+      }
+    },
+    {
       "name": "MPD Patching with $time",
       "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
       "type": "live",

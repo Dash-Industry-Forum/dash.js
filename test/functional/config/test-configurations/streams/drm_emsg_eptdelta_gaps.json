@@ -139,6 +139,22 @@
           }
         ]
       }
+    },
+    {
+      "name": "Video segments without samples in the middle of the period",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/video_gap_mid_period.mpd",
+      "includedTestfiles": [
+        "advanced/play-into-gap"
+      ],
+      "testdata": {
+        "gaps": [
+          {
+            "start": 16,
+            "end": 24
+          }
+        ]
+      }
     }
   ]
 }
