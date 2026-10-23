@@ -110,6 +110,10 @@ async function init() {
     playerController.on('streamInitialized', () => {
         controlBar.enable();
     });
+    // Needs an active stream but must be set before the text scheduler starts
+    playerController.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZING, () => {
+        playerController.enableForcedTextStreaming($('#opt-force-text-streaming').checked);
+    });
     playerController.on('manifestLoaded', (data) => {
         // Show/hide CMSD metrics if enabled
         const cmsdEnabled = $('#opt-cmsd-enabled')?.checked || false;
@@ -200,9 +204,6 @@ function doLoad() {
         protData = selectedItem.protData;
     }
 
-    // Apply initial media settings
-    settingsController.applyInitialMediaSettings();
-
     // Reset chart
     chartController.clearAllData();
 
@@ -217,6 +218,9 @@ function doLoad() {
 
     // Load stream
     playerController.load(url, protData);
+
+    // Apply initial media settings after load: attaching a new source resets them
+    settingsController.applyInitialMediaSettings();
 
     // Re-apply control bar volume/mute state to the new source
     controlBar.syncMuteState();

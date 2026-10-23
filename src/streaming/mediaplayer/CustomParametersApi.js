@@ -109,8 +109,8 @@ function CustomParametersApi() {
      * @param {string} value - Path to a time source.
      * @default
      * <ul>
-     *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-     *     <li>value:http://time.akamai.com/?iso&ms/li>
+     *     <li>schemeIdUri:urn:mpeg:dash:utc:http-iso:2014</li>
+     *     <li>value:https://time.akamai.com/?iso&ms</li>
      * </ul>
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
@@ -154,8 +154,8 @@ function CustomParametersApi() {
      *
      * @default
      * <ul>
-     *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-     *     <li>value:http://time.akamai.com/?iso&ms</li>
+     *     <li>schemeIdUri:urn:mpeg:dash:utc:http-iso:2014</li>
+     *     <li>value:https://time.akamai.com/?iso&ms</li>
      * </ul>
      *
      * @memberof module:MediaPlayer

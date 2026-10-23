@@ -385,7 +385,8 @@ function TimeSyncController() {
      * @return {number}
      */
     function _iso8601Decoder(isoStr) {
-        return Date.parse(isoStr);
+        // xs:dateTime is a profile of ISO 8601 extended format, reuse its more robust parsing
+        return _xsdatetimeDecoder(isoStr);
     }
 
     /**

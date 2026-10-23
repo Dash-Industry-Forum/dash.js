@@ -151,6 +151,11 @@ function DashHandler(config) {
             return false;
         }
 
+        // SegmentBase and BaseURL: without a segment list (not loaded yet or failed) the last segment can not have been requested
+        if (!representation.hasSegments() && !representation.segments) {
+            return false;
+        }
+
         // Either transition from dynamic to static was done or no next static segment found
         if (mediaHasFinished) {
             return true;
