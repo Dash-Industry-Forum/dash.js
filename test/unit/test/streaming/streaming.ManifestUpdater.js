@@ -298,10 +298,16 @@ describe('ManifestUpdater', function () {
             refreshManifestUpdater.initialize();
         }
 
+        function createDynamicManifest() {
+            return { type: DashConstants.DYNAMIC, url: 'http://example.com/live.mpd', loadedTime: new Date() };
+        }
+
+        // Simulates the StreamController, which composes the streams after every manifest update
         function loadDynamicManifest() {
-            const manifest = { type: DashConstants.DYNAMIC, url: 'http://example.com/live.mpd', loadedTime: new Date() };
+            const manifest = createDynamicManifest();
             manifestModelMock.setValue(manifest);
             refreshEventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest });
+            refreshEventBus.trigger(Events.STREAMS_COMPOSED);
         }
 
         function disableScheduleWhilePaused() {
@@ -347,11 +353,38 @@ describe('ManifestUpdater', function () {
 
             refreshEventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
             clock.tick(minimumUpdatePeriod * 1000);
-            refreshEventBus.trigger(Events.STREAMS_COMPOSED);
             loadDynamicManifest();
             clock.tick(minimumUpdatePeriod * 1000);
 
             expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should postpone the refresh until the streams of the initial manifest are composed', function () {
+            createManifestUpdater();
+            const manifest = createDynamicManifest();
+            manifestModelMock.setValue(manifest);
+            refreshEventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest });
+
+            clock.tick(minimumUpdatePeriod * 1000);
+            expect(loadStub.called).to.be.false;
+
+            refreshEventBus.trigger(Events.STREAMS_COMPOSED);
+            clock.tick(refreshSettings.get().streaming.manifestUpdateRetryInterval);
+            expect(loadStub.calledOnce).to.be.true;
+        });
+
+        it('should postpone the refresh until the streams of a manifest set via setManifest() are composed', function () {
+            createManifestUpdater();
+            const manifest = createDynamicManifest();
+            manifestModelMock.setValue(manifest);
+            refreshManifestUpdater.setManifest(manifest);
+
+            clock.tick(minimumUpdatePeriod * 1000);
+            expect(loadStub.called).to.be.false;
+
+            refreshEventBus.trigger(Events.STREAMS_COMPOSED);
+            clock.tick(refreshSettings.get().streaming.manifestUpdateRetryInterval);
+            expect(loadStub.calledOnce).to.be.true;
         });
 
         it('should keep refreshing while paused if scheduleWhilePaused is enabled', function () {
