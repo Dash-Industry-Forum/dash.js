@@ -109,12 +109,12 @@
   "dependencies": {
     "@svta/cml-608": "1.1.0",
     "@svta/cml-c2pa": "1.7.0",
-    "@svta/cml-cmcd": "2.8.2",
-    "@svta/cml-cmsd": "1.1.1",
-    "@svta/cml-dash": "1.0.9",
-    "@svta/cml-id3": "1.0.9",
-    "@svta/cml-request": "1.0.21",
-    "@svta/cml-xml": "1.2.1",
+    "@svta/cml-cmcd": "2.8.3",
+    "@svta/cml-cmsd": "1.1.2",
+    "@svta/cml-dash": "1.0.10",
+    "@svta/cml-id3": "1.0.10",
+    "@svta/cml-request": "1.0.22",
+    "@svta/cml-xml": "1.2.2",
     "codem-isoboxer": "0.3.10",
     "fast-deep-equal": "3.1.3",
     "html-entities": "^2.6.0",
@@ -142,7 +142,6 @@
     "Smooth Streaming"
   ],
   "overrides": {
-    "@svta/cml-utils": "1.6.2",
     "mermaid": {
       "katex": "0.18.4"
     },
