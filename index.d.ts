@@ -1993,6 +1993,11 @@ export class MediaPlayerSettingClass {
                 etpWeightRatio?: number
             }
         },
+        c2pa?: {
+            enabled?: boolean,
+            method?: 'auto' | '19.3' | '19.4',
+            mediaTypes?: Array<'video' | 'audio'>
+        },
         defaultSchemeIdUri?: {
             viewpoint?: string,
             audioChannelConfiguration?: string,
@@ -2016,6 +2021,15 @@ export interface MediaFinishedInformation {
 }
 
 export type TrackSelectionFunction = (tracks: MediaInfo[]) => MediaInfo[];
+
+/**
+ * Validates a custom C2PA continuity method (C2PA 2.4 section 19.3). `validate` receives the
+ * `c2pa.livevideo.segment` assertion data and the manifest of the segment.
+ */
+export interface C2paContinuityValidator {
+    method: string;
+    validate: (assertionData: Record<string, unknown>, manifest: object) => boolean | Promise<boolean>;
+}
 
 export interface DvrWindow {
     end: number;
@@ -2288,6 +2302,8 @@ export interface MediaPlayerClass {
 
     reset(): void;
 
+    resetC2paContinuityValidator(): void;
+
     resetCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void;
 
     resetSettings(): void;
@@ -2303,6 +2319,8 @@ export interface MediaPlayerClass {
     seekToPresentationTime(value: number): void;
 
     setAutoPlay(value: boolean): void;
+
+    setC2paContinuityValidator(validator: C2paContinuityValidator): void;
 
     setConfig(config: object): void;
 
@@ -2418,6 +2436,9 @@ export interface MediaPlayerEvents {
     BUFFER_LOADED: 'bufferLoaded';
     BUFFER_LEVEL_STATE_CHANGED: 'bufferStateChanged';
     BUFFER_LEVEL_UPDATED: 'bufferLevelUpdated';
+    C2PA_INIT_PROCESSED: 'c2paInitProcessed';
+    C2PA_SEGMENT_VALIDATED: 'c2paSegmentValidated';
+    C2PA_ERROR: 'c2paError';
     CAN_PLAY: 'canPlay';
     CAN_PLAY_THROUGH: 'canPlayThrough';
     CAPTION_RENDERED: 'captionRendered';
@@ -3930,6 +3951,8 @@ export interface CustomParametersModel {
 
     getAbrCustomRules(): Array<object>;
 
+    getC2paContinuityValidator(): C2paContinuityValidator | null;
+
     getCustomCapabilitiesFilters(): Array<CapabilitiesFilterFunction>;
 
     getCustomInitialTrackSelectionFunction(): Function;
@@ -3972,9 +3995,13 @@ export interface CustomParametersModel {
 
     reset(): void;
 
+    resetC2paContinuityValidator(): void;
+
     resetCustomInitialTrackSelectionFunction(): void;
 
     restoreDefaultUTCTimingSources(): void;
+
+    setC2paContinuityValidator(validator: C2paContinuityValidator): void;
 
     setConfig(): void; // NOT IMPLEMENTED
     setCustomInitialTrackSelectionFunction(customFunc: Function): void;

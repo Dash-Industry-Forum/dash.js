@@ -236,6 +236,32 @@ function CustomParametersApi() {
     }
 
     /**
+     * Registers a validator for a custom C2PA continuity method. A C2PA Manifest Box segment
+     * (C2PA 2.4 section 19.3) whose `continuityMethod` is not `c2pa.manifestId` fails with
+     * `livevideo.continuityMethod.invalid` unless a validator for that method is registered.
+     * The `validate` function receives the `c2pa.livevideo.segment` assertion data and the manifest,
+     * and returns a boolean or a promise that resolves to a boolean. Only one validator is allowed.
+     * Calling this method overwrites an existing validator.
+     * @param {object} validator
+     * @param {string} validator.method - the `continuityMethod` value that the validator handles
+     * @param {function} validator.validate - the validation callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setC2paContinuityValidator(validator) {
+        state.customParametersModel.setC2paContinuityValidator(validator);
+    }
+
+    /**
+     * Removes the custom C2PA continuity validator.
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function resetC2paContinuityValidator() {
+        state.customParametersModel.resetC2paContinuityValidator();
+    }
+
+    /**
      * Adds an external subtitle file. The provided externalSubtitle must be an instance of the ExternalSubtitle class.
      * @param {ExternalSubtitle} externalSubtitle
      * @memberof module:MediaPlayer
@@ -425,8 +451,10 @@ function CustomParametersApi() {
         removeRequestInterceptor,
         removeResponseInterceptor,
         removeUTCTimingSource,
+        resetC2paContinuityValidator,
         resetCustomInitialTrackSelectionFunction,
         restoreDefaultUTCTimingSources,
+        setC2paContinuityValidator,
         setConfig,
         setCustomInitialTrackSelectionFunction,
         setXHRWithCredentialsForType,
