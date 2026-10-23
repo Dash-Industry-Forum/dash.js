@@ -89,7 +89,7 @@ function vsiEngineReturningSequences(seqs) {
     return {engine, calls};
 }
 
-function createCoordinator({engine, method = 'auto', detector, isCryptoAvailable, loadEngine}) {
+function createCoordinator({engine, method = 'auto', detector, isCryptoAvailable, loadEngine, getContinuityValidator}) {
     const events = [];
     const eventBus = {
         trigger: (type, payload, filters) => events.push({type, payload, filters})
@@ -102,7 +102,8 @@ function createCoordinator({engine, method = 'auto', detector, isCryptoAvailable
         settings,
         detector,
         isCryptoAvailable: isCryptoAvailable || (() => true),
-        loadEngine: loadEngine || (() => Promise.resolve(engine))
+        loadEngine: loadEngine || (() => Promise.resolve(engine)),
+        getContinuityValidator
     });
     return {coordinator, events};
 }
@@ -420,6 +421,38 @@ describe('C2paValidationCoordinator', function () {
             // first media segment a track sees has no baseline to check against (null); the
             // chain only self-anchors from that segment's own manifest id onward.
             expect(seenLastManifestIds).to.deep.equal([null, 'urn:c2pa:manifest-1']);
+        });
+
+        it('should pass the registered continuity validator to the engine', async () => {
+            const continuityValidator = {method: 'com.example.chain', validate: () => true};
+            const seenOptions = [];
+            const {engine} = createEngine({initValidation: manifestBoxInitValidation()});
+            engine.validateC2paManifestBoxSegment = async (bytes, lastManifestId, state, options) => {
+                seenOptions.push(options);
+                return manifestBoxOutcomeFor({isValid: true, errorCodes: [], nextManifestId: 'urn:c2pa:manifest-1'});
+            };
+            const {coordinator} = createCoordinator({engine, getContinuityValidator: () => continuityValidator});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(seenOptions).to.have.lengthOf(1);
+            expect(seenOptions[0].continuityValidator).to.equal(continuityValidator);
+        });
+
+        it('should pass no options to the engine when no continuity validator is registered', async () => {
+            const seenOptions = [];
+            const {engine} = createEngine({initValidation: manifestBoxInitValidation()});
+            engine.validateC2paManifestBoxSegment = async (bytes, lastManifestId, state, options) => {
+                seenOptions.push(options);
+                return manifestBoxOutcomeFor({isValid: true, errorCodes: [], nextManifestId: 'urn:c2pa:manifest-1'});
+            };
+            const {coordinator} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(seenOptions).to.deep.equal([undefined]);
         });
     });
 

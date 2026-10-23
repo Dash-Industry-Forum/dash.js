@@ -68,7 +68,7 @@ function C2paController() {
      * @param {Object} config
      * @param {Object} config.settings dash.js Settings (read for `streaming.c2pa`).
      * @param {Object} config.eventBus dash.js EventBus.
-     * @param {Object} config.customParametersModel Exposes add/removeResponseInterceptor.
+     * @param {Object} config.customParametersModel Exposes add/removeResponseInterceptor and getC2paContinuityValidator.
      */
     function setConfig(config) {
         if (!config) {
@@ -154,7 +154,8 @@ function C2paController() {
         coordinator = C2paValidationCoordinator(context).create({
             settings,
             eventBus,
-            detector
+            detector,
+            getContinuityValidator: () => customParametersModel.getC2paContinuityValidator()
         });
         const c2pa = normalizeC2paOptions(settings.get().streaming.c2pa);
         scanner = C2paScanner(context).create({

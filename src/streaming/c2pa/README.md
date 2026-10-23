@@ -71,8 +71,9 @@ player.updateSettings({
   distinct from a generic `invalid`, which always includes a content-hash or other
   structural failure. `continuityInvalid` means the link itself is broken
   (`livevideo.continuityMethod.invalid`); `continuityUnsupported` means the segment uses a
-  `continuityMethod` this build doesn't recognize (`livevideo.continuityMethod.unsupported`),
-  so continuity simply couldn't be evaluated either way.
+  `continuityMethod` that has no registered validator (`livevideo.continuityMethod.unsupported`),
+  so continuity simply couldn't be evaluated either way. See
+  [Custom continuity methods](#custom-continuity-methods).
 - **`C2PA_ERROR`** — emitted alongside an `unverified` segment record when the engine
   throws unexpectedly or Web Crypto is unavailable. Payload: `{ trackKey, segmentNumber,
   mediaType, errorCodes, message, timestamp }`.
@@ -94,6 +95,26 @@ from that:
   abandoned representation's continuity state is reset. Resuming it later starts a fresh
   baseline instead of reporting a false gap for segments that were never fetched because
   a sibling representation was playing instead.
+
+### Custom continuity methods
+
+C2PA 2.4 §19.3 defines one continuity method, `c2pa.manifestId`. A packager can use another
+method, such as `com.ezdrm.anchor-chain`. A validator that does not support the method fails
+the segment with `livevideo.continuityMethod.invalid`, and the engine adds
+`livevideo.continuityMethod.unsupported`, so the segment reports `continuityUnsupported`.
+To check such a method, register a validator for it:
+
+```js
+player.setC2paContinuityValidator({
+    method: 'com.example.chain',
+    // assertionData is the c2pa.livevideo.segment assertion; manifest is the segment manifest.
+    validate: (assertionData, manifest) => checkChain(assertionData, manifest)
+});
+```
+
+`validate` returns a boolean or a promise that resolves to a boolean. A `false` result, or a
+throw, fails the segment as `invalid`. Only one validator is registered at a time;
+`player.resetC2paContinuityValidator()` removes it.
 
 ## Gotchas
 
