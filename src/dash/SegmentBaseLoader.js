@@ -233,7 +233,7 @@ function SegmentBaseLoader() {
                     let j, len, ss, se, r;
                     let segs = [];
                     let count = 0;
-                    let offset = (sidx.offset || info.range.start) + sidx.size;
+                    let offset = info.range.start + sidx.offset + sidx.first_offset + sidx.size;
                     const tmpCallback = function (result) {
                         if (result) {
                             segs = segs.concat(result);
