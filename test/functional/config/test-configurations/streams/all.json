@@ -34,11 +34,6 @@
       "type": "live"
     },
     {
-      "name": "Akamai Low Latency - Multi Rate",
-      "type": "live",
-      "url": "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd"
-    },
-    {
       "name": "MSS",
       "type": "vod",
       "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest"

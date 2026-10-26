@@ -632,6 +632,42 @@ class DashJsAdapter {
         })
     }
 
+    /**
+     * Attaches the MPD and measures the time until the first PLAYBACK_PLAYING event as well as the number of fragment requests started before that
+     * @param mpd
+     * @param timeoutValue
+     * @return {Promise<{startupDelayMs: number, fragmentRequests: number, timedOut: boolean}>}
+     */
+    async measureStartup(mpd, timeoutValue) {
+        return new Promise((resolve) => {
+            let timeout = null;
+            let fragmentRequests = 0;
+            let startTime = 0;
+
+            const _onComplete = (timedOut) => {
+                clearTimeout(timeout);
+                timeout = null;
+                this.player.off(MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted);
+                this.player.off(MediaPlayer.events.PLAYBACK_PLAYING, _onPlaying);
+                resolve({ startupDelayMs: performance.now() - startTime, fragmentRequests, timedOut });
+            }
+            const _onTimeout = () => {
+                _onComplete(true);
+            }
+            const _onFragmentLoadingStarted = () => {
+                fragmentRequests += 1;
+            }
+            const _onPlaying = () => {
+                _onComplete(false);
+            }
+            this.player.on(MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted);
+            this.player.on(MediaPlayer.events.PLAYBACK_PLAYING, _onPlaying);
+            timeout = setTimeout(_onTimeout, timeoutValue);
+            startTime = performance.now();
+            this.attachSource(mpd);
+        })
+    }
+
     async waitForEventAndGetPayload(timeoutValue, event) {
         return new Promise((resolve) => {
             let timeout = null;
