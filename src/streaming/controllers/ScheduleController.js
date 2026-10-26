@@ -239,6 +239,10 @@ function ScheduleController(config) {
      * @private
      */
     function _getBufferedTimeUntilBufferingTime() {
+        // Gaps are only relevant for audio and video, text tracks are sparse by nature
+        if (type !== Constants.AUDIO && type !== Constants.VIDEO) {
+            return 0;
+        }
         try {
             const buffer = bufferController.getBuffer();
             const ranges = buffer ? buffer.getAllBufferRanges() : null;
