@@ -614,16 +614,6 @@
                     ]
                 },
                 {
-                    "url": "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd",
-                    "name": "Akamai Low Latency Stream (Multi Rate)",
-                    "provider": "akamai",
-                    "tags": [
-                        "live",
-                        "low-latency",
-                        "akamai"
-                    ]
-                },
-                {
                     "url": "https://livesim2.dashif.org/livesim2/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
                     "name": "Low Latency (Single-Rate) (livesim-chunked)",
                     "provider": "dashif",
