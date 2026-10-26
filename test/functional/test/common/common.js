@@ -92,13 +92,13 @@ export async function seekAndEndedEvent(playerAdapter, seekOffset) {
 
 export async function reachedTargetForwardBuffer(playerAdapter, targetBuffer, tolerance) {
     const reachedBuffer = await playerAdapter.reachedTargetForwardBuffer(Constants.TEST_TIMEOUT_THRESHOLDS.TARGET_BUFFER_REACHED, targetBuffer, tolerance);
-    const currentBuffer = playerAdapter.getBufferLengthByType();
+    const currentBuffer = playerAdapter.getForwardBufferLength();
     expect(reachedBuffer, `expected forward buffer to reach ${targetBuffer}s (tolerance ${tolerance}s) within ${Constants.TEST_TIMEOUT_THRESHOLDS.TARGET_BUFFER_REACHED}ms, buffer is ${currentBuffer}s`).to.be.true;
 }
 
 export async function checkIsKeepingForwardBufferTarget(playerAdapter, timeoutValue, target, tolerance) {
     const isKeepingForwardBufferTarget = await playerAdapter.isKeepingForwardBufferTarget(timeoutValue, target, tolerance);
-    const currentBuffer = playerAdapter.getBufferLengthByType();
+    const currentBuffer = playerAdapter.getForwardBufferLength();
     expect(isKeepingForwardBufferTarget, `expected forward buffer to stay within ${target}s (tolerance ${tolerance}s) for ${timeoutValue}ms, buffer is ${currentBuffer}s when the check ended`).to.be.true;
 }
 

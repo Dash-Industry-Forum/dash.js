@@ -252,6 +252,15 @@ class DashJsAdapter {
         return this.player.getBufferLength(type);
     }
 
+    /**
+     * Forward buffer of the main media type. getBufferLength() without a type returns the minimum of all types, including fragmented text which is only buffered one segment ahead.
+     * @return {number}
+     */
+    getForwardBufferLength() {
+        const type = this.player.getTracksFor(Constants.DASH_JS.MEDIA_TYPES.VIDEO).length > 0 ? Constants.DASH_JS.MEDIA_TYPES.VIDEO : Constants.DASH_JS.MEDIA_TYPES.AUDIO;
+        return this.getBufferLengthByType(type);
+    }
+
     getTargetLiveDelay() {
         return this.player.getTargetLiveDelay();
     }
@@ -738,7 +747,7 @@ class DashJsAdapter {
             }
 
             const _checkBuffer = () => {
-                const buffer = this.getBufferLengthByType();
+                const buffer = this.getForwardBufferLength();
                 if (buffer >= targetBuffer - tolerance) {
                     _onComplete(true);
                 }

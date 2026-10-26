@@ -119,8 +119,9 @@ const TEST_INPUTS = {
         TESTRUNS_PER_TYPE: 3
     },
     FAST_SWITCH_QUALITY_VIDEO: {
-        TARGET_BUFFER: 10,
-        TARGET_BUFFER_TOLERANCE: 10,
+        // Fast switching replaces the buffer only from currentTime + 1.5 * fragment duration onwards, so the forward buffer must cover that margin
+        TARGET_BUFFER: 20,
+        TARGET_BUFFER_TOLERANCE: 2,
         LIVE_DELAY: 12,
         MAX_NUMBER_OF_SEGMENT_DOWNLOADS_TO_WAIT: 5
     }
