@@ -12,7 +12,7 @@ function classifyUrl(url, method) {
     if (/\.mpd/i.test(url)) {
         return 'manifest';
     }
-    if (/\.(m4s|m4v|m4a|mp4)/i.test(url)) {
+    if (/\.(m4s|m4v|m4a|mp4|webm)/i.test(url)) {
         return 'segment';
     }
     return 'unknown';
