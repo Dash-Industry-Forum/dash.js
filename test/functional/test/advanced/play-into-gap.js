@@ -35,8 +35,9 @@ import {checkNoCriticalErrors, initializeDashJsAdapterWithoutAttachSource} from 
 
 const TESTCASE = Constants.TESTCASES.ADVANCED.PLAY_INTO_GAP
 const START_OFFSET_BEFORE_GAP = 4;
-// The test content has a single representation, so the top quality buffer targets apply
-const BUFFER_TARGET = 8;
+// The test content has a single representation, so the top quality buffer targets apply.
+// Audio follows the appended video data behind a gap only up to its own buffer target, so the target needs to be larger than the video gap.
+const BUFFER_TARGET = 16;
 // The request that is still in flight may exceed the buffer target by one segment
 const SEGMENT_DURATION_TOLERANCE = 4;
 const CHECK_OFFSET_BEFORE_GAP = 1;
@@ -56,20 +57,22 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         item.testdata.gaps.forEach((gap) => {
             describe(`${TESTCASE} - ${item.name} - gap from ${gap.start} to ${gap.end} - ${mpd}`, function () {
 
-                describe('Gap jump', () => {
+                describe(`Gap jump${gap.bufferTarget ? ` with a buffer target of ${gap.bufferTarget}s` : ''}`, () => {
                     let playerAdapter;
 
                     before(() => {
                         // Chrome plays over a gap in the video buffer as long as there is audio. Synthetic stall events make it stall like other browsers, see https://github.com/Dash-Industry-Forum/dash.js/issues/5115
-                        playerAdapter = createPlayer(item, mpd, gap, {
-                            streaming: {
-                                buffer: {
-                                    syntheticStallEvents: {
-                                        enabled: true
-                                    }
-                                }
+                        const buffer = {
+                            syntheticStallEvents: {
+                                enabled: true
                             }
-                        });
+                        };
+                        // A small buffer target makes video stop right behind the gap, e.g. before it overlaps with audio
+                        if (gap.bufferTarget) {
+                            buffer.bufferTimeAtTopQuality = gap.bufferTarget;
+                            buffer.bufferTimeAtTopQualityLongForm = gap.bufferTarget;
+                        }
+                        playerAdapter = createPlayer(item, mpd, gap, { streaming: { buffer } });
                     })
 
                     after(() => {

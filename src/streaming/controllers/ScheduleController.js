@@ -48,7 +48,7 @@ function ScheduleController(config) {
     const eventBus = EventBus(context).getInstance();
     const fragmentModel = config.fragmentModel;
     const getBufferingTime = config.getBufferingTime || (() => NaN);
-    const getVideoBufferedEnd = config.getVideoBufferedEnd || (() => NaN);
+    const getBufferedEndForType = config.getBufferedEndForType || (() => NaN);
     const mediaPlayerModel = config.mediaPlayerModel;
     const playbackController = config.playbackController;
     const representationController = config.representationController
@@ -233,6 +233,8 @@ function ScheduleController(config) {
      * Returns the buffered time between the current playback time and the end of the last requested segment.
      * In contrast to the buffer level this includes media behind a gap in the buffer, e.g. caused by segments without samples.
      * Otherwise, we would continue buffering until the end of the content as the buffer level never reaches the buffer target.
+     * Media behind a gap does not count as long as another track has data further ahead and the tracks do not overlap behind the gap yet.
+     * Otherwise, the GapController has no range to jump to, e.g. if the audio gap ends after the video gap. Buffering further creates the overlap.
      * @return {number}
      * @private
      */
@@ -244,10 +246,49 @@ function ScheduleController(config) {
             if (isNaN(bufferingTime)) {
                 return 0;
             }
-            return getBufferedTimeInInterval(ranges, playbackController.getTime() || 0, bufferingTime);
+            const currentTime = playbackController.getTime() || 0;
+            if (!_hasCommonRangeAhead(currentTime, bufferingTime) && _isOtherTrackAhead(bufferingTime)) {
+                return 0;
+            }
+            return getBufferedTimeInInterval(ranges, currentTime, bufferingTime);
         } catch (e) {
             return 0;
         }
+    }
+
+    /**
+     * Returns true if the buffered ranges of the video element, i.e. the intersection of all SourceBuffers, contain a range that starts between currentTime and bufferingTime
+     * @param {number} currentTime
+     * @param {number} bufferingTime
+     * @return {boolean}
+     * @private
+     */
+    function _hasCommonRangeAhead(currentTime, bufferingTime) {
+        const commonRanges = playbackController.getBufferedRanges();
+        if (!commonRanges) {
+            return false;
+        }
+        for (let i = 0; i < commonRanges.length; i++) {
+            if (commonRanges.start(i) > currentTime && commonRanges.start(i) < bufferingTime) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns true if the other track (audio for video and vice versa) has appended data beyond bufferingTime
+     * @param {number} bufferingTime
+     * @return {boolean}
+     * @private
+     */
+    function _isOtherTrackAhead(bufferingTime) {
+        const otherType = type === Constants.VIDEO ? Constants.AUDIO : type === Constants.AUDIO ? Constants.VIDEO : null;
+        if (!otherType) {
+            return false;
+        }
+        const otherBufferedEnd = getBufferedEndForType(otherType);
+        return !isNaN(otherBufferedEnd) && otherBufferedEnd > bufferingTime;
     }
 
     /**
@@ -330,7 +371,7 @@ function ScheduleController(config) {
      * @private
      */
     function _getVideoBufferedTimeAhead() {
-        const videoBufferedEnd = getVideoBufferedEnd();
+        const videoBufferedEnd = getBufferedEndForType(Constants.VIDEO);
         if (isNaN(videoBufferedEnd)) {
             return 0;
         }

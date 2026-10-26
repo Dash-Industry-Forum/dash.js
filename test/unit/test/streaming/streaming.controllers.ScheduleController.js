@@ -218,7 +218,7 @@ describe('ScheduleController', function () {
     })
 
     describe('scheduling with a gap in the buffer', () => {
-        let clock, eventBus, fragmentNeededSpy, playbackControllerStub, currentBufferingTime;
+        let clock, eventBus, fragmentNeededSpy, playbackControllerStub, currentBufferingTime, bufferedEnds;
         const toRanges = (r) => ({ length: r.length, start: (i) => r[i][0], end: (i) => r[i][1] });
 
         function createScheduleController(bufferingTime, type = Constants.VIDEO, videoBufferedEnd = NaN) {
@@ -228,9 +228,12 @@ describe('ScheduleController', function () {
             mediaPlayerModel = new MediaPlayerModelMock();
             representationController = new RepresentationControllerMock();
             currentBufferingTime = bufferingTime;
+            bufferedEnds = { video: videoBufferedEnd, audio: NaN };
 
             playbackControllerStub = {
                 getTime: () => 9,
+                // Video element ranges: all tracks have data behind the gap
+                getBufferedRanges: () => toRanges([[0, 16], [24, 40]]),
                 isPaused: () => false,
                 getLowLatencyModeEnabled: () => false
             };
@@ -256,7 +259,7 @@ describe('ScheduleController', function () {
                 },
                 playbackController: playbackControllerStub,
                 getBufferingTime: () => currentBufferingTime,
-                getVideoBufferedEnd: () => videoBufferedEnd
+                getBufferedEndForType: (mediaType) => bufferedEnds[mediaType]
             });
             scheduleController.initialize(type === Constants.AUDIO);
             scheduleController.setLastInitializedRepresentationId('v1');
@@ -284,6 +287,34 @@ describe('ScheduleController', function () {
             // The scheduler is still running and requests again once the media behind the gap no longer counts.
             // Makes sure the assertion above is not caused by an exception, which _shouldScheduleNextRequest would swallow.
             currentBufferingTime = 16;
+            clock.tick(mediaPlayerModel.getScheduleTimeout());
+
+            expect(fragmentNeededSpy.calledOnce).to.be.true;
+        });
+
+        it('should request more segments if the media behind the gap does not overlap with the other track yet and the other track is further ahead', () => {
+            // E.g. video gap 16-24 and audio gap 16-48: the video element has no range behind the gap, so the GapController can not jump yet
+            createScheduleController(40);
+            playbackControllerStub.getBufferedRanges = () => toRanges([[0, 16]]);
+            bufferedEnds.audio = 56;
+            scheduleController.startScheduleTimer(0);
+            clock.tick(1);
+
+            expect(fragmentNeededSpy.calledOnce).to.be.true;
+        });
+
+        it('should not request more segments without an overlap behind the gap if the other track is not further ahead', () => {
+            // Buffering more video can not create an overlap with audio, so the media behind the gap counts
+            createScheduleController(40);
+            playbackControllerStub.getBufferedRanges = () => toRanges([[0, 16]]);
+            bufferedEnds.audio = 20;
+            scheduleController.startScheduleTimer(0);
+            clock.tick(1);
+
+            expect(fragmentNeededSpy.notCalled).to.be.true;
+
+            // Once audio is further ahead, video continues to create the overlap
+            bufferedEnds.audio = 56;
             clock.tick(mediaPlayerModel.getScheduleTimeout());
 
             expect(fragmentNeededSpy.calledOnce).to.be.true;

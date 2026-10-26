@@ -66,7 +66,7 @@ function StreamProcessor(config) {
     let dashMetrics = config.dashMetrics;
     let errHandler = config.errHandler;
     let fragmentModel = config.fragmentModel;
-    let getVideoBufferedEnd = config.getVideoBufferedEnd;
+    let getBufferedEndForType = config.getBufferedEndForType;
     let manifestModel = config.manifestModel;
     let mediaController = config.mediaController;
     let mediaPlayerModel = config.mediaPlayerModel;
@@ -187,7 +187,7 @@ function StreamProcessor(config) {
             dashMetrics,
             fragmentModel,
             getBufferingTime,
-            getVideoBufferedEnd,
+            getBufferedEndForType,
             mediaController,
             mediaPlayerModel,
             mimeType,
