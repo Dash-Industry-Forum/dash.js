@@ -409,7 +409,10 @@
                 "playback/seek",
                 "playback/seek-to-presentation-time",
                 "feature-support/cmcd",
-                "playback-advanced/preload"
+                "playback-advanced/preload",
+                "buffer/buffer-cleanup",
+                "buffer/initial-buffer-target",
+                "live/*"
             ]
         },
         {
@@ -527,7 +530,8 @@
             "provider": "dashif",
             "type": "live",
             "includedTestfiles": [
-                "playback/*"
+                "playback/*",
+                "live/*"
             ]
         },
         {
@@ -599,6 +603,14 @@
             "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
             "includedTestfiles": [
                 "feature-support/cmcd-v2"
+            ]
+        },
+        {
+            "name": "BBB 30fps VoD - Buffer",
+            "type": "vod",
+            "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+            "includedTestfiles": [
+                "buffer/*"
             ]
         },
         {

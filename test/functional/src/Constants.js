@@ -102,7 +102,9 @@ const TEST_INPUTS = {
     },
     LIVE_DELAY: {
         VALUE: 10,
-        TOLERANCE: 2
+        TOLERANCE: 2,
+        // Catch-up in low latency mode oscillates around the target, so the live delay can be slightly below it
+        LOWER_TOLERANCE: 0.5
     },
     LATENCY_CATCHUP: {
         DELAY: 12,
@@ -119,8 +121,9 @@ const TEST_INPUTS = {
         TESTRUNS_PER_TYPE: 3
     },
     FAST_SWITCH_QUALITY_VIDEO: {
-        TARGET_BUFFER: 10,
-        TARGET_BUFFER_TOLERANCE: 10,
+        // Fast switching replaces the buffer only from currentTime + 1.5 * fragment duration onwards, so the forward buffer must cover that margin
+        TARGET_BUFFER: 20,
+        TARGET_BUFFER_TOLERANCE: 2,
         LIVE_DELAY: 12,
         MAX_NUMBER_OF_SEGMENT_DOWNLOADS_TO_WAIT: 5
     }
