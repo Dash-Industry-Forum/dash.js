@@ -300,8 +300,16 @@ describe('ScheduleController', function () {
         it('should base the audio buffer target on the end of the appended video data if the video buffer has a gap', () => {
             // Video level ends at the gap (16 - 9 = 7), but video is appended until 40: target = 40 - 9 + 1
             createScheduleController(20, Constants.AUDIO, 40);
+            mediaPlayerModel.getBufferTimeDefaultUnadjusted = () => 60;
 
             expect(scheduleController.getBufferTarget()).to.equal(32);
+        });
+
+        it('should limit the audio buffer target behind a video gap to the buffer target audio would use on its own', () => {
+            // Video is appended until 169 behind a large gap. Without the limit the target would be 169 - 9 + 1 = 161
+            createScheduleController(20, Constants.AUDIO, 169);
+
+            expect(scheduleController.getBufferTarget()).to.equal(18 + 1);
         });
 
         it('should continue buffering audio behind a gap in the video buffer', () => {
