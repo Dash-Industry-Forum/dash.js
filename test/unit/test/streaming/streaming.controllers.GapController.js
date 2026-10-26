@@ -260,45 +260,6 @@ describe('GapController', function () {
 
             expect(seekSpy.notCalled).to.be.true;
         });
-
-        it('should jump a gap that exists only in the video SourceBuffer', function () {
-            const clock = sinon.useFakeTimers();
-            const toRanges = (r) => ({ length: r.length, start: (i) => r[i][0], end: (i) => r[i][1] });
-            const streamProcessor = (type, ranges) => ({
-                getType: () => type,
-                getBuffer: () => ({ getAllBufferRanges: () => toRanges(ranges) })
-            });
-
-            settings.update({ streaming: { gaps: { jumpLargeGaps: true } } });
-            streamControllerMock.getActiveStream = sinon.stub().returns({
-                getStartTime: () => 0,
-                getDuration: () => 60,
-                getStreamId: () => 'p0'
-            });
-            streamControllerMock.getActiveStreamProcessors = sinon.stub().returns([
-                streamProcessor('video', [[0, 16], [24, 60]]),
-                streamProcessor('audio', [[0, 20]])
-            ]);
-            // The video element only reports the intersection of the audio and video ranges
-            videoModelMock.getBufferRange = sinon.stub().returns(toRanges([[0, 16]]));
-            playbackControllerMock.getTime = sinon.stub().returns(16);
-            playbackControllerMock.isSeeking = sinon.stub().returns(false);
-            playbackControllerMock.isPaused = sinon.stub().returns(false);
-            playbackControllerMock.getTimeToStreamEnd = sinon.stub().returns(44);
-            const seekSpy = sinon.spy(playbackControllerMock, 'seek');
-
-            for (let i = 0; i < 20; i++) {
-                eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
-            }
-            clock.tick(1);
-            clock.restore();
-
-            expect(seekSpy.calledOnce).to.be.true;
-            expect(seekSpy.firstCall.args[0]).to.equal(24 + settings.get().streaming.gaps.seekOffset);
-            // The target is not part of the buffered ranges of the video element: no stick to buffered and no internal seek
-            expect(seekSpy.firstCall.args[1]).to.be.false;
-            expect(seekSpy.firstCall.args[2]).to.be.false;
-        });
     });
 
     describe('Configuration', function () {

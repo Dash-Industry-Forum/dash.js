@@ -221,7 +221,7 @@ describe('ScheduleController', function () {
         let clock, eventBus, fragmentNeededSpy;
         const toRanges = (r) => ({ length: r.length, start: (i) => r[i][0], end: (i) => r[i][1] });
 
-        function createScheduleController(bufferingTime) {
+        function createScheduleController(bufferingTime, type = Constants.VIDEO, videoBufferingTime = NaN) {
             streamInfo = voHelper.getDummyStreamInfo();
             dashMetrics = new DashMetricsMock();
             abrController = new AbrControllerMock();
@@ -238,7 +238,7 @@ describe('ScheduleController', function () {
 
             scheduleController = ScheduleController(context).create({
                 streamInfo,
-                type: Constants.VIDEO,
+                type,
                 dashMetrics,
                 abrController,
                 mediaPlayerModel,
@@ -253,9 +253,10 @@ describe('ScheduleController', function () {
                     isPaused: () => false,
                     getLowLatencyModeEnabled: () => false
                 },
-                getBufferingTime: () => bufferingTime
+                getBufferingTime: () => bufferingTime,
+                getVideoBufferingTime: () => videoBufferingTime
             });
-            scheduleController.initialize(false);
+            scheduleController.initialize(type === Constants.AUDIO);
             scheduleController.setLastInitializedRepresentationId('v1');
         }
 
@@ -285,6 +286,26 @@ describe('ScheduleController', function () {
             clock.tick(1);
 
             expect(fragmentNeededSpy.calledOnce).to.be.true;
+        });
+
+        it('should continue buffering audio up to the position video has been requested to, even if the video buffer level is small because of a gap', () => {
+            // Audio is buffered until 20, video has been requested until 40 but its contiguous buffer level ends at the gap
+            createScheduleController(20, Constants.AUDIO, 40);
+            // Audio target is the video buffer level + 1 = 8. The audio buffer level alone does not require another segment
+            dashMetrics.getCurrentBufferLevel = (mediaType) => mediaType === Constants.VIDEO ? 7 : 11;
+            scheduleController.startScheduleTimer(0);
+            clock.tick(1);
+
+            expect(fragmentNeededSpy.calledOnce).to.be.true;
+        });
+
+        it('should stop buffering audio once it is ahead of the position video has been requested to', () => {
+            createScheduleController(42, Constants.AUDIO, 40);
+            dashMetrics.getCurrentBufferLevel = (mediaType) => mediaType === Constants.VIDEO ? 7 : 11;
+            scheduleController.startScheduleTimer(0);
+            clock.tick(1);
+
+            expect(fragmentNeededSpy.notCalled).to.be.true;
         });
     });
 });

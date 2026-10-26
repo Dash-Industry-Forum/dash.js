@@ -500,6 +500,7 @@ function Stream(config) {
             dashMetrics: config.dashMetrics,
             errHandler,
             fragmentModel,
+            getVideoBufferingTime: _getVideoBufferingTime,
             manifestModel,
             mediaController,
             mediaPlayerModel,
@@ -934,6 +935,11 @@ function Stream(config) {
         }
 
         return _getProcessorByType(mediaInfo.type);
+    }
+
+    function _getVideoBufferingTime() {
+        const videoProcessor = _getProcessorByType(Constants.VIDEO);
+        return videoProcessor ? videoProcessor.getBufferingTime() : NaN;
     }
 
     function _getProcessorByType(type) {

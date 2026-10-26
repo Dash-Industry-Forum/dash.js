@@ -47,6 +47,7 @@ function ScheduleController(config) {
     const eventBus = EventBus(context).getInstance();
     const fragmentModel = config.fragmentModel;
     const getBufferingTime = config.getBufferingTime || (() => NaN);
+    const getVideoBufferingTime = config.getVideoBufferingTime || (() => NaN);
     const mediaPlayerModel = config.mediaPlayerModel;
     const playbackController = config.playbackController;
     const representationController = config.representationController
@@ -272,7 +273,22 @@ function ScheduleController(config) {
             segmentDurationToAddToBufferLevel = 0;
         }
 
-        return bufferLevel + segmentDurationToAddToBufferLevel < bufferTarget;
+        return bufferLevel + segmentDurationToAddToBufferLevel < bufferTarget || _isAudioBehindVideo();
+    }
+
+    /**
+     * The buffer target for audio is derived from the contiguous video buffer level. If the video buffer has a gap, e.g. caused by segments without samples, audio would stop buffering at the gap.
+     * The buffered ranges of the video element are the intersection of all SourceBuffers. Without audio behind the gap the GapController can not jump it.
+     * Continue buffering audio until it reaches the position up to which video has been requested.
+     * @return {boolean}
+     * @private
+     */
+    function _isAudioBehindVideo() {
+        if (type !== Constants.AUDIO || !hasVideoTrack) {
+            return false;
+        }
+        const videoBufferingTime = getVideoBufferingTime();
+        return !isNaN(videoBufferingTime) && getBufferingTime() < videoBufferingTime + 1;
     }
 
     /**
