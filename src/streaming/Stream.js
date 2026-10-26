@@ -45,6 +45,7 @@ import MediaPlayerEvents from './MediaPlayerEvents.js';
 import StreamProcessor from './StreamProcessor.js';
 import ThumbnailController from './thumbnail/ThumbnailController.js';
 import URLUtils from './utils/URLUtils.js';
+import {getBufferedEndBefore} from './utils/BufferRangeUtils.js';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.MUXED, Constants.IMAGE];
@@ -947,16 +948,7 @@ function Stream(config) {
         const buffer = videoProcessor ? videoProcessor.getBuffer() : null;
         const ranges = buffer ? buffer.getAllBufferRanges() : null;
         const bufferingTime = videoProcessor ? videoProcessor.getBufferingTime() : NaN;
-        if (!ranges || isNaN(bufferingTime)) {
-            return NaN;
-        }
-        let bufferedEnd = NaN;
-        for (let i = 0; i < ranges.length; i++) {
-            if (ranges.start(i) < bufferingTime) {
-                bufferedEnd = Math.min(ranges.end(i), bufferingTime);
-            }
-        }
-        return bufferedEnd;
+        return isNaN(bufferingTime) ? NaN : getBufferedEndBefore(ranges, bufferingTime);
     }
 
     function _getProcessorByType(type) {

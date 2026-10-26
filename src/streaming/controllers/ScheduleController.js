@@ -36,6 +36,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import MetricsConstants from '../constants/MetricsConstants.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import {getBufferedTimeInInterval} from '../utils/BufferRangeUtils.js';
 
 function ScheduleController(config) {
 
@@ -240,15 +241,10 @@ function ScheduleController(config) {
             const buffer = bufferController.getBuffer();
             const ranges = buffer ? buffer.getAllBufferRanges() : null;
             const bufferingTime = getBufferingTime();
-            if (!ranges || isNaN(bufferingTime)) {
+            if (isNaN(bufferingTime)) {
                 return 0;
             }
-            const currentTime = playbackController.getTime() || 0;
-            let bufferedTime = 0;
-            for (let i = 0; i < ranges.length; i++) {
-                bufferedTime += Math.max(0, Math.min(ranges.end(i), bufferingTime) - Math.max(ranges.start(i), currentTime));
-            }
-            return bufferedTime;
+            return getBufferedTimeInInterval(ranges, playbackController.getTime() || 0, bufferingTime);
         } catch (e) {
             return 0;
         }
