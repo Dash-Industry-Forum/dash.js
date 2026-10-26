@@ -218,7 +218,7 @@ describe('ScheduleController', function () {
     })
 
     describe('scheduling with a gap in the buffer', () => {
-        let clock, eventBus, fragmentNeededSpy, playbackControllerStub;
+        let clock, eventBus, fragmentNeededSpy, playbackControllerStub, currentBufferingTime;
         const toRanges = (r) => ({ length: r.length, start: (i) => r[i][0], end: (i) => r[i][1] });
 
         function createScheduleController(bufferingTime, type = Constants.VIDEO, videoBufferedEnd = NaN) {
@@ -227,6 +227,7 @@ describe('ScheduleController', function () {
             abrController = new AbrControllerMock();
             mediaPlayerModel = new MediaPlayerModelMock();
             representationController = new RepresentationControllerMock();
+            currentBufferingTime = bufferingTime;
 
             playbackControllerStub = {
                 getTime: () => 9,
@@ -254,7 +255,7 @@ describe('ScheduleController', function () {
                     getBuffer: () => ({ getAllBufferRanges: () => toRanges([[0, 16], [24, 40]]) })
                 },
                 playbackController: playbackControllerStub,
-                getBufferingTime: () => bufferingTime,
+                getBufferingTime: () => currentBufferingTime,
                 getVideoBufferedEnd: () => videoBufferedEnd
             });
             scheduleController.initialize(type === Constants.AUDIO);
@@ -279,6 +280,13 @@ describe('ScheduleController', function () {
             clock.tick(1);
 
             expect(fragmentNeededSpy.notCalled).to.be.true;
+
+            // The scheduler is still running and requests again once the media behind the gap no longer counts.
+            // Makes sure the assertion above is not caused by an exception, which _shouldScheduleNextRequest would swallow.
+            currentBufferingTime = 16;
+            clock.tick(mediaPlayerModel.getScheduleTimeout());
+
+            expect(fragmentNeededSpy.calledOnce).to.be.true;
         });
 
         it('should request more segments if the buffered media until the next request is below the buffer target', () => {

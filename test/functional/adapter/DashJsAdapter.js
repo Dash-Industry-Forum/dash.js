@@ -10,6 +10,7 @@ class DashJsAdapter {
         this.videoElement = document.getElementById('video-element');
         this.ttmlRenderingDiv = document.getElementById('ttml-rendering-div');
         this.startedFragmentDownloads = [];
+        this.requestedMediaEnd = {};
         this.logEvents = {};
         this.errorEvents = [];
         this.registeredEvents = new Set();
@@ -177,7 +178,20 @@ class DashJsAdapter {
                 targetString += e.request.range;
             }
             this.startedFragmentDownloads.push(targetString);
+            const end = e.request.startTime + e.request.duration;
+            if (!isNaN(end)) {
+                this.requestedMediaEnd[e.request.mediaType] = Math.max(this.requestedMediaEnd[e.request.mediaType] || 0, end);
+            }
         }
+    }
+
+    /**
+     * Returns the end of the furthest media segment that has been requested for the given media type
+     * @param {string} mediaType
+     * @returns {number}
+     */
+    getRequestedMediaEnd(mediaType) {
+        return this.requestedMediaEnd[mediaType] || 0;
     }
 
     _onLogEvent(e) {
@@ -195,6 +209,7 @@ class DashJsAdapter {
      */
     attachSource(mpd, startTime = null) {
         this.startedFragmentDownloads = [];
+        this.requestedMediaEnd = {};
         this.player.attachSource(mpd, startTime);
     }
 
