@@ -320,6 +320,16 @@ describe('ScheduleController', function () {
             expect(fragmentNeededSpy.calledOnce).to.be.true;
         });
 
+        it('should not count buffered media without a playback time, e.g. while preloading', () => {
+            // Counting from 0 would include [0, 16] and [24, 40], i.e. 32s, and stop scheduling. The buffer level (7) is below the target (18)
+            createScheduleController(40);
+            playbackControllerStub.getTime = () => null;
+            scheduleController.startScheduleTimer(0);
+            clock.tick(1);
+
+            expect(fragmentNeededSpy.calledOnce).to.be.true;
+        });
+
         it('should request more segments if the buffered media until the next request is below the buffer target', () => {
             createScheduleController(16);
             scheduleController.startScheduleTimer(0);

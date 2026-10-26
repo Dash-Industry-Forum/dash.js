@@ -246,7 +246,11 @@ function ScheduleController(config) {
             if (isNaN(bufferingTime)) {
                 return 0;
             }
-            const currentTime = playbackController.getTime() || 0;
+            // No playback time while preloading, fall back to the buffer level which uses the seek target in that case
+            const currentTime = playbackController.getTime();
+            if (currentTime === null || isNaN(currentTime)) {
+                return 0;
+            }
             if (!_hasCommonRangeAhead(currentTime, bufferingTime) && _isOtherTrackAhead(bufferingTime)) {
                 return 0;
             }
