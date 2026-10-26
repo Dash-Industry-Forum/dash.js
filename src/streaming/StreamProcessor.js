@@ -66,6 +66,7 @@ function StreamProcessor(config) {
     let dashMetrics = config.dashMetrics;
     let errHandler = config.errHandler;
     let fragmentModel = config.fragmentModel;
+    let getBufferedEndForType = config.getBufferedEndForType;
     let manifestModel = config.manifestModel;
     let mediaController = config.mediaController;
     let mediaPlayerModel = config.mediaPlayerModel;
@@ -185,6 +186,8 @@ function StreamProcessor(config) {
             bufferController,
             dashMetrics,
             fragmentModel,
+            getBufferingTime,
+            getBufferedEndForType,
             mediaController,
             mediaPlayerModel,
             mimeType,
@@ -1681,6 +1684,10 @@ function StreamProcessor(config) {
         dashMetrics.pushPlayListTraceMetrics(time, reason);
     }
 
+    function getBufferingTime() {
+        return bufferingTime;
+    }
+
     function getLastSegment() {
         return dashHandler.getLastSegment();
     }
@@ -1695,6 +1702,7 @@ function StreamProcessor(config) {
         getBuffer,
         getBufferController,
         getBufferLevel,
+        getBufferingTime,
         getFragmentModel,
         getLastSegment,
         getMediaInfo,

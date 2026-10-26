@@ -15,19 +15,58 @@
 <body>
 
 <script class="code">
-    async function init(video, wrapper) {
+    async function init(video, wrapper, panel) {
         var player,
-            url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+            url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
 
         player = dashjs.MediaPlayer().create();
 
+        function seconds(value, digits) {
+            return isNaN(value) ? '-' : value.toFixed(digits) + ' s';
+        }
+
+        // Initial values come from the settings panel, e.g. { bufferPruningInterval: 10, bufferToKeep: 20 }
         player.updateSettings({
             streaming: {
-                buffer: {
-                    bufferPruningInterval: 10,
-                    bufferToKeep: 20,
-                }
+                buffer: panel.getValues()
             }
+        });
+
+        // Pruning parameters can be changed at runtime
+        panel.onApply(function (buffer) {
+            player.updateSettings({
+                streaming: {
+                    buffer: buffer
+                }
+            });
+        });
+
+        var lastBufferStart = NaN;
+        var lastPruningTime = NaN;
+        player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function () {
+            setInterval(function () {
+                var ranges = video.buffered;
+                var currentTime = video.currentTime;
+                var rangeTexts = [];
+                var bufferStart = NaN;
+                for (var i = 0; i < ranges.length; i++) {
+                    rangeTexts.push(ranges.start(i).toFixed(1) + ' - ' + ranges.end(i).toFixed(1));
+                    if (ranges.start(i) <= currentTime && currentTime <= ranges.end(i)) {
+                        bufferStart = ranges.start(i);
+                    }
+                }
+                // The buffer behind the current time only shrinks when dash.js prunes it
+                if (bufferStart > lastBufferStart) {
+                    lastPruningTime = Date.now();
+                }
+                lastBufferStart = bufferStart;
+
+                panel.setMetric('currentTime', seconds(currentTime, 1));
+                panel.setMetric('ranges', rangeTexts.join(', ') || '-');
+                panel.setMetric('backBuffer', seconds(currentTime - bufferStart, 1));
+                panel.setMetric('forwardBuffer', seconds(player.getBufferLength('video'), 1));
+                panel.setMetric('lastPruning', isNaN(lastPruningTime) ? 'not yet' : seconds((Date.now() - lastPruningTime) / 1000, 0) + ' ago');
+            }, 500);
         });
 
         player.initialize(video, url, true);
@@ -36,14 +75,29 @@
 </script>
 
 <script type="module">
-    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    import { initSamplePage, createControlBar, createSamplePanel } from '../lib/sample-template.js';
+
+    var panel = createSamplePanel({
+        settings: [
+            { key: 'bufferPruningInterval', label: 'bufferPruningInterval (s)', value: 10 },
+            { key: 'bufferToKeep', label: 'bufferToKeep (s)', value: 20 }
+        ],
+        metrics: [
+            { key: 'currentTime', label: 'Current time' },
+            { key: 'ranges', label: 'Buffered ranges' },
+            { key: 'backBuffer', label: 'Back buffer' },
+            { key: 'forwardBuffer', label: 'Forward buffer (video)' },
+            { key: 'lastPruning', label: 'Last pruning' }
+        ]
+    });
 
     initSamplePage({
         title: 'Buffer cleanup',
-        description: 'Shows how to define the parameters for buffer cleanup/pruning in dash.js. Settings used: <b>bufferPruningInterval</b> (interval in seconds for buffer check and pruning), <b>bufferToKeep</b> (buffer kept in source buffer in seconds).',
+        description: 'Shows how to define the parameters for buffer cleanup/pruning in dash.js. Settings used: <b>bufferPruningInterval</b> (interval in seconds for buffer check and pruning), <b>bufferToKeep</b> (buffer kept in source buffer in seconds). Change the values in the settings panel and click apply to update them at runtime. The back buffer grows during playback and drops to <b>bufferToKeep</b> every <b>bufferPruningInterval</b> seconds.',
         category: 'Buffer',
         codeExpanded: true,
-        onInit: (video, container, wrapper) => init(video, wrapper)
+        sidePanel: panel.element,
+        onInit: (video, container, wrapper) => init(video, wrapper, panel)
     });
 </script>
 </body>

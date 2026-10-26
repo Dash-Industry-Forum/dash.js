@@ -600,6 +600,71 @@
             "includedTestfiles": [
                 "feature-support/cmcd-v2"
             ]
+        },
+        {
+            "name": "Segment Timeline with missing audio segment in MPD for time 0",
+            "type": "vod",
+            "url": "/base/test/functional/content/gap/audio_gap_at_start_timeline.mpd",
+            "includedTestfiles": [
+                "advanced/seek-in-gaps"
+            ],
+            "testdata": {
+                "gaps": [
+                    {
+                        "start": 0,
+                        "end": 5.97
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Segment Timeline with missing video segment in MPD for time 0",
+            "type": "vod",
+            "url": "/base/test/functional/content/gap/video_gap_at_start_timeline.mpd",
+            "includedTestfiles": [
+                "advanced/seek-in-gaps"
+            ],
+            "testdata": {
+                "gaps": [
+                    {
+                        "start": 0,
+                        "end": 6
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Video segments without samples in the middle of the period",
+            "type": "vod",
+            "url": "/base/test/functional/content/gap/video_gap_mid_period.mpd",
+            "includedTestfiles": [
+                "advanced/play-into-gap"
+            ],
+            "testdata": {
+                "gaps": [
+                    {
+                        "start": 16,
+                        "end": 24
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Audio and video segments without samples in the middle of the period, gaps ending at different times",
+            "type": "vod",
+            "url": "/base/test/functional/content/gap/video_audio_gap_mid_period.mpd",
+            "includedTestfiles": [
+                "advanced/play-into-gap"
+            ],
+            "testdata": {
+                "gaps": [
+                    {
+                        "start": 16,
+                        "end": 32.09,
+                        "bufferTarget": 8
+                    }
+                ]
+            }
         }
     ]
 }

@@ -78,6 +78,10 @@ class PlaybackControllerMock {
         return null;
     }
 
+    getBufferedRanges() {
+        return null;
+    }
+
     getPlayedRanges() {
         return null;
     }
