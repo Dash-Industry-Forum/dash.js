@@ -3,19 +3,28 @@ import {expect} from 'chai';
 import DashJsAdapter from '../../adapter/DashJsAdapter.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 
+// player.time() throws while no view is attached (e.g. during preload), so the assertion message must not rely on it
+function _getCurrentTimeForMessage(playerAdapter) {
+    try {
+        return playerAdapter.getCurrentTime();
+    } catch (e) {
+        return 'not available';
+    }
+}
+
 export async function checkIsPlaying(playerAdapter, expectedState) {
     const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
-    expect(isPlaying, `expected isPlaying to be ${expectedState}, currentTime is ${playerAdapter.getCurrentTime()}`).to.equal(expectedState);
+    expect(isPlaying, `expected isPlaying to be ${expectedState}, currentTime is ${_getCurrentTimeForMessage(playerAdapter)}`).to.equal(expectedState);
 }
 
 export async function checkIsProgressing(playerAdapter) {
     const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-    expect(isProgressing, `expected playback to progress by at least ${Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING}s within ${Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING}ms, currentTime is ${playerAdapter.getCurrentTime()}`).to.be.true;
+    expect(isProgressing, `expected playback to progress by at least ${Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING}s within ${Constants.TEST_TIMEOUT_THRESHOLDS.IS_PROGRESSING}ms, currentTime is ${_getCurrentTimeForMessage(playerAdapter)}`).to.be.true;
 }
 
 export async function checkIsNotProgressing(playerAdapter) {
     const isProgressing = await playerAdapter.isProgressing(Constants.TEST_TIMEOUT_THRESHOLDS.IS_NOT_PROGRESSING, Constants.TEST_INPUTS.GENERAL.MINIMUM_PROGRESS_WHEN_PLAYING);
-    expect(isProgressing, `expected playback to not progress, currentTime is ${playerAdapter.getCurrentTime()}`).to.be.false;
+    expect(isProgressing, `expected playback to not progress, currentTime is ${_getCurrentTimeForMessage(playerAdapter)}`).to.be.false;
 }
 
 export function checkNoCriticalErrors(playerAdapter) {
