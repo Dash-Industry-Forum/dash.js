@@ -61,6 +61,17 @@ describe('CustomParametersModel', function () {
         expect(customInitialTrackSelectionFunction).to.be.null;
     })
 
+    it('Should set and reset the C2PA continuity validator', () => {
+        const validator = { method: 'com.example.chain', validate: () => true };
+        expect(customParametersModel.getC2paContinuityValidator()).to.be.null;
+
+        customParametersModel.setC2paContinuityValidator(validator);
+        expect(customParametersModel.getC2paContinuityValidator()).to.equal(validator);
+
+        customParametersModel.resetC2paContinuityValidator();
+        expect(customParametersModel.getC2paContinuityValidator()).to.be.null;
+    })
+
     describe('callback registries', () => {
         const registryContracts = [
             { name: 'request interceptors', add: 'addRequestInterceptor', remove: 'removeRequestInterceptor', get: 'getRequestInterceptors', getInitialCallbacks: () => cmcdController.getCmcdRequestInterceptors() },

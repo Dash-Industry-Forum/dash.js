@@ -122,6 +122,11 @@ class IsoBox {
                 this.media_time = boxData.media_time;
                 this.flags = boxData.flags;
                 break;
+            case 'uuid':
+                // codem-isoboxer parses the 16-byte usertype for uuid boxes; expose it
+                // so callers (e.g. C2PA detection) can identify the box by its UUID.
+                this.usertype = boxData.usertype;
+                break;
         }
     }
 
