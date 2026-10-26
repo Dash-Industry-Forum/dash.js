@@ -102,7 +102,9 @@ const TEST_INPUTS = {
     },
     LIVE_DELAY: {
         VALUE: 10,
-        TOLERANCE: 2
+        TOLERANCE: 2,
+        // Catch-up in low latency mode oscillates around the target, so the live delay can be slightly below it
+        LOWER_TOLERANCE: 0.5
     },
     LATENCY_CATCHUP: {
         DELAY: 12,
