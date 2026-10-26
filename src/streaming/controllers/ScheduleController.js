@@ -47,7 +47,7 @@ function ScheduleController(config) {
     const eventBus = EventBus(context).getInstance();
     const fragmentModel = config.fragmentModel;
     const getBufferingTime = config.getBufferingTime || (() => NaN);
-    const getVideoBufferingTime = config.getVideoBufferingTime || (() => NaN);
+    const getVideoBufferedEnd = config.getVideoBufferedEnd || (() => NaN);
     const mediaPlayerModel = config.mediaPlayerModel;
     const playbackController = config.playbackController;
     const representationController = config.representationController
@@ -273,22 +273,7 @@ function ScheduleController(config) {
             segmentDurationToAddToBufferLevel = 0;
         }
 
-        return bufferLevel + segmentDurationToAddToBufferLevel < bufferTarget || _isAudioBehindVideo();
-    }
-
-    /**
-     * The buffer target for audio is derived from the contiguous video buffer level. If the video buffer has a gap, e.g. caused by segments without samples, audio would stop buffering at the gap.
-     * The buffered ranges of the video element are the intersection of all SourceBuffers. Without audio behind the gap the GapController can not jump it.
-     * Continue buffering audio until it reaches the position up to which video has been requested.
-     * @return {boolean}
-     * @private
-     */
-    function _isAudioBehindVideo() {
-        if (type !== Constants.AUDIO || !hasVideoTrack) {
-            return false;
-        }
-        const videoBufferingTime = getVideoBufferingTime();
-        return !isNaN(videoBufferingTime) && getBufferingTime() < videoBufferingTime + 1;
+        return bufferLevel + segmentDurationToAddToBufferLevel < bufferTarget;
     }
 
     /**
@@ -340,13 +325,33 @@ function ScheduleController(config) {
     }
 
     /**
+     * Returns the time between the current playback time and the end of the appended video data.
+     * In contrast to the video buffer level this includes video behind a gap in the video buffer, e.g. caused by segments without samples.
+     * The buffered ranges of the video element are the intersection of all SourceBuffers. If audio stops at the video gap, the GapController can not jump it.
+     * @return {number}
+     * @private
+     */
+    function _getVideoBufferedTimeAhead() {
+        const videoBufferedEnd = getVideoBufferedEnd();
+        if (isNaN(videoBufferedEnd)) {
+            return 0;
+        }
+        // No playback time while preloading, fall back to the video buffer level
+        const currentTime = playbackController.getTime();
+        if (currentTime === null || isNaN(currentTime)) {
+            return 0;
+        }
+        return Math.max(videoBufferedEnd - currentTime, 0);
+    }
+
+    /**
      * Returns the buffer target for audio tracks in case we have a video track available as well
      * @return {number}
      * @private
      */
     function _getBufferTargetForAudio() {
         try {
-            const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
+            const videoBufferLevel = Math.max(dashMetrics.getCurrentBufferLevel(Constants.VIDEO), _getVideoBufferedTimeAhead());
             const currentRepresentation = representationController.getCurrentRepresentation();
             // For multiperiod we need to consider that audio and video segments might have different durations.
             // This can lead to scenarios in which we completely buffered the video segments and the video buffer level for the current period is not changing anymore. However we might still need a small audio segment to finish buffering audio as well.

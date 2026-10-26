@@ -218,16 +218,21 @@ describe('ScheduleController', function () {
     })
 
     describe('scheduling with a gap in the buffer', () => {
-        let clock, eventBus, fragmentNeededSpy;
+        let clock, eventBus, fragmentNeededSpy, playbackControllerStub;
         const toRanges = (r) => ({ length: r.length, start: (i) => r[i][0], end: (i) => r[i][1] });
 
-        function createScheduleController(bufferingTime, type = Constants.VIDEO, videoBufferingTime = NaN) {
+        function createScheduleController(bufferingTime, type = Constants.VIDEO, videoBufferedEnd = NaN) {
             streamInfo = voHelper.getDummyStreamInfo();
             dashMetrics = new DashMetricsMock();
             abrController = new AbrControllerMock();
             mediaPlayerModel = new MediaPlayerModelMock();
             representationController = new RepresentationControllerMock();
 
+            playbackControllerStub = {
+                getTime: () => 9,
+                isPaused: () => false,
+                getLowLatencyModeEnabled: () => false
+            };
             // Contiguous buffer level from currentTime 9 to the start of the gap at 16
             dashMetrics.currentBufferLevel = 7;
             abrController.handlePendingManualQualitySwitch = () => false;
@@ -248,13 +253,9 @@ describe('ScheduleController', function () {
                     getIsBufferingCompleted: () => false,
                     getBuffer: () => ({ getAllBufferRanges: () => toRanges([[0, 16], [24, 40]]) })
                 },
-                playbackController: {
-                    getTime: () => 9,
-                    isPaused: () => false,
-                    getLowLatencyModeEnabled: () => false
-                },
+                playbackController: playbackControllerStub,
                 getBufferingTime: () => bufferingTime,
-                getVideoBufferingTime: () => videoBufferingTime
+                getVideoBufferedEnd: () => videoBufferedEnd
             });
             scheduleController.initialize(type === Constants.AUDIO);
             scheduleController.setLastInitializedRepresentationId('v1');
@@ -288,10 +289,16 @@ describe('ScheduleController', function () {
             expect(fragmentNeededSpy.calledOnce).to.be.true;
         });
 
-        it('should continue buffering audio up to the position video has been requested to, even if the video buffer level is small because of a gap', () => {
-            // Audio is buffered until 20, video has been requested until 40 but its contiguous buffer level ends at the gap
+        it('should base the audio buffer target on the end of the appended video data if the video buffer has a gap', () => {
+            // Video level ends at the gap (16 - 9 = 7), but video is appended until 40: target = 40 - 9 + 1
             createScheduleController(20, Constants.AUDIO, 40);
-            // Audio target is the video buffer level + 1 = 8. The audio buffer level alone does not require another segment
+
+            expect(scheduleController.getBufferTarget()).to.equal(32);
+        });
+
+        it('should continue buffering audio behind a gap in the video buffer', () => {
+            createScheduleController(20, Constants.AUDIO, 40);
+            // Without the gap handling the audio target would be the video buffer level + 1 = 8
             dashMetrics.getCurrentBufferLevel = (mediaType) => mediaType === Constants.VIDEO ? 7 : 11;
             scheduleController.startScheduleTimer(0);
             clock.tick(1);
@@ -299,13 +306,17 @@ describe('ScheduleController', function () {
             expect(fragmentNeededSpy.calledOnce).to.be.true;
         });
 
-        it('should stop buffering audio once it is ahead of the position video has been requested to', () => {
-            createScheduleController(42, Constants.AUDIO, 40);
-            dashMetrics.getCurrentBufferLevel = (mediaType) => mediaType === Constants.VIDEO ? 7 : 11;
-            scheduleController.startScheduleTimer(0);
-            clock.tick(1);
+        it('should use the video buffer level for the audio buffer target if there is no appended video data', () => {
+            createScheduleController(20, Constants.AUDIO, NaN);
 
-            expect(fragmentNeededSpy.notCalled).to.be.true;
+            expect(scheduleController.getBufferTarget()).to.equal(8);
+        });
+
+        it('should use the video buffer level for the audio buffer target if there is no playback time, e.g. while preloading', () => {
+            createScheduleController(20, Constants.AUDIO, 40);
+            playbackControllerStub.getTime = () => null;
+
+            expect(scheduleController.getBufferTarget()).to.equal(8);
         });
     });
 });

@@ -500,7 +500,7 @@ function Stream(config) {
             dashMetrics: config.dashMetrics,
             errHandler,
             fragmentModel,
-            getVideoBufferingTime: _getVideoBufferingTime,
+            getVideoBufferedEnd: _getVideoBufferedEnd,
             manifestModel,
             mediaController,
             mediaPlayerModel,
@@ -937,9 +937,26 @@ function Stream(config) {
         return _getProcessorByType(mediaInfo.type);
     }
 
-    function _getVideoBufferingTime() {
+    /**
+     * Returns the end of the appended video data up to the position video has been requested to. Ranges after that position, e.g. left over from before a backward seek, are ignored.
+     * @return {number}
+     * @private
+     */
+    function _getVideoBufferedEnd() {
         const videoProcessor = _getProcessorByType(Constants.VIDEO);
-        return videoProcessor ? videoProcessor.getBufferingTime() : NaN;
+        const buffer = videoProcessor ? videoProcessor.getBuffer() : null;
+        const ranges = buffer ? buffer.getAllBufferRanges() : null;
+        const bufferingTime = videoProcessor ? videoProcessor.getBufferingTime() : NaN;
+        if (!ranges || isNaN(bufferingTime)) {
+            return NaN;
+        }
+        let bufferedEnd = NaN;
+        for (let i = 0; i < ranges.length; i++) {
+            if (ranges.start(i) < bufferingTime) {
+                bufferedEnd = Math.min(ranges.end(i), bufferingTime);
+            }
+        }
+        return bufferedEnd;
     }
 
     function _getProcessorByType(type) {
