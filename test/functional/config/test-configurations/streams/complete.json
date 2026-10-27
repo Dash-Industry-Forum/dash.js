@@ -91,7 +91,8 @@
       "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
       "includedTestfiles": [
         "feature-support/cmcd",
-        "feature-support/cmcd-v2"
+        "feature-support/cmcd-v2",
+        "buffer/*"
       ]
     },
     {
@@ -1532,6 +1533,39 @@
           "browser": "safari"
         }
       ]
+    },
+    {
+      "name": "Video segments without samples in the middle of the period",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/video_gap_mid_period.mpd",
+      "includedTestfiles": [
+        "advanced/play-into-gap"
+      ],
+      "testdata": {
+        "gaps": [
+          {
+            "start": 16,
+            "end": 24
+          }
+        ]
+      }
+    },
+    {
+      "name": "Audio and video segments without samples in the middle of the period, gaps ending at different times",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/video_audio_gap_mid_period.mpd",
+      "includedTestfiles": [
+        "advanced/play-into-gap"
+      ],
+      "testdata": {
+        "gaps": [
+          {
+            "start": 16,
+            "end": 32.09,
+            "bufferTarget": 8
+          }
+        ]
+      }
     }
   ]
 }

@@ -15,7 +15,9 @@
       "includedTestfiles": [
         "playback/*",
         "feature-support/cmcd",
-        "live/*"
+        "live/*",
+        "buffer/buffer-cleanup",
+        "buffer/initial-buffer-target"
       ]
     },
     {
@@ -108,7 +110,8 @@
       "includedTestfiles": [
         "playback/play",
         "playback/pause",
-        "playback/seek"
+        "playback/seek",
+        "text/language-matching"
       ]
     },
     {
@@ -269,6 +272,70 @@
       "includedTestfiles": [
         "advanced/seek-in-gaps"
       ]
+    },
+    {
+      "url": "https://storage.googleapis.com/shaka-demo-assets/sintel-many-subs/dash.mpd",
+      "name": "Shaka 44 different subtitles",
+      "type": "vod",
+      "includedTestfiles": [
+        "text/language-matching"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "L3D-DASH LiveSim2",
+      "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/chunkdur_0.5/ssras_2,1/chunkdurssr_2,0.2/testpic_2s_low_delay/Manifest.mpd",
+      "provider": "dashif",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/*",
+        "live/*"
+      ]
+    },
+    {
+      "name": "BBB 30fps VoD - Buffer",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+      "includedTestfiles": [
+        "buffer/*"
+      ]
+    },
+    {
+      "name": "Video segments without samples in the middle of the period",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/video_gap_mid_period.mpd",
+      "includedTestfiles": [
+        "advanced/play-into-gap"
+      ],
+      "testdata": {
+        "gaps": [
+          {
+            "start": 16,
+            "end": 24
+          }
+        ]
+      }
+    },
+    {
+      "name": "Audio and video segments without samples in the middle of the period, gaps ending at different times",
+      "type": "vod",
+      "url": "/base/test/functional/content/gap/video_audio_gap_mid_period.mpd",
+      "includedTestfiles": [
+        "advanced/play-into-gap"
+      ],
+      "testdata": {
+        "gaps": [
+          {
+            "start": 16,
+            "end": 32.09,
+            "bufferTarget": 8
+          }
+        ]
+      }
     }
   ]
 }

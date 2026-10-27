@@ -394,5 +394,90 @@ export async function createControlBar(player, videoElement, wrapperElement) {
     return cb;
 }
 
+/**
+ * Helper: build a side panel with editable numeric settings and live debug values.
+ * Pass the returned element as opts.sidePanel to initSamplePage().
+ *
+ * @param {Object} opts
+ * @param {Array<{key: string, label: string, value: number}>} opts.settings - Settings shown as number inputs
+ * @param {string} [opts.applyLabel='Apply'] - Label of the apply button
+ * @param {Array<{key: string, label: string}>} opts.metrics - Debug values shown below the settings
+ * @returns {{element: HTMLElement, getValues: Function, onApply: Function, setMetric: Function}}
+ */
+export function createSamplePanel(opts) {
+    var inputs = {};
+    var metricValues = {};
+    var applyCallbacks = [];
+    var element = el('div', { style: 'display:flex;flex-direction:column;gap:0.75rem;' });
+
+    var settingsCard = el('div', { className: 'sample-metrics' });
+    settingsCard.appendChild(el('div', { className: 'sample-metrics-header', textContent: 'Settings' }));
+    var settingsBody = el('div', { className: 'sample-metrics-body' });
+    opts.settings.forEach(function (setting) {
+        var row = el('div', { className: 'metric-row' });
+        var input = el('input', {
+            type: 'number',
+            className: 'form-control form-control-sm',
+            style: 'width:6rem;',
+            value: isNaN(setting.value) ? '' : String(setting.value),
+            'aria-label': setting.label
+        });
+        inputs[setting.key] = input;
+        row.appendChild(el('label', { className: 'metric-label', textContent: setting.label }));
+        row.appendChild(input);
+        settingsBody.appendChild(row);
+    });
+    var applyButton = el('button', {
+        type: 'button',
+        className: 'btn btn-sm btn-primary mt-2',
+        textContent: opts.applyLabel || 'Apply'
+    });
+    applyButton.addEventListener('click', function () {
+        var values = getValues();
+        applyCallbacks.forEach(function (callback) {
+            callback(values);
+        });
+    });
+    settingsBody.appendChild(applyButton);
+    settingsCard.appendChild(settingsBody);
+    element.appendChild(settingsCard);
+
+    var metricsCard = el('div', { className: 'sample-metrics' });
+    metricsCard.appendChild(el('div', { className: 'sample-metrics-header', textContent: 'Debug' }));
+    var metricsBody = el('div', { className: 'sample-metrics-body' });
+    opts.metrics.forEach(function (metric) {
+        var row = el('div', { className: 'metric-row' });
+        var value = el('span', { className: 'metric-value', textContent: '-' });
+        metricValues[metric.key] = value;
+        row.appendChild(el('span', { className: 'metric-label', textContent: metric.label }));
+        row.appendChild(value);
+        metricsBody.appendChild(row);
+    });
+    metricsCard.appendChild(metricsBody);
+    element.appendChild(metricsCard);
+
+    // Empty inputs result in NaN, which dash.js uses to disable a setting, e.g. initialBufferLevel
+    function getValues() {
+        var values = {};
+        for (var key in inputs) {
+            values[key] = parseFloat(inputs[key].value);
+        }
+        return values;
+    }
+
+    return {
+        element: element,
+        getValues: getValues,
+        onApply: function (callback) {
+            applyCallbacks.push(callback);
+        },
+        setMetric: function (key, text) {
+            if (metricValues[key]) {
+                metricValues[key].textContent = text;
+            }
+        }
+    };
+}
+
 // Expose on window so plain <script class="code"> blocks can access it
 window.createControlBar = createControlBar;

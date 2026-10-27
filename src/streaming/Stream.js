@@ -45,6 +45,7 @@ import MediaPlayerEvents from './MediaPlayerEvents.js';
 import StreamProcessor from './StreamProcessor.js';
 import ThumbnailController from './thumbnail/ThumbnailController.js';
 import URLUtils from './utils/URLUtils.js';
+import {getBufferedEndBefore} from './utils/BufferRangeUtils.js';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.MUXED, Constants.IMAGE];
@@ -500,6 +501,7 @@ function Stream(config) {
             dashMetrics: config.dashMetrics,
             errHandler,
             fragmentModel,
+            getBufferedEndForType: _getBufferedEndForType,
             manifestModel,
             mediaController,
             mediaPlayerModel,
@@ -934,6 +936,20 @@ function Stream(config) {
         }
 
         return _getProcessorByType(mediaInfo.type);
+    }
+
+    /**
+     * Returns the end of the appended data of the given media type up to the position it has been requested to. Ranges after that position, e.g. left over from before a backward seek, are ignored.
+     * @param {string} type
+     * @return {number}
+     * @private
+     */
+    function _getBufferedEndForType(type) {
+        const processor = _getProcessorByType(type);
+        const buffer = processor ? processor.getBuffer() : null;
+        const ranges = buffer ? buffer.getAllBufferRanges() : null;
+        const bufferingTime = processor ? processor.getBufferingTime() : NaN;
+        return isNaN(bufferingTime) ? NaN : getBufferedEndBefore(ranges, bufferingTime);
     }
 
     function _getProcessorByType(type) {

@@ -140,6 +140,14 @@ function BoxParser(/*config*/) {
         // exactly one mfhd per moof
         let mfhdBoxes = isoFile.getBoxes('mfhd');
 
+        // Not every buffer reaching this function is ISOBMFF. WebM media
+        // segments contain no moof or mfhd at all, and reading
+        // mfhdBoxes[mfhdBoxes.length - 1] below then throws. Return the same
+        // empty shape used for an empty buffer above.
+        if (moofBoxes.length === 0 || mfhdBoxes.length === 0) {
+            return { sampleList: [], lastSequenceNumber: NaN, totalDuration: NaN, numSequences: NaN };
+        }
+
         let sampleDuration,
             sampleCompositionTimeOffset,
             sampleCount,
