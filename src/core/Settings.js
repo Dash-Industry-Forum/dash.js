@@ -244,6 +244,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                 limitBitrateByPortal: false,
  *                 usePixelRatioInLimitBitrateByPortal: false,
  *                 hybridSwitchBufferTime: 12,
+ *                 segmentSequenceSwitching: {
+ *                     maxUpSwitchesPerSequence: 1,
+ *                     maxDownSwitchesPerSequence: -1,
+ *                     allowUpSwitchAfterDownSwitch: false,
+ *                     allowDownSwitchAfterUpSwitch: true
+ *                 },
  *                rules: {
  *                     throughputRule: {
  *                         active: true
@@ -862,6 +868,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * When the throughput rule and the Bola rule are both active, this value defines the buffer level in seconds when the
  * player will switch from throughput to Bola.
  *
+ * @property {module:Settings~SegmentSequenceSwitchingSettings} [segmentSequenceSwitching]
+ * Limits the quality switches the ABR logic performs in the middle of a segment sequence, i.e. at partial segment boundaries of content signaling partial segments and SegmentSequenceProperties.
+ *
  * @property {module:Settings~AbrRules} [rules]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time
  * we switch to a dynamic mode.<br>
@@ -885,6 +894,20 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Use -1 to let the player decide.
  * @property {module:Settings~AudioVideoSettings} [autoSwitchBitrate={audio: true, video: true}]
  * Indicates whether the player should enable ABR algorithms to switch the bitrate.
+ */
+
+/**
+ * @typedef {Object} SegmentSequenceSwitchingSettings
+ * Only applies to switches the ABR rules request in the middle of a segment sequence, for instance into an S-Frame. Switches at the start of a segment sequence,
+ * leaving a bootstrap Representation and manual quality switches are not limited.
+ * @property {number} [maxUpSwitchesPerSequence=1]
+ * Maximum number of up-switches within one segment sequence. Use 0 to only switch up at the start of a segment sequence and -1 for no limit.
+ * @property {number} [maxDownSwitchesPerSequence=-1]
+ * Maximum number of down-switches within one segment sequence. Note that a large down-switch might be performed in several hops, each hop counts as a down-switch. Use -1 for no limit.
+ * @property {boolean} [allowUpSwitchAfterDownSwitch=false]
+ * If false, the ABR logic does not switch up again in a segment sequence in which it already switched down. This prevents an immediate down and up switch.
+ * @property {boolean} [allowDownSwitchAfterUpSwitch=true]
+ * If false, the ABR logic does not switch down again in a segment sequence in which it already switched up.
  */
 
 /**
@@ -1573,6 +1596,12 @@ function Settings() {
                 limitBitrateByPortalMinimum: 0,
                 enableSupplementalPropertyAdaptationSetSwitching: true,
                 hybridSwitchBufferTime: 12,
+                segmentSequenceSwitching: {
+                    maxUpSwitchesPerSequence: 1,
+                    maxDownSwitchesPerSequence: -1,
+                    allowUpSwitchAfterDownSwitch: false,
+                    allowDownSwitchAfterUpSwitch: true
+                },
                 rules: {
                     throughputRule: {
                         active: true,

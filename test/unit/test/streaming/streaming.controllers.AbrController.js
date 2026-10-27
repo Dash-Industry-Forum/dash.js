@@ -1272,8 +1272,9 @@ describe('AbrController', function () {
         }
 
         // Partial segment 3 of 8 has been requested, the next partial segment starts with an S-Frame
-        function _setLastSegment(replacementSubNumber, totalNumberOfPartialSegments = 8) {
+        function _setLastSegment(replacementSubNumber, totalNumberOfPartialSegments = 8, index = 0) {
             streamProcessor.getLastSegment = () => ({
+                index,
                 isPartialSegment: true,
                 totalNumberOfPartialSegments,
                 replacementSubNumber
@@ -1438,6 +1439,129 @@ describe('AbrController', function () {
                 // Nothing left in the queue
                 _setCurrentRepresentation(main360);
                 expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.false;
+            });
+        });
+
+        describe('segment sequence switching settings', function () {
+
+            let ruleTarget;
+
+            // Unlike _stubRuleTarget the rules collection is only replaced once, so the switch state of the segment sequence survives target changes
+            function _stubRuleTargets() {
+                FactoryMaker.extend('ABRRulesCollection', function () {
+                    return {
+                        getBestPossibleSwitchRequest: () => ({ representation: ruleTarget, reason: { message: 'test rule' } })
+                    };
+                }, true, context);
+                abrCtrl.reset();
+                abrCtrl.initialize();
+                abrCtrl.registerStreamType(Constants.VIDEO, streamProcessor);
+            }
+
+            // Requests the ABR decision for the partial segment following replacementSubNumber and applies a resulting switch
+            function _checkAt(replacementSubNumber, target, index = 0) {
+                ruleTarget = target;
+                _setLastSegment(replacementSubNumber, 8, index);
+                const hasSwitched = abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id);
+                if (hasSwitched) {
+                    _setCurrentRepresentation(capturedEvents[capturedEvents.length - 1].newRepresentation);
+                }
+                return hasSwitched;
+            }
+
+            beforeEach(function () {
+                _setCurrentRepresentation(main360);
+                _stubRuleTargets();
+            });
+
+            it('should only switch up once within a segment sequence', function () {
+                expect(_checkAt(2, main540)).to.be.true;
+                expect(_checkAt(3, main720)).to.be.false;
+                expect(currentRepresentation.id).to.equal('main540p');
+            });
+
+            it('should allow another up-switch in the next segment sequence', function () {
+                expect(_checkAt(2, main540)).to.be.true;
+                expect(_checkAt(3, main720)).to.be.false;
+                expect(_checkAt(0, main720, 1)).to.be.true;
+                expect(currentRepresentation.id).to.equal('main720p');
+            });
+
+            it('should not limit switches at the start of a segment sequence', function () {
+                expect(_checkAt(2, main540)).to.be.true;
+                expect(_checkAt(7, main720)).to.be.true;
+                expect(capturedEvents[1].noInitSegmentRequired).to.be.false;
+            });
+
+            it('should allow multiple up-switches if maxUpSwitchesPerSequence is -1', function () {
+                settings.update({ streaming: { abr: { segmentSequenceSwitching: { maxUpSwitchesPerSequence: -1 } } } });
+                expect(_checkAt(2, main540)).to.be.true;
+                expect(_checkAt(3, main720)).to.be.true;
+                expect(_checkAt(4, main1080)).to.be.true;
+            });
+
+            it('should not switch up within a segment sequence if maxUpSwitchesPerSequence is 0', function () {
+                settings.update({ streaming: { abr: { segmentSequenceSwitching: { maxUpSwitchesPerSequence: 0 } } } });
+                expect(_checkAt(2, main540)).to.be.false;
+                expect(_checkAt(7, main540)).to.be.true;
+            });
+
+            it('should not switch up again after a down-switch within a segment sequence', function () {
+                _setCurrentRepresentation(main720);
+                expect(_checkAt(2, main540)).to.be.true;
+                expect(_checkAt(3, main720)).to.be.false;
+                expect(currentRepresentation.id).to.equal('main540p');
+            });
+
+            it('should switch up after a down-switch if allowUpSwitchAfterDownSwitch is enabled', function () {
+                settings.update({ streaming: { abr: { segmentSequenceSwitching: { allowUpSwitchAfterDownSwitch: true } } } });
+                _setCurrentRepresentation(main720);
+                expect(_checkAt(2, main540)).to.be.true;
+                expect(_checkAt(3, main720)).to.be.true;
+            });
+
+            it('should allow a down-switch after an up-switch by default', function () {
+                expect(_checkAt(2, main540)).to.be.true;
+                expect(_checkAt(3, main360)).to.be.true;
+            });
+
+            it('should not switch down after an up-switch if allowDownSwitchAfterUpSwitch is disabled', function () {
+                settings.update({ streaming: { abr: { segmentSequenceSwitching: { allowDownSwitchAfterUpSwitch: false } } } });
+                expect(_checkAt(2, main540)).to.be.true;
+                expect(_checkAt(3, main360)).to.be.false;
+            });
+
+            it('should hop down multiple times within a segment sequence by default', function () {
+                _setCurrentRepresentation(main1080);
+                expect(_checkAt(2, main360)).to.be.true;
+                expect(currentRepresentation.id).to.equal('main540p');
+                expect(_checkAt(3, main360)).to.be.true;
+                expect(currentRepresentation.id).to.equal('main360p');
+            });
+
+            it('should limit the down hops to maxDownSwitchesPerSequence', function () {
+                settings.update({ streaming: { abr: { segmentSequenceSwitching: { maxDownSwitchesPerSequence: 1 } } } });
+                _setCurrentRepresentation(main1080);
+                expect(_checkAt(2, main360)).to.be.true;
+                expect(_checkAt(3, main360)).to.be.false;
+                expect(currentRepresentation.id).to.equal('main540p');
+            });
+
+            it('should neither limit nor count manual quality switches', function () {
+                expect(_checkAt(2, main540)).to.be.true;
+
+                _setLastSegment(3);
+                abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, main720, { message: 'manual' });
+                expect(capturedEvents[capturedEvents.length - 1].newRepresentation.id).to.equal('main720p');
+            });
+
+            it('should not count leaving a bootstrap Representation as an up-switch', function () {
+                _setCurrentRepresentation(bootstrap360);
+                // The exit picks the main Representation closest in bandwidth, independent of the ABR rules
+                expect(_checkAt(2, main360)).to.be.true;
+                expect(currentRepresentation.id).to.equal('main720p');
+                expect(_checkAt(3, main1080)).to.be.true;
+                expect(currentRepresentation.id).to.equal('main1080p');
             });
         });
     })

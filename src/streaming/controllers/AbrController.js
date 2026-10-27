@@ -75,6 +75,7 @@ function AbrController() {
         logger,
         mediaPlayerModel,
         queuedManualQualitySwitches,
+        segmentSequenceSwitchStateDict,
         settings,
         streamController,
         streamProcessorDict,
@@ -128,6 +129,11 @@ function AbrController() {
         abandonmentStateDict[streamId][type] = {};
         abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
 
+        if (!segmentSequenceSwitchStateDict[streamId]) {
+            segmentSequenceSwitchStateDict[streamId] = {};
+        }
+        segmentSequenceSwitchStateDict[streamId][type] = _createSegmentSequenceSwitchState(NaN);
+
         // Do not change current value if it has been set before
         const currentState = abrRulesCollection.getBolaState(type)
         if (currentState === undefined) {
@@ -154,6 +160,10 @@ function AbrController() {
                 delete abandonmentStateDict[streamId][type];
             }
 
+            if (segmentSequenceSwitchStateDict[streamId] && segmentSequenceSwitchStateDict[streamId][type]) {
+                delete segmentSequenceSwitchStateDict[streamId][type];
+            }
+
         } catch (e) {
 
         }
@@ -162,6 +172,7 @@ function AbrController() {
     function resetInitialSettings() {
         abandonmentStateDict = {};
         excludedRepresentationIds = {};
+        segmentSequenceSwitchStateDict = {};
         streamProcessorDict = {};
         queuedManualQualitySwitches = new Map();
 
@@ -891,10 +902,15 @@ function AbrController() {
                     logger.debug(`Can not switch to Representation ${newRepresentation.id} for ${type} at partial segment ${lastSegment.replacementSubNumber}. Waiting for the next possible switch point.`);
                     return false;
                 }
+                if (!_isAllowedBySegmentSequenceSwitchingSettings(streamId, type, lastSegment, currentRepresentation, reachableRepresentation)) {
+                    logger.debug(`Not switching to Representation ${reachableRepresentation.id} for ${type} at partial segment ${lastSegment.replacementSubNumber}. The segment sequence switching settings do not allow another switch in this direction.`);
+                    return false;
+                }
                 if (reachableRepresentation.id !== newRepresentation.id) {
                     logger.debug(`Can not switch to Representation ${newRepresentation.id} for ${type} at partial segment ${lastSegment.replacementSubNumber}. Hopping via Representation ${reachableRepresentation.id}.`);
                 }
                 _changeQuality(type, currentRepresentation, reachableRepresentation, switchRequest.reason);
+                _addSegmentSequenceSwitch(streamId, type, lastSegment, currentRepresentation, reachableRepresentation);
                 return true;
             }
 
@@ -902,6 +918,80 @@ function AbrController() {
         } catch (e) {
             logger.error(e);
             return false;
+        }
+    }
+
+    function _createSegmentSequenceSwitchState(segmentIndex) {
+        return { segmentIndex, upSwitchCount: 0, downSwitchCount: 0 };
+    }
+
+    /**
+     * A switch in the middle of a segment sequence enters the target at a partial segment boundary. Switches at the start of a segment sequence enter at a regular SAP and are not limited.
+     * @private
+     */
+    function _isMidSegmentSequenceSwitch(lastSegment) {
+        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
+            return false;
+        }
+
+        return _getNextPartialSubNumber(lastSegment) !== 0;
+    }
+
+    /**
+     * Returns the switches performed in the segment sequence the next partial segment belongs to. A new segment sequence starts with fresh counters.
+     * @private
+     */
+    function _getSegmentSequenceSwitchState(streamId, type, lastSegment) {
+        if (!segmentSequenceSwitchStateDict[streamId]) {
+            segmentSequenceSwitchStateDict[streamId] = {};
+        }
+        const state = segmentSequenceSwitchStateDict[streamId][type];
+        if (!state || state.segmentIndex !== lastSegment.index) {
+            segmentSequenceSwitchStateDict[streamId][type] = _createSegmentSequenceSwitchState(lastSegment.index);
+        }
+
+        return segmentSequenceSwitchStateDict[streamId][type];
+    }
+
+    function _isBelowSwitchLimit(switchCount, limit) {
+        if (isNaN(limit) || limit < 0) {
+            return true;
+        }
+
+        return switchCount < limit;
+    }
+
+    /**
+     * Limits the switches the ABR rules request within one segment sequence, e.g. at most one up-switch and no up-switch after a down-switch.
+     * @private
+     */
+    function _isAllowedBySegmentSequenceSwitchingSettings(streamId, type, lastSegment, currentRepresentation, targetRepresentation) {
+        if (!_isMidSegmentSequenceSwitch(lastSegment) || targetRepresentation.bandwidth === currentRepresentation.bandwidth) {
+            return true;
+        }
+
+        const switchingSettings = settings.get().streaming.abr.segmentSequenceSwitching;
+        const state = _getSegmentSequenceSwitchState(streamId, type, lastSegment);
+
+        if (targetRepresentation.bandwidth > currentRepresentation.bandwidth) {
+            return _isBelowSwitchLimit(state.upSwitchCount, switchingSettings.maxUpSwitchesPerSequence)
+                && (switchingSettings.allowUpSwitchAfterDownSwitch || state.downSwitchCount === 0);
+        }
+
+        return _isBelowSwitchLimit(state.downSwitchCount, switchingSettings.maxDownSwitchesPerSequence)
+            && (switchingSettings.allowDownSwitchAfterUpSwitch || state.upSwitchCount === 0);
+    }
+
+    function _addSegmentSequenceSwitch(streamId, type, lastSegment, currentRepresentation, targetRepresentation) {
+        if (!_isMidSegmentSequenceSwitch(lastSegment) || targetRepresentation.bandwidth === currentRepresentation.bandwidth) {
+            return;
+        }
+
+        const state = _getSegmentSequenceSwitchState(streamId, type, lastSegment);
+        if (targetRepresentation.bandwidth > currentRepresentation.bandwidth) {
+            state.upSwitchCount += 1;
+        } else {
+            state.downSwitchCount += 1;
         }
     }
 

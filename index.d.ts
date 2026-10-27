@@ -1878,6 +1878,12 @@ export class MediaPlayerSettingClass {
             limitBitrateByPortalMinimum?: number,
             enableSupplementalPropertyAdaptationSetSwitching?: boolean,
             hybridSwitchBufferTime?: number,
+            segmentSequenceSwitching?: {
+                maxUpSwitchesPerSequence?: number,
+                maxDownSwitchesPerSequence?: number,
+                allowUpSwitchAfterDownSwitch?: boolean,
+                allowDownSwitchAfterUpSwitch?: boolean
+            },
             rules?: {
                 throughputRule?: {
                     active?: boolean
