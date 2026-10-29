@@ -95,6 +95,11 @@ function PreBufferSink(onAppendedCallback) {
         return Promise.resolve();
     }
 
+    // Chunks are stored synchronously, there is never a pending append
+    function hasPendingMediaAppendAtTime() {
+        return false;
+    }
+
     function getAllBufferRanges() {
         let ranges = [];
 
@@ -167,6 +172,7 @@ function PreBufferSink(onAppendedCallback) {
 
     instance = {
         getAllBufferRanges,
+        hasPendingMediaAppendAtTime,
         append,
         remove,
         abort,

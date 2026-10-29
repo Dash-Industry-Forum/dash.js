@@ -173,6 +173,28 @@ describe('DashHandler', function () {
             });
         });
 
+        it('isLastSegmentRequested returns false after the media has finished if buffering continues before the last requested segment, e.g. after a seek back', () => {
+            segRequestStub.restore();
+            const lastSegment = { index: 14, presentationStartTime: 84, duration: 6, representation: {}, media: 'http://someurl' };
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByIndex');
+            segRequestStub.onFirstCall().returns(lastSegment);
+            segRequestStub.onSecondCall().returns(null);
+
+            const dashHandler = DashHandler(context).create(config);
+            dashHandler.initialize(false);
+            const representation = new Representation();
+            representation.segmentInfoType = DashConstants.SEGMENT_TEMPLATE;
+            representation.adaptation = { index: 1, period: { duration: 90 } };
+            lastSegment.representation = representation;
+
+            // Requests the last segment, then finds no further segment: the media has finished
+            dashHandler.getNextSegmentRequest({}, representation);
+            dashHandler.getNextSegmentRequest({}, representation);
+
+            expect(dashHandler.isLastSegmentRequested(representation, 1)).to.be.false;
+            expect(dashHandler.isLastSegmentRequested(representation, 90)).to.be.true;
+        });
+
         it('returns null if the next segment is after @endNumber', () => {
             const dashHandler = DashHandler(context).create(config);
             const representation = {segmentInfoType: DashConstants.SEGMENT_TEMPLATE, adaptation: {index: 1}, endNumber: 2 };

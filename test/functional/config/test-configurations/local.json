@@ -20,7 +20,18 @@
     },
     "firefox_custom": {
       "base": "Firefox",
-      "prefs": {}
+      "prefs": {
+        "browser.aboutwelcome.enabled": false,
+        "browser.startup.homepage_override.mstone": "ignore",
+        "startup.homepage_welcome_url": "",
+        "startup.homepage_welcome_url.additional": "",
+        "browser.shell.checkDefaultBrowser": false,
+        "datareporting.policy.dataSubmissionEnabled": false,
+        "toolkit.telemetry.reportingpolicy.firstRun": false,
+        "trailhead.firstrun.didSeeAboutWelcome": true,
+        "media.autoplay.default": 0,
+        "media.autoplay.blocking_policy": 0
+      }
     },
     "safari_custom": {
       "base": "SafariNative",

@@ -520,8 +520,13 @@ class DashJsAdapter {
             }
             const _onFragmentLoadingCompleted = (e) => {
                 if (e && e.request && e.request.mediaType === Constants.DASH_JS.MEDIA_TYPES.VIDEO && !isNaN(e.request.presentationStartTime)) {
-                    if (e.request.presentationStartTime > bufferInformation.currentTime
-                        && e.request.presentationStartTime < bufferInformation.currentTime + bufferInformation.forwardBuffer
+                    // Compare against the live buffer: the ABR switch can happen long after bufferInformation was captured.
+                    // A replacing segment overlaps the forward buffer that is still filled with the previous representation.
+                    const currentTime = this.getCurrentTime();
+                    const bufferEnd = currentTime + this.getBufferLengthByType(Constants.DASH_JS.MEDIA_TYPES.VIDEO);
+                    const segmentEnd = e.request.presentationStartTime + e.request.duration;
+                    if (segmentEnd > currentTime
+                        && e.request.presentationStartTime < bufferEnd - Constants.TEST_INPUTS.FAST_SWITCH_QUALITY_VIDEO.BUFFER_OVERLAP_TOLERANCE
                         && e.request.representation.id !== bufferInformation.currentRepresentation.id) {
                         _onComplete(true);
                     }

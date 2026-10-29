@@ -19,17 +19,25 @@ The source files are placed in multiple folders:
 * `view`: Customized view for the test execution including a video element.
 
 # Configuration
-The main configuration for the test execution is defined in `karma.functional.conf.js`. To adjust the list of
-testvectors or the testcases the existing `config/content.js` can be adjusted. As an alternative, include a different
-configuration file in `src/Utils.js`. Future additions to the test framework should allow definition of the testfile
-to be used directly via command line parameters.
+The main configuration for the test execution is defined in `config/karma.functional.conf.cjs`. Browsers and reporters
+are selected via `--configfile` (see `config/test-configurations`), the testvectors via `--streamsfile` (see
+`config/test-configurations/streams`):
+
+* `smoke`: Small set of core vectors, default for `npm run test-functional`.
+* `complete`: All vectors with all applicable testcases (`npm run test-functional:complete`).
+* `drm`: DRM subset of `complete` (`npm run test-functional:drm`).
+* `text`: Subtitle and caption subset of `complete` (`npm run test-functional:text`).
+* `single`: One vector, used in the pull request CI.
+
+A testvector can restrict its testcases with `includedTestfiles` and `excludedTestfiles`. Both accept concrete testcases
+(`playback/seek`) and categories (`playback/*`). Without `includedTestfiles` all loaded testcases are used.
 
 # Test Execution
 To execute the functional tests run the following steps:
 
 1. `npm install` to install all dependencies
 2. `npm run build` to build the `dist` files of dash.js. 
-3. `npm run test-functional-mocha` to execute the tests.
+3. `npm run test-functional` to execute the tests.
 4. The results will be available after the test execution in `test/functional-karma/results`
 
 # Edge on Windows: Widevine CDM requires a persistent browser profile

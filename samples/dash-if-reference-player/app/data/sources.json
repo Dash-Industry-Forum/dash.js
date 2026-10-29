@@ -98,6 +98,11 @@
             "acronym": "V-Nova",
             "name": "V-Nova",
             "url": "https://v-nova.com/"
+        },
+        "gpac": {
+            "acronym": "GPAC",
+            "name": "GPAC / Telecom Paris",
+            "url": "https://gpac.io/"
         }
     },
     "items": [
@@ -357,6 +362,49 @@
                         "vod",
                         "dolby"
                     ]
+                },
+                {
+                    "name": "Multiperiod, codec and mimeType change across periods",
+                    "url": "https://storage.googleapis.com/shaka-demo-assets/heliocentrism-mixed-codec/heliocentrism.mpd",
+                    "provider": "google",
+                    "tags": [
+                        "vod",
+                        "multiperiod",
+                        "webm",
+                        "google"
+                    ]
+                },
+                {
+                    "name": "Multicodec (WebM/MP4), multiple languages",
+                    "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd",
+                    "provider": "google",
+                    "tags": [
+                        "vod",
+                        "multiaudio",
+                        "webm",
+                        "google"
+                    ]
+                },
+                {
+                    "name": "Surround and stereo audio",
+                    "url": "https://storage.googleapis.com/shaka-demo-assets/tos-surround/dash.mpd",
+                    "provider": "google",
+                    "tags": [
+                        "vod",
+                        "multiaudio",
+                        "surround",
+                        "google"
+                    ]
+                },
+                {
+                    "name": "Multiperiod, 5 periods, live profile (GPAC conformance)",
+                    "url": "https://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-live-periods/mp4-live-periods-mpd.mpd",
+                    "provider": "gpac",
+                    "tags": [
+                        "vod",
+                        "multiperiod",
+                        "gpac"
+                    ]
                 }
             ]
         },
@@ -438,7 +486,7 @@
                     ]
                 },
                 {
-                    "url": " https://livesim2.dashif.org/livesim2/ato_10/testpic_2s/Manifest.mpd",
+                    "url": "https://livesim2.dashif.org/livesim2/ato_10/testpic_2s/Manifest.mpd",
                     "name": "10 seconds availabilityTimeOffset (livesim)",
                     "provider": "dashif",
                     "tags": [
@@ -585,6 +633,48 @@
                         "hevc",
                         "multi-audio",
                         "bbc"
+                    ]
+                },
+                {
+                    "name": "StartOver SegmentTimeline, -20s to +20s (livesim)",
+                    "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/startrel_-20/stoprel_20/timeoffset_0/testpic_2s/Manifest.mpd",
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "segmenttimeline",
+                        "dynamic-to-static",
+                        "dashif"
+                    ]
+                },
+                {
+                    "name": "SegmentTemplate with manifest updates provided via MPD patch (livesim)",
+                    "url": "https://livesim2.dashif.org/livesim2/patch_60/testpic_2s/Manifest.mpd",
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "mpd-patching",
+                        "dashif"
+                    ]
+                },
+                {
+                    "name": "Content Steering with two pathways (livesim)",
+                    "url": "https://livesim2.dashif.org/livesim2/steer_alpha,beta;ttl=20/testpic_2s/Manifest.mpd?sessionId=alice",
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "content-steering",
+                        "dashif"
+                    ]
+                },
+                {
+                    "name": "Multicodec live, H.264, VP9 and AV1",
+                    "url": "https://storage.googleapis.com/shaka-live-assets/player-source.mpd",
+                    "provider": "google",
+                    "tags": [
+                        "live",
+                        "av1",
+                        "webm",
+                        "google"
                     ]
                 }
             ]
@@ -900,6 +990,26 @@
                     "tags": [
                         "subtitles",
                         "arte"
+                    ]
+                },
+                {
+                    "name": "WebVTT in MP4 (wvtt)",
+                    "url": "https://storage.googleapis.com/shaka-demo-assets/sintel-mp4-wvtt/dash.mpd",
+                    "provider": "google",
+                    "tags": [
+                        "subtitles",
+                        "webvtt",
+                        "google"
+                    ]
+                },
+                {
+                    "name": "On-demand Testcard - WOFF Font Download signalled with essential property descriptor, relative BaseURL",
+                    "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-ctv-stereo-en-efdt-woff-bur.mpd",
+                    "provider": "bbc",
+                    "tags": [
+                        "subtitles",
+                        "woff",
+                        "bbc"
                     ]
                 }
             ]
@@ -1870,6 +1980,69 @@
                         "widevine",
                         "playready",
                         "vdms"
+                    ]
+                },
+                {
+                    "name": "Multiperiod, encrypted, clear, encrypted (Widevine)",
+                    "url": "https://storage.googleapis.com/shaka-demo-assets/sintel-mixed-encryption/enc-clear-enc.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://proxy.uat.widevine.com/proxy"
+                        }
+                    },
+                    "provider": "google",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "widevine",
+                        "google"
+                    ]
+                },
+                {
+                    "name": "W3C Clear Key via license server",
+                    "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-clearkey/dash.mpd",
+                    "protData": {
+                        "org.w3.clearkey": {
+                            "serverURL": "https://cwip-shaka-proxy.appspot.com/clearkey?_u3wDe7erb7v8Lqt8A3QDQ=ABEiM0RVZneImaq7zN3u_w"
+                        }
+                    },
+                    "provider": "google",
+                    "tags": [
+                        "drm",
+                        "clearkey",
+                        "google"
+                    ]
+                },
+                {
+                    "name": "Microsoft PlayReady AV1 CBCS",
+                    "url": "https://test.playready.microsoft.com/media/dash/BBBAV1CBC/manifest.mpd",
+                    "protData": {
+                        "com.microsoft.playready": {
+                            "serverURL": "https://test.playready.microsoft.com/core/rightsmanager.asmx?cfg=(ckt:AES128BitCBC)"
+                        }
+                    },
+                    "provider": "microsoft",
+                    "tags": [
+                        "drm",
+                        "playready",
+                        "av1",
+                        "microsoft"
+                    ]
+                },
+                {
+                    "name": "Microsoft PlayReady 1080p CBCS",
+                    "url": "https://test.playready.microsoft.com/media/dash/APPLEENC_CBCS_BBB_1080p/1080p.mpd",
+                    "protData": {
+                        "com.microsoft.playready": {
+                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:false,ck:W31bfVt9W31bfVt9W31bfQ==,ckt:aescbc)"
+                        }
+                    },
+                    "provider": "microsoft",
+                    "tags": [
+                        "drm",
+                        "playready",
+                        "cbcs",
+                        "microsoft"
                     ]
                 }
             ]

@@ -156,6 +156,12 @@ function DashHandler(config) {
             return false;
         }
 
+        // We are replacing existing stuff in the buffer, for instance after a track switch, or we seeked back to a time before the last requested segment.
+        // Checked before mediaHasFinished: the flag is not reset by a seek, so a seek back into a gap would otherwise be treated as completed buffering.
+        if (lastSegment.presentationStartTime + lastSegment.duration > bufferingTime) {
+            return false;
+        }
+
         // Either transition from dynamic to static was done or no next static segment found
         if (mediaHasFinished) {
             return true;
@@ -163,11 +169,6 @@ function DashHandler(config) {
 
         // Period is endless
         if (!isFinite(representation.adaptation.period.duration)) {
-            return false;
-        }
-
-        // we are replacing existing stuff in the buffer for instance after a track switch
-        if (lastSegment.presentationStartTime + lastSegment.duration > bufferingTime) {
             return false;
         }
 
