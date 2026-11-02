@@ -32,9 +32,16 @@
 /**
  * Lightweight BCP-47 tag normalization.
  *
- * Handles:
- * 1. Case normalization per RFC 5646 section 2.1.1
- * 2. ISO 639-2/B and 639-2/T (3-letter) to ISO 639-1 (2-letter) conversion
+ * Produces the RFC 5646 section 4.5 canonical tag in "extlang form":
+ * 1. Grandfathered and redundant tags replaced by their IANA Preferred-Value
+ * 2. Deprecated language and region subtags replaced by their IANA Preferred-Value
+ * 3. ISO 639-2/B and 639-2/T (3-letter) to ISO 639-1 (2-letter) conversion (RFC 5646 section 2.2.1)
+ * 4. Extended language subtags prefixed with their macrolanguage (e.g. cmn -> zh-cmn)
+ * 5. Extension sequences ordered by singleton, private use kept last
+ * 6. Case normalization per RFC 5646 section 2.1.1
+ *
+ * CLDR canonicalization (likely-subtag minimization such as nl-NL -> nl, macrolanguage
+ * folding such as zh-cmn -> zh, und -> en) is not part of BCP 47 and deliberately not applied.
  *
  * Replaces the heavy bcp-47-normalize package (~280 KB) which carried
  * a full IANA subtag registry (8039 entries) that dash.js never needed.
@@ -82,25 +89,114 @@ export const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescripto
     yor: 'yo', zha: 'za', zho: 'zh', zul: 'zu'
 }));
 
+/**
+ * IANA Language Subtag Registry: grandfathered and redundant tags that have a Preferred-Value.
+ * Grandfathered tags without a Preferred-Value (e.g. i-default, zh-min) are kept as they are.
+ */
+const TAG_PREFERRED_VALUES = Object.create(null, Object.getOwnPropertyDescriptors({
+    'art-lojban': 'jbo', 'en-gb-oed': 'en-GB-oxendict', 'i-ami': 'ami', 'i-bnn': 'bnn', 'i-hak': 'hak',
+    'i-klingon': 'tlh', 'i-lux': 'lb', 'i-navajo': 'nv', 'i-pwn': 'pwn', 'i-tao': 'tao', 'i-tay': 'tay',
+    'i-tsu': 'tsu', 'no-bok': 'nb', 'no-nyn': 'nn', 'sgn-be-fr': 'sfb', 'sgn-be-nl': 'vgt', 'sgn-ch-de': 'sgg',
+    'zh-guoyu': 'cmn', 'zh-hakka': 'hak', 'zh-min-nan': 'nan', 'zh-xiang': 'hsn',
+    'sgn-br': 'bzs', 'sgn-co': 'csn', 'sgn-de': 'gsg', 'sgn-dk': 'dsl', 'sgn-es': 'ssp', 'sgn-fr': 'fsl',
+    'sgn-gb': 'bfi', 'sgn-gr': 'gss', 'sgn-ie': 'isg', 'sgn-it': 'ise', 'sgn-jp': 'jsl', 'sgn-mx': 'mfs',
+    'sgn-ni': 'ncs', 'sgn-nl': 'dse', 'sgn-no': 'nsl', 'sgn-pt': 'psr', 'sgn-se': 'swl', 'sgn-us': 'ase',
+    'sgn-za': 'sfs'
+}));
+
+/**
+ * IANA Language Subtag Registry: deprecated language subtags with a Preferred-Value.
+ * ponytail: only the 2-letter ones; add deprecated 3-letter codes if they show up in content
+ */
+const DEPRECATED_LANGUAGES = Object.create(null, Object.getOwnPropertyDescriptors({
+    in: 'id', iw: 'he', ji: 'yi', jw: 'jv', mo: 'ro'
+}));
+
+/**
+ * IANA Language Subtag Registry: deprecated region subtags with a Preferred-Value.
+ */
+const DEPRECATED_REGIONS = Object.create(null, Object.getOwnPropertyDescriptors({
+    BU: 'MM', DD: 'DE', FX: 'FR', TP: 'TL', YD: 'YE', ZR: 'CD'
+}));
+
+/**
+ * IANA Language Subtag Registry: extlang subtags and their Prefix, used to produce the extlang form.
+ * ponytail: Chinese, Arabic, Malay, Swahili and sign language families only; add other extlangs from the registry if needed
+ */
+const EXTLANG_PREFIXES = Object.create(null);
+[
+    ['zh', 'cdo cjy cmn cpx czh czo gan hak hsn lzh mnp nan wuu yue'],
+    ['ar', 'acm afb aeb ajp apc apd arb arq ars ary arz ayl'],
+    ['ms', 'min zlm zsm'],
+    ['sw', 'swc swh'],
+    ['sgn', 'ase bfi bzs csn dse dsl fsl gsg gss isg ise jsl mfs ncs nsl psr sfb sfs sgg ssp swl vgt']
+].forEach(([prefix, extlangs]) => extlangs.split(' ').forEach(extlang => EXTLANG_PREFIXES[extlang] = prefix));
+
+// Grandfathered and redundant tags, longest match first (zh-min-nan before zh-min)
+function _replacePreferredTag(parts) {
+    for (let n = Math.min(3, parts.length); n > 1; n--) {
+        const preferredValue = TAG_PREFERRED_VALUES[parts.slice(0, n).join('-')];
+        if (preferredValue) {
+            return preferredValue.toLowerCase().split('-').concat(parts.slice(n));
+        }
+    }
+    return parts;
+}
+
 export function normalizeBcp47(tag) {
     if (!tag || typeof tag !== 'string') {
         return tag;
     }
-    const parts = tag.split('-');
+    let parts = _replacePreferredTag(tag.toLowerCase().split('-'));
 
-    // Language: lowercase + ISO 639-2 to 639-1 conversion
-    parts[0] = parts[0].toLowerCase();
-    parts[0] = ISO_639_2_TO_1[parts[0]] || parts[0];
+    // Private use (x-...) and irregular grandfathered tags without Preferred-Value (i-default) stay lowercase
+    if (parts[0].length === 1) {
+        return parts.join('-');
+    }
 
-    for (let i = 1; i < parts.length; i++) {
+    // Language: deprecated subtags and ISO 639-2 to 639-1
+    parts[0] = DEPRECATED_LANGUAGES[parts[0]] || ISO_639_2_TO_1[parts[0]] || parts[0];
+
+    // Deprecated regions, up to the first singleton
+    for (let i = 1; i < parts.length && parts[i].length !== 1; i++) {
+        const region = DEPRECATED_REGIONS[parts[i].toUpperCase()];
+        if (parts[i].length === 2 && region) {
+            parts[i] = region.toLowerCase();
+        }
+    }
+
+    // The replacements above can produce a redundant tag (sgn-DD -> sgn-DE -> gsg), resolve it in the same call
+    parts = _replacePreferredTag(parts);
+
+    // Extlang form (cmn -> zh-cmn)
+    if (EXTLANG_PREFIXES[parts[0]]) {
+        parts.unshift(EXTLANG_PREFIXES[parts[0]]);
+    }
+
+    // Script and region casing applies only up to the first singleton, extension subtags stay lowercase
+    let i = 1;
+    for (; i < parts.length && parts[i].length !== 1; i++) {
         if (parts[i].length === 4) {
             // Script: titlecase (e.g. latn -> Latn)
-            parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1).toLowerCase();
-        } else if (parts[i].length === 2 && /^[a-zA-Z]+$/.test(parts[i])) {
+            parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
+        } else if (parts[i].length === 2 && /^[a-z]+$/.test(parts[i])) {
             // Region (2 alpha): uppercase (e.g. us -> US)
             parts[i] = parts[i].toUpperCase();
         }
     }
 
-    return parts.join('-');
+    // Extension sequences ordered by singleton, private use sequence kept last
+    const privateUseIndex = parts.indexOf('x', i);
+    const end = privateUseIndex === -1 ? parts.length : privateUseIndex;
+    const extensions = [];
+    for (let j = i; j < end; j++) {
+        if (parts[j].length === 1) {
+            extensions.push([parts[j]]);
+        } else {
+            extensions[extensions.length - 1].push(parts[j]);
+        }
+    }
+    extensions.sort((a, b) => a[0] < b[0] ? -1 : 1);
+
+    return parts.slice(0, i).concat(...extensions, parts.slice(end)).join('-');
 }

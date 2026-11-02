@@ -162,7 +162,11 @@ function HTTPLoader(cfg) {
                 if (!event.lengthComputable ||
                     (event.lengthComputable && event.total !== event.loaded)) {
                     requestObject.firstByteDate = currentTime;
-                    commonMediaResponse.resourceTiming.responseStart = currentTime.getTime();
+                    // resourceTiming values are DOMHighResTimeStamps relative to performance.timeOrigin
+                    // (like the Resource Timing API values they mirror), not epoch timestamps.
+                    // startTime and responseEnd use performance.now(), so responseStart must too,
+                    // otherwise derived durations (e.g. CMCD ttfb) mix the two clocks.
+                    commonMediaResponse.resourceTiming.responseStart = performance.now();
                 }
             }
 

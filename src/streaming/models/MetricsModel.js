@@ -169,7 +169,7 @@ function MetricsModel(config) {
 
             }
 
-            addHttpRequest(adjustedRequest, adjustedResponse, null, cmsd)
+            addHttpRequest(adjustedRequest, adjustedResponse, null, null)
             vo.actualurl = response.url;
         }
 
@@ -181,7 +181,6 @@ function MetricsModel(config) {
         vo.trequest = request.startDate;
         vo.tresponse = request.firstByteDate;
         vo.responsecode = response.status;
-        vo.cmsd = cmsd;
 
         vo._tfinish = request.endDate;
         vo._stream = request.mediaType;
@@ -194,6 +193,7 @@ function MetricsModel(config) {
         vo._serviceLocation = request.serviceLocation || null;
         vo._fileLoaderType = request.fileLoaderType;
         vo._resourceTimingValues = request.resourceTimingValues;
+        vo._cmsd = cmsd || null;
         vo._streamId = request && request.representation && request.representation.mediaInfo && request.representation.mediaInfo.streamInfo ? request.representation.mediaInfo.streamInfo.id : null;
 
         if (traces) {
