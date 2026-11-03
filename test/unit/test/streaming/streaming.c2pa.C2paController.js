@@ -120,11 +120,11 @@ describe('C2paController', function () {
 
     it('should not throw on a seek or period switch whether or not C2PA is enabled', () => {
         controller.initialize();
-        eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKED);
+        eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKING);
         eventBus.trigger(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED);
 
         enableC2pa();
-        eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKED);
+        eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKING);
         eventBus.trigger(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED);
 
         expect(customParametersModel.interceptors.length).to.equal(1);
@@ -136,7 +136,7 @@ describe('C2paController', function () {
         controller.reset();
 
         expect(() => {
-            eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKED);
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKING);
             eventBus.trigger(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED);
         }).to.not.throw();
     });

@@ -784,4 +784,162 @@ describe('C2paValidationCoordinator', function () {
             expect(events[1].payload.method).to.equal('19.4');
         });
     });
+
+    describe('segments that overlap in time', function () {
+
+        function deferred() {
+            let resolve;
+            const promise = new Promise((r) => {
+                resolve = r;
+            });
+            return {promise, resolve};
+        }
+
+        function flush() {
+            return new Promise((resolve) => setTimeout(resolve, 0));
+        }
+
+        function mediaWithByte(trackKey, value) {
+            return Object.assign(mediaInput(trackKey, NaN), {bytes: new Uint8Array([value])});
+        }
+
+        it('should validate a ManifestBox segment against the manifest id left by the one before it', async () => {
+            const {engine} = createEngine({initValidation: manifestBoxInitValidation()});
+            const firstDone = deferred();
+            const lastManifestIds = [];
+            engine.validateC2paManifestBoxSegment = async (bytes, lastManifestId) => {
+                lastManifestIds.push(lastManifestId);
+                if (bytes[0] === 1) {
+                    await firstDone.promise;
+                }
+                return manifestBoxOutcomeFor({isValid: true, errorCodes: [], previousManifestId: lastManifestId, nextManifestId: 'm' + bytes[0]});
+            };
+            const {coordinator} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            const first = coordinator.handleSegment(mediaWithByte('stream3', 1));
+            const second = coordinator.handleSegment(mediaWithByte('stream3', 2));
+            await flush();
+            firstDone.resolve();
+            await Promise.all([first, second]);
+
+            expect(lastManifestIds).to.deep.equal([null, 'm1']);
+        });
+
+        it('should not report an earlier segment as reordered when a later one validates faster', async () => {
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            const firstDone = deferred();
+            engine.validateC2paSegment = async (bytes) => {
+                if (bytes[0] === 1) {
+                    await firstDone.promise;
+                }
+                return vsiSegmentOutcome({isValid: true, errorCodes: [], seq: bytes[0]});
+            };
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            const first = coordinator.handleSegment(mediaWithByte('stream3', 1));
+            const second = coordinator.handleSegment(mediaWithByte('stream3', 2));
+            await flush();
+            firstDone.resolve();
+            await Promise.all([first, second]);
+
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.map((record) => [record.segmentNumber, record.status])).to.deep.equal([[1, 'valid'], [2, 'valid']]);
+        });
+
+        it('should keep validating other tracks while one track is busy', async () => {
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            const videoDone = deferred();
+            engine.validateC2paSegment = async (bytes) => {
+                if (bytes[0] === 1) {
+                    await videoDone.promise;
+                }
+                return vsiSegmentOutcome({isValid: true, errorCodes: [], seq: bytes[0]});
+            };
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('video-track', 'video'));
+            await coordinator.handleSegment(initInput('audio-track', 'audio'));
+            const video = coordinator.handleSegment(mediaWithByte('video-track', 1));
+            await coordinator.handleSegment(Object.assign(mediaWithByte('audio-track', 7), {mediaType: 'audio'}));
+
+            const beforeVideo = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(beforeVideo.map((record) => record.mediaType)).to.deep.equal(['audio']);
+
+            videoDone.resolve();
+            await video;
+        });
+
+        it('should drop an init segment that was still validating when reset was called', async () => {
+            const {engine} = createEngine({
+                initValidation: vsiInitValidation([{kid: 'key-1'}]),
+                segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
+            });
+            const initDone = deferred();
+            const validateInit = engine.validateC2paInitSegment;
+            engine.validateC2paInitSegment = async (bytes) => {
+                await initDone.promise;
+                return validateInit(bytes);
+            };
+            const {coordinator, events} = createCoordinator({engine});
+
+            const staleInit = coordinator.handleSegment(initInput('stream3'));
+            await flush();
+            coordinator.reset();
+            initDone.resolve();
+            await staleInit;
+
+            // The new source has not sent its init yet, so this media segment has no state.
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(eventsOfType(events, MediaPlayerEvents.C2PA_INIT_PROCESSED)).to.have.length(0);
+            expect(eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED)).to.have.length(0);
+        });
+
+        it('should drop a media segment that was still validating when reset was called', async () => {
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            const segmentDone = deferred();
+            engine.validateC2paSegment = async () => {
+                await segmentDone.promise;
+                return vsiSegmentOutcome({isValid: true, errorCodes: [], seq: 289});
+            };
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            const staleMedia = coordinator.handleSegment(mediaInput('stream3', 289));
+            await flush();
+            coordinator.reset();
+            segmentDone.resolve();
+            await staleMedia;
+
+            expect(eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED)).to.have.length(0);
+        });
+
+        it('should reset an abandoned track only after its in-flight segment finishes', async () => {
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            const firstDone = deferred();
+            engine.validateC2paSegment = async (bytes) => {
+                if (bytes[0] === 10) {
+                    await firstDone.promise;
+                }
+                return vsiSegmentOutcome({isValid: true, errorCodes: [], seq: bytes[0]});
+            };
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('low'));
+            await coordinator.handleSegment(initInput('high'));
+            // "high" was active last; switching to "low" resets "high", then back again.
+            const low = coordinator.handleSegment(mediaWithByte('low', 10));
+            const high = coordinator.handleSegment(mediaWithByte('high', 11));
+            await flush();
+            firstDone.resolve();
+            await Promise.all([low, high]);
+            // Resuming "low" after the switch away is a fresh baseline, not a gap.
+            await coordinator.handleSegment(mediaWithByte('low', 20));
+
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.map((record) => record.status)).to.deep.equal(['valid', 'valid', 'valid']);
+        });
+    });
 });

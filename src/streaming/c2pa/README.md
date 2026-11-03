@@ -123,11 +123,13 @@ throw, fails the segment as `invalid`. Only one validator is registered at a tim
 - **Browser only**: `@svta/cml-c2pa` needs a real Web Crypto implementation and correctly
   validates certificate/signature data only in a browser context; it should always be
   tested in an actual browser, not assumed correct from a Node script.
-- **A track's init is async**: classifying it (dynamic import + crypto work) takes real
-  time, and the scanner never blocks later segments waiting for it. The coordinator
-  awaits a track's own init promise before validating that track's first media segment,
-  so this doesn't race — but any change to `handleSegment`'s dispatch order should keep
-  that invariant.
+- **Validation is async, one track at a time**: classifying an init (dynamic import +
+  crypto work) and validating a media segment take real time, and the scanner never
+  blocks later segments waiting for them. The coordinator runs each track's segments
+  through a per-track queue, so a track's init is classified before its first media
+  segment and each media segment sees the state left by the one before it. Different
+  tracks still validate in parallel. Work queued before `reset()` is dropped at its next
+  check, so it never writes into the next source's state.
 - **A stripped or corrupted C2PA box reads as "never signed"**: `@svta/cml-c2pa` throws
   for both a plain init segment with no C2PA data and one whose C2PA box is present but
   malformed, with no stable, documented way to tell them apart (only the exception's free

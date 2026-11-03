@@ -117,7 +117,8 @@ function C2paValidationCoordinator(config) {
         trackStates,
         sequenceTracker,
         activeTrackKeyByMediaType,
-        initPromises,
+        trackQueues,
+        generation,
         enginePromise,
         engineErrorReported;
 
@@ -126,7 +127,8 @@ function C2paValidationCoordinator(config) {
         trackStates = {};
         sequenceTracker = C2paSequenceTracker(context).create();
         activeTrackKeyByMediaType = {};
-        initPromises = {};
+        trackQueues = {};
+        generation = 0;
         enginePromise = null;
         engineErrorReported = false;
     }
@@ -141,27 +143,33 @@ function C2paValidationCoordinator(config) {
             return Promise.resolve();
         }
         _resetAbandonedTrackOnSwitch(segmentInput);
-        if (segmentInput.kind === SEGMENT_KIND_INIT) {
-            const promise = _handleInitSegment(segmentInput);
-            initPromises[segmentInput.trackKey] = promise;
-            return promise;
-        }
-        return _handleMediaSegmentAfterInit(segmentInput);
+        const handler = segmentInput.kind === SEGMENT_KIND_INIT ? _handleInitSegment : _handleMediaSegment;
+        return _enqueue(segmentInput.trackKey, (gen) => handler(segmentInput, gen));
     }
 
     /**
-     * The scanner forwards each segment without awaiting the previous one, so a track's
-     * first media segment can arrive and be handled while that track's own init segment is
-     * still being classified (dynamic import + crypto work). Awaiting the init's own promise
-     * here — if one was seen for this track — guarantees `trackStates[trackKey]` is populated
-     * (session keys, method, etc.) before a media segment reads it, closing that race.
+     * The scanner forwards each segment without awaiting the previous one, but a track's
+     * state (session keys, sequence state, last manifest id) is read before and written
+     * after an asynchronous validation. Running a track's work one task at a time keeps its
+     * init classified before its first media segment and each media segment validated
+     * against the state left by the one before it. Different tracks still run in parallel.
+     *
+     * Each task gets the generation it was queued in. `reset()` starts a new generation, and
+     * work from an older one stops at its next check instead of writing into the new state.
+     * @param {string} trackKey
+     * @param {function(number): *} task
+     * @returns {Promise<void>}
      */
-    async function _handleMediaSegmentAfterInit(input) {
-        const pendingInit = initPromises[input.trackKey];
-        if (pendingInit) {
-            await pendingInit;
-        }
-        return _handleMediaSegment(input);
+    function _enqueue(trackKey, task) {
+        const gen = generation;
+        const previous = trackQueues[trackKey] || Promise.resolve();
+        const next = previous.then(() => (_isCurrent(gen) ? task(gen) : undefined));
+        trackQueues[trackKey] = next.catch(() => {});
+        return next;
+    }
+
+    function _isCurrent(gen) {
+        return gen === generation;
     }
 
     /**
@@ -174,12 +182,12 @@ function C2paValidationCoordinator(config) {
     function _resetAbandonedTrackOnSwitch(input) {
         const previousTrackKey = activeTrackKeyByMediaType[input.mediaType];
         if (previousTrackKey && previousTrackKey !== input.trackKey) {
-            resetSequenceForTrack(previousTrackKey);
+            _enqueueSequenceReset(previousTrackKey);
         }
         activeTrackKeyByMediaType[input.mediaType] = input.trackKey;
     }
 
-    async function _handleInitSegment(input) {
+    async function _handleInitSegment(input, gen) {
         if (!isCryptoAvailable()) {
             // Without Web Crypto we cannot validate; keep the track active (skip:false)
             // so its media segments surface as `unverified` rather than being dropped.
@@ -199,6 +207,9 @@ function C2paValidationCoordinator(config) {
         }
 
         const engine = await _getEngine();
+        if (!_isCurrent(gen)) {
+            return;
+        }
         if (!engine && !engineErrorReported) {
             // Once per session, not once per segment.
             engineErrorReported = true;
@@ -206,6 +217,9 @@ function C2paValidationCoordinator(config) {
                 'The C2PA validation engine failed to load; validation is disabled for this session.');
         }
         const validation = await _validateInit(engine, input.bytes);
+        if (!_isCurrent(gen)) {
+            return;
+        }
         const method = _classify(validation);
 
         trackStates[input.trackKey] = {
@@ -226,7 +240,7 @@ function C2paValidationCoordinator(config) {
         _emitInitProcessed(input, validation, method);
     }
 
-    async function _handleMediaSegment(input) {
+    async function _handleMediaSegment(input, gen) {
         const state = trackStates[input.trackKey];
         if (state && state.skip) {
             // A non-C2PA track in auto mode is never parsed or validated again.
@@ -246,9 +260,9 @@ function C2paValidationCoordinator(config) {
         }
 
         if (method === C2PA_METHOD_VSI) {
-            await _validateVsiSegment(input, state, forced);
+            await _validateVsiSegment(input, state, forced, gen);
         } else {
-            await _validateManifestBoxSegment(input, state, forced);
+            await _validateManifestBoxSegment(input, state, forced, gen);
         }
     }
 
@@ -325,9 +339,9 @@ function C2paValidationCoordinator(config) {
         return null;
     }
 
-    async function _validateVsiSegment(input, state, forced) {
+    async function _validateVsiSegment(input, state, forced, gen) {
         const engine = await _getEngine();
-        if (!engine || typeof engine.validateC2paSegment !== 'function') {
+        if (!_isCurrent(gen) || !engine || typeof engine.validateC2paSegment !== 'function') {
             return;
         }
 
@@ -338,8 +352,15 @@ function C2paValidationCoordinator(config) {
         try {
             outcome = await engine.validateC2paSegment(input.bytes, sessionKeys, sequenceState);
         } catch (e) {
+            if (!_isCurrent(gen)) {
+                return;
+            }
             // Never propagate a validation failure to the pipeline; surface it instead.
             _emitUnverified(input, C2PA_METHOD_VSI, VALIDATION_ERROR_CODE, _errorMessage(e));
+            return;
+        }
+
+        if (!_isCurrent(gen)) {
             return;
         }
 
@@ -358,9 +379,9 @@ function C2paValidationCoordinator(config) {
         _emitValidatedWithSequence(input, _toVsiSegmentRecord(input, outcome.result, state));
     }
 
-    async function _validateManifestBoxSegment(input, state, forced) {
+    async function _validateManifestBoxSegment(input, state, forced, gen) {
         const engine = await _getEngine();
-        if (!engine || typeof engine.validateC2paManifestBoxSegment !== 'function') {
+        if (!_isCurrent(gen) || !engine || typeof engine.validateC2paManifestBoxSegment !== 'function') {
             return;
         }
 
@@ -375,6 +396,9 @@ function C2paValidationCoordinator(config) {
         try {
             outcome = await engine.validateC2paManifestBoxSegment(input.bytes, lastManifestId, manifestBoxState, options);
         } catch (e) {
+            if (!_isCurrent(gen)) {
+                return;
+            }
             // Under a forced method a throw means the forced structure is absent; in auto
             // mode it is an unexpected engine failure surfaced as `unverified`.
             if (forced) {
@@ -382,6 +406,10 @@ function C2paValidationCoordinator(config) {
             } else {
                 _emitUnverified(input, C2PA_METHOD_MANIFEST_BOX, VALIDATION_ERROR_CODE, _errorMessage(e));
             }
+            return;
+        }
+
+        if (!_isCurrent(gen)) {
             return;
         }
 
@@ -574,7 +602,8 @@ function C2paValidationCoordinator(config) {
         trackStates = {};
         sequenceTracker.reset();
         activeTrackKeyByMediaType = {};
-        initPromises = {};
+        trackQueues = {};
+        generation++;
         enginePromise = null;
         engineErrorReported = false;
     }
@@ -585,8 +614,13 @@ function C2paValidationCoordinator(config) {
      */
     function resetActiveSequences() {
         Object.keys(activeTrackKeyByMediaType).forEach((mediaType) => {
-            resetSequenceForTrack(activeTrackKeyByMediaType[mediaType]);
+            _enqueueSequenceReset(activeTrackKeyByMediaType[mediaType]);
         });
+    }
+
+    // Runs after the track's in-flight segments, so they can't re-seed the state just cleared.
+    function _enqueueSequenceReset(trackKey) {
+        _enqueue(trackKey, () => resetSequenceForTrack(trackKey));
     }
 
     /**

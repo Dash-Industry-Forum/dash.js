@@ -95,7 +95,7 @@ function C2paController() {
         }
         if (!subscribed) {
             eventBus.on(Events.SETTING_UPDATED_C2PA_ENABLED, _onEnabledChanged, instance);
-            eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onSeekOrPeriodSwitch, instance);
+            eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onSeekOrPeriodSwitch, instance);
             eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onSeekOrPeriodSwitch, instance);
             subscribed = true;
         }
@@ -107,6 +107,9 @@ function C2paController() {
     }
 
     // A seek/period switch isn't a continuity break; reset so it doesn't read as one.
+    // This listens for PLAYBACK_SEEKING, not PLAYBACK_SEEKED: dash.js fetches segments for
+    // the new position before SEEKED fires, and they would be checked against the old
+    // baseline. The coordinator queues the reset behind segments already in flight.
     function _onSeekOrPeriodSwitch() {
         if (coordinator) {
             coordinator.resetActiveSequences();
@@ -176,7 +179,7 @@ function C2paController() {
         _detach();
         if (eventBus && subscribed) {
             eventBus.off(Events.SETTING_UPDATED_C2PA_ENABLED, _onEnabledChanged, instance);
-            eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onSeekOrPeriodSwitch, instance);
+            eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onSeekOrPeriodSwitch, instance);
             eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onSeekOrPeriodSwitch, instance);
             subscribed = false;
         }
