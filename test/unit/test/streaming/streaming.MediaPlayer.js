@@ -1446,4 +1446,15 @@ describe('MediaPlayer with context injected', () => {
             expect(secondStub.calledOnce).to.be.true;
         });
     });
+
+    describe('reset and reuse', function () {
+        it('should accept a new view and source after reset', function () {
+            player.initialize(videoElementMock, specHelper.getDummyUrl(), false);
+            player.reset();
+
+            player.attachView(videoElementMock);
+            expect(() => player.attachSource(specHelper.getDummyUrl())).to.not.throw();
+            expect(player.isReady()).to.be.true;
+        });
+    });
 })

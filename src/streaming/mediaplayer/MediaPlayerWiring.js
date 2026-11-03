@@ -681,9 +681,11 @@ function MediaPlayerWiring() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
+        // Unlike the detect*() controllers, the C2PA controller is created once in
+        // createCoreControllers(), which does not run again after reset; keep the instance
+        // so createPlaybackControllers() can reconfigure it for the next source.
         if (c2paController) {
             c2paController.reset();
-            c2paController = null;
         }
         if (state.offlineController) {
             state.offlineController.reset();
