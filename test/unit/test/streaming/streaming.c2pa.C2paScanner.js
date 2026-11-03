@@ -306,6 +306,56 @@ describe('C2paScanner', function () {
             expect(handledSegments.length).to.equal(0);
         });
 
+        it('should read the media types on every response when given a getter', async () => {
+            let mediaTypes = ['video', 'audio'];
+            scanner = C2paScanner(context).create({
+                customParametersModel,
+                segmentHandler: (segmentInput) => handledSegments.push(segmentInput),
+                getMediaTypes: () => mediaTypes
+            });
+            const audioResponse = () => createResponse({
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'audio',
+                url: 'https://cdn.example/live/chunk-stream4-00001.m4s',
+                data: bufferFrom([1])
+            });
+
+            await intercept(audioResponse());
+            mediaTypes = ['video'];
+            await intercept(audioResponse());
+
+            expect(handledSegments.length).to.equal(1);
+        });
+
+        it('should report a media type that is scanned again after being left out', async () => {
+            let mediaTypes = ['video', 'audio'];
+            const resumed = [];
+            scanner = C2paScanner(context).create({
+                customParametersModel,
+                segmentHandler: (segmentInput) => handledSegments.push(segmentInput.mediaType),
+                getMediaTypes: () => mediaTypes,
+                onMediaTypeResumed: (mediaType) => resumed.push(mediaType + '@' + handledSegments.length)
+            });
+            const audioResponse = () => createResponse({
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'audio',
+                url: 'https://cdn.example/live/chunk-stream4-00001.m4s',
+                data: bufferFrom([1])
+            });
+
+            await intercept(audioResponse());
+            mediaTypes = ['video'];
+            await intercept(audioResponse());
+            await intercept(audioResponse());
+            mediaTypes = ['video', 'audio'];
+            await intercept(audioResponse());
+            await intercept(audioResponse());
+
+            // Reported once, before the first segment scanned again is handled.
+            expect(resumed).to.deep.equal(['audio@1']);
+            expect(handledSegments).to.deep.equal(['audio', 'audio', 'audio']);
+        });
+
         it('should never propagate a handler failure to the pipeline', async () => {
             scanner = C2paScanner(context).create({
                 customParametersModel,

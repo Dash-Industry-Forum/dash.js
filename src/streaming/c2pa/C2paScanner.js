@@ -73,23 +73,33 @@ const SEGMENT_ROLE_PREFIX_PATTERN = /^(?:init|chunk)-/;
  * @param {Object} config.customParametersModel Exposes addResponseInterceptor / removeResponseInterceptor.
  * @param {function(SegmentInput):*} [config.segmentHandler] Consumer of the normalized chunk.
  * @param {Array.<string>} [config.mediaTypes] Media types to scan; defaults to video and audio.
+ * @param {function(): Array.<string>} [config.getMediaTypes] Returns the media types to scan,
+ * read on every response so a settings change applies right away. Takes precedence over
+ * `config.mediaTypes`.
+ * @param {function(string)} [config.onMediaTypeResumed] Called with a media type that is scanned
+ * again after it was left out, before its first segment is handled. Its skipped segments were
+ * never seen, so their absence must not read as a gap.
  */
 function C2paScanner(config) {
     config = config || {};
     const context = this.context;
     const customParametersModel = config.customParametersModel;
     const segmentHandler = config.segmentHandler;
-    const mediaTypes = Array.isArray(config.mediaTypes) ? config.mediaTypes : DEFAULT_C2PA_MEDIA_TYPES.slice();
+    const staticMediaTypes = Array.isArray(config.mediaTypes) ? config.mediaTypes : DEFAULT_C2PA_MEDIA_TYPES.slice();
+    const getMediaTypes = typeof config.getMediaTypes === 'function' ? config.getMediaTypes : () => staticMediaTypes;
+    const onMediaTypeResumed = config.onMediaTypeResumed;
 
     let instance,
         logger,
         interceptor,
-        registered;
+        registered,
+        leftOutMediaTypes;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         registered = false;
         interceptor = _interceptResponse;
+        leftOutMediaTypes = {};
     }
 
     /**
@@ -157,8 +167,15 @@ function C2paScanner(config) {
         }
 
         const mediaType = request.mediaType;
-        if (mediaTypes.indexOf(mediaType) === -1) {
+        if (getMediaTypes().indexOf(mediaType) === -1) {
+            leftOutMediaTypes[mediaType] = true;
             return null;
+        }
+        if (leftOutMediaTypes[mediaType]) {
+            delete leftOutMediaTypes[mediaType];
+            if (onMediaTypeResumed) {
+                onMediaTypeResumed(mediaType);
+            }
         }
 
         const url = (response.request && response.request.url) || request.url || '';

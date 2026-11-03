@@ -160,11 +160,11 @@ function C2paController() {
             detector,
             getContinuityValidator: () => customParametersModel.getC2paContinuityValidator()
         });
-        const c2pa = normalizeC2paOptions(settings.get().streaming.c2pa);
         scanner = C2paScanner(context).create({
             customParametersModel,
             segmentHandler: coordinator.handleSegment,
-            mediaTypes: c2pa.mediaTypes
+            getMediaTypes: () => normalizeC2paOptions(settings.get().streaming.c2pa).mediaTypes,
+            onMediaTypeResumed: coordinator.resetSequencesForMediaType
         });
     }
 

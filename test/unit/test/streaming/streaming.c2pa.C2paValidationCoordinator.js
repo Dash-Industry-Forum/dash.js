@@ -222,6 +222,116 @@ describe('C2paValidationCoordinator', function () {
         });
     });
 
+    describe('forcing a method after a track was classified as non-C2PA', function () {
+
+        it('should validate the track\'s media segments once a method is forced', async () => {
+            const {engine, calls} = createEngine({
+                throwOnInit: true,
+                manifestBoxOutcome: manifestBoxOutcomeFor({isValid: true, errorCodes: [], previousManifestId: null, nextManifestId: 'm1'})
+            });
+            let method = 'auto';
+            const events = [];
+            const coordinator = C2paValidationCoordinator(context).create({
+                eventBus: {trigger: (type, payload) => events.push({type, payload})},
+                settings: {get: () => ({streaming: {c2pa: {method}}})},
+                isCryptoAvailable: () => true,
+                loadEngine: () => Promise.resolve(engine)
+            });
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            expect(calls.manifestBox).to.equal(0);
+
+            method = '19.3';
+            await coordinator.handleSegment(mediaInput('stream3', 290));
+
+            expect(calls.manifestBox).to.equal(1);
+            expect(eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED).map((record) => record.status)).to.deep.equal(['valid']);
+        });
+    });
+
+    describe('segments whose signed sequence number is unknown', function () {
+
+        it('should not report gaps from URL numbers that are timestamps', async () => {
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            engine.validateC2paSegment = async () => {
+                const outcome = vsiSegmentOutcome({isValid: true, errorCodes: []});
+                delete outcome.result.sequenceNumber;
+                return outcome;
+            };
+            const {coordinator, events} = createCoordinator({engine});
+
+            // $Time$-style URL numbers: 2 s segments at a 1000 timescale.
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 1000));
+            await coordinator.handleSegment(mediaInput('stream3', 3000));
+            await coordinator.handleSegment(mediaInput('stream3', 5000));
+
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.map((record) => record.status)).to.deep.equal(['valid', 'valid', 'valid']);
+            expect(records.map((record) => record.segmentNumber)).to.deep.equal([1000, 3000, 5000]);
+        });
+
+        it('should still report gaps in the signed sequence number', async () => {
+            const {engine} = vsiEngineReturningSequences([10, 12]);
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 1000));
+            await coordinator.handleSegment(mediaInput('stream3', 5000));
+
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.map((record) => [record.segmentNumber, record.status])).to.deep.equal([[10, 'valid'], [11, 'missing'], [12, 'valid']]);
+        });
+    });
+
+    describe('a media type scanned again after being left out', function () {
+
+        it('should start its active track from a fresh baseline', async () => {
+            const {engine} = vsiEngineReturningSequences([10, 11, 18]);
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 1));
+            await coordinator.handleSegment(mediaInput('stream3', 2));
+            // Segments 12 to 17 were not scanned while video was left out of mediaTypes.
+            coordinator.resetSequencesForMediaType('video');
+            await coordinator.handleSegment(mediaInput('stream3', 3));
+
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.map((record) => record.status)).to.deep.equal(['valid', 'valid', 'valid']);
+        });
+
+        it('should ignore a media type with no active track', () => {
+            const {engine} = createEngine({});
+            const {coordinator} = createCoordinator({engine});
+
+            expect(() => coordinator.resetSequencesForMediaType('audio')).to.not.throw();
+        });
+    });
+
+    describe('event timestamps', function () {
+
+        it('should stamp C2PA_ERROR with the injected clock', async () => {
+            const {engine} = createEngine({});
+            const events = [];
+            const coordinator = C2paValidationCoordinator(context).create({
+                eventBus: {trigger: (type, payload) => events.push({type, payload})},
+                settings: {get: () => ({streaming: {c2pa: {method: '19.4'}}})},
+                isCryptoAvailable: () => false,
+                loadEngine: () => Promise.resolve(engine),
+                now: () => 1234
+            });
+
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            const error = eventsOfType(events, MediaPlayerEvents.C2PA_ERROR)[0];
+            const record = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED)[0];
+            expect(error.timestamp).to.equal(1234);
+            expect(record.timestamp).to.equal(1234);
+        });
+    });
+
     describe('VSI (§19.4) media-segment validation', function () {
 
         it('should emit a valid SegmentRecord for a valid VSI segment', async () => {
