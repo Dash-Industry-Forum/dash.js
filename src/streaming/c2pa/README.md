@@ -84,7 +84,9 @@ See `samples/c2pa/index.html` for a working example that renders a per-segment �
 
 Each representation (not each media type) has its own independent signed chain
 (`previousManifestId` for §19.3, a monotonic sequence number for §19.4), tracked under a
-stable per-representation `trackKey` derived from the segment URL. Two things follow
+stable per-representation `trackKey` built from the period id, media type and
+representation id (`"<periodId>/<mediaType>/<representationId>"`). Only a request that
+carries no representation falls back to a key derived from the segment URL. Two things follow
 from that:
 
 - **Joining a live stream mid-broadcast**: a track's first observed segment has no known

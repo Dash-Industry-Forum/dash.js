@@ -33,11 +33,15 @@ import Debug from '../../core/Debug.js';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest.js';
 import { DEFAULT_C2PA_MEDIA_TYPES, SEGMENT_KIND_INIT, SEGMENT_KIND_MEDIA } from './C2paOptions.js';
 
-// dash.js 5.x does not reliably populate the representation id and req.index resets
-// per DASH period, so a stable per-representation trackKey is derived from the segment
-// URL filename instead. The file extension, the trailing segment number and the leading
-// role prefix (init-/chunk-) are stripped so an init segment and its media segments of
-// the same representation map to the same trackKey across common packager namings:
+// The trackKey identifies the representation a segment belongs to. It is built from the
+// period id, media type and representation id of the FragmentRequest, which DashHandler
+// sets on both init and media requests. That works for any URL layout, including
+// "$RepresentationID$/$Number$.m4s" where every init is named "init.mp4".
+//
+// When a request carries no representation, the trackKey falls back to the segment URL
+// filename. The file extension, the trailing segment number and the leading role prefix
+// (init-/chunk-) are stripped so an init segment and its media segments of the same
+// representation map to the same trackKey across common packager namings:
 //   "init-stream3.m4s"             -> trackKey "stream3",            segmentNumber NaN
 //   "chunk-stream3-00289.m4s"      -> trackKey "stream3",            segmentNumber 289
 //   "wdr-video=4045695.dash"       -> trackKey "wdr-video=4045695",  segmentNumber NaN
@@ -54,7 +58,7 @@ const SEGMENT_ROLE_PREFIX_PATTERN = /^(?:init|chunk)-/;
  * @property {('video'|'audio')} mediaType Media type of the chunk.
  * @property {Uint8Array} bytes A private copy of the segment bytes, safe to read asynchronously.
  * @property {number} segmentNumber Globally-monotonic segment number from the URL, NaN when absent (init).
- * @property {string} trackKey Stable per-representation key derived from the URL filename.
+ * @property {string} trackKey Stable per-representation key (period, media type and representation id).
  */
 
 /**
@@ -164,7 +168,7 @@ function C2paScanner(config) {
             mediaType,
             bytes: _copySegmentBytes(response.data),
             segmentNumber: _segmentNumberFromUrl(url),
-            trackKey: _trackKeyFromUrl(url)
+            trackKey: _trackKeyFromRequest(request, mediaType) || _trackKeyFromUrl(url)
         };
     }
 
@@ -203,6 +207,16 @@ function C2paScanner(config) {
 
     function _fileStem(url) {
         return _fileNameFromUrl(url).replace(SEGMENT_EXTENSION_PATTERN, '');
+    }
+
+    function _trackKeyFromRequest(request, mediaType) {
+        const representation = request.representation;
+        if (!representation || representation.id === null || representation.id === undefined) {
+            return null;
+        }
+        const period = representation.adaptation && representation.adaptation.period;
+        const periodId = period && period.id !== null && period.id !== undefined ? period.id : '';
+        return periodId + '/' + mediaType + '/' + representation.id;
     }
 
     function _trackKeyFromUrl(url) {

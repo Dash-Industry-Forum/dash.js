@@ -21,16 +21,20 @@ function createCustomParametersModelMock() {
     };
 }
 
-function createResponse({type, mediaType, url, data}) {
+function createResponse({type, mediaType, url, data, representation}) {
     return {
         request: {
             url,
             customData: {
-                request: {type, mediaType, url}
+                request: {type, mediaType, url, representation}
             }
         },
         data
     };
+}
+
+function createRepresentation(id, periodId) {
+    return {id, adaptation: {period: {id: periodId}}};
 }
 
 function bufferFrom(values) {
@@ -179,6 +183,79 @@ describe('C2paScanner', function () {
             expect(handledSegments[1].segmentNumber).to.equal(31200);
         });
 
+        it('should key init and media by representation for $RepresentationID$/$Number$ URLs', async () => {
+            const representation = createRepresentation('V300', 'p0');
+            await intercept(createResponse({
+                type: HTTPRequest.INIT_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://livesim2.dashif.org/livesim2/testpic_2s/V300/init.mp4',
+                data: bufferFrom([1]),
+                representation
+            }));
+            await intercept(createResponse({
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://livesim2.dashif.org/livesim2/testpic_2s/V300/88123.m4s',
+                data: bufferFrom([2]),
+                representation
+            }));
+            await intercept(createResponse({
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://livesim2.dashif.org/livesim2/testpic_2s/V300/88124.m4s',
+                data: bufferFrom([3]),
+                representation
+            }));
+
+            expect(handledSegments.map((segment) => segment.trackKey)).to.deep.equal(['p0/video/V300', 'p0/video/V300', 'p0/video/V300']);
+        });
+
+        it('should give each representation its own trackKey when every init is named init.mp4', async () => {
+            await intercept(createResponse({
+                type: HTTPRequest.INIT_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://cdn.example/live/V300/init.mp4',
+                data: bufferFrom([1]),
+                representation: createRepresentation('V300', 'p0')
+            }));
+            await intercept(createResponse({
+                type: HTTPRequest.INIT_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://cdn.example/live/V600/init.mp4',
+                data: bufferFrom([1]),
+                representation: createRepresentation('V600', 'p0')
+            }));
+            await intercept(createResponse({
+                type: HTTPRequest.INIT_SEGMENT_TYPE,
+                mediaType: 'audio',
+                url: 'https://cdn.example/live/A48/init.mp4',
+                data: bufferFrom([1]),
+                representation: createRepresentation('A48', 'p0')
+            }));
+
+            const trackKeys = handledSegments.map((segment) => segment.trackKey);
+            expect(trackKeys).to.deep.equal(['p0/video/V300', 'p0/video/V600', 'p0/audio/A48']);
+        });
+
+        it('should separate the same representation id in different periods', async () => {
+            await intercept(createResponse({
+                type: HTTPRequest.INIT_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://cdn.example/p0/video/init.mp4',
+                data: bufferFrom([1]),
+                representation: createRepresentation('video', 'p0')
+            }));
+            await intercept(createResponse({
+                type: HTTPRequest.INIT_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://cdn.example/p1/video/init.mp4',
+                data: bufferFrom([1]),
+                representation: createRepresentation('video', 'p1')
+            }));
+
+            expect(handledSegments[0].trackKey).to.not.equal(handledSegments[1].trackKey);
+        });
+
         it('should hand the segment a private copy of the bytes', async () => {
             const values = [5, 6, 7];
             const response = createResponse({
@@ -246,6 +323,47 @@ describe('C2paScanner', function () {
             const returned = await intercept(response);
 
             expect(returned).to.equal(response);
+        });
+    });
+
+    describe('with the validation coordinator', function () {
+
+        it('should validate $RepresentationID$/$Number$ media segments with the session keys from their init', async () => {
+            const sessionKey = {kid: 'k1'};
+            const sessionKeysSeen = [];
+            const coordinator = C2paValidationCoordinator(context).create({
+                eventBus: {trigger: () => {}},
+                settings: {get: () => ({streaming: {c2pa: {method: 'auto'}}})},
+                isCryptoAvailable: () => true,
+                loadEngine: () => Promise.resolve({
+                    validateC2paInitSegment: async () => ({isValid: true, sessionKeys: [sessionKey], manifest: {}, errorCodes: []}),
+                    validateC2paSegment: async (bytes, sessionKeys) => {
+                        sessionKeysSeen.push(sessionKeys);
+                        return {result: {isValid: true, sequenceNumber: sessionKeysSeen.length, errorCodes: []}, nextSequenceState: {}};
+                    }
+                })
+            });
+            scanner = C2paScanner(context).create({
+                customParametersModel,
+                segmentHandler: coordinator.handleSegment
+            });
+            scanner.registerInterceptor();
+            const representation = createRepresentation('V300', 'p0');
+            const urls = ['V300/init.mp4', 'V300/88123.m4s', 'V300/88124.m4s'];
+
+            for (const url of urls) {
+                await customParametersModel.interceptors[0](createResponse({
+                    type: url.endsWith('init.mp4') ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE,
+                    mediaType: 'video',
+                    url: 'https://livesim2.dashif.org/livesim2/testpic_2s/' + url,
+                    data: bufferFrom([1, 2, 3]),
+                    representation
+                }));
+            }
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(sessionKeysSeen.length).to.equal(2);
+            sessionKeysSeen.forEach((sessionKeys) => expect(sessionKeys).to.deep.equal([sessionKey]));
         });
     });
 

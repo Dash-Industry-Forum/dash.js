@@ -65,7 +65,7 @@
 /**
  * Public payload of the {@link MediaPlayerEvents#event:C2PA_INIT_PROCESSED} event.
  * @typedef {Object} InitProcessedEvent
- * @property {string} trackKey Stable per-representation key derived from the segment URL.
+ * @property {string} trackKey Stable per-representation key (`"<periodId>/<mediaType>/<representationId>"`).
  * @property {?C2paMethod} method Signing method classified from the init segment, or null when no provenance is present.
  * @property {?string} manifestId Manifest id carried by the init segment, when applicable.
  * @property {?string} issuer Issuer of the signing certificate, when applicable.
@@ -77,7 +77,7 @@
 /**
  * Public payload of the {@link MediaPlayerEvents#event:C2PA_ERROR} event.
  * @typedef {Object} C2paErrorEvent
- * @property {string} trackKey Stable per-representation key derived from the segment URL.
+ * @property {string} trackKey Stable per-representation key (`"<periodId>/<mediaType>/<representationId>"`).
  * @property {?number} segmentNumber Segment number the error relates to, when applicable.
  * @property {?('video'|'audio')} mediaType Media type the error relates to, when applicable.
  * @property {Array.<string>} errorCodes Stable, narrowed error codes describing the failure.
