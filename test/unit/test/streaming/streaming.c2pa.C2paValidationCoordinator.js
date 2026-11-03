@@ -302,6 +302,34 @@ describe('C2paValidationCoordinator', function () {
             expect(records.map((record) => record.status)).to.deep.equal(['valid', 'valid', 'valid']);
         });
 
+        it('should reset after a segment that was still validating, not before it', async () => {
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            let releaseFirst;
+            const firstGate = new Promise((resolve) => {
+                releaseFirst = resolve;
+            });
+            engine.validateC2paSegment = async (bytes) => {
+                if (bytes[0] === 1) {
+                    await firstGate;
+                }
+                return vsiSegmentOutcome({isValid: true, errorCodes: [], seq: bytes[0]});
+            };
+            const {coordinator, events} = createCoordinator({engine});
+            const segmentWithSeq = (seq) => Object.assign(mediaInput('stream3', NaN), {bytes: new Uint8Array([seq])});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            const inFlight = coordinator.handleSegment(segmentWithSeq(1));
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            // Segments 2 to 4 were not scanned while video was left out of mediaTypes.
+            coordinator.resetSequencesForMediaType('video');
+            releaseFirst();
+            await inFlight;
+            await coordinator.handleSegment(segmentWithSeq(5));
+
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.map((record) => [record.segmentNumber, record.status])).to.deep.equal([[1, 'valid'], [5, 'valid']]);
+        });
+
         it('should ignore a media type with no active track', () => {
             const {engine} = createEngine({});
             const {coordinator} = createCoordinator({engine});

@@ -672,7 +672,7 @@ function C2paValidationCoordinator(config) {
     function resetSequencesForMediaType(mediaType) {
         const trackKey = activeTrackKeyByMediaType[mediaType];
         if (trackKey) {
-            resetSequenceForTrack(trackKey);
+            _enqueueSequenceReset(trackKey);
         }
     }
 
