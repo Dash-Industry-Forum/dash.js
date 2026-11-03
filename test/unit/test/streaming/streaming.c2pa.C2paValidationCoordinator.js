@@ -740,17 +740,20 @@ describe('C2paValidationCoordinator', function () {
             expect(events[1].payload.errorCodes).to.deep.equal(['c2pa.forcedMethodMismatch']);
         });
 
-        it('should validate against the forced method even without prior init state', async () => {
-            const {engine} = createEngine({
+        it('should report a forced §19.4 segment without prior init state as unverified', async () => {
+            const {engine, calls} = createEngine({
                 segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
             });
             const {coordinator, events} = createCoordinator({engine, method: '19.4'});
 
             await coordinator.handleSegment(mediaInput('stream3', 289));
 
-            expect(events.length).to.equal(1);
-            expect(events[0].payload.status).to.equal('valid');
-            expect(events[0].payload.method).to.equal('19.4');
+            expect(calls.vsi).to.equal(0);
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.length).to.equal(1);
+            expect(records[0].status).to.equal('unverified');
+            expect(records[0].method).to.equal('19.4');
+            expect(records[0].errorCodes).to.deep.equal(['c2pa.initSegmentMissing']);
         });
 
         it('should use the detector to classify a media segment when its track has no init classification', async () => {
@@ -758,11 +761,11 @@ describe('C2paValidationCoordinator', function () {
             const {engine} = createEngine({segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})});
             const {coordinator, events} = createCoordinator({engine, method: 'auto', detector});
 
-            // No init segment was ever seen for this track (e.g. joined the stream mid-broadcast).
+            // No init segment was ever seen for this track (e.g. C2PA was enabled mid-stream).
             await coordinator.handleSegment(mediaInput('stream3', 289));
 
             expect(detectorCalls.count).to.equal(1);
-            expect(events[0].payload.status).to.equal('valid');
+            expect(events[0].payload.status).to.equal('unverified');
             expect(events[0].payload.method).to.equal('19.4');
         });
 
@@ -782,6 +785,81 @@ describe('C2paValidationCoordinator', function () {
             expect(detectorCalls.count).to.equal(0);
             expect(events[1].payload.status).to.equal('valid');
             expect(events[1].payload.method).to.equal('19.4');
+        });
+    });
+
+    describe('§19.4 segments whose init segment was never seen', function () {
+
+        it('should report each segment as unverified without calling the engine', async () => {
+            const {engine, calls} = createEngine({segmentOutcome: vsiSegmentOutcome({isValid: false, errorCodes: ['livevideo.segment.invalid']})});
+            const {detector} = countingDetector('19.4');
+            const {coordinator, events} = createCoordinator({engine, detector});
+
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(mediaInput('stream3', 290));
+
+            expect(calls.vsi).to.equal(0);
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.map((record) => record.status)).to.deep.equal(['unverified', 'unverified']);
+            records.forEach((record) => expect(record.errorCodes).to.deep.equal(['c2pa.initSegmentMissing']));
+        });
+
+        it('should emit C2PA_ERROR once per track, not once per segment', async () => {
+            const {engine} = createEngine({});
+            const {detector} = countingDetector('19.4');
+            const {coordinator, events} = createCoordinator({engine, detector});
+            const audio = (segmentNumber) => Object.assign(mediaInput('audio-track', segmentNumber), {mediaType: 'audio'});
+
+            await coordinator.handleSegment(mediaInput('video-track', 1));
+            await coordinator.handleSegment(mediaInput('video-track', 2));
+            await coordinator.handleSegment(audio(1));
+            await coordinator.handleSegment(audio(2));
+
+            const errors = eventsOfType(events, MediaPlayerEvents.C2PA_ERROR);
+            expect(errors.map((error) => error.trackKey)).to.deep.equal(['video-track', 'audio-track']);
+            errors.forEach((error) => expect(error.errorCodes).to.deep.equal(['c2pa.initSegmentMissing']));
+        });
+
+        it('should validate normally once the track\'s init segment arrives', async () => {
+            const {engine, calls} = createEngine({
+                initValidation: vsiInitValidation([{kid: 'key-1'}]),
+                segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
+            });
+            const {detector} = countingDetector('19.4');
+            const {coordinator, events} = createCoordinator({engine, detector});
+
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 290));
+
+            expect(calls.vsi).to.equal(1);
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.map((record) => record.status)).to.deep.equal(['unverified', 'valid']);
+        });
+
+        it('should report the missing init again for a new source after reset', async () => {
+            const {engine} = createEngine({});
+            const {detector} = countingDetector('19.4');
+            const {coordinator, events} = createCoordinator({engine, detector});
+
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            coordinator.reset();
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(eventsOfType(events, MediaPlayerEvents.C2PA_ERROR)).to.have.length(2);
+        });
+
+        it('should still validate §19.3 segments without an init, since they carry their own manifest', async () => {
+            const {engine, calls} = createEngine({
+                manifestBoxOutcome: manifestBoxOutcomeFor({isValid: true, errorCodes: [], previousManifestId: null, nextManifestId: 'm1'})
+            });
+            const {detector} = countingDetector('19.3');
+            const {coordinator, events} = createCoordinator({engine, detector});
+
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(calls.manifestBox).to.equal(1);
+            expect(eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED)[0].status).to.equal('valid');
         });
     });
 

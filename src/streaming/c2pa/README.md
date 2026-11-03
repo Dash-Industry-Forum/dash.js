@@ -51,7 +51,11 @@ player.updateSettings({
   skips detection entirely; a segment that doesn't match the forced structure is reported
   `invalid` with a `c2pa.forcedMethodMismatch` code rather than silently ignored.
 - `enabled` and `method` both take effect at runtime via `updateSettings` — no need to
-  reattach the source.
+  reattach the source. For §19.4, though, the session keys are in the init segment. If
+  C2PA is enabled after a track's init was fetched, that track's segments are reported
+  `unverified` with `c2pa.initSegmentMissing` until the player fetches the init again
+  (for example after a quality switch). Enable C2PA before `attachSource` to validate
+  from the first segment.
 
 ## Events
 
@@ -75,7 +79,8 @@ player.updateSettings({
   so continuity simply couldn't be evaluated either way. See
   [Custom continuity methods](#custom-continuity-methods).
 - **`C2PA_ERROR`** — emitted alongside an `unverified` segment record when the engine
-  throws unexpectedly or Web Crypto is unavailable. Payload: `{ trackKey, segmentNumber,
+  throws unexpectedly or Web Crypto is unavailable, and once per track when a §19.4
+  segment arrives before any init segment for that track (`c2pa.initSegmentMissing`). Payload: `{ trackKey, segmentNumber,
   mediaType, errorCodes, message, timestamp }`.
 
 See `samples/c2pa/index.html` for a working example that renders a per-segment ✅/❌ grid.
