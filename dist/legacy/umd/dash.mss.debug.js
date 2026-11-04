@@ -286,6 +286,27 @@ module.exports = function (O) {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/internals/array-buffer-non-extensible.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/core-js/internals/array-buffer-non-extensible.js ***!
+  \***********************************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+
+// FF26- bug: ArrayBuffers are non-extensible, but Object.isExtensible does not report it
+var fails = __webpack_require__(/*! ../internals/fails */ "./node_modules/core-js/internals/fails.js");
+
+module.exports = fails(function () {
+  if (typeof ArrayBuffer == 'function') {
+    var buffer = new ArrayBuffer(8);
+    // eslint-disable-next-line es/no-object-isextensible, es/no-object-defineproperty -- safe
+    if (Object.isExtensible(buffer)) Object.defineProperty(buffer, 'a', { value: 8 });
+  }
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/internals/array-buffer-not-detached.js":
 /*!*********************************************************************!*\
   !*** ./node_modules/core-js/internals/array-buffer-not-detached.js ***!
@@ -2508,6 +2529,23 @@ module.exports = function (KEY, exec, FORCED, SHAM) {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/internals/freezing.js":
+/*!****************************************************!*\
+  !*** ./node_modules/core-js/internals/freezing.js ***!
+  \****************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+
+var fails = __webpack_require__(/*! ../internals/fails */ "./node_modules/core-js/internals/fails.js");
+
+module.exports = !fails(function () {
+  // eslint-disable-next-line es/no-object-isextensible, es/no-object-preventextensions -- required for testing
+  return Object.isExtensible(Object.preventExtensions({}));
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/internals/function-apply.js":
 /*!**********************************************************!*\
   !*** ./node_modules/core-js/internals/function-apply.js ***!
@@ -3258,6 +3296,107 @@ module.exports = function (O, options) {
     createNonEnumerableProperty(O, 'cause', options.cause);
   }
 };
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/internals/internal-metadata.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/core-js/internals/internal-metadata.js ***!
+  \*************************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var uncurryThis = __webpack_require__(/*! ../internals/function-uncurry-this */ "./node_modules/core-js/internals/function-uncurry-this.js");
+var hiddenKeys = __webpack_require__(/*! ../internals/hidden-keys */ "./node_modules/core-js/internals/hidden-keys.js");
+var isObject = __webpack_require__(/*! ../internals/is-object */ "./node_modules/core-js/internals/is-object.js");
+var hasOwn = __webpack_require__(/*! ../internals/has-own-property */ "./node_modules/core-js/internals/has-own-property.js");
+var defineProperty = (__webpack_require__(/*! ../internals/object-define-property */ "./node_modules/core-js/internals/object-define-property.js").f);
+var getOwnPropertyNamesModule = __webpack_require__(/*! ../internals/object-get-own-property-names */ "./node_modules/core-js/internals/object-get-own-property-names.js");
+var getOwnPropertyNamesExternalModule = __webpack_require__(/*! ../internals/object-get-own-property-names-external */ "./node_modules/core-js/internals/object-get-own-property-names-external.js");
+var isExtensible = __webpack_require__(/*! ../internals/object-is-extensible */ "./node_modules/core-js/internals/object-is-extensible.js");
+var uid = __webpack_require__(/*! ../internals/uid */ "./node_modules/core-js/internals/uid.js");
+var FREEZING = __webpack_require__(/*! ../internals/freezing */ "./node_modules/core-js/internals/freezing.js");
+
+var REQUIRED = false;
+var METADATA = uid('meta');
+var id = 0;
+
+var setMetadata = function (it) {
+  defineProperty(it, METADATA, { value: {
+    objectID: 'O' + id++, // object ID
+    weakData: {}          // weak collections IDs
+  } });
+};
+
+var fastKey = function (it, create) {
+  // return a primitive with prefix
+  if (!isObject(it)) return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
+  if (!hasOwn(it, METADATA)) {
+    // can't set metadata to uncaught frozen object
+    if (!isExtensible(it)) return 'F';
+    // not necessary to add metadata
+    if (!create) return 'E';
+    // add missing metadata
+    setMetadata(it);
+  // return object ID
+  } return it[METADATA].objectID;
+};
+
+var getWeakData = function (it, create) {
+  if (!hasOwn(it, METADATA)) {
+    // can't set metadata to uncaught frozen object
+    if (!isExtensible(it)) return true;
+    // not necessary to add metadata
+    if (!create) return false;
+    // add missing metadata
+    setMetadata(it);
+  // return the store of weak collections IDs
+  } return it[METADATA].weakData;
+};
+
+// add metadata on freeze-family methods calling
+var onFreeze = function (it) {
+  if (FREEZING && REQUIRED && isExtensible(it) && !hasOwn(it, METADATA)) setMetadata(it);
+  return it;
+};
+
+var enable = function () {
+  meta.enable = function () { /* empty */ };
+  REQUIRED = true;
+  var getOwnPropertyNames = getOwnPropertyNamesModule.f;
+  var splice = uncurryThis([].splice);
+  var test = {};
+  // eslint-disable-next-line unicorn/no-immediate-mutation -- ES3 syntax limitation
+  test[METADATA] = 1;
+
+  // prevent exposing of metadata key
+  if (getOwnPropertyNames(test).length) {
+    getOwnPropertyNamesModule.f = function (it) {
+      var result = getOwnPropertyNames(it);
+      for (var i = 0, length = result.length; i < length; i++) {
+        if (result[i] === METADATA) {
+          splice(result, i, 1);
+          break;
+        }
+      } return result;
+    };
+
+    $({ target: 'Object', stat: true, forced: true }, {
+      getOwnPropertyNames: getOwnPropertyNamesExternalModule.f
+    });
+  }
+};
+
+var meta = module.exports = {
+  enable: enable,
+  fastKey: fastKey,
+  getWeakData: getWeakData,
+  onFreeze: onFreeze
+};
+
+hiddenKeys[METADATA] = true;
 
 
 /***/ }),
@@ -4799,6 +4938,33 @@ module.exports = CORRECT_PROTOTYPE_GETTER ? $Object.getPrototypeOf : function (O
     return constructor.prototype;
   } return object instanceof $Object ? ObjectPrototype : null;
 };
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/internals/object-is-extensible.js":
+/*!****************************************************************!*\
+  !*** ./node_modules/core-js/internals/object-is-extensible.js ***!
+  \****************************************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+
+var fails = __webpack_require__(/*! ../internals/fails */ "./node_modules/core-js/internals/fails.js");
+var isObject = __webpack_require__(/*! ../internals/is-object */ "./node_modules/core-js/internals/is-object.js");
+var classof = __webpack_require__(/*! ../internals/classof-raw */ "./node_modules/core-js/internals/classof-raw.js");
+var ARRAY_BUFFER_NON_EXTENSIBLE = __webpack_require__(/*! ../internals/array-buffer-non-extensible */ "./node_modules/core-js/internals/array-buffer-non-extensible.js");
+
+// eslint-disable-next-line es/no-object-isextensible -- safe
+var $isExtensible = Object.isExtensible;
+var FAILS_ON_PRIMITIVES = fails(function () { $isExtensible(1); });
+
+// `Object.isExtensible` method
+// https://tc39.es/ecma262/#sec-object.isextensible
+module.exports = (FAILS_ON_PRIMITIVES || ARRAY_BUFFER_NON_EXTENSIBLE) ? function isExtensible(it) {
+  if (!isObject(it)) return false;
+  if (ARRAY_BUFFER_NON_EXTENSIBLE && classof(it) === 'ArrayBuffer') return false;
+  return $isExtensible ? $isExtensible(it) : true;
+} : $isExtensible;
 
 
 /***/ }),
@@ -8526,6 +8692,34 @@ var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/i
 // https://tc39.es/ecma262/#sec-number.max_safe_integer
 $({ target: 'Number', stat: true, nonConfigurable: true, nonWritable: true }, {
   MAX_SAFE_INTEGER: 0x1FFFFFFFFFFFFF
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es.object.freeze.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/core-js/modules/es.object.freeze.js ***!
+  \**********************************************************/
+/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
+
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var FREEZING = __webpack_require__(/*! ../internals/freezing */ "./node_modules/core-js/internals/freezing.js");
+var fails = __webpack_require__(/*! ../internals/fails */ "./node_modules/core-js/internals/fails.js");
+var isObject = __webpack_require__(/*! ../internals/is-object */ "./node_modules/core-js/internals/is-object.js");
+var onFreeze = (__webpack_require__(/*! ../internals/internal-metadata */ "./node_modules/core-js/internals/internal-metadata.js").onFreeze);
+
+// eslint-disable-next-line es/no-object-freeze -- safe
+var $freeze = Object.freeze;
+var FAILS_ON_PRIMITIVES = fails(function () { $freeze(1); });
+
+// `Object.freeze` method
+// https://tc39.es/ecma262/#sec-object.freeze
+$({ target: 'Object', stat: true, forced: FAILS_ON_PRIMITIVES, sham: !FREEZING }, {
+  freeze: function freeze(it) {
+    return $freeze && isObject(it) ? $freeze(onFreeze(it)) : it;
+  }
 });
 
 
@@ -12823,6 +13017,30 @@ function _createClass(e, r, t) {
 
 /***/ }),
 
+/***/ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/@babel/runtime/helpers/esm/defineProperty.js ***!
+  \*******************************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": function() { return /* binding */ _defineProperty; }
+/* harmony export */ });
+/* harmony import */ var _toPropertyKey_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./toPropertyKey.js */ "./node_modules/@babel/runtime/helpers/esm/toPropertyKey.js");
+
+function _defineProperty(e, r, t) {
+  return (r = (0,_toPropertyKey_js__WEBPACK_IMPORTED_MODULE_0__["default"])(r)) in e ? Object.defineProperty(e, r, {
+    value: t,
+    enumerable: !0,
+    configurable: !0,
+    writable: !0
+  }) : e[r] = t, e;
+}
+
+
+/***/ }),
+
 /***/ "./node_modules/@babel/runtime/helpers/esm/getPrototypeOf.js":
 /*!*******************************************************************!*\
   !*** ./node_modules/@babel/runtime/helpers/esm/getPrototypeOf.js ***!
@@ -15352,7 +15570,7 @@ function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+;
 
 /**
  * @class
@@ -15376,7 +15594,7 @@ var MssErrors = /*#__PURE__*/function (_ErrorsBase) {
     _this.MSS_UNSUPPORTED_CODEC_MESSAGE = 'Unsupported codec';
     return _this;
   }
-  (0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(MssErrors, _ErrorsBase);
+  ;(0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(MssErrors, _ErrorsBase);
   return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(MssErrors);
 }(_core_errors_ErrorsBase_js__WEBPACK_IMPORTED_MODULE_6__["default"]);
 var mssErrors = new MssErrors();
@@ -16312,7 +16530,7 @@ function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+;
 
 /**
  * @class
@@ -16780,7 +16998,7 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
     _this.MANAGED_MEDIA_SOURCE_END_STREAMING = 'managedMediaSourceEndStreaming';
     return _this;
   }
-  (0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(MediaPlayerEvents, _EventsBase);
+  ;(0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(MediaPlayerEvents, _EventsBase);
   return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(MediaPlayerEvents);
 }(_core_events_EventsBase_js__WEBPACK_IMPORTED_MODULE_6__["default"]);
 var mediaPlayerEvents = new MediaPlayerEvents();
@@ -16795,6 +17013,10 @@ var mediaPlayerEvents = new MediaPlayerEvents();
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
+/* harmony import */ var core_js_modules_es_object_freeze_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.object.freeze.js */ "./node_modules/core-js/modules/es.object.freeze.js");
+
+
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -16830,7 +17052,7 @@ __webpack_require__.r(__webpack_exports__);
  * Protection Constants declaration
  * @ignore
  */
-/* harmony default export */ __webpack_exports__["default"] = ({
+var ProtectionConstants = {
   CLEARKEY_KEYSTEM_STRING: 'org.w3.clearkey',
   CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
   ENCRYPTION_SCHEME_CBCS: 'cbcs',
@@ -16858,6 +17080,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
   PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+  PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING: 'com.microsoft.playready.recommendation.3000',
   PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
   ROBUSTNESS_STRINGS: {
     WIDEVINE: {
@@ -16871,7 +17094,16 @@ __webpack_require__.r(__webpack_exports__);
   W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
   WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
   WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed'
-});
+};
+
+// System strings tried in order by requestMediaKeySystemAccess if the application does not define a
+// systemStringPriority. Key systems without an entry only use their own system string.
+// PlayReady: Edge accepts the plain string, Firefox uses '.recommendation'. Chrome on Windows only supports SL3000
+// via '.recommendation.3000'. It is opt-in via systemStringPriority, otherwise multi-DRM content would silently
+// switch from Widevine to PlayReady in Chrome.
+// Frozen as it is shared by all player instances
+ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = Object.freeze((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__["default"])({}, ProtectionConstants.PLAYREADY_KEYSTEM_STRING, Object.freeze([ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING])));
+/* harmony default export */ __webpack_exports__["default"] = (ProtectionConstants);
 
 /***/ }),
 
@@ -17105,8 +17337,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   HTTPRequest: function() { return /* binding */ HTTPRequest; },
 /* harmony export */   HTTPRequestTrace: function() { return /* binding */ HTTPRequestTrace; }
 /* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
+/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
+/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
 
 
 /**
@@ -17145,121 +17377,134 @@ __webpack_require__.r(__webpack_exports__);
  * by Metrics Reporting code.
  * @ignore
  */
-var HTTPRequest = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__["default"])(
-/**
- * @class
- */
-function HTTPRequest() {
-  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__["default"])(this, HTTPRequest);
+var HTTPRequest = /*#__PURE__*/function () {
   /**
-   * Identifier of the TCP connection on which the HTTP request was sent.
-   * @public
+   * @class
    */
-  this.tcpid = null;
-  /**
-   * This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
-   * The type of the request:
-   * - MPD
-   * - XLink expansion
-   * - Initialization Fragment
-   * - Index Fragment
-   * - Media Fragment
-   * - Bitstream Switching Fragment
-   * - CMCD Response
-   * - other
-   * @public
-   */
-  this.type = null;
-  /**
-   * The original URL (before any redirects or failures)
-   * @public
-   */
-  this.url = null;
-  /**
-   * The actual URL requested, if different from above
-   * @public
-   */
-  this.actualurl = null;
-  /**
-   * The contents of the byte-range-spec part of the HTTP Range header.
-   * @public
-   */
-  this.range = null;
-  /**
-   * Real-Time | The real time at which the request was sent.
-   * @public
-   */
-  this.trequest = null;
-  /**
-   * Real-Time | The real time at which the first byte of the response was received.
-   * @public
-   */
-  this.tresponse = null;
-  /**
-   * The HTTP response code.
-   * @public
-   */
-  this.responsecode = null;
-  /**
-   * The duration of the throughput trace intervals (ms), for successful requests only.
-   * @public
-   */
-  this.interval = null;
-  /**
-   * Throughput traces, for successful requests only.
-   * @public
-   */
-  this.trace = [];
-  /**
-   * The CMSD static and dynamic values retrieved from CMSD response headers.
-   * @public
-   */
-  this.cmsd = null;
+  function HTTPRequest() {
+    (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__["default"])(this, HTTPRequest);
+    /**
+     * Identifier of the TCP connection on which the HTTP request was sent.
+     * @public
+     */
+    this.tcpid = null;
+    /**
+     * This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
+     * The type of the request:
+     * - MPD
+     * - XLink expansion
+     * - Initialization Fragment
+     * - Index Fragment
+     * - Media Fragment
+     * - Bitstream Switching Fragment
+     * - CMCD Response
+     * - other
+     * @public
+     */
+    this.type = null;
+    /**
+     * The original URL (before any redirects or failures)
+     * @public
+     */
+    this.url = null;
+    /**
+     * The actual URL requested, if different from above
+     * @public
+     */
+    this.actualurl = null;
+    /**
+     * The contents of the byte-range-spec part of the HTTP Range header.
+     * @public
+     */
+    this.range = null;
+    /**
+     * Real-Time | The real time at which the request was sent.
+     * @public
+     */
+    this.trequest = null;
+    /**
+     * Real-Time | The real time at which the first byte of the response was received.
+     * @public
+     */
+    this.tresponse = null;
+    /**
+     * The HTTP response code.
+     * @public
+     */
+    this.responsecode = null;
+    /**
+     * The duration of the throughput trace intervals (ms), for successful requests only.
+     * @public
+     */
+    this.interval = null;
+    /**
+     * Throughput traces, for successful requests only.
+     * @public
+     */
+    this.trace = [];
+
+    /**
+     * Type of stream ("audio" | "video" etc..)
+     * @public
+     */
+    this._stream = null;
+    /**
+     * Real-Time | The real time at which the request finished.
+     * @public
+     */
+    this._tfinish = null;
+    /**
+     * The duration of the media requests, if available, in seconds.
+     * @public
+     */
+    this._mediaduration = null;
+    /**
+     * all the response headers from request.
+     * @public
+     */
+    this._responseHeaders = null;
+    /**
+     * The selected service location for the request. string.
+     * @public
+     */
+    this._serviceLocation = null;
+    /**
+     * The type of the loader that was used. Distinguish between fetch loader and xhr loader
+     */
+    this._fileLoaderType = null;
+    /**
+     * The values derived from the ResourceTimingAPI.
+     */
+    this._resourceTimingValues = null;
+    /**
+     * The CMSD static and dynamic values retrieved from CMSD response headers.
+     * Not part of the HttpList metric defined in ISO/IEC 23009-1 Annex D.4.3, hence private.
+     * @public
+     */
+    this._cmsd = null;
+  }
 
   /**
-   * Type of stream ("audio" | "video" etc..)
-   * @public
+   * Prototype getter, so it is not serialised as part of the HttpList metric.
+   * @deprecated since 5.3.0, use `_cmsd` instead. Will be removed in v6.
    */
-  this._stream = null;
-  /**
-   * Real-Time | The real time at which the request finished.
-   * @public
-   */
-  this._tfinish = null;
-  /**
-   * The duration of the media requests, if available, in seconds.
-   * @public
-   */
-  this._mediaduration = null;
-  /**
-   * all the response headers from request.
-   * @public
-   */
-  this._responseHeaders = null;
-  /**
-   * The selected service location for the request. string.
-   * @public
-   */
-  this._serviceLocation = null;
-  /**
-   * The type of the loader that was used. Distinguish between fetch loader and xhr loader
-   */
-  this._fileLoaderType = null;
-  /**
-   * The values derived from the ResourceTimingAPI.
-   */
-  this._resourceTimingValues = null;
-});
+  return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(HTTPRequest, [{
+    key: "cmsd",
+    get: function get() {
+      return this._cmsd;
+    }
+  }]);
+}();
 /**
  * @classdesc This Object holds reference to the progress of the HTTPRequest.
  * @ignore
  */
-var HTTPRequestTrace = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__["default"])(
+var HTTPRequestTrace = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(
 /**
  * @class
  */
 function HTTPRequestTrace() {
-  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__["default"])(this, HTTPRequestTrace);
+  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__["default"])(this, HTTPRequestTrace);
   /**
    * Real-Time | Measurement stream start.
    * @public
@@ -17316,6 +17561,12 @@ HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
+/******/ 		if (!(moduleId in __webpack_modules__)) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
 /******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
@@ -17324,47 +17575,41 @@ HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/define property getters */
-/******/ 	!function() {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = function(exports, definition) {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
+/******/ 	// define getter/value functions for harmony exports
+/******/ 	__webpack_require__.d = function(exports, definition) {
+/******/ 		for(var key in definition) {
+/******/ 			if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 			}
-/******/ 		};
-/******/ 	}();
+/******/ 		}
+/******/ 	};
 /******/ 	
 /******/ 	/* webpack/runtime/global */
-/******/ 	!function() {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
-/******/ 	}();
+/******/ 	__webpack_require__.g = (function() {
+/******/ 		if (typeof globalThis === 'object') return globalThis;
+/******/ 		try {
+/******/ 			return this || new Function('return this')();
+/******/ 		} catch (e) {
+/******/ 			if (typeof window === 'object') return window;
+/******/ 		}
+/******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	!function() {
-/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
-/******/ 	}();
+/******/ 	__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); };
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
-/******/ 	!function() {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = function(exports) {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	}();
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
+!function() {
 /*!**************************!*\
   !*** ./src/mss/index.js ***!
   \**************************/
@@ -17417,6 +17662,7 @@ if (!dashjs) {
 dashjs.MssHandler = _MssHandler_js__WEBPACK_IMPORTED_MODULE_1__["default"];
 /* harmony default export */ __webpack_exports__["default"] = (dashjs);
 
+}();
 __webpack_exports__ = __webpack_exports__["default"];
 /******/ 	return __webpack_exports__;
 /******/ })()

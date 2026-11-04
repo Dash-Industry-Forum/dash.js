@@ -9979,39 +9979,6 @@ $({ target: 'Array', proto: true, forced: !HAS_SPECIES_SUPPORT }, {
 
 /***/ }),
 
-/***/ "./node_modules/core-js/modules/es.array.find.js":
-/*!*******************************************************!*\
-  !*** ./node_modules/core-js/modules/es.array.find.js ***!
-  \*******************************************************/
-/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
-var $find = (__webpack_require__(/*! ../internals/array-iteration */ "./node_modules/core-js/internals/array-iteration.js").find);
-var addToUnscopables = __webpack_require__(/*! ../internals/add-to-unscopables */ "./node_modules/core-js/internals/add-to-unscopables.js");
-
-var FIND = 'find';
-var SKIPS_HOLES = true;
-
-// Shouldn't skip holes
-// eslint-disable-next-line es/no-array-prototype-find -- testing
-if (FIND in []) Array(1)[FIND](function () { SKIPS_HOLES = false; });
-
-// `Array.prototype.find` method
-// https://tc39.es/ecma262/#sec-array.prototype.find
-$({ target: 'Array', proto: true, forced: SKIPS_HOLES }, {
-  find: function find(callbackfn /* , that = undefined */) {
-    return $find(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-  }
-});
-
-// https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-addToUnscopables(FIND);
-
-
-/***/ }),
-
 /***/ "./node_modules/core-js/modules/es.array.flat-map.js":
 /*!***********************************************************!*\
   !*** ./node_modules/core-js/modules/es.array.flat-map.js ***!
@@ -10886,49 +10853,6 @@ $({ target: 'Iterator', proto: true, real: true, forced: FORCED }, {
     return new IteratorProxy(getIteratorDirect(this), {
       predicate: predicate
     });
-  }
-});
-
-
-/***/ }),
-
-/***/ "./node_modules/core-js/modules/es.iterator.find.js":
-/*!**********************************************************!*\
-  !*** ./node_modules/core-js/modules/es.iterator.find.js ***!
-  \**********************************************************/
-/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-
-var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
-var call = __webpack_require__(/*! ../internals/function-call */ "./node_modules/core-js/internals/function-call.js");
-var iterate = __webpack_require__(/*! ../internals/iterate */ "./node_modules/core-js/internals/iterate.js");
-var aCallable = __webpack_require__(/*! ../internals/a-callable */ "./node_modules/core-js/internals/a-callable.js");
-var anObject = __webpack_require__(/*! ../internals/an-object */ "./node_modules/core-js/internals/an-object.js");
-var getIteratorDirect = __webpack_require__(/*! ../internals/get-iterator-direct */ "./node_modules/core-js/internals/get-iterator-direct.js");
-var iteratorClose = __webpack_require__(/*! ../internals/iterator-close */ "./node_modules/core-js/internals/iterator-close.js");
-var iteratorHelperWithoutClosingOnEarlyError = __webpack_require__(/*! ../internals/iterator-helper-without-closing-on-early-error */ "./node_modules/core-js/internals/iterator-helper-without-closing-on-early-error.js");
-
-var findWithoutClosingOnEarlyError = iteratorHelperWithoutClosingOnEarlyError('find', TypeError);
-
-// `Iterator.prototype.find` method
-// https://tc39.es/ecma262/#sec-iterator.prototype.find
-$({ target: 'Iterator', proto: true, real: true, forced: findWithoutClosingOnEarlyError }, {
-  find: function find(predicate) {
-    anObject(this);
-    try {
-      aCallable(predicate);
-    } catch (error) {
-      iteratorClose(this, 'throw', error);
-    }
-
-    if (findWithoutClosingOnEarlyError) return call(findWithoutClosingOnEarlyError, this, predicate);
-
-    var record = getIteratorDirect(this);
-    var counter = 0;
-    return iterate(record, function (value, stop) {
-      if (predicate(value, counter++)) return stop(value);
-    }, { IS_RECORD: true, INTERRUPTED: true }).result;
   }
 });
 
@@ -11876,6 +11800,35 @@ $({ target: 'Object', stat: true }, {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/modules/es.object.freeze.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/core-js/modules/es.object.freeze.js ***!
+  \**********************************************************/
+/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var FREEZING = __webpack_require__(/*! ../internals/freezing */ "./node_modules/core-js/internals/freezing.js");
+var fails = __webpack_require__(/*! ../internals/fails */ "./node_modules/core-js/internals/fails.js");
+var isObject = __webpack_require__(/*! ../internals/is-object */ "./node_modules/core-js/internals/is-object.js");
+var onFreeze = (__webpack_require__(/*! ../internals/internal-metadata */ "./node_modules/core-js/internals/internal-metadata.js").onFreeze);
+
+// eslint-disable-next-line es/no-object-freeze -- safe
+var $freeze = Object.freeze;
+var FAILS_ON_PRIMITIVES = fails(function () { $freeze(1); });
+
+// `Object.freeze` method
+// https://tc39.es/ecma262/#sec-object.freeze
+$({ target: 'Object', stat: true, forced: FAILS_ON_PRIMITIVES, sham: !FREEZING }, {
+  freeze: function freeze(it) {
+    return $freeze && isObject(it) ? $freeze(onFreeze(it)) : it;
+  }
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/modules/es.object.get-own-property-descriptor.js":
 /*!*******************************************************************************!*\
   !*** ./node_modules/core-js/modules/es.object.get-own-property-descriptor.js ***!
@@ -11993,6 +11946,26 @@ $({ target: 'Object', stat: true, forced: FAILS_ON_PRIMITIVES, sham: !CORRECT_PR
   }
 });
 
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es.object.is.js":
+/*!******************************************************!*\
+  !*** ./node_modules/core-js/modules/es.object.is.js ***!
+  \******************************************************/
+/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var is = __webpack_require__(/*! ../internals/same-value */ "./node_modules/core-js/internals/same-value.js");
+
+// `Object.is` method
+// https://tc39.es/ecma262/#sec-object.is
+$({ target: 'Object', stat: true }, {
+  is: is
+});
 
 
 /***/ }),
@@ -13233,6 +13206,51 @@ $({ target: 'Set', proto: true, real: true, forced: FORCED }, {
 
 /***/ }),
 
+/***/ "./node_modules/core-js/modules/es.string.ends-with.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/core-js/modules/es.string.ends-with.js ***!
+  \*************************************************************/
+/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var uncurryThis = __webpack_require__(/*! ../internals/function-uncurry-this-clause */ "./node_modules/core-js/internals/function-uncurry-this-clause.js");
+var getOwnPropertyDescriptor = (__webpack_require__(/*! ../internals/object-get-own-property-descriptor */ "./node_modules/core-js/internals/object-get-own-property-descriptor.js").f);
+var toLength = __webpack_require__(/*! ../internals/to-length */ "./node_modules/core-js/internals/to-length.js");
+var toString = __webpack_require__(/*! ../internals/to-string */ "./node_modules/core-js/internals/to-string.js");
+var notARegExp = __webpack_require__(/*! ../internals/not-a-regexp */ "./node_modules/core-js/internals/not-a-regexp.js");
+var requireObjectCoercible = __webpack_require__(/*! ../internals/require-object-coercible */ "./node_modules/core-js/internals/require-object-coercible.js");
+var correctIsRegExpLogic = __webpack_require__(/*! ../internals/correct-is-regexp-logic */ "./node_modules/core-js/internals/correct-is-regexp-logic.js");
+var IS_PURE = __webpack_require__(/*! ../internals/is-pure */ "./node_modules/core-js/internals/is-pure.js");
+
+var slice = uncurryThis(''.slice);
+var min = Math.min;
+
+var CORRECT_IS_REGEXP_LOGIC = correctIsRegExpLogic('endsWith');
+// https://github.com/zloirock/core-js/pull/702
+var MDN_POLYFILL_BUG = !IS_PURE && !CORRECT_IS_REGEXP_LOGIC && !!function () {
+  var descriptor = getOwnPropertyDescriptor(String.prototype, 'endsWith');
+  return descriptor && !descriptor.writable;
+}();
+
+// `String.prototype.endsWith` method
+// https://tc39.es/ecma262/#sec-string.prototype.endswith
+$({ target: 'String', proto: true, forced: !MDN_POLYFILL_BUG && !CORRECT_IS_REGEXP_LOGIC }, {
+  endsWith: function endsWith(searchString /* , endPosition = @length */) {
+    var that = toString(requireObjectCoercible(this));
+    notARegExp(searchString);
+    var endPosition = arguments.length > 1 ? arguments[1] : undefined;
+    var len = that.length;
+    var end = endPosition === undefined ? len : min(toLength(endPosition), len);
+    var search = toString(searchString);
+    return slice(that, end - search.length, end) === search;
+  }
+});
+
+
+/***/ }),
+
 /***/ "./node_modules/core-js/modules/es.string.from-code-point.js":
 /*!*******************************************************************!*\
   !*** ./node_modules/core-js/modules/es.string.from-code-point.js ***!
@@ -13433,6 +13451,26 @@ $({ target: 'String', proto: true, forced: WEBKIT_BUG }, {
   padStart: function padStart(maxLength /* , fillString = ' ' */) {
     return $padStart(this, maxLength, arguments.length > 1 ? arguments[1] : undefined);
   }
+});
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es.string.repeat.js":
+/*!**********************************************************!*\
+  !*** ./node_modules/core-js/modules/es.string.repeat.js ***!
+  \**********************************************************/
+/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var repeat = __webpack_require__(/*! ../internals/string-repeat */ "./node_modules/core-js/internals/string-repeat.js");
+
+// `String.prototype.repeat` method
+// https://tc39.es/ecma262/#sec-string.prototype.repeat
+$({ target: 'String', proto: true }, {
+  repeat: repeat
 });
 
 
@@ -13760,6 +13798,49 @@ fixRegExpWellKnownSymbolLogic('split', function (SPLIT, nativeSplit, maybeCallNa
     }
   ];
 }, BUGGY || !SPLIT_WORKS_WITH_OVERWRITTEN_EXEC, UNSUPPORTED_Y);
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/es.string.starts-with.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/core-js/modules/es.string.starts-with.js ***!
+  \***************************************************************/
+/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var uncurryThis = __webpack_require__(/*! ../internals/function-uncurry-this-clause */ "./node_modules/core-js/internals/function-uncurry-this-clause.js");
+var getOwnPropertyDescriptor = (__webpack_require__(/*! ../internals/object-get-own-property-descriptor */ "./node_modules/core-js/internals/object-get-own-property-descriptor.js").f);
+var toLength = __webpack_require__(/*! ../internals/to-length */ "./node_modules/core-js/internals/to-length.js");
+var toString = __webpack_require__(/*! ../internals/to-string */ "./node_modules/core-js/internals/to-string.js");
+var notARegExp = __webpack_require__(/*! ../internals/not-a-regexp */ "./node_modules/core-js/internals/not-a-regexp.js");
+var requireObjectCoercible = __webpack_require__(/*! ../internals/require-object-coercible */ "./node_modules/core-js/internals/require-object-coercible.js");
+var correctIsRegExpLogic = __webpack_require__(/*! ../internals/correct-is-regexp-logic */ "./node_modules/core-js/internals/correct-is-regexp-logic.js");
+var IS_PURE = __webpack_require__(/*! ../internals/is-pure */ "./node_modules/core-js/internals/is-pure.js");
+
+var stringSlice = uncurryThis(''.slice);
+var min = Math.min;
+
+var CORRECT_IS_REGEXP_LOGIC = correctIsRegExpLogic('startsWith');
+// https://github.com/zloirock/core-js/pull/702
+var MDN_POLYFILL_BUG = !IS_PURE && !CORRECT_IS_REGEXP_LOGIC && !!function () {
+  var descriptor = getOwnPropertyDescriptor(String.prototype, 'startsWith');
+  return descriptor && !descriptor.writable;
+}();
+
+// `String.prototype.startsWith` method
+// https://tc39.es/ecma262/#sec-string.prototype.startswith
+$({ target: 'String', proto: true, forced: !MDN_POLYFILL_BUG && !CORRECT_IS_REGEXP_LOGIC }, {
+  startsWith: function startsWith(searchString /* , position = 0 */) {
+    var that = toString(requireObjectCoercible(this));
+    notARegExp(searchString);
+    var index = toLength(min(arguments.length > 1 ? arguments[1] : undefined, that.length));
+    var search = toString(searchString);
+    return stringSlice(that, index, index + search.length) === search;
+  }
+});
 
 
 /***/ }),
@@ -15970,6 +16051,42 @@ var DOM_EXCEPTION = 'DOMException';
 
 // `DOMException.prototype[@@toStringTag]` property
 setToStringTag(getBuiltIn(DOM_EXCEPTION), DOM_EXCEPTION);
+
+
+/***/ }),
+
+/***/ "./node_modules/core-js/modules/web.queue-microtask.js":
+/*!*************************************************************!*\
+  !*** ./node_modules/core-js/modules/web.queue-microtask.js ***!
+  \*************************************************************/
+/***/ (function(__unused_webpack_module, __unused_webpack_exports, __webpack_require__) {
+
+"use strict";
+
+var $ = __webpack_require__(/*! ../internals/export */ "./node_modules/core-js/internals/export.js");
+var globalThis = __webpack_require__(/*! ../internals/global-this */ "./node_modules/core-js/internals/global-this.js");
+var microtask = __webpack_require__(/*! ../internals/microtask */ "./node_modules/core-js/internals/microtask.js");
+var aCallable = __webpack_require__(/*! ../internals/a-callable */ "./node_modules/core-js/internals/a-callable.js");
+var validateArgumentsLength = __webpack_require__(/*! ../internals/validate-arguments-length */ "./node_modules/core-js/internals/validate-arguments-length.js");
+var fails = __webpack_require__(/*! ../internals/fails */ "./node_modules/core-js/internals/fails.js");
+var DESCRIPTORS = __webpack_require__(/*! ../internals/descriptors */ "./node_modules/core-js/internals/descriptors.js");
+
+// Bun ~ 1.0.30 bug
+// https://github.com/oven-sh/bun/issues/9249
+var WRONG_ARITY = fails(function () {
+  // getOwnPropertyDescriptor for prevent experimental warning in Node 11
+  // eslint-disable-next-line es/no-object-getownpropertydescriptor -- safe
+  return DESCRIPTORS && Object.getOwnPropertyDescriptor(globalThis, 'queueMicrotask').value.length !== 1;
+});
+
+// `queueMicrotask` method
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-queuemicrotask
+$({ global: true, enumerable: true, dontCallGetSet: true, forced: WRONG_ARITY }, {
+  queueMicrotask: function queueMicrotask(fn) {
+    validateArgumentsLength(arguments.length, 1);
+    microtask(aCallable(fn));
+  }
+});
 
 
 /***/ }),
@@ -18878,6 +18995,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; },
 /* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; },
 /* harmony export */   CMCD_EVENT_MUTE: function() { return /* binding */ CMCD_EVENT_MUTE; },
+/* harmony export */   CMCD_EVENT_PLAYBACK_RATE: function() { return /* binding */ CMCD_EVENT_PLAYBACK_RATE; },
 /* harmony export */   CMCD_EVENT_PLAYER_COLLAPSE: function() { return /* binding */ CMCD_EVENT_PLAYER_COLLAPSE; },
 /* harmony export */   CMCD_EVENT_PLAYER_EXPAND: function() { return /* binding */ CMCD_EVENT_PLAYER_EXPAND; },
 /* harmony export */   CMCD_EVENT_PLAY_STATE: function() { return /* binding */ CMCD_EVENT_PLAY_STATE; },
@@ -18895,9 +19013,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; },
 /* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; },
 /* harmony export */   CMCD_QUERY: function() { return /* binding */ CMCD_QUERY; },
+/* harmony export */   CMCD_RECORDED_REPORT_MODE_EVENT: function() { return /* binding */ CMCD_RECORDED_REPORT_MODE_EVENT; },
+/* harmony export */   CMCD_RECORDED_REPORT_MODE_HEADER: function() { return /* binding */ CMCD_RECORDED_REPORT_MODE_HEADER; },
+/* harmony export */   CMCD_RECORDED_REPORT_MODE_QUERY: function() { return /* binding */ CMCD_RECORDED_REPORT_MODE_QUERY; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_EVENT: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_EVENT; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_MANIFEST: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_MANIFEST; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_SEGMENT: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_SEGMENT; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_UNKNOWN: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_UNKNOWN; },
 /* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; },
 /* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; },
 /* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; },
+/* harmony export */   CMCD_REQUEST_PROVENANCE: function() { return /* binding */ CMCD_REQUEST_PROVENANCE; },
 /* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; },
 /* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; },
 /* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; },
@@ -18910,6 +19036,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; },
 /* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; },
 /* harmony export */   CmcdPlayerState: function() { return /* binding */ CmcdPlayerState; },
+/* harmony export */   CmcdRecordedReportMode: function() { return /* binding */ CmcdRecordedReportMode; },
+/* harmony export */   CmcdRecordedRequestType: function() { return /* binding */ CmcdRecordedRequestType; },
+/* harmony export */   CmcdReportRecorder: function() { return /* binding */ CmcdReportRecorder; },
 /* harmony export */   CmcdReporter: function() { return /* binding */ CmcdReporter; },
 /* harmony export */   CmcdReportingMode: function() { return /* binding */ CmcdReportingMode; },
 /* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; },
@@ -18918,6 +19047,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CmcdValidationSeverity: function() { return /* binding */ CmcdValidationSeverity; },
 /* harmony export */   appendCmcdHeaders: function() { return /* binding */ appendCmcdHeaders; },
 /* harmony export */   appendCmcdQuery: function() { return /* binding */ appendCmcdQuery; },
+/* harmony export */   createFetchTransport: function() { return /* binding */ createFetchTransport; },
+/* harmony export */   createXhrTransport: function() { return /* binding */ createXhrTransport; },
 /* harmony export */   decodeCmcd: function() { return /* binding */ decodeCmcd; },
 /* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; },
 /* harmony export */   fromCmcdHeaders: function() { return /* binding */ fromCmcdHeaders; },
@@ -18945,78 +19076,85 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   validateCmcdStructure: function() { return /* binding */ validateCmcdStructure; },
 /* harmony export */   validateCmcdValues: function() { return /* binding */ validateCmcdValues; }
 /* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ "./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js");
-/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ "./node_modules/@babel/runtime/helpers/esm/toConsumableArray.js");
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
-/* harmony import */ var _babel_runtime_helpers_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @babel/runtime/helpers/objectWithoutProperties */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js");
-/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
-/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
-/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @babel/runtime/helpers/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
+/* harmony import */ var _babel_runtime_helpers_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/objectWithoutProperties */ "./node_modules/@babel/runtime/helpers/esm/objectWithoutProperties.js");
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
+/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ "./node_modules/@babel/runtime/helpers/esm/toConsumableArray.js");
+/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
+/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
+/* harmony import */ var _babel_runtime_helpers_asyncToGenerator__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @babel/runtime/helpers/asyncToGenerator */ "./node_modules/@babel/runtime/helpers/esm/asyncToGenerator.js");
+/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
+/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
 /* harmony import */ var _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @babel/runtime/regenerator */ "./node_modules/@babel/runtime/regenerator/index.js");
 /* harmony import */ var core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.error.cause.js */ "./node_modules/core-js/modules/es.error.cause.js");
 /* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
-/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.symbol.js */ "./node_modules/core-js/modules/es.symbol.js");
-/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.symbol.description.js */ "./node_modules/core-js/modules/es.symbol.description.js");
-/* harmony import */ var core_js_modules_es_symbol_iterator_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.symbol.iterator.js */ "./node_modules/core-js/modules/es.symbol.iterator.js");
-/* harmony import */ var core_js_modules_es_array_filter_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.array.filter.js */ "./node_modules/core-js/modules/es.array.filter.js");
-/* harmony import */ var core_js_modules_es_array_find_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.array.find.js */ "./node_modules/core-js/modules/es.array.find.js");
-/* harmony import */ var core_js_modules_es_array_flat_map_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.array.flat-map.js */ "./node_modules/core-js/modules/es.array.flat-map.js");
-/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.array.from.js */ "./node_modules/core-js/modules/es.array.from.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
-/* harmony import */ var core_js_modules_es_array_sort_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.array.sort.js */ "./node_modules/core-js/modules/es.array.sort.js");
-/* harmony import */ var core_js_modules_es_array_splice_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.array.splice.js */ "./node_modules/core-js/modules/es.array.splice.js");
-/* harmony import */ var core_js_modules_es_array_unscopables_flat_map_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.array.unscopables.flat-map.js */ "./node_modules/core-js/modules/es.array.unscopables.flat-map.js");
-/* harmony import */ var core_js_modules_es_function_name_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.function.name.js */ "./node_modules/core-js/modules/es.function.name.js");
-/* harmony import */ var core_js_modules_es_iterator_constructor_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.iterator.constructor.js */ "./node_modules/core-js/modules/es.iterator.constructor.js");
-/* harmony import */ var core_js_modules_es_iterator_every_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.iterator.every.js */ "./node_modules/core-js/modules/es.iterator.every.js");
-/* harmony import */ var core_js_modules_es_iterator_filter_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.iterator.filter.js */ "./node_modules/core-js/modules/es.iterator.filter.js");
-/* harmony import */ var core_js_modules_es_iterator_find_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.iterator.find.js */ "./node_modules/core-js/modules/es.iterator.find.js");
-/* harmony import */ var core_js_modules_es_iterator_flat_map_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.iterator.flat-map.js */ "./node_modules/core-js/modules/es.iterator.flat-map.js");
-/* harmony import */ var core_js_modules_es_iterator_for_each_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.iterator.for-each.js */ "./node_modules/core-js/modules/es.iterator.for-each.js");
-/* harmony import */ var core_js_modules_es_iterator_map_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.iterator.map.js */ "./node_modules/core-js/modules/es.iterator.map.js");
-/* harmony import */ var core_js_modules_es_iterator_reduce_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.iterator.reduce.js */ "./node_modules/core-js/modules/es.iterator.reduce.js");
-/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.map.js */ "./node_modules/core-js/modules/es.map.js");
-/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
-/* harmony import */ var core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/es.number.is-integer.js */ "./node_modules/core-js/modules/es.number.is-integer.js");
-/* harmony import */ var core_js_modules_es_object_assign_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! core-js/modules/es.object.assign.js */ "./node_modules/core-js/modules/es.object.assign.js");
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
-/* harmony import */ var core_js_modules_es_object_get_own_property_descriptor_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! core-js/modules/es.object.get-own-property-descriptor.js */ "./node_modules/core-js/modules/es.object.get-own-property-descriptor.js");
-/* harmony import */ var core_js_modules_es_object_get_own_property_descriptors_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! core-js/modules/es.object.get-own-property-descriptors.js */ "./node_modules/core-js/modules/es.object.get-own-property-descriptors.js");
+/* harmony import */ var core_js_modules_es_array_filter_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.array.filter.js */ "./node_modules/core-js/modules/es.array.filter.js");
+/* harmony import */ var core_js_modules_es_array_flat_map_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.array.flat-map.js */ "./node_modules/core-js/modules/es.array.flat-map.js");
+/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.array.from.js */ "./node_modules/core-js/modules/es.array.from.js");
+/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
+/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
+/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
+/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
+/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
+/* harmony import */ var core_js_modules_es_array_sort_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.array.sort.js */ "./node_modules/core-js/modules/es.array.sort.js");
+/* harmony import */ var core_js_modules_es_array_splice_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.array.splice.js */ "./node_modules/core-js/modules/es.array.splice.js");
+/* harmony import */ var core_js_modules_es_array_unscopables_flat_map_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.array.unscopables.flat-map.js */ "./node_modules/core-js/modules/es.array.unscopables.flat-map.js");
+/* harmony import */ var core_js_modules_es_global_this_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.global-this.js */ "./node_modules/core-js/modules/es.global-this.js");
+/* harmony import */ var core_js_modules_es_iterator_constructor_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.iterator.constructor.js */ "./node_modules/core-js/modules/es.iterator.constructor.js");
+/* harmony import */ var core_js_modules_es_iterator_every_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.iterator.every.js */ "./node_modules/core-js/modules/es.iterator.every.js");
+/* harmony import */ var core_js_modules_es_iterator_filter_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.iterator.filter.js */ "./node_modules/core-js/modules/es.iterator.filter.js");
+/* harmony import */ var core_js_modules_es_iterator_flat_map_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.iterator.flat-map.js */ "./node_modules/core-js/modules/es.iterator.flat-map.js");
+/* harmony import */ var core_js_modules_es_iterator_for_each_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.iterator.for-each.js */ "./node_modules/core-js/modules/es.iterator.for-each.js");
+/* harmony import */ var core_js_modules_es_iterator_map_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.iterator.map.js */ "./node_modules/core-js/modules/es.iterator.map.js");
+/* harmony import */ var core_js_modules_es_iterator_reduce_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.iterator.reduce.js */ "./node_modules/core-js/modules/es.iterator.reduce.js");
+/* harmony import */ var core_js_modules_es_iterator_some_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.iterator.some.js */ "./node_modules/core-js/modules/es.iterator.some.js");
+/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.map.js */ "./node_modules/core-js/modules/es.map.js");
+/* harmony import */ var core_js_modules_es_number_constructor_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.number.constructor.js */ "./node_modules/core-js/modules/es.number.constructor.js");
+/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
+/* harmony import */ var core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.number.is-integer.js */ "./node_modules/core-js/modules/es.number.is-integer.js");
+/* harmony import */ var core_js_modules_es_object_assign_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.object.assign.js */ "./node_modules/core-js/modules/es.object.assign.js");
+/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
+/* harmony import */ var core_js_modules_es_object_freeze_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/es.object.freeze.js */ "./node_modules/core-js/modules/es.object.freeze.js");
+/* harmony import */ var core_js_modules_es_object_get_own_property_descriptor_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! core-js/modules/es.object.get-own-property-descriptor.js */ "./node_modules/core-js/modules/es.object.get-own-property-descriptor.js");
+/* harmony import */ var core_js_modules_es_object_get_own_property_descriptors_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! core-js/modules/es.object.get-own-property-descriptors.js */ "./node_modules/core-js/modules/es.object.get-own-property-descriptors.js");
+/* harmony import */ var core_js_modules_es_object_get_prototype_of_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! core-js/modules/es.object.get-prototype-of.js */ "./node_modules/core-js/modules/es.object.get-prototype-of.js");
+/* harmony import */ var core_js_modules_es_object_is_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! core-js/modules/es.object.is.js */ "./node_modules/core-js/modules/es.object.is.js");
 /* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! core-js/modules/es.object.keys.js */ "./node_modules/core-js/modules/es.object.keys.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_promise_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! core-js/modules/es.promise.js */ "./node_modules/core-js/modules/es.promise.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
-/* harmony import */ var core_js_modules_es_set_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! core-js/modules/es.set.js */ "./node_modules/core-js/modules/es.set.js");
-/* harmony import */ var core_js_modules_es_set_difference_v2_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! core-js/modules/es.set.difference.v2.js */ "./node_modules/core-js/modules/es.set.difference.v2.js");
-/* harmony import */ var core_js_modules_es_set_intersection_v2_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! core-js/modules/es.set.intersection.v2.js */ "./node_modules/core-js/modules/es.set.intersection.v2.js");
-/* harmony import */ var core_js_modules_es_set_is_disjoint_from_v2_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! core-js/modules/es.set.is-disjoint-from.v2.js */ "./node_modules/core-js/modules/es.set.is-disjoint-from.v2.js");
-/* harmony import */ var core_js_modules_es_set_is_subset_of_v2_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! core-js/modules/es.set.is-subset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-subset-of.v2.js");
-/* harmony import */ var core_js_modules_es_set_is_superset_of_v2_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! core-js/modules/es.set.is-superset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-superset-of.v2.js");
-/* harmony import */ var core_js_modules_es_set_symmetric_difference_v2_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! core-js/modules/es.set.symmetric-difference.v2.js */ "./node_modules/core-js/modules/es.set.symmetric-difference.v2.js");
-/* harmony import */ var core_js_modules_es_set_union_v2_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! core-js/modules/es.set.union.v2.js */ "./node_modules/core-js/modules/es.set.union.v2.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
-/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
-/* harmony import */ var core_js_modules_es_string_split_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! core-js/modules/es.string.split.js */ "./node_modules/core-js/modules/es.string.split.js");
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_61__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
-/* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_62__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each.js */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
-/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_63__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
-/* harmony import */ var core_js_modules_web_url_js__WEBPACK_IMPORTED_MODULE_64__ = __webpack_require__(/*! core-js/modules/web.url.js */ "./node_modules/core-js/modules/web.url.js");
-/* harmony import */ var core_js_modules_web_url_to_json_js__WEBPACK_IMPORTED_MODULE_65__ = __webpack_require__(/*! core-js/modules/web.url.to-json.js */ "./node_modules/core-js/modules/web.url.to-json.js");
-/* harmony import */ var core_js_modules_web_url_search_params_js__WEBPACK_IMPORTED_MODULE_66__ = __webpack_require__(/*! core-js/modules/web.url-search-params.js */ "./node_modules/core-js/modules/web.url-search-params.js");
-/* harmony import */ var core_js_modules_web_url_search_params_delete_js__WEBPACK_IMPORTED_MODULE_67__ = __webpack_require__(/*! core-js/modules/web.url-search-params.delete.js */ "./node_modules/core-js/modules/web.url-search-params.delete.js");
-/* harmony import */ var core_js_modules_web_url_search_params_has_js__WEBPACK_IMPORTED_MODULE_68__ = __webpack_require__(/*! core-js/modules/web.url-search-params.has.js */ "./node_modules/core-js/modules/web.url-search-params.has.js");
-/* harmony import */ var core_js_modules_web_url_search_params_size_js__WEBPACK_IMPORTED_MODULE_69__ = __webpack_require__(/*! core-js/modules/web.url-search-params.size.js */ "./node_modules/core-js/modules/web.url-search-params.size.js");
-/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
-/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_71__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! core-js/modules/es.symbol.js */ "./node_modules/core-js/modules/es.symbol.js");
+/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! core-js/modules/es.symbol.description.js */ "./node_modules/core-js/modules/es.symbol.description.js");
+/* harmony import */ var core_js_modules_es_symbol_iterator_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! core-js/modules/es.symbol.iterator.js */ "./node_modules/core-js/modules/es.symbol.iterator.js");
+/* harmony import */ var core_js_modules_es_function_name_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! core-js/modules/es.function.name.js */ "./node_modules/core-js/modules/es.function.name.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_promise_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! core-js/modules/es.promise.js */ "./node_modules/core-js/modules/es.promise.js");
+/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
+/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
+/* harmony import */ var core_js_modules_es_set_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! core-js/modules/es.set.js */ "./node_modules/core-js/modules/es.set.js");
+/* harmony import */ var core_js_modules_es_set_difference_v2_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! core-js/modules/es.set.difference.v2.js */ "./node_modules/core-js/modules/es.set.difference.v2.js");
+/* harmony import */ var core_js_modules_es_set_intersection_v2_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! core-js/modules/es.set.intersection.v2.js */ "./node_modules/core-js/modules/es.set.intersection.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_disjoint_from_v2_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! core-js/modules/es.set.is-disjoint-from.v2.js */ "./node_modules/core-js/modules/es.set.is-disjoint-from.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_subset_of_v2_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! core-js/modules/es.set.is-subset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-subset-of.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_superset_of_v2_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! core-js/modules/es.set.is-superset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-superset-of.v2.js");
+/* harmony import */ var core_js_modules_es_set_symmetric_difference_v2_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! core-js/modules/es.set.symmetric-difference.v2.js */ "./node_modules/core-js/modules/es.set.symmetric-difference.v2.js");
+/* harmony import */ var core_js_modules_es_set_union_v2_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! core-js/modules/es.set.union.v2.js */ "./node_modules/core-js/modules/es.set.union.v2.js");
+/* harmony import */ var core_js_modules_es_string_ends_with_js__WEBPACK_IMPORTED_MODULE_61__ = __webpack_require__(/*! core-js/modules/es.string.ends-with.js */ "./node_modules/core-js/modules/es.string.ends-with.js");
+/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_62__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
+/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_63__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_64__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
+/* harmony import */ var core_js_modules_es_string_split_js__WEBPACK_IMPORTED_MODULE_65__ = __webpack_require__(/*! core-js/modules/es.string.split.js */ "./node_modules/core-js/modules/es.string.split.js");
+/* harmony import */ var core_js_modules_es_string_starts_with_js__WEBPACK_IMPORTED_MODULE_66__ = __webpack_require__(/*! core-js/modules/es.string.starts-with.js */ "./node_modules/core-js/modules/es.string.starts-with.js");
+/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_67__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
+/* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_68__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each.js */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
+/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_69__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
+/* harmony import */ var core_js_modules_web_queue_microtask_js__WEBPACK_IMPORTED_MODULE_70__ = __webpack_require__(/*! core-js/modules/web.queue-microtask.js */ "./node_modules/core-js/modules/web.queue-microtask.js");
+/* harmony import */ var core_js_modules_web_url_js__WEBPACK_IMPORTED_MODULE_71__ = __webpack_require__(/*! core-js/modules/web.url.js */ "./node_modules/core-js/modules/web.url.js");
+/* harmony import */ var core_js_modules_web_url_to_json_js__WEBPACK_IMPORTED_MODULE_72__ = __webpack_require__(/*! core-js/modules/web.url.to-json.js */ "./node_modules/core-js/modules/web.url.to-json.js");
+/* harmony import */ var core_js_modules_web_url_search_params_js__WEBPACK_IMPORTED_MODULE_73__ = __webpack_require__(/*! core-js/modules/web.url-search-params.js */ "./node_modules/core-js/modules/web.url-search-params.js");
+/* harmony import */ var core_js_modules_web_url_search_params_delete_js__WEBPACK_IMPORTED_MODULE_74__ = __webpack_require__(/*! core-js/modules/web.url-search-params.delete.js */ "./node_modules/core-js/modules/web.url-search-params.delete.js");
+/* harmony import */ var core_js_modules_web_url_search_params_has_js__WEBPACK_IMPORTED_MODULE_75__ = __webpack_require__(/*! core-js/modules/web.url-search-params.has.js */ "./node_modules/core-js/modules/web.url-search-params.has.js");
+/* harmony import */ var core_js_modules_web_url_search_params_size_js__WEBPACK_IMPORTED_MODULE_76__ = __webpack_require__(/*! core-js/modules/web.url-search-params.size.js */ "./node_modules/core-js/modules/web.url-search-params.size.js");
+/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_78__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
 
 
 
@@ -19028,12 +19166,13 @@ __webpack_require__.r(__webpack_exports__);
 var _excluded = ["url"],
   _excluded2 = ["version", "eventTargets", "sid", "transmissionMode"],
   _excluded3 = ["customData", "headers"];
-
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_7__["default"])(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+;
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+;
 
 
 
@@ -19098,53 +19237,302 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
 
 
 
-//#region src/CMCD_FORMATTER_MAP.ts
-var roundValue = function roundValue(value) {
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem(Math.round(value.value), value.params);
-  return Math.round(value);
-};
-var toRounded = function toRounded(value) {
-  if (Array.isArray(value)) return value.map(roundValue);
-  return roundValue(value);
-};
-var _toUrlSafe = function toUrlSafe(value, options) {
-  if (Array.isArray(value)) return value.map(function (item) {
-    return _toUrlSafe(item, options);
-  });
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem && typeof value.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem(_toUrlSafe(value.value, options), value.params);else {
-    if (options.baseUrl) value = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_71__.urlToRelativePath)(value, (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_71__.getBaseUrl)(options.baseUrl));
-    return options.version === 1 ? encodeURIComponent(value) : value;
-  }
-};
-var hundredValue = function hundredValue(value) {
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem(Math.round(value.value / 100) * 100, value.params);
-  return Math.round(value / 100) * 100;
-};
-var toHundred = function toHundred(value) {
-  if (Array.isArray(value)) return value.map(hundredValue);
-  return hundredValue(value);
-};
-var nor = function nor(value, options) {
-  var norValue = value;
-  if (options.version >= 2) {
-    if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem && typeof value.value === "string") norValue = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem([value]);else if (typeof value === "string") norValue = [value];
-  }
-  return _toUrlSafe(norValue, options);
-};
+
+
+
+
+
+
+//#region src/CMCD_INNER_LIST_KEYS.ts
 /**
-* The default formatters for CMCD values.
+* Inner-list keys in version 2 that are scalars in version 1.
 *
-* @public
+* Used by both encoding (down-conversion) and decoding (up-conversion).
+*
+* @internal
 */
-var CMCD_FORMATTER_MAP = {
-  br: toRounded,
-  d: toRounded,
-  bl: toHundred,
-  dl: toHundred,
-  mtp: toHundred,
-  nor: nor,
-  rtp: toHundred,
-  tb: toRounded
+var CMCD_INNER_LIST_KEYS = /* @__PURE__ */new Set(["ab", "bl", "br", "bsa", "bsd", "bsda", "lab", "lb", "mtp", "pb", "tab", "tb", "tbl", "tpb"]);
+
+//#endregion
+//#region src/CMCD_KEY_SPECS.ts
+var MEDIA = ["a", "v", "av", "tt", "c", "o"];
+/**
+* The encoder rules of each key. The table has one row for each key of CTA-5004-B Table 1, plus `nrr` of CTA-5004 and `cdn`.
+*
+* @internal
+*/
+var CMCD_KEY_SPECS = {
+  ab: {
+    type: "ot-list",
+    round: 1,
+    supersededBy: "br",
+    version: 2
+  },
+  bg: {
+    type: "boolean",
+    omitDefault: false,
+    requiredOn: "b",
+    version: 2
+  },
+  bl: {
+    type: "ot-list",
+    round: 100
+  },
+  br: {
+    type: "ot-list",
+    round: 1,
+    requiredOn: "bc"
+  },
+  bs: {
+    type: "boolean",
+    omitDefault: false
+  },
+  bsa: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  bsd: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  bsda: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  cdn: {
+    type: "string",
+    max: 128,
+    version: 2
+  },
+  cen: {
+    type: "string",
+    max: 64,
+    mode: "event",
+    onlyOn: "ce",
+    requiredOn: "ce",
+    version: 2
+  },
+  cid: {
+    type: "string",
+    max: 128,
+    v1Max: 64,
+    requiredOn: "c"
+  },
+  cmsdd: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  cmsds: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  cs: {
+    type: "string",
+    version: 2
+  },
+  d: {
+    type: "integer",
+    round: 1,
+    ot: MEDIA
+  },
+  dfa: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  dl: {
+    type: "integer",
+    round: 100
+  },
+  e: {
+    type: "token",
+    mode: "event",
+    requiredOn: "always",
+    version: 2
+  },
+  ec: {
+    type: "string-list",
+    requiredOn: "e",
+    version: 2
+  },
+  h: {
+    type: "string",
+    max: 128,
+    mode: "event",
+    requiredOn: "h",
+    version: 2
+  },
+  lab: {
+    type: "ot-list",
+    round: 1,
+    supersededBy: "lb",
+    version: 2
+  },
+  lb: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  ltc: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  msd: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  mtp: {
+    type: "ot-list",
+    round: 100
+  },
+  nor: {
+    type: "nor"
+  },
+  nr: {
+    type: "boolean",
+    omitDefault: false,
+    version: 2
+  },
+  nrr: {
+    type: "string",
+    version: 1
+  },
+  ot: {
+    type: "token"
+  },
+  pb: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  pr: {
+    type: "decimal",
+    omitDefault: 1,
+    requiredOn: "pr"
+  },
+  pt: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  rc: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  rtp: {
+    type: "integer",
+    round: 100
+  },
+  sf: {
+    type: "token",
+    v1Map: {
+      e: "o"
+    }
+  },
+  sid: {
+    type: "string",
+    max: 64
+  },
+  smrt: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  sn: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  st: {
+    type: "token",
+    v1Map: {
+      ll: "l"
+    }
+  },
+  sta: {
+    type: "token",
+    requiredOn: "ps",
+    version: 2
+  },
+  su: {
+    type: "boolean",
+    omitDefault: false
+  },
+  tab: {
+    type: "ot-list",
+    round: 1,
+    supersededBy: "tb",
+    version: 2
+  },
+  tb: {
+    type: "ot-list",
+    round: 1
+  },
+  tbl: {
+    type: "ot-list",
+    round: 100,
+    version: 2
+  },
+  tpb: {
+    type: "ot-list",
+    round: 1,
+    ot: ["a", "v", "av", "c"],
+    version: 2
+  },
+  ts: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    requiredOn: "always",
+    version: 2
+  },
+  ttfb: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  ttfbb: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  ttlb: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  url: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    requiredOn: "rr",
+    version: 2
+  },
+  v: {
+    type: "integer",
+    round: 1,
+    requiredOn: "always",
+    version: 2
+  }
 };
 
 //#endregion
@@ -19155,139 +19543,6 @@ var CMCD_FORMATTER_MAP = {
 * @public
 */
 var CMCD_V2 = 2;
-
-//#endregion
-//#region src/CmcdEventType.ts
-/**
-* CMCD event type for the 'bc' key (bitrate change).
-*
-* @public
-*/
-var CMCD_EVENT_BITRATE_CHANGE = "bc";
-/**
-* CMCD event type for the 'ps' key (play state change).
-*
-* @public
-*/
-var CMCD_EVENT_PLAY_STATE = "ps";
-/**
-* CMCD event type for the 'e' key (error).
-*
-* @public
-*/
-var CMCD_EVENT_ERROR = "e";
-/**
-* CMCD event type for the 't' key (time interval).
-*
-* @public
-*/
-var CMCD_EVENT_TIME_INTERVAL = "t";
-/**
-* CMCD event type for the 'c' key (content ID).
-*
-* @public
-*/
-var CMCD_EVENT_CONTENT_ID = "c";
-/**
-* CMCD event type for the 'b' key (backgrounded mode).
-*
-* @public
-*/
-var CMCD_EVENT_BACKGROUNDED_MODE = "b";
-/**
-* CMCD event type for the 'm' key (mute).
-*
-* @public
-*/
-var CMCD_EVENT_MUTE = "m";
-/**
-* CMCD event type for the 'um' key (unmute).
-*
-* @public
-*/
-var CMCD_EVENT_UNMUTE = "um";
-/**
-* CMCD event type for the 'pe' key (player expand).
-*
-* @public
-*/
-var CMCD_EVENT_PLAYER_EXPAND = "pe";
-/**
-* CMCD event type for the 'pc' key (player collapse).
-*
-* @public
-*/
-var CMCD_EVENT_PLAYER_COLLAPSE = "pc";
-/**
-* CMCD event type for the 'rr' key (response received).
-*
-* @public
-*/
-var CMCD_EVENT_RESPONSE_RECEIVED = "rr";
-/**
-* CMCD event type for the 'as' key (ad start).
-*
-* @public
-*/
-var CMCD_EVENT_AD_START = "as";
-/**
-* CMCD event type for the 'ae' key (ad end).
-*
-* @public
-*/
-var CMCD_EVENT_AD_END = "ae";
-/**
-* CMCD event type for the 'abs' key (ad break start).
-*
-* @public
-*/
-var CMCD_EVENT_AD_BREAK_START = "abs";
-/**
-* CMCD event type for the 'abe' key (ad break end).
-*
-* @public
-*/
-var CMCD_EVENT_AD_BREAK_END = "abe";
-/**
-* CMCD event type for the 'sk' key (skip).
-*
-* @public
-*/
-var CMCD_EVENT_SKIP = "sk";
-/**
-* CMCD event type for the 'ce' key (custom event).
-*
-* @public
-*/
-var CMCD_EVENT_CUSTOM_EVENT = "ce";
-/**
-* CMCD event types for the 'e' key (event mode).
-*
-* @enum
-*
-* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event | CTA-5004-B Event}
-*
-* @public
-*/
-var CmcdEventType = {
-  BITRATE_CHANGE: CMCD_EVENT_BITRATE_CHANGE,
-  PLAY_STATE: CMCD_EVENT_PLAY_STATE,
-  ERROR: CMCD_EVENT_ERROR,
-  TIME_INTERVAL: CMCD_EVENT_TIME_INTERVAL,
-  CONTENT_ID: CMCD_EVENT_CONTENT_ID,
-  BACKGROUNDED_MODE: CMCD_EVENT_BACKGROUNDED_MODE,
-  MUTE: CMCD_EVENT_MUTE,
-  UNMUTE: CMCD_EVENT_UNMUTE,
-  PLAYER_EXPAND: CMCD_EVENT_PLAYER_EXPAND,
-  PLAYER_COLLAPSE: CMCD_EVENT_PLAYER_COLLAPSE,
-  RESPONSE_RECEIVED: CMCD_EVENT_RESPONSE_RECEIVED,
-  AD_START: CMCD_EVENT_AD_START,
-  AD_END: CMCD_EVENT_AD_END,
-  AD_BREAK_START: CMCD_EVENT_AD_BREAK_START,
-  AD_BREAK_END: CMCD_EVENT_AD_BREAK_END,
-  SKIP: CMCD_EVENT_SKIP,
-  CUSTOM_EVENT: CMCD_EVENT_CUSTOM_EVENT
-};
 
 //#endregion
 //#region src/CmcdReportingMode.ts
@@ -19316,205 +19571,54 @@ var CmcdReportingMode = {
 };
 
 //#endregion
-//#region src/CMCD_EVENT_KEYS.ts
-/**
-* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
-*
-* @public
-*/
-var CMCD_EVENT_KEYS = ["cen", "e", "h", "ts"];
-
-//#endregion
-//#region src/CMCD_REQUEST_KEYS.ts
-/**
-* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
-*
-* @public
-*/
-var CMCD_REQUEST_KEYS = ["ab", "bg", "bl", "br", "bs", "bsa", "bsd", "bsda", "cdn", "cid", "cs", "d", "dfa", "dl", "ec", "lab", "lb", "ltc", "msd", "mtp", "nor", "nr", "ot", "pb", "pr", "pt", "rtp", "sf", "sid", "sn", "st", "sta", "su", "tab", "tb", "tbl", "tpb", "v"];
-
-//#endregion
-//#region src/isCmcdCustomKey.ts
-var CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
-/**
-* Check if a key is a custom key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a custom key, `false` otherwise.
-*
-* @public
-*/
-function isCmcdCustomKey(key) {
-  return CUSTOM_KEY_REGEX.test(key);
+//#region src/downConvertToV1.ts
+function hasParams(params) {
+  for (var _ in params) return true;
+  return false;
 }
-
-//#endregion
-//#region src/isCmcdRequestKey.ts
-var CMCD_REQUEST_KEY_SET = new Set(CMCD_REQUEST_KEYS);
 /**
-* Check if a key is a valid CMCD request key.
+* Unwrap an inner list or SfItem value to a scalar.
 *
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
-*/
-function isCmcdRequestKey(key) {
-  return CMCD_REQUEST_KEY_SET.has(key) || isCmcdCustomKey(key);
-}
-
-//#endregion
-//#region src/CMCD_RESPONSE_KEYS.ts
-/**
-* CMCD v2 - Response-only and timing keys.
-*
-* @public
-*/
-var CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
-
-//#endregion
-//#region src/isCmcdResponseReceivedKey.ts
-var CMCD_RESPONSE_KEY_SET = new Set(CMCD_RESPONSE_KEYS);
-/**
-* Check if a key is a valid CMCD response key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdResponseReceivedKey.test.ts#example}
-*/
-function isCmcdResponseReceivedKey(key) {
-  return CMCD_RESPONSE_KEY_SET.has(key);
-}
-
-//#endregion
-//#region src/isCmcdEventKey.ts
-var CMCD_EVENT_KEY_SET = new Set(CMCD_EVENT_KEYS);
-/**
-* Check if a key is a valid CMCD event key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdEventKey.test.ts#example}
-*/
-function isCmcdEventKey(key) {
-  return isCmcdRequestKey(key) || isCmcdResponseReceivedKey(key) || CMCD_EVENT_KEY_SET.has(key);
-}
-
-//#endregion
-//#region src/CMCD_INNER_LIST_KEYS.ts
-/**
-* Keys that are inner lists in V2 but plain scalars in V1.
-*
-* Used by both encoding (down-conversion) and decoding (up-conversion).
-*
-* @internal
-*/
-var CMCD_INNER_LIST_KEYS = new Set(["ab", "bl", "br", "bsa", "bsd", "bsda", "lab", "lb", "mtp", "pb", "tab", "tb", "tbl", "tpb"]);
-
-//#endregion
-//#region src/CMCD_V1_KEYS.ts
-/**
-* Defines the keys for CMCD (Common Media Client Data) version 1.
-*
-* @public
-*/
-var CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
-
-//#endregion
-//#region src/isCmcdV1Key.ts
-var CMCD_V1_KEY_SET$1 = new Set(CMCD_V1_KEYS);
-/**
-* Filter function for CMCD v1 keys.
-*
-* @param key - The CMCD key to filter.
-*
-* @returns `true` if the key should be included, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdV1Key.test.ts#example}
-*/
-function isCmcdV1Key(key) {
-  return CMCD_V1_KEY_SET$1.has(key) || isCmcdCustomKey(key);
-}
-
-//#endregion
-//#region src/isTokenField.ts
-var TOKEN_FIELDS = new Set(["ot", "sf", "st", "e", "sta"]);
-/**
-* Checks if the given key is a token field.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a token field.
-*
-* @internal
-*/
-function isTokenField(key) {
-  return TOKEN_FIELDS.has(key);
-}
-
-//#endregion
-//#region src/isValid.ts
-/**
-* Checks if the given value is valid
-*
-* @param value - The value to check.
-*
-* @returns `true` if the key is a value is valid.
-*
-* @internal
-*/
-function isValid(value) {
-  if (typeof value === "number") return Number.isFinite(value);
-  return value != null && value !== "" && value !== false;
-}
-
-//#endregion
-//#region src/prepareCmcdData.ts
-var filterMap = (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_7__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_7__["default"])({}, CMCD_EVENT_MODE, isCmcdEventKey), CMCD_REQUEST_MODE, isCmcdRequestKey);
-/**
-* Unwrap an inner list or SfItem value to a plain scalar.
+* The scalar is the value of the item with the object type flag of `ot`
+* (CTA-5004-B section 4.1, item 14). Without that item, it is the value
+* of the first item without parameters. Otherwise it is `undefined`.
 */
 function unwrapValue(value, ot) {
-  if (Array.isArray(value)) {
-    var item;
-    if (ot) item = value.find(function (item$1) {
-      var _item$1$params;
-      return ((_item$1$params = item$1.params) === null || _item$1$params === void 0 ? void 0 : _item$1$params.ot) === ot;
-    });
-    if (!item) item = value[0];
-    return unwrapValue(item);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem) value = value.value;
+  if (!Array.isArray(value)) return value;
+  var fallback;
+  var _iterator = _createForOfIteratorHelper(value),
+    _step;
+  try {
+    for (_iterator.s(); !(_step = _iterator.n()).done;) {
+      var _item$params;
+      var item = _step.value;
+      if (!(item instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem)) {
+        if (fallback === void 0) fallback = item;
+        continue;
+      }
+      if (ot && ((_item$params = item.params) === null || _item$params === void 0 ? void 0 : _item$params[ot]) === true) return item.value;
+      if (fallback === void 0 && !hasParams(item.params)) fallback = item.value;
+    }
+  } catch (err) {
+    _iterator.e(err);
+  } finally {
+    _iterator.f();
   }
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem) return value.value;
-  return value;
+  return fallback;
 }
 /**
-* Down-convert V2 CMCD data to V1 format.
+* Down-convert version 2 CMCD data to version 1.
 *
-* - Extracts `nrr` from `nor` SfItem `r` parameter.
-* - Unwraps inner-list values to plain scalars.
+* - Extracts `nrr` from the `nor` SfItem's `r` parameter.
+* - Unwraps inner-list values to scalars for the object type `ot`.
+*
+* @internal
 */
-function downConvertToV1(obj) {
+function downConvertToV1(obj, ot) {
   var result = {};
   for (var _i = 0, _Object$entries = Object.entries(obj); _i < _Object$entries.length; _i++) {
-    var _Object$entries$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_6__["default"])(_Object$entries[_i], 2),
+    var _Object$entries$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_7__["default"])(_Object$entries[_i], 2),
       key = _Object$entries$_i[0],
       value = _Object$entries$_i[1];
     if (value == null) {
@@ -19522,15 +19626,319 @@ function downConvertToV1(obj) {
       continue;
     }
     if (key === "nor") {
-      var first = (Array.isArray(value) ? value : [value])[0];
-      if (first instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem) {
+      var list = value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem && Array.isArray(value.value) ? value.value : value;
+      var first = Array.isArray(list) ? list[0] : list;
+      if (first instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem) {
         var _first$params;
         result["nor"] = first.value;
         if ((_first$params = first.params) !== null && _first$params !== void 0 && _first$params.r) result["nrr"] = first.params.r;
       } else result["nor"] = first;
-    } else if (CMCD_INNER_LIST_KEYS.has(key)) result[key] = unwrapValue(value, obj["ot"]);else result[key] = value;
+    } else if (CMCD_INNER_LIST_KEYS.has(key)) result[key] = unwrapValue(value, ot);else result[key] = value;
   }
   return result;
+}
+
+//#endregion
+//#region src/isCmcdCustomKey.ts
+var CUSTOM_KEY_REGEX = /^[a-z][a-z0-9.-]*$/;
+/**
+* Check if a key is a valid custom key: a lowercase first letter, then
+* characters from `a-z 0-9 . -`. The key needs a hyphen, not at the start
+* or end. This check applies the CTA-5004-B custom-key rules, restricted
+* to names that RFC 8941 key serialization accepts.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdCustomKey.test.ts#example}
+*/
+function isCmcdCustomKey(key) {
+  var separator = key.indexOf("-", 1);
+  return separator > 0 && separator < key.length - 1 && CUSTOM_KEY_REGEX.test(key);
+}
+
+//#endregion
+//#region src/getKeySpec.ts
+var CUSTOM_KEY_SPEC = {
+  type: "custom",
+  omitDefault: false,
+  max: 64,
+  v1Max: Infinity
+};
+/**
+* Returns the row of a key in the key table.
+*
+* @param key - The key to look up.
+*
+* @returns The row of a reserved key, the custom row for a valid custom key, or `undefined`.
+*
+* @internal
+*/
+function getKeySpec(key) {
+  if (Object.prototype.hasOwnProperty.call(CMCD_KEY_SPECS, key)) return CMCD_KEY_SPECS[key];
+  return isCmcdCustomKey(key) ? CUSTOM_KEY_SPEC : void 0;
+}
+
+//#endregion
+//#region src/isValid.ts
+/**
+* Checks if the given value is valid to send as a CMCD value.
+*
+* `undefined`, `null`, an empty string, `false`, an empty array, and a
+* number that is not finite are not valid. CTA-5004-B requires omitting
+* the key when its value is unknown.
+*
+* @param value - The value to check.
+*
+* @returns `true` if the value is valid.
+*
+* @internal
+*/
+function isValid(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.length > 0;
+  return value != null && value !== "" && value !== false;
+}
+
+//#endregion
+//#region src/formatNor.ts
+function toBase(baseUrl) {
+  if (!baseUrl) return;
+  try {
+    return new URL((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_78__.getBaseUrl)(baseUrl)).href;
+  } catch (_unused) {
+    return;
+  }
+}
+function formatPath(path, base, version) {
+  if (typeof path !== "string" || path === "") return;
+  var relative = base ? (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_78__.urlToRelativePath)(path, base) : path;
+  return version === 1 ? encodeURIComponent(relative) : relative;
+}
+function formatEntry(entry, base, version) {
+  if (entry instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem) {
+    var path = formatPath(entry.value, base, version);
+    return path === void 0 ? void 0 : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem(path, entry.params);
+  }
+  return formatPath(entry, base, version);
+}
+function formatEntries(entries, base, version) {
+  var list = [];
+  var _iterator2 = _createForOfIteratorHelper(entries),
+    _step2;
+  try {
+    for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+      var entry = _step2.value;
+      var formatted = formatEntry(entry, base, version);
+      if (formatted !== void 0) list.push(formatted);
+    }
+  } catch (err) {
+    _iterator2.e(err);
+  } finally {
+    _iterator2.f();
+  }
+  return list.length > 0 ? list : void 0;
+}
+/**
+* Formats a `nor` value. Each path becomes relative to `baseUrl` when `baseUrl` is a valid URL.
+* Version 1 encodes the path with `encodeURIComponent`. Version 2 wraps one path in a list.
+* The parameters of an entry and of an inner list stay on the value.
+*
+* @param value - A path, an `SfItem` of a path, or a list of them. An `SfItem` can also wrap the list.
+* @param options - The version and `baseUrl` of the report.
+*
+* @returns The formatted value, or `undefined` when no entry is a non-empty string.
+*
+* @internal
+*/
+function formatNor(value, options) {
+  var base = toBase(options.baseUrl);
+  var version = options.version;
+  if (Array.isArray(value)) return formatEntries(value, base, version);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem && Array.isArray(value.value)) {
+    var list = formatEntries(value.value, base, version);
+    return list && new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem(list, value.params);
+  }
+  var entry = formatEntry(value, base, version);
+  return version === 1 || entry === void 0 ? entry : [entry];
+}
+
+//#endregion
+//#region src/toTokenString.ts
+/**
+* Resolve the text of a token value.
+*
+* A token may be a plain string, a registry `Symbol`, an `SfToken`, or an
+* `SfItem` that wraps such a value.
+*
+* @param value - The value to resolve.
+*
+* @returns The token text, or `undefined` when the value is not a token.
+*
+* @internal
+*/
+function toTokenString(value) {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem) return toTokenString(value.value);
+  if (typeof value === "string") return value;
+  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__["default"])(value) === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfToken) return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.symbolToStr)(value);
+}
+
+//#endregion
+//#region src/normalizeValue.ts
+function toText(value, spec, version) {
+  var _ref, _ref2;
+  var max = (_ref = (_ref2 = version === 1 ? spec.v1Max : void 0) !== null && _ref2 !== void 0 ? _ref2 : spec.max) !== null && _ref !== void 0 ? _ref : Infinity;
+  return typeof value === "string" && value !== "" && value.length <= max ? value : void 0;
+}
+function normalizeBare(value, spec, version) {
+  switch (spec.type) {
+    case "boolean":
+      return typeof value === "boolean" ? value : void 0;
+    case "integer":
+    case "ot-list":
+      return typeof value === "number" && Number.isFinite(value) ? Math.round(value / spec.round) * spec.round : void 0;
+    case "decimal":
+      return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+    case "string":
+      return toText(value, spec, version);
+    case "string-list":
+      return typeof value === "string" && value !== "" ? value : void 0;
+    case "token":
+      {
+        var text = toTokenString(value);
+        var v1Map = version === 1 ? spec.v1Map : void 0;
+        var token = text !== void 0 && v1Map !== void 0 && Object.prototype.hasOwnProperty.call(v1Map, text) ? v1Map[text] : text;
+        return token ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfToken(token) : void 0;
+      }
+    case "custom":
+      if (typeof value === "string") return toText(value, spec, version);
+      if (typeof value === "number") return Number.isFinite(value) ? value : void 0;
+      if (Array.isArray(value)) return value.length > 0 ? value : void 0;
+      return typeof value === "boolean" || (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__["default"])(value) === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfToken ? value : void 0;
+    default:
+      return;
+  }
+}
+function normalizeItem(value, spec, version) {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem) {
+    var bare = normalizeBare(value.value, spec, version);
+    return bare === void 0 ? void 0 : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem(bare, value.params);
+  }
+  return normalizeBare(value, spec, version);
+}
+function normalizeList(value, spec, version) {
+  var wrapper = value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem && Array.isArray(value.value) ? value : void 0;
+  var items = wrapper ? wrapper.value : Array.isArray(value) ? value : [value];
+  var list = [];
+  var _iterator3 = _createForOfIteratorHelper(items),
+    _step3;
+  try {
+    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
+      var item = _step3.value;
+      var normalized = normalizeItem(item, spec, version);
+      if (normalized !== void 0) list.push(normalized);
+    }
+  } catch (err) {
+    _iterator3.e(err);
+  } finally {
+    _iterator3.f();
+  }
+  if (list.length === 0) return;
+  return wrapper ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem(list, wrapper.params) : list;
+}
+/**
+* Applies the value rule of a key type from the key table.
+*
+* An `SfItem` keeps its parameters, and the rule applies to the value inside it.
+* In version 2, a list key wraps one value in a list.
+* The rules do not check the limits of RFC 8941, such as the integer range.
+*
+* @param value - The value to prepare.
+* @param spec - The row of the key in the key table.
+* @param options - The version and `baseUrl` of the report.
+*
+* @returns The value to send, or `undefined` when the value fails the rule.
+*
+* @internal
+*/
+function normalizeValue(value, spec, options) {
+  if (spec.type === "nor") return formatNor(value, options);
+  if (spec.type === "string-list" || spec.type === "ot-list" && options.version !== 1) return normalizeList(value, spec, options.version);
+  return normalizeItem(value, spec, options.version);
+}
+
+//#endregion
+//#region src/toBareValue.ts
+/**
+* Returns the value inside an `SfItem`, or the value itself.
+*
+* `decodeCmcd` returns a member with parameters as an `SfItem`. For an
+* inner list with parameters, the value of the `SfItem` is the list.
+*
+* @param value - The value to read.
+* @returns The value without its parameters.
+*
+* @internal
+*/
+function toBareValue(value) {
+  return value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem ? value.value : value;
+}
+
+//#endregion
+//#region src/prepareCmcdData.ts
+function hasKey(spec, reportingMode, isV1) {
+  return (spec.mode === void 0 || spec.mode === reportingMode) && (spec.version === void 0 || spec.version === 1 === isV1);
+}
+function isRequired(spec, event) {
+  return spec.requiredOn === "always" || event !== void 0 && spec.requiredOn === event;
+}
+function hasObjectTypes(spec) {
+  return (spec.type === "integer" || spec.type === "ot-list") && spec.ot !== void 0;
+}
+function needsV1ObjectType(obj, filter) {
+  if (typeof filter !== "function" || filter("ot")) return true;
+  var _iterator4 = _createForOfIteratorHelper(CMCD_INNER_LIST_KEYS),
+    _step4;
+  try {
+    for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
+      var key = _step4.value;
+      if (Array.isArray(toBareValue(obj[key])) && filter(key)) return true;
+    }
+  } catch (err) {
+    _iterator4.e(err);
+  } finally {
+    _iterator4.f();
+  }
+  return false;
+}
+function allowsObjectType(spec, objectType) {
+  if (objectType === void 0 || spec.type !== "integer" && spec.type !== "ot-list" || spec.ot === void 0) return true;
+  return spec.ot.includes(objectType);
+}
+function isDefaultValue(spec, value) {
+  return "omitDefault" in spec && toBareValue(value) === spec.omitDefault;
+}
+function insertKey(keys, specs, key) {
+  var index = 0;
+  while (index < keys.length && keys[index] < key) index++;
+  keys.splice(index, 0, key);
+  specs.splice(index, 0, CMCD_KEY_SPECS[key]);
+}
+function prepareValue(key, value, spec, options, formatterOptions) {
+  var _options$formatters;
+  var formatter = (_options$formatters = options.formatters) === null || _options$formatters === void 0 ? void 0 : _options$formatters[key];
+  if (typeof formatter !== "function") return value == null ? void 0 : normalizeValue(value, spec, formatterOptions);
+  var formatted = isValid(value) ? formatter(value, formatterOptions) : value;
+  if (!isValid(formatted) && !(formatted === false && spec.type === "boolean")) return;
+  if (spec.type === "token") {
+    if (typeof formatted === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfToken(formatted);
+    if (formatted instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem && typeof formatted.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem(new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfToken(formatted.value), formatted.params);
+  }
+  return formatted;
 }
 /**
 * Convert a generic object to CMCD data.
@@ -19539,56 +19947,79 @@ function downConvertToV1(obj) {
 * @param options - Options for encoding.
 *
 * @public
+*
+* @example
+* {@includeCode ../test/prepareCmcdData.test.ts#example}
 */
 function prepareCmcdData(obj) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var results = {};
-  if (obj == null || (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_5__["default"])(obj) !== "object") return results;
-  var version = options.version || obj["v"] || CMCD_V2;
+  if (obj == null || (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__["default"])(obj) !== "object") return results;
+  var version = options.version || toBareValue(obj["v"]) || CMCD_V2;
   var reportingMode = options.reportingMode || CMCD_REQUEST_MODE;
-  var data = version === 1 ? downConvertToV1(obj) : obj;
-  var keyFilter = version === 1 ? isCmcdV1Key : filterMap[reportingMode];
-  var keys = Object.keys(data).filter(keyFilter);
-  if (data["e"] && data["e"] !== CMCD_EVENT_RESPONSE_RECEIVED) keys = keys.filter(function (key) {
-    return !isCmcdResponseReceivedKey(key);
-  });
-  var filter = options.filter;
-  if (typeof filter === "function") keys = keys.filter(filter);
-  var isEventMode = reportingMode === CMCD_EVENT_MODE;
-  if (isEventMode) {
-    var eventType = data["e"];
-    if (!keys.includes("e") && eventType != null) keys.push("e");
-    if (!keys.includes("ts")) keys.push("ts");
-    if (!keys.includes("cen") && data["cen"] != null && eventType === CMCD_EVENT_CUSTOM_EVENT) keys.push("cen");
-  }
-  if (keys.length === 0) return results;
-  if (version > 1 && !keys.includes("v")) keys.push("v");
+  var isV1 = version === 1;
+  var isEventReport = !isV1 && reportingMode === CMCD_EVENT_MODE;
   var formatterOptions = {
     version: version,
     reportingMode: reportingMode,
     baseUrl: options.baseUrl
   };
-  keys.sort();
-  var _iterator = _createForOfIteratorHelper(keys),
-    _step;
+  var filter = options.filter;
+  var objectTypeValue;
+  var objectType;
+  if (isV1 && needsV1ObjectType(obj, filter)) {
+    objectTypeValue = prepareValue("ot", obj["ot"], CMCD_KEY_SPECS["ot"], options, formatterOptions);
+    objectType = toTokenString(objectTypeValue);
+  }
+  var data = isV1 ? downConvertToV1(obj, objectType) : obj;
+  var eventValue = isEventReport ? prepareValue("e", data["e"], CMCD_KEY_SPECS["e"], options, formatterOptions) : void 0;
+  var event = toTokenString(eventValue);
+  var keys = [];
+  var specs = [];
+  var passed = false;
+  var needsObjectType = false;
+  var _iterator5 = _createForOfIteratorHelper(Object.keys(data).sort()),
+    _step5;
   try {
-    for (_iterator.s(); !(_step = _iterator.n()).done;) {
-      var _options$formatters$k, _options$formatters;
-      var key = _step.value;
-      var value = data[key];
-      var formatter = (_options$formatters$k = (_options$formatters = options.formatters) === null || _options$formatters === void 0 ? void 0 : _options$formatters[key]) !== null && _options$formatters$k !== void 0 ? _options$formatters$k : CMCD_FORMATTER_MAP[key];
-      if (typeof formatter === "function") value = formatter(value, formatterOptions);
-      if (key === "v") if (version === 1) continue;else value = version;
-      if (key === "pr" && value === 1) continue;
-      if (isEventMode && key === "ts" && !Number.isFinite(value)) value = Date.now();
-      if (!isValid(value)) continue;
-      if (isTokenField(key) && typeof value === "string") value = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfToken(value);
-      results[key] = value;
+    for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
+      var _key = _step5.value;
+      var _spec = getKeySpec(_key);
+      if (_spec === void 0 || !hasKey(_spec, reportingMode, isV1)) continue;
+      if (typeof filter !== "function" || filter(_key)) passed = true;else if (!isRequired(_spec, event)) continue;
+      if (_spec.onlyOn !== void 0 && _spec.onlyOn !== event) continue;
+      if (_key === "ot" || hasObjectTypes(_spec)) needsObjectType = true;
+      keys.push(_key);
+      specs.push(_spec);
     }
   } catch (err) {
-    _iterator.e(err);
+    _iterator5.e(err);
   } finally {
-    _iterator.f();
+    _iterator5.f();
+  }
+  if (!passed && !isEventReport) return results;
+  if (needsObjectType && !isV1) {
+    objectTypeValue = prepareValue("ot", data["ot"], CMCD_KEY_SPECS["ot"], options, formatterOptions);
+    objectType = toTokenString(objectTypeValue);
+  }
+  if (isEventReport && !keys.includes("ts")) insertKey(keys, specs, "ts");
+  if (!isV1 && !keys.includes("v")) insertKey(keys, specs, "v");
+  var values = new Array(keys.length);
+  for (var i = keys.length - 1; i >= 0; i--) {
+    var key = keys[i];
+    var spec = specs[i];
+    if (spec.type === "ot-list" && spec.supersededBy !== void 0) {
+      var exact = keys.indexOf(spec.supersededBy, i + 1);
+      if (exact !== -1 && values[exact] !== void 0) continue;
+    }
+    if (key === "v") values[i] = version;else if (key === "ot") values[i] = objectTypeValue;else if (key === "e") values[i] = eventValue;else if (isV1 || allowsObjectType(spec, objectType)) values[i] = prepareValue(key, data[key], spec, options, formatterOptions);
+    if (key === "ts") {
+      var timestamp = toBareValue(values[i]);
+      if (typeof timestamp !== "number" || !Number.isFinite(timestamp)) values[i] = Date.now();
+    }
+  }
+  for (var _i2 = 0; _i2 < keys.length; _i2++) {
+    var value = values[_i2];
+    if (value !== void 0 && (!isDefaultValue(specs[_i2], value) || isRequired(specs[_i2], event))) results[keys[_i2]] = value;
   }
   return results;
 }
@@ -19645,9 +20076,9 @@ var CMCD_HEADER_FIELDS = [CMCD_OBJECT, CMCD_REQUEST, CMCD_SESSION, CMCD_STATUS];
 /**
 * The map of CMCD keys to their appropriate header shard.
 *
-* Note: Event-only keys (e, ts, cen, h) and response-received keys
-* (rc, ttfb, ttlb, url, etc.) are intentionally absent. They are
-* transmitted via the event-mode POST body, not HTTP headers.
+* Event-only keys (e, ts, cen, h) and response-received keys (rc, ttfb,
+* ttlb, url, and others) are intentionally absent. They are transmitted
+* in the event-mode POST body, not HTTP headers.
 *
 * @public
 */
@@ -19705,9 +20136,9 @@ function createHeaderMap(headerMap) {
   }, {});
 }
 /**
-* Group a CMCD data object into header shards
+* Group a CMCD object into header shards
 *
-* @param cmcd - The CMCD data object to convert.
+* @param cmcd - The CMCD object to convert.
 * @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
 *
 * @returns The CMCD header shards.
@@ -19721,9 +20152,9 @@ function groupCmcdHeaders(cmcd, customHeaderMap) {
   if (!cmcd) return result;
   var keys = Object.keys(cmcd);
   var custom = customHeaderMap ? createHeaderMap(customHeaderMap) : {};
-  for (var _i2 = 0, _keys = keys; _i2 < _keys.length; _i2++) {
+  for (var _i3 = 0, _keys = keys; _i3 < _keys.length; _i3++) {
     var _result$field;
-    var key = _keys[_i2];
+    var key = _keys[_i3];
     var field = CMCD_HEADER_MAP[key] || custom[key] || CmcdHeaderField.REQUEST;
     var data = (_result$field = result[field]) !== null && _result$field !== void 0 ? _result$field : result[field] = {};
     data[key] = cmcd[key];
@@ -19745,11 +20176,11 @@ function groupCmcdHeaders(cmcd, customHeaderMap) {
 function toPreparedCmcdHeaders(data, customHeaderMap) {
   var result = {};
   var shards = groupCmcdHeaders(data, customHeaderMap);
-  for (var _i3 = 0, _Object$entries2 = Object.entries(shards); _i3 < _Object$entries2.length; _i3++) {
-    var _Object$entries2$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_6__["default"])(_Object$entries2[_i3], 2),
+  for (var _i4 = 0, _Object$entries2 = Object.entries(shards); _i4 < _Object$entries2.length; _i4++) {
+    var _Object$entries2$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_7__["default"])(_Object$entries2[_i4], 2),
       field = _Object$entries2$_i[0],
       value = _Object$entries2$_i[1];
-    var shard = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.encodeSfDict)(value, {
+    var shard = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.encodeSfDict)(value, {
       whitespace: false
     });
     if (shard) result[field] = shard;
@@ -19760,10 +20191,10 @@ function toPreparedCmcdHeaders(data, customHeaderMap) {
 //#endregion
 //#region src/toCmcdHeaders.ts
 /**
-* Convert a CMCD data object to request headers
+* Convert a CMCD object to request headers
 *
-* @param cmcd - The CMCD data object to convert.
-* @param options - Options for encoding the CMCD object.
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding.
 *
 * @returns The CMCD header shards.
 *
@@ -19783,13 +20214,13 @@ function toCmcdHeaders(cmcd) {
 //#endregion
 //#region src/appendCmcdHeaders.ts
 /**
-* Append CMCD query args to a header object.
+* Append CMCD header shards to a header object.
 *
 * @param headers - The headers to append to.
 * @param cmcd - The CMCD object to append.
-* @param options - Encode options.
+* @param options - Options for encoding.
 *
-* @returns The headers with the CMCD header shards appended.
+* @returns The headers with CMCD header shards appended.
 *
 * @public
 *
@@ -19803,15 +20234,6 @@ function appendCmcdHeaders(headers, cmcd, options) {
 }
 
 //#endregion
-//#region src/CMCD_PARAM.ts
-/**
-* CMCD parameter name.
-*
-* @public
-*/
-var CMCD_PARAM = "CMCD";
-
-//#endregion
 //#region src/encodePreparedCmcd.ts
 /**
 * Encode already-prepared CMCD data to a structured field dictionary string.
@@ -19822,7 +20244,7 @@ var CMCD_PARAM = "CMCD";
 * @internal
 */
 function encodePreparedCmcd(data) {
-  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.encodeSfDict)(data, {
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.encodeSfDict)(data, {
     whitespace: false
   });
 }
@@ -19851,58 +20273,112 @@ function encodeCmcd(cmcd) {
 }
 
 //#endregion
-//#region src/toCmcdUrl.ts
+//#region src/CMCD_PARAM.ts
 /**
-* Convert a CMCD data object to a URL encoded string.
-*
-* @param cmcd - The CMCD object to convert.
-* @param options - Options for encoding the CMCD object.
-*
-* @returns The URL encoded CMCD data.
-*
-* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+* CMCD parameter name.
 *
 * @public
 */
-function toCmcdUrl(cmcd) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  if (!cmcd) return "";
-  var params = encodeCmcd(cmcd, options);
-  return encodeURIComponent(params);
+var CMCD_PARAM = "CMCD";
+
+//#endregion
+//#region src/percentEncode.ts
+var SUB_DELIMS_REGEX = /[!'()*]/g;
+var SURROGATE_REGEX = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g;
+function encodeSubDelim(char) {
+  return "%".concat(char.charCodeAt(0).toString(16).toUpperCase());
+}
+function replaceUnpaired(match) {
+  return match.length === 2 ? match : "�";
+}
+/**
+* Percent-encode a string for the `CMCD` query parameter.
+*
+* Only the unreserved characters of RFC 3986 stay unencoded: letters, digits,
+* `-`, `.`, `_`, and `~`. The query examples of CTA-5004-B use this encoding.
+* An unpaired surrogate becomes U+FFFD.
+*
+* @param value - The string to encode.
+* @returns The encoded string.
+*
+* @internal
+*/
+function percentEncode(value) {
+  var encoded;
+  try {
+    encoded = encodeURIComponent(value);
+  } catch (_unused2) {
+    encoded = encodeURIComponent(value.replace(SURROGATE_REGEX, replaceUnpaired));
+  }
+  return encoded.replace(SUB_DELIMS_REGEX, encodeSubDelim);
 }
 
 //#endregion
-//#region src/toCmcdQuery.ts
+//#region src/replaceCmcdParam.ts
+function isCmcdParam(param) {
+  return param === CMCD_PARAM || param.startsWith("".concat(CMCD_PARAM, "="));
+}
 /**
-* Convert a CMCD data object to a query arg.
+* Replace the `CMCD` query parameter of a URL.
 *
-* @param cmcd - The CMCD object to convert.
-* @param options - Options for encoding the CMCD object.
+* The first `CMCD` parameter takes the new value in place. The function
+* removes the other `CMCD` parameters. If the URL has no `CMCD` parameter,
+* the new parameter goes at the end of the query. An empty `value` only
+* removes the parameters. The function does not change the rest of the URL.
+* The URL can be relative.
 *
-* @returns The CMCD query arg.
+* @param url - The URL.
+* @param value - The encoded CMCD data, before percent-encoding.
+* @returns The URL with at most one `CMCD` parameter.
 *
-* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
-*
-* @public
-*
-* @example
-* {@includeCode ../test/toCmcdQuery.test.ts#example}
+* @internal
 */
-function toCmcdQuery(cmcd) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  if (!cmcd) return "";
-  return "".concat(CMCD_PARAM, "=").concat(toCmcdUrl(cmcd, options));
+function replaceCmcdParam(url, value) {
+  var hashIndex = url.indexOf("#");
+  var end = hashIndex === -1 ? url.length : hashIndex;
+  var queryIndex = url.indexOf("?");
+  var start = queryIndex === -1 || queryIndex > end ? end : queryIndex;
+  var params = [];
+  var param = value ? "".concat(CMCD_PARAM, "=").concat(percentEncode(value)) : "";
+  var found = false;
+  var _iterator6 = _createForOfIteratorHelper(start < end ? url.slice(start + 1, end).split("&") : []),
+    _step6;
+  try {
+    for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
+      var item = _step6.value;
+      if (!isCmcdParam(item)) params.push(item);else {
+        found = true;
+        if (param) {
+          params.push(param);
+          param = "";
+        }
+      }
+    }
+  } catch (err) {
+    _iterator6.e(err);
+  } finally {
+    _iterator6.f();
+  }
+  if (param) {
+    if (params[params.length - 1] === "") params.pop();
+    params.push(param);
+  } else if (!found) return url;
+  var query = params.join("&");
+  return "".concat(url.slice(0, start)).concat(query ? "?".concat(query) : "").concat(url.slice(end));
 }
 
 //#endregion
 //#region src/appendCmcdQuery.ts
-var REGEX = /CMCD=[^&#]+/;
 /**
 * Append CMCD query args to a URL.
 *
+* If the URL has a `CMCD` parameter, the new value replaces it in place. The
+* other parameters and the fragment stay as they are. If the data has no keys
+* to send, the function returns the URL unchanged.
+*
 * @param url - The URL to append to.
 * @param cmcd - The CMCD object to append.
-* @param options - Options for encoding the CMCD object.
+* @param options - Options for encoding.
 *
 * @returns The URL with the CMCD query args appended.
 *
@@ -19914,20 +20390,136 @@ var REGEX = /CMCD=[^&#]+/;
 * @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
 */
 function appendCmcdQuery(url, cmcd, options) {
-  var query = toCmcdQuery(cmcd, options);
-  if (!query) return url;
-  if (REGEX.test(url)) return url.replace(REGEX, query);
-  return "".concat(url).concat(url.includes("?") ? "&" : "?").concat(query);
+  var value = cmcd ? encodeCmcd(cmcd, options) : "";
+  return value ? replaceCmcdParam(url, value) : url;
 }
 
 //#endregion
 //#region src/CMCD_DEFAULT_TIME_INTERVAL.ts
 /**
-* The default time interval in seconds when using using event mode
+* The default time interval in seconds when using event mode
 *
 * @public
 */
 var CMCD_DEFAULT_TIME_INTERVAL = 30;
+
+//#endregion
+//#region src/CMCD_EVENT_KEYS.ts
+/**
+* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+var CMCD_EVENT_KEYS = ["cen", "e", "h", "ts"];
+
+//#endregion
+//#region src/CMCD_FORMATTER_MAP.ts
+var _formatNumbers = function formatNumbers(value, format) {
+  if (Array.isArray(value)) {
+    var list = [];
+    var _iterator7 = _createForOfIteratorHelper(value),
+      _step7;
+    try {
+      for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
+        var item = _step7.value;
+        var formatted = _formatNumbers(item, format);
+        if (Number.isFinite(formatted instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem ? formatted.value : formatted)) list.push(formatted);
+      }
+    } catch (err) {
+      _iterator7.e(err);
+    } finally {
+      _iterator7.f();
+    }
+    return list;
+  }
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem) {
+    var _formatted = _formatNumbers(value.value, format);
+    return isValid(_formatted) ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem(_formatted, value.params) : NaN;
+  }
+  return typeof value === "number" ? format(value) : NaN;
+};
+var toRounded = function toRounded(value) {
+  return _formatNumbers(value, Math.round);
+};
+var toNumber = function toNumber(value) {
+  return _formatNumbers(value, Number);
+};
+var roundToHundred = function roundToHundred(value) {
+  return Math.round(value / 100) * 100;
+};
+var toHundred = function toHundred(value) {
+  return _formatNumbers(value, roundToHundred);
+};
+/**
+* Formatters for CMCD values.
+*
+* The encoder applies the same rounding through its key table, and `nor` is the `nor` rule of the encoder.
+* Use an entry to build a custom formatter for `CmcdEncodeOptions.formatters`.
+* The formatter of a numeric key drops a value or a list element that is not a finite number.
+*
+* @public
+*/
+var CMCD_FORMATTER_MAP = {
+  br: toRounded,
+  d: toRounded,
+  bl: toHundred,
+  dl: toHundred,
+  mtp: toHundred,
+  nor: function nor(value, options) {
+    var _formatNor;
+    return (_formatNor = formatNor(value, options)) !== null && _formatNor !== void 0 ? _formatNor : "";
+  },
+  rtp: toHundred,
+  tb: toRounded,
+  tbl: toHundred,
+  ab: toRounded,
+  bsa: toRounded,
+  bsd: toRounded,
+  bsda: toRounded,
+  dfa: toRounded,
+  lab: toRounded,
+  lb: toRounded,
+  ltc: toRounded,
+  msd: toRounded,
+  pb: toRounded,
+  pr: toNumber,
+  pt: toRounded,
+  rc: toRounded,
+  sn: toRounded,
+  tab: toRounded,
+  tpb: toRounded,
+  ts: toRounded,
+  ttfb: toRounded,
+  ttfbb: toRounded,
+  ttlb: toRounded
+};
+
+//#endregion
+//#region src/CMCD_REQUEST_KEYS.ts
+/**
+* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+var CMCD_REQUEST_KEYS = ["ab", "bg", "bl", "br", "bs", "bsa", "bsd", "bsda", "cdn", "cid", "cs", "d", "dfa", "dl", "ec", "lab", "lb", "ltc", "msd", "mtp", "nor", "nr", "ot", "pb", "pr", "pt", "rtp", "sf", "sid", "sn", "st", "sta", "su", "tab", "tb", "tbl", "tpb", "v"];
+
+//#endregion
+//#region src/CMCD_RESPONSE_KEYS.ts
+/**
+* Response-only and timing keys for version 2.
+*
+* @public
+*/
+var CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
+
+//#endregion
+//#region src/CMCD_V1_KEYS.ts
+/**
+* Defines the keys for CMCD (Common Media Client Data) version 1.
+*
+* @public
+*/
+var CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
 
 //#endregion
 //#region src/CMCD_KEYS.ts
@@ -19936,7 +20528,7 @@ var CMCD_DEFAULT_TIME_INTERVAL = 30;
 *
 * @public
 */
-var CMCD_KEYS = [].concat(CMCD_V1_KEYS, CMCD_REQUEST_KEYS, CMCD_RESPONSE_KEYS, CMCD_EVENT_KEYS).filter(function (key, index, arr) {
+var CMCD_KEYS = /* @__PURE__ */[].concat(CMCD_V1_KEYS, CMCD_REQUEST_KEYS, CMCD_RESPONSE_KEYS, CMCD_EVENT_KEYS).filter(function (key, index, arr) {
   return arr.indexOf(key) === index;
 });
 
@@ -19950,6 +20542,34 @@ var CMCD_KEYS = [].concat(CMCD_V1_KEYS, CMCD_REQUEST_KEYS, CMCD_RESPONSE_KEYS, C
 var CMCD_MIME_TYPE = "application/cmcd";
 
 //#endregion
+//#region src/CMCD_REQUEST_PROVENANCE.ts
+/**
+* The `customData` property where `CmcdReporter.createRequestReport()`
+* writes session provenance on every request it returns.
+*
+* The value is a frozen `CmcdRequestProvenance` record. `sid` names the
+* session that issued the request. `cid` is the content id at the time the
+* request was issued. `data` is the request's per-call data as an encoded
+* CMCD string. `CmcdReporter.recordResponseReceived()` reads the record to
+* attribute a late response to its session and to rebuild the request-time
+* report keys.
+* Spread and `Object.assign` copy the record into ordinary request clones.
+* `JSON.stringify` and structured clone drop symbol-keyed properties. Before
+* either operation, read the value and restore it afterward. JSON preserves
+* the record's fields. Attribution uses the `sid` value rather than object
+* identity, so a parsed plain-object copy attributes correctly. For a record
+* naming a `sid` the reporter does not retain, the reporter drops the
+* response rather than reattributing it.
+*
+* The symbol registry provides the symbol, so duplicated copies of this
+* library in one bundle interoperate. The registry key is stable across
+* versions.
+*
+* @public
+*/
+var CMCD_REQUEST_PROVENANCE = /* @__PURE__ */Symbol.for("@svta/cml-cmcd/request-provenance");
+
+//#endregion
 //#region src/CMCD_V1.ts
 /**
 * CMCD Version 1
@@ -19957,6 +20577,146 @@ var CMCD_MIME_TYPE = "application/cmcd";
 * @public
 */
 var CMCD_V1 = 1;
+
+//#endregion
+//#region src/CmcdEventType.ts
+/**
+* CMCD event type 'bc' (bitrate change).
+*
+* @public
+*/
+var CMCD_EVENT_BITRATE_CHANGE = "bc";
+/**
+* CMCD event type 'ps' (play state change).
+*
+* @public
+*/
+var CMCD_EVENT_PLAY_STATE = "ps";
+/**
+* CMCD event type 'pr' (playback rate change).
+*
+* @public
+*/
+var CMCD_EVENT_PLAYBACK_RATE = "pr";
+/**
+* CMCD event type 'e' (error).
+*
+* @public
+*/
+var CMCD_EVENT_ERROR = "e";
+/**
+* CMCD event type 't' (time interval).
+*
+* @public
+*/
+var CMCD_EVENT_TIME_INTERVAL = "t";
+/**
+* CMCD event type 'c' (content ID).
+*
+* @public
+*/
+var CMCD_EVENT_CONTENT_ID = "c";
+/**
+* CMCD event type 'b' (backgrounded mode).
+*
+* @public
+*/
+var CMCD_EVENT_BACKGROUNDED_MODE = "b";
+/**
+* CMCD event type 'm' (mute).
+*
+* @public
+*/
+var CMCD_EVENT_MUTE = "m";
+/**
+* CMCD event type 'um' (unmute).
+*
+* @public
+*/
+var CMCD_EVENT_UNMUTE = "um";
+/**
+* CMCD event type 'pe' (player expand).
+*
+* @public
+*/
+var CMCD_EVENT_PLAYER_EXPAND = "pe";
+/**
+* CMCD event type 'pc' (player collapse).
+*
+* @public
+*/
+var CMCD_EVENT_PLAYER_COLLAPSE = "pc";
+/**
+* CMCD event type 'rr' (response received).
+*
+* @public
+*/
+var CMCD_EVENT_RESPONSE_RECEIVED = "rr";
+/**
+* CMCD event type 'as' (ad start).
+*
+* @public
+*/
+var CMCD_EVENT_AD_START = "as";
+/**
+* CMCD event type 'ae' (ad end).
+*
+* @public
+*/
+var CMCD_EVENT_AD_END = "ae";
+/**
+* CMCD event type 'abs' (ad break start).
+*
+* @public
+*/
+var CMCD_EVENT_AD_BREAK_START = "abs";
+/**
+* CMCD event type 'abe' (ad break end).
+*
+* @public
+*/
+var CMCD_EVENT_AD_BREAK_END = "abe";
+/**
+* CMCD event type 'sk' (skip).
+*
+* @public
+*/
+var CMCD_EVENT_SKIP = "sk";
+/**
+* CMCD event type 'ce' (custom event).
+*
+* @public
+*/
+var CMCD_EVENT_CUSTOM_EVENT = "ce";
+/**
+* CMCD event types for the 'e' key (event mode).
+*
+* @enum
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event | CTA-5004-B Event}
+*
+* @public
+*/
+var CmcdEventType = {
+  BITRATE_CHANGE: CMCD_EVENT_BITRATE_CHANGE,
+  PLAY_STATE: CMCD_EVENT_PLAY_STATE,
+  PLAYBACK_RATE: CMCD_EVENT_PLAYBACK_RATE,
+  ERROR: CMCD_EVENT_ERROR,
+  TIME_INTERVAL: CMCD_EVENT_TIME_INTERVAL,
+  CONTENT_ID: CMCD_EVENT_CONTENT_ID,
+  BACKGROUNDED_MODE: CMCD_EVENT_BACKGROUNDED_MODE,
+  MUTE: CMCD_EVENT_MUTE,
+  UNMUTE: CMCD_EVENT_UNMUTE,
+  PLAYER_EXPAND: CMCD_EVENT_PLAYER_EXPAND,
+  PLAYER_COLLAPSE: CMCD_EVENT_PLAYER_COLLAPSE,
+  RESPONSE_RECEIVED: CMCD_EVENT_RESPONSE_RECEIVED,
+  AD_START: CMCD_EVENT_AD_START,
+  AD_END: CMCD_EVENT_AD_END,
+  AD_BREAK_START: CMCD_EVENT_AD_BREAK_START,
+  AD_BREAK_END: CMCD_EVENT_AD_BREAK_END,
+  SKIP: CMCD_EVENT_SKIP,
+  CUSTOM_EVENT: CMCD_EVENT_CUSTOM_EVENT
+};
 
 //#endregion
 //#region src/CmcdObjectType.ts
@@ -19984,7 +20744,7 @@ var CmcdObjectType = {
 //#endregion
 //#region src/CmcdPlayerState.ts
 /**
-* CMCD v2 player states for the 'sta' key.
+* CMCD version 2 player states for the 'sta' key.
 *
 *
 * @enum
@@ -20005,6 +20765,604 @@ var CmcdPlayerState = {
   QUIT: "q",
   PRELOADING: "d"
 };
+
+//#endregion
+//#region src/CmcdRecordedReportMode.ts
+/**
+* CMCD query reporting mode: CMCD data transmitted as a `CMCD=` URL
+* query parameter.
+*
+* @public
+*/
+var CMCD_RECORDED_REPORT_MODE_QUERY = "query";
+/**
+* CMCD header reporting mode: CMCD data transmitted as `CMCD-*` HTTP
+* headers.
+*
+* @public
+*/
+var CMCD_RECORDED_REPORT_MODE_HEADER = "header";
+/**
+* CMCD event reporting mode: CMCD data transmitted as a POST body to an
+* event-target URL.
+*
+* @public
+*/
+var CMCD_RECORDED_REPORT_MODE_EVENT = "event";
+/**
+* Reporting mode in which `CmcdReportRecorder` observed a captured
+* report.
+*
+* @enum
+*
+* @public
+*/
+var CmcdRecordedReportMode = {
+  QUERY: CMCD_RECORDED_REPORT_MODE_QUERY,
+  HEADER: CMCD_RECORDED_REPORT_MODE_HEADER,
+  EVENT: CMCD_RECORDED_REPORT_MODE_EVENT
+};
+
+//#endregion
+//#region src/CmcdRecordedRequestType.ts
+/**
+* Manifest or playlist request classification.
+*
+* @public
+*/
+var CMCD_RECORDED_REQUEST_TYPE_MANIFEST = "manifest";
+/**
+* Media segment request classification.
+*
+* @public
+*/
+var CMCD_RECORDED_REQUEST_TYPE_SEGMENT = "segment";
+/**
+* CMCD event-mode report request classification (POST to a URL in
+* `eventTargetUrls`).
+*
+* @public
+*/
+var CMCD_RECORDED_REQUEST_TYPE_EVENT = "event";
+/**
+* Default classification for requests the recorder did not recognize
+* as manifest, segment, or event.
+*
+* @public
+*/
+var CMCD_RECORDED_REQUEST_TYPE_UNKNOWN = "unknown";
+/**
+* Classification of a captured request, used by `CmcdReportRecorder`
+* for filtering.
+*
+* @enum
+*
+* @public
+*/
+var CmcdRecordedRequestType = {
+  MANIFEST: CMCD_RECORDED_REQUEST_TYPE_MANIFEST,
+  SEGMENT: CMCD_RECORDED_REQUEST_TYPE_SEGMENT,
+  EVENT: CMCD_RECORDED_REQUEST_TYPE_EVENT,
+  UNKNOWN: CMCD_RECORDED_REQUEST_TYPE_UNKNOWN
+};
+
+//#endregion
+//#region src/createFetchTransport.ts
+function toHttpRequest(_x) {
+  return _toHttpRequest.apply(this, arguments);
+}
+/**
+* Create a transport adapter for `CmcdReportRecorder` that patches
+* `globalThis.fetch` to capture requests with CMCD data. The patched
+* `fetch` normalizes each request to `HttpRequest` (lowercase headers,
+* body read as a UTF-8 string).
+*
+* The patched `fetch` reads each body once with `Request.text()` for
+* inspection. This read is safe for the body types that CMCD reports use
+* in practice: `string`, `Blob`, `ArrayBuffer`, `FormData`, and
+* `URLSearchParams`. The underlying `fetch` can read those bodies again.
+* Do not pass a `ReadableStream` as `init.body`. The patched `fetch`
+* consumes the stream, and the underlying `fetch` receives an
+* already-disturbed stream.
+*
+* @public
+*/
+function _toHttpRequest() {
+  _toHttpRequest = (0,_babel_runtime_helpers_asyncToGenerator__WEBPACK_IMPORTED_MODULE_5__["default"])(/*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.mark(function _callee3(request) {
+    var headers, body, _t2;
+    return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.wrap(function (_context3) {
+      while (1) switch (_context3.prev = _context3.next) {
+        case 0:
+          headers = {};
+          request.headers.forEach(function (value, name) {
+            headers[name.toLowerCase()] = value;
+          });
+          if (!request.body) {
+            _context3.next = 4;
+            break;
+          }
+          _context3.prev = 1;
+          _context3.next = 2;
+          return request.text();
+        case 2:
+          body = _context3.sent;
+          _context3.next = 4;
+          break;
+        case 3:
+          _context3.prev = 3;
+          _t2 = _context3["catch"](1);
+          body = void 0;
+        case 4:
+          return _context3.abrupt("return", {
+            url: request.url,
+            method: request.method,
+            headers: headers,
+            body: body
+          });
+        case 5:
+        case "end":
+          return _context3.stop();
+      }
+    }, _callee3, null, [[1, 3]]);
+  }));
+  return _toHttpRequest.apply(this, arguments);
+}
+function createFetchTransport() {
+  return {
+    attach: function attach(deliver) {
+      var origFetch = globalThis.fetch;
+      globalThis.fetch = /*#__PURE__*/function () {
+        var _ref3 = (0,_babel_runtime_helpers_asyncToGenerator__WEBPACK_IMPORTED_MODULE_5__["default"])(/*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.mark(function _callee(input, init) {
+          var synthetic, _t;
+          return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.wrap(function (_context) {
+            while (1) switch (_context.prev = _context.next) {
+              case 0:
+                _t = deliver;
+                _context.next = 1;
+                return toHttpRequest(input instanceof Request ? input.clone() : new Request(input, init));
+              case 1:
+                synthetic = _t(_context.sent);
+                if (!synthetic) {
+                  _context.next = 2;
+                  break;
+                }
+                return _context.abrupt("return", synthetic);
+              case 2:
+                return _context.abrupt("return", origFetch.call(globalThis, input, init));
+              case 3:
+              case "end":
+                return _context.stop();
+            }
+          }, _callee);
+        }));
+        return function (_x2, _x3) {
+          return _ref3.apply(this, arguments);
+        };
+      }();
+      return function () {
+        globalThis.fetch = origFetch;
+      };
+    }
+  };
+}
+
+//#endregion
+//#region src/createXhrTransport.ts
+function completeXhrWith(_x4, _x5) {
+  return _completeXhrWith.apply(this, arguments);
+}
+/**
+* Create a transport adapter for `CmcdReportRecorder` that patches
+* `XMLHttpRequest.prototype` to capture requests with CMCD data.
+*
+* @public
+*/
+function _completeXhrWith() {
+  _completeXhrWith = (0,_babel_runtime_helpers_asyncToGenerator__WEBPACK_IMPORTED_MODULE_5__["default"])(/*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.mark(function _callee4(xhr, response) {
+    var text, ProgressEventCtor;
+    return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.wrap(function (_context4) {
+      while (1) switch (_context4.prev = _context4.next) {
+        case 0:
+          _context4.next = 1;
+          return response.clone().text().catch(function () {
+            return "";
+          });
+        case 1:
+          text = _context4.sent;
+          ProgressEventCtor = typeof ProgressEvent !== "undefined" ? ProgressEvent : Event;
+          queueMicrotask(function () {
+            try {
+              var _xhr$_cmcdUrl;
+              Object.defineProperty(xhr, "status", {
+                value: response.status,
+                configurable: true
+              });
+              Object.defineProperty(xhr, "statusText", {
+                value: response.statusText,
+                configurable: true
+              });
+              Object.defineProperty(xhr, "readyState", {
+                value: 4,
+                configurable: true
+              });
+              Object.defineProperty(xhr, "responseURL", {
+                value: (_xhr$_cmcdUrl = xhr._cmcdUrl) !== null && _xhr$_cmcdUrl !== void 0 ? _xhr$_cmcdUrl : "",
+                configurable: true
+              });
+              Object.defineProperty(xhr, "response", {
+                value: text,
+                configurable: true
+              });
+              Object.defineProperty(xhr, "responseText", {
+                value: text,
+                configurable: true
+              });
+              if (typeof xhr.onload === "function") xhr.onload.call(xhr, new ProgressEventCtor("load"));
+              if (typeof xhr.onloadend === "function") xhr.onloadend.call(xhr, new ProgressEventCtor("loadend"));
+            } catch (_unused9) {
+              var _xhr$_cmcdUrl2;
+              var target = xhr;
+              target["status"] = response.status;
+              target["statusText"] = response.statusText;
+              target["readyState"] = 4;
+              target["responseURL"] = (_xhr$_cmcdUrl2 = xhr._cmcdUrl) !== null && _xhr$_cmcdUrl2 !== void 0 ? _xhr$_cmcdUrl2 : "";
+              target["response"] = text;
+              target["responseText"] = text;
+              if (typeof xhr.onload === "function") xhr.onload.call(xhr, new ProgressEventCtor("load"));
+              if (typeof xhr.onloadend === "function") xhr.onloadend.call(xhr, new ProgressEventCtor("loadend"));
+            }
+          });
+        case 2:
+        case "end":
+          return _context4.stop();
+      }
+    }, _callee4);
+  }));
+  return _completeXhrWith.apply(this, arguments);
+}
+function createXhrTransport() {
+  return {
+    attach: function attach(deliver) {
+      var Xhr = globalThis.XMLHttpRequest;
+      if (!Xhr) return function () {};
+      var origOpen = Xhr.prototype.open;
+      var origSetRequestHeader = Xhr.prototype.setRequestHeader;
+      var origSend = Xhr.prototype.send;
+      Xhr.prototype.open = function (method, url) {
+        this._cmcdMethod = method;
+        this._cmcdUrl = typeof url === "string" ? url : url.toString();
+        this._cmcdHeaders = {};
+        return origOpen.apply(this, arguments);
+      };
+      Xhr.prototype.setRequestHeader = function (name, value) {
+        if (this._cmcdHeaders) this._cmcdHeaders[name.toLowerCase()] = value;
+        return origSetRequestHeader.apply(this, [name, value]);
+      };
+      Xhr.prototype.send = function (body) {
+        var _this$_cmcdUrl, _this$_cmcdMethod, _this$_cmcdHeaders, _ref4;
+        var synthetic = deliver({
+          url: (_this$_cmcdUrl = this._cmcdUrl) !== null && _this$_cmcdUrl !== void 0 ? _this$_cmcdUrl : "",
+          method: ((_this$_cmcdMethod = this._cmcdMethod) !== null && _this$_cmcdMethod !== void 0 ? _this$_cmcdMethod : "GET").toUpperCase(),
+          headers: (_this$_cmcdHeaders = this._cmcdHeaders) !== null && _this$_cmcdHeaders !== void 0 ? _this$_cmcdHeaders : {},
+          body: (_ref4 = typeof Document !== "undefined" && body instanceof Document ? void 0 : body) !== null && _ref4 !== void 0 ? _ref4 : void 0
+        });
+        if (synthetic) {
+          completeXhrWith(this, synthetic);
+          return;
+        }
+        return origSend.apply(this, [body]);
+      };
+      return function () {
+        Xhr.prototype.open = origOpen;
+        Xhr.prototype.setRequestHeader = origSetRequestHeader;
+        Xhr.prototype.send = origSend;
+      };
+    }
+  };
+}
+
+//#endregion
+//#region src/CmcdReportRecorder.ts
+var MANIFEST_EXTENSIONS = /\.(m3u8|mpd)(\?|$|\/)/i;
+var SEGMENT_EXTENSIONS = /\.(m4s|m4v|m4a|mp4|ts|aac)(\?|$|\/)/i;
+function classifyUrl(url, isEventTarget) {
+  if (isEventTarget) return CmcdRecordedRequestType.EVENT;
+  if (MANIFEST_EXTENSIONS.test(url)) return CmcdRecordedRequestType.MANIFEST;
+  if (SEGMENT_EXTENSIONS.test(url)) return CmcdRecordedRequestType.SEGMENT;
+  return CmcdRecordedRequestType.UNKNOWN;
+}
+function hasCmcdHeader(headers) {
+  if (!headers) return false;
+  for (var name in headers) if (name.toLowerCase().startsWith("cmcd-")) return true;
+  return false;
+}
+function detectReportingMode(url, headers, isEventTarget) {
+  if (isEventTarget) return "event";
+  if (hasCmcdHeader(headers)) return "header";
+  return url.includes("".concat(CMCD_PARAM, "=")) ? "query" : null;
+}
+/**
+* Test helper that records CMCD reports from the XHR and fetch
+* transports for assertions in e2e tests. The recorder normalizes each
+* captured request to {@link @svta/cml-utils!HttpRequest | HttpRequest},
+* so tests are identical regardless of which transport the player uses.
+*
+* @example
+* {@includeCode ../test/CmcdReportRecorder.test.ts#example}
+*
+* @public
+*/
+var CmcdReportRecorder = /*#__PURE__*/function () {
+  function CmcdReportRecorder() {
+    var _this = this;
+    (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_3__["default"])(this, CmcdReportRecorder);
+    this.reports = [];
+    this.detachers = [];
+    this.attached = false;
+    this.eventTargetUrls = [];
+    this.waiters = /* @__PURE__ */new Map();
+    this.waitTimeout = 15e3;
+    this.deliver = function (request) {
+      var _request$method;
+      var url = request.url;
+      var isEventTarget = ((_request$method = request.method) !== null && _request$method !== void 0 ? _request$method : "GET").toUpperCase() === "POST" && _this.eventTargetUrls.some(function (t) {
+        return url.startsWith(t);
+      });
+      var reportingMode = detectReportingMode(url, request.headers, isEventTarget);
+      if (reportingMode === null) return;
+      var captured = {
+        request: request,
+        type: classifyUrl(url, isEventTarget),
+        reportingMode: reportingMode,
+        timestamp: Date.now()
+      };
+      _this.reports.push(captured);
+      if (_this.onReport) try {
+        _this.onReport(captured);
+      } catch (err) {
+        console.error("CmcdReportRecorder onReport listener threw:", err);
+      }
+      _this.notifyWaiters();
+      return isEventTarget ? new Response(null, {
+        status: 204
+      }) : void 0;
+    };
+  }
+  return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_4__["default"])(CmcdReportRecorder, [{
+    key: "getMatching",
+    value: function getMatching(type) {
+      return type === void 0 ? (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_2__["default"])(this.reports) : this.reports.filter(function (r) {
+        return r.type === type;
+      });
+    }
+  }, {
+    key: "notifyWaiters",
+    value: function notifyWaiters() {
+      var _iterator8 = _createForOfIteratorHelper(this.waiters),
+        _step8;
+      try {
+        for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
+          var _step8$value = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_7__["default"])(_step8.value, 2),
+            timer = _step8$value[0],
+            waiter = _step8$value[1];
+          var matching = this.getMatching(waiter.type);
+          if (matching.length >= waiter.count) {
+            clearTimeout(timer);
+            this.waiters.delete(timer);
+            waiter.resolve(matching);
+          }
+        }
+      } catch (err) {
+        _iterator8.e(err);
+      } finally {
+        _iterator8.f();
+      }
+    }
+  }, {
+    key: "waitFor",
+    value: function waitFor(type, options) {
+      var _options$count,
+        _options$timeout,
+        _this2 = this;
+      var count = (_options$count = options.count) !== null && _options$count !== void 0 ? _options$count : 1;
+      var timeout = (_options$timeout = options.timeout) !== null && _options$timeout !== void 0 ? _options$timeout : this.waitTimeout;
+      var matching = this.getMatching(type);
+      if (matching.length >= count) return Promise.resolve(matching);
+      return new Promise(function (resolve, reject) {
+        var timer = setTimeout(function () {
+          _this2.waiters.delete(timer);
+          var current = _this2.getMatching(type);
+          reject(/* @__PURE__ */new Error("Timeout waiting for ".concat(count, " ").concat(type !== null && type !== void 0 ? type : "any", " CMCD report(s). Got ").concat(current.length, ". Total recorded: ").concat(_this2.reports.length, ".")));
+        }, timeout);
+        _this2.waiters.set(timer, {
+          type: type,
+          count: count,
+          resolve: resolve,
+          reject: reject
+        });
+      });
+    }
+    /**
+    * Install transport patches and start recording CMCD reports.
+    * If the recorder is already attached, this call does nothing. The
+    * recorder keeps the previous options and silently ignores the new
+    * `options` argument. To re-attach with different options, call
+    * `detach()` first.
+    *
+    * @public
+    */
+  }, {
+    key: "attach",
+    value: function attach() {
+      var _options$eventTargetU, _options$waitTimeout, _options$transports;
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      if (this.attached) return;
+      this.attached = true;
+      this.eventTargetUrls = (_options$eventTargetU = options.eventTargetUrls) !== null && _options$eventTargetU !== void 0 ? _options$eventTargetU : [];
+      this.onReport = options.onReport;
+      this.waitTimeout = (_options$waitTimeout = options.waitTimeout) !== null && _options$waitTimeout !== void 0 ? _options$waitTimeout : 15e3;
+      var transports = (_options$transports = options.transports) !== null && _options$transports !== void 0 ? _options$transports : [createXhrTransport(), createFetchTransport()];
+      var _iterator9 = _createForOfIteratorHelper(transports),
+        _step9;
+      try {
+        for (_iterator9.s(); !(_step9 = _iterator9.n()).done;) {
+          var transport = _step9.value;
+          this.detachers.push(transport.attach(this.deliver));
+        }
+      } catch (err) {
+        _iterator9.e(err);
+      } finally {
+        _iterator9.f();
+      }
+    }
+    /**
+    * Remove transport patches and stop recording. Rejects any pending
+    * wait promises with `Error('Recorder detached while waiting')`.
+    *
+    * @public
+    */
+  }, {
+    key: "detach",
+    value: function detach() {
+      if (!this.attached) return;
+      var _iterator0 = _createForOfIteratorHelper(this.detachers),
+        _step0;
+      try {
+        for (_iterator0.s(); !(_step0 = _iterator0.n()).done;) {
+          var detacher = _step0.value;
+          detacher();
+        }
+      } catch (err) {
+        _iterator0.e(err);
+      } finally {
+        _iterator0.f();
+      }
+      this.detachers = [];
+      this.attached = false;
+      this.eventTargetUrls = [];
+      this.onReport = void 0;
+      var _iterator1 = _createForOfIteratorHelper(this.waiters),
+        _step1;
+      try {
+        for (_iterator1.s(); !(_step1 = _iterator1.n()).done;) {
+          var _step1$value = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_7__["default"])(_step1.value, 2),
+            timer = _step1$value[0],
+            waiter = _step1$value[1];
+          clearTimeout(timer);
+          waiter.reject(/* @__PURE__ */new Error("Recorder detached while waiting"));
+        }
+      } catch (err) {
+        _iterator1.e(err);
+      } finally {
+        _iterator1.f();
+      }
+      this.waiters.clear();
+    }
+    /**
+    * Discard all recorded reports. Does not affect the attached state.
+    *
+    * @public
+    */
+  }, {
+    key: "clear",
+    value: function clear() {
+      this.reports = [];
+    }
+    /**
+    * Return a copy of all recorded reports.
+    *
+    * @public
+    */
+  }, {
+    key: "getReports",
+    value: function getReports() {
+      return (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_2__["default"])(this.reports);
+    }
+    /**
+    * Wait until at least `count` reports of any type are recorded.
+    * Resolves with all matching reports. Rejects with a diagnostic error
+    * on timeout. `count` defaults to 1. `timeout` defaults to the
+    * recorder's `waitTimeout` option (default 15000 ms).
+    *
+    * @public
+    */
+  }, {
+    key: "waitForReports",
+    value: function waitForReports() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      return this.waitFor(void 0, options);
+    }
+    /**
+    * Wait until at least `count` manifest reports are recorded.
+    * Resolves with all matching reports. Rejects with a diagnostic error
+    * on timeout. `count` defaults to 1. `timeout` defaults to the
+    * recorder's `waitTimeout` option (default 15000 ms).
+    *
+    * @public
+    */
+  }, {
+    key: "waitForManifest",
+    value: function waitForManifest() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      return this.waitFor(CmcdRecordedRequestType.MANIFEST, options);
+    }
+    /**
+    * Wait until at least `count` segment reports are recorded.
+    * Resolves with all matching reports. Rejects with a diagnostic error
+    * on timeout. `count` defaults to 1. `timeout` defaults to the
+    * recorder's `waitTimeout` option (default 15000 ms).
+    *
+    * @public
+    */
+  }, {
+    key: "waitForSegments",
+    value: function waitForSegments() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      return this.waitFor(CmcdRecordedRequestType.SEGMENT, options);
+    }
+    /**
+    * Wait until at least `count` event-mode reports are recorded.
+    * Resolves with all matching reports. Rejects with a diagnostic error
+    * on timeout. `count` defaults to 1. `timeout` defaults to the
+    * recorder's `waitTimeout` option (default 15000 ms).
+    *
+    * @public
+    */
+  }, {
+    key: "waitForEvents",
+    value: function waitForEvents() {
+      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      return this.waitFor(CmcdRecordedRequestType.EVENT, options);
+    }
+  }]);
+}();
+
+//#endregion
+//#region src/CMCD_STATE_EVENT_FIELDS.ts
+/**
+* Maps each state-change event type to the persistent field whose value
+* the event signals.
+*
+* The key table (`CMCD_KEY_SPECS`) marks the field as always sent on its
+* event, so the key filter of `prepareCmcdData` does not remove it.
+* `CmcdReporter` deduplicates events against the field value. It drops an
+* event whose field has no value and restores the field if a transform
+* removes it.
+*
+* Sending the field with each state-change event is a library choice.
+* The exception is the exit from backgrounded mode, which CTA-5004-B
+* defines as a `b` event without `bg`. CTA-5004-B requires the field only
+* on the `ps` event, which MUST carry `sta`. CTA-5004-B states no such rule
+* for `pr`, `c`, or `bc`. `validateCmcdStructure` follows CTA-5004-B and
+* does not read this map.
+*
+* Iteration order matters: `CmcdReporter.update()` records state-change
+* events in map order when several tracked fields change in one call.
+* Do not reorder entries without auditing reporter behavior.
+*
+* @internal
+*/
+var CMCD_STATE_EVENT_FIELDS = /* @__PURE__ */new Map([[CMCD_EVENT_PLAY_STATE, "sta"], [CMCD_EVENT_PLAYBACK_RATE, "pr"], [CMCD_EVENT_CONTENT_ID, "cid"], [CMCD_EVENT_BACKGROUNDED_MODE, "bg"], [CMCD_EVENT_BITRATE_CHANGE, "br"]]);
 
 //#endregion
 //#region src/CmcdTransmissionMode.ts
@@ -20042,6 +21400,60 @@ var CmcdTransmissionMode = {
 };
 
 //#endregion
+//#region src/upConvertToV2.ts
+/**
+* Up-convert version 1 CMCD data to version 2.
+*
+* - Wraps scalar values in arrays for inner-list keys.
+* - Wraps `nor` string in an array.
+*
+* The function returns version 2 data (has `v: 2`) unchanged. An inner list
+* with parameters, which `decodeCmcd` returns as an `SfItem` that wraps the
+* list, also stays unchanged.
+*
+* @internal
+*/
+function upConvertToV2(obj) {
+  if (toBareValue(obj["v"]) === CMCD_V2) return obj;
+  var result = {};
+  for (var _i5 = 0, _Object$entries3 = Object.entries(obj); _i5 < _Object$entries3.length; _i5++) {
+    var _Object$entries3$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_7__["default"])(_Object$entries3[_i5], 2),
+      key = _Object$entries3$_i[0],
+      value = _Object$entries3$_i[1];
+    if (value == null) {
+      result[key] = value;
+      continue;
+    }
+    if (CMCD_INNER_LIST_KEYS.has(key) && !Array.isArray(toBareValue(value))) result[key] = [value];else if (key === "nor" && typeof value === "string") result[key] = [value];else result[key] = value;
+  }
+  return result;
+}
+
+//#endregion
+//#region src/decodeCmcd.ts
+function reduceValue(value, useSymbol) {
+  if (Array.isArray(value)) return value.map(function (item) {
+    return reduceValue(item, useSymbol);
+  });
+  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__["default"])(value) === "symbol") return useSymbol === void 0 ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.symbolToStr)(value) : value;
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem) return value.params ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem(reduceValue(value.value, useSymbol), value.params) : reduceValue(value.value, useSymbol);
+  return value;
+}
+function decodeCmcd(cmcd, options) {
+  if (!cmcd) return {};
+  var sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.decodeSfDict)(cmcd, options);
+  var result = {};
+  for (var _i6 = 0, _Object$entries4 = Object.entries(sfDict); _i6 < _Object$entries4.length; _i6++) {
+    var _Object$entries4$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_7__["default"])(_Object$entries4[_i6], 2),
+      key = _Object$entries4$_i[0],
+      item = _Object$entries4$_i[1];
+    result[key] = reduceValue(item, options === null || options === void 0 ? void 0 : options.useSymbol);
+  }
+  if (options !== null && options !== void 0 && options.convertToLatest) return upConvertToV2(result);
+  return result;
+}
+
+//#endregion
 //#region src/CmcdReporter.ts
 function createEncodingOptions(reportingMode, config, baseUrl) {
   var _config$enabledKeys;
@@ -20052,12 +21464,163 @@ function createEncodingOptions(reportingMode, config, baseUrl) {
     filter: function filter(key) {
       return enabledKeySet.has(key);
     },
-    baseUrl: baseUrl
+    baseUrl: baseUrl,
+    customHeaderMap: config.customHeaderMap
   };
+}
+/**
+* Deep equality for CmcdObjectTypeList (used for `br` deduplication).
+*
+* Arrays with the same elements in different positions count as different.
+* Players that construct `br` consistently get correct deduplication.
+* Reordered arrays produce extra events, which is the safer failure.
+*/
+function cmcdObjectTypeListEqual(a, b) {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    var ai = a[i];
+    var bi = b[i];
+    if (ai === bi) continue;
+    if ((typeof ai === "number" ? ai : ai.value) !== (typeof bi === "number" ? bi : bi.value)) return false;
+    var ap = typeof ai === "number" ? void 0 : ai.params;
+    var bp = typeof bi === "number" ? void 0 : bi.params;
+    var ak = ap && Object.keys(ap)[0];
+    var bk = bp && Object.keys(bp)[0];
+    if (ak !== bk) return false;
+    if (ak !== void 0 && bk !== void 0 && ap && bp && ap[ak] !== bp[bk]) return false;
+  }
+  return true;
+}
+/**
+* Equality for `br` deduplication. A `br` value can be an `SfItem` that
+* wraps the list, as `decodeCmcd` returns for an inner list with
+* parameters. Two values are equal when their lists are equal. The
+* parameters of the list are not compared.
+*/
+function brEqual(a, b) {
+  var listA = toBareValue(a);
+  var listB = toBareValue(b);
+  if (!Array.isArray(listA) || !Array.isArray(listB)) return Object.is(a, b);
+  return cmcdObjectTypeListEqual(listA, listB);
+}
+var equal = Object.is;
+var identity = function identity(v) {
+  return v;
+};
+/**
+* Maps each tracked state field to its event type and equality function.
+* Order matters: `update()` fires events in this order for multi-field updates.
+*/
+var STATE_FIELDS = /* @__PURE__ */Array.from(CMCD_STATE_EVENT_FIELDS, function (_ref5) {
+  var _ref6 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_7__["default"])(_ref5, 2),
+    event = _ref6[0],
+    field = _ref6[1];
+  if (field === "br") return {
+    event: event,
+    field: field,
+    equal: brEqual,
+    snapshot: function snapshot(v) {
+      return Array.isArray(v) ? v.slice() : copyItemValue(v);
+    }
+  };
+  return {
+    event: event,
+    field: field,
+    equal: equal,
+    snapshot: identity
+  };
+});
+var STATE_FIELDS_BY_EVENT = /* @__PURE__ */new Map(/* @__PURE__ */STATE_FIELDS.map(function (e) {
+  return [e.event, e];
+}));
+function buildRequiredEventKeys() {
+  return new Map([].concat((0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_2__["default"])(CMCD_STATE_EVENT_FIELDS), [[CMCD_EVENT_CUSTOM_EVENT, "cen"], [CMCD_EVENT_ERROR, "ec"], [CMCD_EVENT_RESPONSE_RECEIVED, "url"]]));
+}
+/**
+* Maps each event type to the key that a report of that type must keep,
+* beyond `e` and `ts`. Built from the state-change table plus the three
+* event types whose required key is event data, not player state.
+*/
+var CMCD_REQUIRED_EVENT_KEYS = /* @__PURE__ */buildRequiredEventKeys();
+/**
+* Copies a value with the `SfItem` structure, including its `params` record
+* and the list of an `SfItem` that wraps a list.
+*
+* The copy keeps the prototype because `prepareCmcdData`, the formatter map,
+* validation, and the structured-field encoder all branch on
+* `instanceof SfItem`. A plain spread (and `structuredClone`) would return a
+* prototype-less object and silently change the encoded output.
+*/
+function copyItemValue(value) {
+  if (value === null || (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__["default"])(value) !== "object") return value;
+  var copy = Object.assign(Object.create(Object.getPrototypeOf(value)), value);
+  if (copy.params !== null && (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__["default"])(copy.params) === "object") copy.params = _objectSpread({}, copy.params);
+  if (Array.isArray(copy.value)) copy.value = copy.value.map(copyItemValue);
+  return copy;
+}
+/**
+* Copies the nested values of a report in place. A transform cannot mutate
+* the reporter's data store, or another target's report for the same event,
+* through an array or an `SfItem` it received.
+*
+* The copy is complete for the CMCD value space. `CmcdValue` and
+* `CmcdCustomValue` admit only primitives, `SfItem<primitive>`, and arrays of
+* those. `decodeCmcd` also returns an `SfItem` that wraps a list, and the
+* copy includes that list. `SfItem.params` is a flat record. The reporter calls this function
+* where a transform is configured, at session end on the ended session's
+* store, and on the request's stored player-facing view. The session-end
+* copy detaches the frozen snapshot from caller-held references.
+*/
+function copyReportValues(data) {
+  var record = data;
+  for (var key in record) {
+    var value = record[key];
+    if (Array.isArray(value)) {
+      var copy = new Array(value.length);
+      for (var i = 0; i < value.length; i++) copy[i] = copyItemValue(value[i]);
+      record[key] = copy;
+    } else if (value !== null && (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__["default"])(value) === "object") record[key] = copyItemValue(value);
+  }
+  return data;
+}
+/**
+* Decodes the per-call data snapshot of a provenance record into new,
+* encodable report data. Tokens decode as `SfToken` and items with params
+* as `SfItem` (`useSymbol: false`), so every value re-encodes with its
+* original type. Only `recordResponseReceived()` calls this function.
+* Returns an empty object when the record is absent, has no snapshot, or
+* the snapshot does not parse (a value this reporter did not write). The
+* response then reports its derived keys over the session's data alone.
+*/
+function decodeSnapshot(provenance) {
+  var encoded = provenance !== null && (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__["default"])(provenance) === "object" ? provenance.data : void 0;
+  if (typeof encoded !== "string" || !encoded) return {};
+  try {
+    return decodeCmcd(encoded, {
+      useSymbol: false
+    });
+  } catch (_unused3) {
+    return {};
+  }
+}
+/**
+* Creates a session's frozen base provenance record: the issuing `sid`, and
+* the `cid` that is current at creation time. `update()` creates a new record
+* on every `cid` change. Requests issued before a mid-session content change
+* keep their original `cid`, while later requests get the new one.
+*/
+function mintProvenance(sid, cid) {
+  return Object.freeze(typeof cid === "string" && cid ? {
+    sid: sid,
+    cid: cid
+  } : {
+    sid: sid
+  });
 }
 function defaultRequester(request) {
   var url = request.url,
-    init = (0,_babel_runtime_helpers_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_4__["default"])(request, _excluded);
+    init = (0,_babel_runtime_helpers_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_0__["default"])(request, _excluded);
   return fetch(url, init);
 }
 function createCmcdReporterConfig(config) {
@@ -20066,14 +21629,17 @@ function createCmcdReporterConfig(config) {
     _config$eventTargets = config.eventTargets,
     eventTargets = _config$eventTargets === void 0 ? [] : _config$eventTargets,
     _config$sid = config.sid,
-    sid = _config$sid === void 0 ? (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_71__.uuid)() : _config$sid,
+    sid = _config$sid === void 0 ? (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_78__.uuid)() : _config$sid,
     _config$transmissionM = config.transmissionMode,
     transmissionMode = _config$transmissionM === void 0 ? CMCD_QUERY : _config$transmissionM,
-    rest = (0,_babel_runtime_helpers_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_4__["default"])(config, _excluded2);
+    rest = (0,_babel_runtime_helpers_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_0__["default"])(config, _excluded2);
+  var retention = config.sessionRetention;
+  var sessionRetention = typeof retention === "number" ? Math.floor(retention) : NaN;
   return _objectSpread(_objectSpread({}, rest), {}, {
     version: version,
     transmissionMode: transmissionMode,
     sid: sid,
+    sessionRetention: sessionRetention >= 0 ? sessionRetention : 2,
     eventTargets: eventTargets.reduce(function (acc, target) {
       var _target$events, _target$enabledKeys, _target$interval;
       if (target !== null && target !== void 0 && target.url && (_target$events = target.events) !== null && _target$events !== void 0 && _target$events.length) acc.push({
@@ -20082,7 +21648,8 @@ function createCmcdReporterConfig(config) {
         url: target.url,
         events: target.events.slice(),
         interval: (_target$interval = target.interval) !== null && _target$interval !== void 0 ? _target$interval : CMCD_DEFAULT_TIME_INTERVAL,
-        batchSize: target.batchSize || 1
+        batchSize: target.batchSize || 1,
+        transform: target.transform
       });
       return acc;
     }, [])
@@ -20090,6 +21657,14 @@ function createCmcdReporterConfig(config) {
 }
 /**
 * The CMCD reporter.
+*
+* `C` describes the player's own `customData`, which the reporter passes to
+* each configured `transform`. TypeScript infers `C` from the configuration,
+* so an annotation on one `transform` types the request in every other
+* `transform`. The default leaves `customData` values `unknown`.
+*
+* @typeParam C - The type of the player's `customData`. Defaults to
+*                `Record<string, unknown>`.
 *
 * @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#reporting-modes-when-we-send-data | CTA-5004-B Reporting Modes}
 *
@@ -20100,87 +21675,143 @@ var CmcdReporter = /*#__PURE__*/function () {
   * Creates a new CMCD reporter.
   *
   * @param config - The configuration for the CMCD reporter.
-  * @param requester - The function to use to send the request.
+  * @param requester - The function that sends the request.
   *                    The default is a simple wrapper around the
   *                    native `fetch` API.
   */
   function CmcdReporter(config) {
     var _performance$timing;
     var requester = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultRequester;
-    (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_2__["default"])(this, CmcdReporter);
+    (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_3__["default"])(this, CmcdReporter);
     this.timeOrigin = performance.timeOrigin || ((_performance$timing = performance.timing) === null || _performance$timing === void 0 ? void 0 : _performance$timing.fetchStart) || Date.now() - performance.now();
-    this.data = {};
-    this.msd = NaN;
-    this.eventTargets = /* @__PURE__ */new Map();
-    this.requestTarget = {
-      sn: 0,
-      msdSent: false
-    };
+    this.sessions = /* @__PURE__ */new Map();
+    this.intervals = /* @__PURE__ */new Map();
+    this.started = false;
     this.config = createCmcdReporterConfig(config);
-    this.data = {
+    this.session = this.createSession(this.config.sid, {
       cid: this.config.cid,
-      sid: this.config.sid,
       v: this.config.version
-    };
+    });
+    this.sessions.set(this.session.sid, this.session);
     this.requester = requester;
-    var _iterator2 = _createForOfIteratorHelper(this.config.eventTargets),
-      _step2;
-    try {
-      for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-        var target = _step2.value;
-        this.eventTargets.set(target, {
-          intervalId: void 0,
-          sn: 0,
-          msdSent: false,
-          queue: []
-        });
-      }
-    } catch (err) {
-      _iterator2.e(err);
-    } finally {
-      _iterator2.f();
-    }
   }
   /**
-  * Starts the CMCD reporter. Called by the player when the reporter is enabled.
-  *
-  * Note: This fires an initial time-interval event immediately (synchronously)
-  * before the first interval elapses. Ensure CMCD data (sid, cid, etc.) is
-  * populated before calling start().
+  * Creates the state for a new session: initial counters, flags, queues, and
+  * deduplication baseline for every configured target.
   */
-  return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_3__["default"])(CmcdReporter, [{
-    key: "start",
-    value: function start() {
-      var _this = this;
-      this.eventTargets.forEach(function (target, config) {
-        _this.disarmInterval(target);
-        if (config.interval === 0 || !config.events.includes(CmcdEventType.TIME_INTERVAL)) return;
-        var timeIntervalEvent = function timeIntervalEvent() {
-          _this.recordTargetEvent(target, config, CMCD_EVENT_TIME_INTERVAL);
-          _this.processEventTargets();
-        };
-        target.intervalId = setInterval(timeIntervalEvent, config.interval * 1e3);
-        timeIntervalEvent();
-      });
+  return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_4__["default"])(CmcdReporter, [{
+    key: "createSession",
+    value: function createSession(sid, data) {
+      var eventTargets = /* @__PURE__ */new Map();
+      var _iterator10 = _createForOfIteratorHelper(this.config.eventTargets),
+        _step10;
+      try {
+        for (_iterator10.s(); !(_step10 = _iterator10.n()).done;) {
+          var target = _step10.value;
+          eventTargets.set(target, {
+            sn: 0,
+            msdSent: false,
+            queue: [],
+            disposed: false
+          });
+        }
+      } catch (err) {
+        _iterator10.e(err);
+      } finally {
+        _iterator10.f();
+      }
+      return {
+        sid: sid,
+        provenance: mintProvenance(sid, data.cid),
+        data: data,
+        msd: NaN,
+        lastEmitted: toBareValue(data.bg) === true ? {} : {
+          bg: false
+        },
+        eventTargets: eventTargets,
+        requestTarget: {
+          sn: 0,
+          msdSent: false
+        }
+      };
     }
     /**
-    * Stops the CMCD reporter. Called by the player when the reporter is disabled.
+    * Starts the CMCD reporter. The player calls this method when it enables the
+    * reporter.
+    *
+    * This method fires an initial time-interval event immediately (synchronously),
+    * before the first interval elapses. Populate the CMCD data (sid, cid, and
+    * others) before calling start().
+    */
+  }, {
+    key: "start",
+    value: function start() {
+      var _this3 = this;
+      this.started = true;
+      var failure;
+      var session = this.session;
+      session.eventTargets.forEach(function (target, config) {
+        _this3.disarmInterval(config);
+        if (target.disposed || !_this3.armInterval(config)) return;
+        try {
+          _this3.recordTargetEvent(session, target, config, CMCD_EVENT_TIME_INTERVAL);
+          _this3.processEventTargets();
+        } catch (error) {
+          failure !== null && failure !== void 0 ? failure : failure = {
+            error: error
+          };
+        }
+      });
+      if (failure) throw failure.error;
+    }
+    /**
+    * Starts the time-interval timer for an event target when its config
+    * requires one. Returns whether a timer started. The callback reports into
+    * whichever session is current when the timer fires.
+    */
+  }, {
+    key: "armInterval",
+    value: function armInterval(config) {
+      var _this4 = this;
+      if (config.interval === 0 || !config.events.includes(CMCD_EVENT_TIME_INTERVAL)) return false;
+      this.intervals.set(config, setInterval(function () {
+        var session = _this4.session;
+        var target = session.eventTargets.get(config);
+        if (target) {
+          _this4.recordTargetEvent(session, target, config, CMCD_EVENT_TIME_INTERVAL);
+          _this4.processEventTargets();
+        }
+      }, config.interval * 1e3));
+      return true;
+    }
+    /**
+    * Stops the CMCD reporter. The player calls this method when it disables the
+    * reporter.
     *
     * @param flush - Whether to flush the event targets.
     */
   }, {
     key: "stop",
     value: function stop() {
-      var _this2 = this;
       var flush = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      this.started = false;
       if (flush) this.flush();
-      this.eventTargets.forEach(function (target) {
-        _this2.disarmInterval(target);
-      });
+      var _iterator11 = _createForOfIteratorHelper(this.config.eventTargets),
+        _step11;
+      try {
+        for (_iterator11.s(); !(_step11 = _iterator11.n()).done;) {
+          var config = _step11.value;
+          this.disarmInterval(config);
+        }
+      } catch (err) {
+        _iterator11.e(err);
+      } finally {
+        _iterator11.f();
+      }
     }
     /**
-    * Forces the sending of all event reports, regardless of the batch size or interval.
-    * Useful for sending outstanding reports when the player is destroyed or a playback
+    * Sends all outstanding event reports, regardless of the batch size or
+    * interval. Use this method when the player is destroyed or a playback
     * session ends.
     */
   }, {
@@ -20189,69 +21820,279 @@ var CmcdReporter = /*#__PURE__*/function () {
       this.processEventTargets(true);
     }
     /**
-    * Updates the CMCD data. Called by the player when the data changes.
+    * Updates the CMCD data.
+    *
+    * The player calls this method when data changes. The tracked state fields
+    * are `sta`, `pr`, `cid`, `bg`, and `br`. If a new value for one of them
+    * differs from the last reported value for that field, the reporter fires
+    * the matching state-change event. The comparison uses the last reported
+    * value, not the previous persisted value. The first state-change event in
+    * a new session therefore always fires, even when the persisted value did
+    * not change across the `sid` boundary.
+    *
+    * The `bg` field is an exception. A session that does not start with
+    * `bg: true` begins with `false` as its last reported `bg` value.
+    * `bg: false` therefore fires `BACKGROUNDED_MODE` only if the session
+    * started with `bg: true` or reported `bg: true`. CTA-5004-B defines a
+    * `b` event without `bg` as the exit from backgrounded mode, so the exit
+    * report does not carry `bg`. A target transform can add `bg: false` to
+    * the exit report. The encoder writes that value as `?0`.
+    *
+    * Multi-field updates fire the events in this order: `sta`, `pr`, `cid`,
+    * `bg`, `br`. The order of keys in the input object does not affect the
+    * firing order.
+    *
+    * A state-change event can include context fields, for example `bl`, `mtp`,
+    * `pt`, `ltc`. Those fields must be in the data store before the state field
+    * changes. Either pass them with the state field in the same `update()`
+    * call, or persist them with earlier `update()` calls. An auto-fired event
+    * reports the current content of the data store. `TIME_INTERVAL` events also
+    * read the data store, and the caller cannot add per-call data to them. The
+    * player must therefore update the fields it wants in periodic reports with
+    * this method.
+    *
+    * A `sid` change resets the deduplication baseline.
+    *
+    * `sid` and `msd` are session-owned. The reporter tracks them itself and
+    * writes them into every outgoing report, so this method is the only way
+    * to change them. A per-call value on {@link CmcdReporter.recordEvent},
+    * {@link CmcdReporter.createRequestReport}, or
+    * {@link CmcdReporter.recordResponseReceived} has no effect.
+    * `msd` must be a finite number of milliseconds between `0` and
+    * `999_999_999_999_999` (the RFC 8941 integer maximum). The reporter
+    * rounds `msd` to the nearest integer and ignores invalid values.
     *
     * @param data - The data to update.
     */
   }, {
     key: "update",
     value: function update(data) {
-      if (data.sid && data.sid !== this.data.sid) this.resetSession();
-      if (data.msd && !isNaN(data.msd)) this.msd = data.msd;
-      this.data = _objectSpread(_objectSpread(_objectSpread({}, this.data), data), {}, {
+      if (data.sid && data.sid !== this.session.sid) this.startSession(data.sid);
+      var session = this.session;
+      var msd = data.msd;
+      if (typeof msd === "number" && Number.isFinite(msd) && msd >= 0) {
+        var rounded = Math.round(msd);
+        if (rounded <= 999999999999999) session.msd = rounded;
+      }
+      session.data = _objectSpread(_objectSpread(_objectSpread({}, session.data), data), {}, {
+        sid: void 0,
         msd: void 0
       });
+      if (session.data.cid !== session.provenance.cid) session.provenance = mintProvenance(session.sid, session.data.cid);
+      for (var _i7 = 0, _STATE_FIELDS = STATE_FIELDS; _i7 < _STATE_FIELDS.length; _i7++) {
+        var entry = _STATE_FIELDS[_i7];
+        if (entry.field in data && !entry.equal(session.data[entry.field], session.lastEmitted[entry.field])) this.recordEvent(entry.event);
+      }
     }
     /**
-    * Records an event. Called by the player when an event occurs.
+    * Starts a new session. The reporter retains the current session for late
+    * responses and creates a new current session. It then sends the ended
+    * sessions' queued reports and removes the oldest sessions beyond the
+    * configured retention.
+    *
+    * The ended session's snapshot is frozen: the reporter detaches its value
+    * graph, so nested values from earlier `update()` calls cannot mutate the
+    * snapshot. The new session starts from a shallow copy of that graph, which
+    * preserves the data store. All fields, including `cid`, `br`, and custom
+    * keys, survive a `sid` change as before. CTA-5004-B expects a `sid` to be
+    * unique per playback session, so a reused `sid` replaces the retained
+    * session with that `sid`. The replaced session's remaining state is lost,
+    * as if removed, and the reporter attributes its late responses to the
+    * replacement.
+    */
+  }, {
+    key: "startSession",
+    value: function startSession(sid) {
+      this.session.data = copyReportValues(_objectSpread({}, this.session.data));
+      this.session = this.createSession(sid, _objectSpread({}, this.session.data));
+      this.sessions.delete(sid);
+      this.sessions.set(sid, this.session);
+      this.processEventTargets();
+      var _iterator12 = _createForOfIteratorHelper(this.sessions.keys()),
+        _step12;
+      try {
+        for (_iterator12.s(); !(_step12 = _iterator12.n()).done;) {
+          var key = _step12.value;
+          if (this.sessions.size <= this.config.sessionRetention + 1) break;
+          this.sessions.delete(key);
+        }
+      } catch (err) {
+        _iterator12.e(err);
+      } finally {
+        _iterator12.f();
+      }
+      if (this.started) {
+        var _iterator13 = _createForOfIteratorHelper(this.config.eventTargets),
+          _step13;
+        try {
+          for (_iterator13.s(); !(_step13 = _iterator13.n()).done;) {
+            var config = _step13.value;
+            if (!this.intervals.has(config)) this.armInterval(config);
+          }
+        } catch (err) {
+          _iterator13.e(err);
+        } finally {
+          _iterator13.f();
+        }
+      }
+    }
+    /**
+    * Records an event. The player calls this method when an event occurs.
+    *
+    * For state-change events (`PLAY_STATE`, `PLAYBACK_RATE`, `CONTENT_ID`,
+    * `BACKGROUNDED_MODE`, `BITRATE_CHANGE`), this method:
+    * 1. Writes the state field from `data` (if present) into the reporter's
+    *    data store, as `update()` would.
+    * 2. Discards the event if the state field has no value after that write
+    *    (never set, or cleared with `update({ field: undefined })`).
+    * 3. Suppresses the event if the field's current value equals the
+    *    last reported value (no state transition). {@link CmcdReporter.update}
+    *    describes the `bg` value that a new session starts with.
+    *
+    * The reporter always records all other event types.
+    *
+    * For state-change events, prefer {@link CmcdReporter.update}, also for
+    * context fields in a combined call like
+    * `update({ sta: 'p', bl: [3000], mtp: [8500] })`. After `update()`
+    * auto-fires a state-change event, deduplication suppresses a
+    * `recordEvent()` call for the same event, and that call's `data` is
+    * silently lost.
+    *
+    * Call `recordEvent()` directly for events whose data comes with the event
+    * call. Examples: `CUSTOM_EVENT` with `cen`, `ERROR` with `ec`, ad lifecycle
+    * events, `MUTE`/`UNMUTE`, `PLAYER_EXPAND`/`PLAYER_COLLAPSE`, `SKIP`. For
+    * `RESPONSE_RECEIVED`, prefer {@link CmcdReporter.recordResponseReceived},
+    * which derives the per-response fields automatically.
     *
     * @param type - The type of event to record.
-    * @param data - Additional data to record with the event. This data
-    *               only applies to this event report. Persistent data should
-    *               be updated using `update()`.
+    * @param data - Additional data to record with the event. This data applies
+    *               only to this event report. The exception is the state field
+    *               of a state-change event, which the reporter also writes into
+    *               its data store. The reporter ignores session-owned keys
+    *               (`sid`, `msd`) supplied here and writes its own values.
     */
   }, {
     key: "recordEvent",
     value: function recordEvent(type) {
-      var _this3 = this;
       var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      this.eventTargets.forEach(function (target, config) {
-        _this3.recordTargetEvent(target, config, type, data);
-      });
-      this.processEventTargets();
+      this.emitEvent(this.session, type, data);
     }
     /**
-    * Records an event for a target. Called by the reporter when an event occurs.
+    * Records an event for every configured target of a session. State-change
+    * deduplication runs once, before the per-target loop.
+    *
+    * @param session - The session the event belongs to. Everything the event
+    *                  touches (data store, deduplication baseline, counters,
+    *                  queues) is that session's. Only `recordResponseReceived()`
+    *                  ever passes an ended session.
+    * @param type - The type of event to record.
+    * @param data - Additional data to record with the event.
+    * @param request - The media request that triggered the event, when
+    *                  one exists. Only `recordResponseReceived()` sets this
+    *                  parameter, which the reporter passes to each target's
+    *                  `transform`.
+    */
+  }, {
+    key: "emitEvent",
+    value: function emitEvent(session, type, data, request) {
+      var _this5 = this;
+      var entry = STATE_FIELDS_BY_EVENT.get(type);
+      if (entry) {
+        var field = entry.field;
+        var incoming = data[field];
+        if (incoming !== void 0) Object.assign(session.data, (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, field, incoming));
+        var current = session.data[field];
+        if (current === void 0) return;
+        if (entry.equal(current, session.lastEmitted[field])) return;
+        Object.assign(session.lastEmitted, (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, field, entry.snapshot(current)));
+      }
+      var failure;
+      session.eventTargets.forEach(function (target, config) {
+        try {
+          _this5.recordTargetEvent(session, target, config, type, data, request);
+        } catch (error) {
+          failure !== null && failure !== void 0 ? failure : failure = {
+            error: error
+          };
+        }
+      });
+      this.processEventTargets();
+      if (failure) throw failure.error;
+    }
+    /**
+    * Records an event for a target. The reporter calls this method when an
+    * event occurs.
     *
     * @param target - The target to record the event for.
     * @param config - The configuration for the target.
     * @param type - The type of event to record.
     * @param data - Additional data to record with the event. This data
-    *               only applies to this event report. Persistent data should
-    *               be updated using `update()`.
+    *               only applies to this event report. Use `update()` for
+    *               persistent data.
+    * @param request - The media request that triggered the event, when
+    *                  one exists. The target's `transform` receives it.
     */
   }, {
     key: "recordTargetEvent",
-    value: function recordTargetEvent(target, config, type) {
+    value: function recordTargetEvent(session, target, config, type) {
       var _data$ts;
-      var data = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {};
-      if (!config.events.includes(type)) return;
-      var item = _objectSpread(_objectSpread(_objectSpread({}, this.data), data), {}, {
+      var data = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : {};
+      var request = arguments.length > 5 ? arguments[5] : undefined;
+      if (target.disposed || !config.events.includes(type)) return;
+      var item = _objectSpread(_objectSpread(_objectSpread({}, session.data), data), {}, {
+        sid: session.sid,
         e: type,
-        ts: (_data$ts = data.ts) !== null && _data$ts !== void 0 ? _data$ts : Date.now(),
-        sn: target.sn++
+        ts: (_data$ts = data.ts) !== null && _data$ts !== void 0 ? _data$ts : Date.now()
       });
-      if (!isNaN(this.msd) && !target.msdSent) {
-        item.msd = this.msd;
-        target.msdSent = true;
+      if (type === CMCD_EVENT_BACKGROUNDED_MODE && toBareValue(item.bg) === false) delete item.bg;
+      var transform = config.transform;
+      if (!transform) {
+        this.queueTargetEvent(session, target, config, item, type);
+        return;
       }
-      target.queue.push(item);
+      copyReportValues(item);
+      var requiredKey = CMCD_REQUIRED_EVENT_KEYS.get(type);
+      var requiredValue = requiredKey ? item[requiredKey] : void 0;
+      var ts = item.ts;
+      var report = transform(item, request);
+      if (report == null) return;
+      if (!isValid(report.ts)) report.ts = ts;
+      if (requiredKey && isValid(requiredValue) && !isValid(report[requiredKey])) Object.assign(report, (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, requiredKey, requiredValue));
+      this.queueTargetEvent(session, target, config, report, type);
     }
     /**
-    * Records a response-received event. Called by the player when a media
-    * request response has been fully received.
+    * Writes the reporter-owned fields into a finished event report, encodes
+    * the report, and pushes the encoded line to the target's queue.
     *
-    * This method automatically derives the `rr` event keys from the
+    * This method runs after any transform. A transform cannot bypass the
+    * target's `events` filter through `e`, break `sn` continuity, or replace
+    * the session identity in `sid` and `msd`. Encoding here makes a report
+    * that cannot serialize throw inside the recording call, instead of failing
+    * the batch send and re-queueing forever.
+    *
+    * @param target - The target to queue the report for.
+    * @param config - The configuration for the target.
+    * @param report - The finished report data.
+    * @param type - The type of event being reported.
+    */
+  }, {
+    key: "queueTargetEvent",
+    value: function queueTargetEvent(session, target, config, report, type) {
+      var _config$enabledKeys2;
+      report.e = type;
+      report.sn = target.sn++;
+      report.sid = session.sid;
+      if (!isNaN(session.msd) && !target.msdSent && (_config$enabledKeys2 = config.enabledKeys) !== null && _config$enabledKeys2 !== void 0 && _config$enabledKeys2.includes("msd")) {
+        report.msd = session.msd;
+        target.msdSent = true;
+      } else delete report.msd;
+      target.queue.push(encodeCmcd(report, createEncodingOptions(CMCD_EVENT_MODE, config)));
+    }
+    /**
+    * Records a response-received event. The player calls this method when a
+    * media request response has fully arrived.
+    *
+    * This method derives these `rr` event keys automatically:
     *
     * - `url` - the original requested URL (before any redirects)
     * - `rc` - the HTTP response status code
@@ -20259,25 +22100,64 @@ var CmcdReporter = /*#__PURE__*/function () {
     * - `ttfb` - time to first byte (from `resourceTiming.responseStart`)
     * - `ttlb` - time to last byte (from `resourceTiming.duration`)
     *
-    * Additional keys like `ttfbb`, `cmsdd`, `cmsds`, and `smrt` can be
-    * supplied via the `data` parameter if the player has access to them.
+    * If the player has additional keys like `ttfbb`, `cmsdd`, `cmsds`, and
+    * `smrt`, pass them in the `data` parameter.
+    *
+    * The request's `customData` is generic, so a player can pass a request with
+    * its own keys (for example `{ requestType: 'segment' }`) without a cast. The
+    * reporter reads only the provenance record that
+    * {@link CmcdReporter.createRequestReport} writes there. Every other key
+    * stays unchanged and visible to an event target's `transform` through its
+    * `request` argument.
+    *
+    * A reporter with a concrete `C` requires the request to satisfy that type.
+    * TypeScript therefore rejects a call whose request the configured
+    * transforms could not read. See {@link CmcdReporterCustomData}.
+    *
+    * The provenance record that {@link CmcdReporter.createRequestReport}
+    * stored on the request's `customData` (under
+    * {@link CMCD_REQUEST_PROVENANCE}) selects the session by `sid`. A record
+    * that names no retained session drops the response (see
+    * `CmcdReporterConfig.sessionRetention`). A request without a record reports
+    * under the current session, as in version 2.4.0. The request-time data then
+    * comes from `customData.cmcd`. A per-call `data.sid` cannot substitute. The
+    * reporter accepts any record whose `sid` names a retained session. The
+    * record may come from another reporter with the same session attributes,
+    * or be hand-built. If the request has a record, a response that completes
+    * after a `sid` change reports under its own retained session, with that
+    * session's data snapshot and sequence numbers.
+    *
+    * With a record, request-time report keys come from the record's encoded
+    * per-call `data` snapshot, which the reporter decodes for each response.
+    * The record's `cid` replaces the session's current `cid` in the report. A
+    * response that completes after a mid-session content change therefore
+    * reports its request-time values.
+    *
+    * @typeParam RD - The `customData` of this request. Defaults to the
+    *                reporter's own `C`.
     *
     * @param response - The HTTP response received.
     * @param data - Additional CMCD data to include with the event.
-    *               Values provided here override any auto-derived values.
+    *               Values provided here override the derived values.
+    *               The reporter ignores session-owned keys (`sid`, `msd`)
+    *               supplied here.
     */
   }, {
     key: "recordResponseReceived",
     value: function recordResponseReceived(response) {
-      var _data$url, _request$customData$c, _request$customData;
+      var _data$url, _request$customData, _request$customData2;
       var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
       var request = response.request;
       var url = (_data$url = data.url) !== null && _data$url !== void 0 ? _data$url : request === null || request === void 0 ? void 0 : request.url;
       if (!url) return;
-      var urlObj = new URL(url);
-      urlObj.searchParams.delete(CMCD_PARAM);
+      var provenance = (_request$customData = request.customData) === null || _request$customData === void 0 ? void 0 : _request$customData[CMCD_REQUEST_PROVENANCE];
+      var session = provenance === void 0 ? this.session : this.resolveSession(provenance);
+      if (!session) return;
+      var cmcd = provenance === void 0 ? _objectSpread({}, (_request$customData2 = request.customData) === null || _request$customData2 === void 0 ? void 0 : _request$customData2.cmcd) : decodeSnapshot(provenance);
+      var _ref7 = provenance !== null && provenance !== void 0 ? provenance : {},
+        cid = _ref7.cid;
       var derived = {
-        url: urlObj.toString(),
+        url: replaceCmcdParam(url),
         rc: response.status
       };
       var timing = response.resourceTiming;
@@ -20288,12 +22168,29 @@ var CmcdReporter = /*#__PURE__*/function () {
         }
         if (timing.duration != null) derived.ttlb = Math.round(timing.duration);
       }
-      var cmcd = (_request$customData$c = (_request$customData = request.customData) === null || _request$customData === void 0 ? void 0 : _request$customData.cmcd) !== null && _request$customData$c !== void 0 ? _request$customData$c : {};
-      this.recordEvent(CMCD_EVENT_RESPONSE_RECEIVED, _objectSpread(_objectSpread(_objectSpread({}, cmcd), derived), data));
+      this.emitEvent(session, CMCD_EVENT_RESPONSE_RECEIVED, _objectSpread(_objectSpread(_objectSpread(_objectSpread({}, typeof cid === "string" && cid ? {
+        cid: cid
+      } : void 0), cmcd), derived), data), request);
     }
     /**
-    * Applies the CMCD request report data to the request. Called by the player
-    * before sending the request.
+    * Resolves the session that a provenance record names. The record's `sid`
+    * must name one of this reporter's retained sessions, or the reporter
+    * discards the response. A record that names a removed or unknown `sid`
+    * resolves nothing. Any other attribution would be wrong. The reporter reads
+    * the `sid` as a plain property. A record
+    * copied through JSON therefore resolves the same session, and a hand-built
+    * record that names a retained session is accepted.
+    */
+  }, {
+    key: "resolveSession",
+    value: function resolveSession(provenance) {
+      if (provenance === null || (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_6__["default"])(provenance) !== "object") return;
+      var sid = provenance.sid;
+      return typeof sid === "string" ? this.sessions.get(sid) : void 0;
+    }
+    /**
+    * Applies the CMCD request report data to the request. The player calls this
+    * method before sending the request.
     *
     * @param req - The request to apply the CMCD request report to.
     * @returns The request with the CMCD request report applied.
@@ -20307,9 +22204,9 @@ var CmcdReporter = /*#__PURE__*/function () {
       return (_this$createRequestRe = this.createRequestReport(req)) !== null && _this$createRequestRe !== void 0 ? _this$createRequestRe : req;
     }
     /**
-    * Checks if the request reporting is enabled.
+    * Checks whether request reporting is enabled.
     *
-    * @returns `true` if the request reporting is enabled, `false` otherwise.
+    * @returns `true` if request reporting is enabled, `false` otherwise.
     */
   }, {
     key: "isRequestReportingEnabled",
@@ -20318,48 +22215,89 @@ var CmcdReporter = /*#__PURE__*/function () {
       return !!((_this$config$enabledK = this.config.enabledKeys) !== null && _this$config$enabledK !== void 0 && _this$config$enabledK.length);
     }
     /**
-    * Creates a new request with the CMCD request report data applied. Called by the player
-    * before sending the request.
+    * The provenance record to write on a returned request. It is the session's
+    * frozen base record, extended with the caller's per-call data encoded as a
+    * CMCD string when there is any. Requests without per-call data share the
+    * base record, so the reporter writes only one property. The snapshot never
+    * contains reporter-written fields. A value that cannot encode contributes
+    * no snapshot and does not fail the request. The response still attributes
+    * and reports derived keys over session data, matching the tolerance of
+    * `decodeSnapshot()` when reading.
+    */
+  }, {
+    key: "createRequestProvenance",
+    value: function createRequestProvenance(data, baseUrl) {
+      var base = this.session.provenance;
+      if (!data) return base;
+      try {
+        var encoded = encodeCmcd(data, {
+          version: this.config.version,
+          reportingMode: CMCD_REQUEST_MODE,
+          baseUrl: baseUrl
+        });
+        return encoded ? Object.freeze(_objectSpread(_objectSpread({}, base), {}, {
+          data: encoded
+        })) : base;
+      } catch (_unused4) {
+        return base;
+      }
+    }
+    /**
+    * Creates a new request with the CMCD request report data applied. The
+    * player calls this method before sending the request.
+    *
+    * A reporter with a concrete `C` requires the request's `customData` to
+    * satisfy that type. TypeScript therefore rejects a call whose request the
+    * configured transform could not read. See
+    * {@link CmcdReporterCustomData}.
+    *
+    * @typeParam R - The type of the request. Its `customData` must satisfy
+    *                the reporter's `C`.
     *
     * @param request - The request to apply the CMCD request report to.
     * @param data - The data to apply to the request. This data only
-    *               applies to this request report. Persistent data
-    *               should be updated using `update()`.
+    *               applies to this request report. Use `update()` for
+    *               persistent data.
     * @returns The request with the CMCD request report applied.
     */
   }, {
     key: "createRequestReport",
     value: function createRequestReport(request, data) {
       var _this$config$enabledK2;
-      var _request$customData2 = request.customData,
-        customData = _request$customData2 === void 0 ? {} : _request$customData2,
+      var _request$customData3 = request.customData,
+        customData = _request$customData3 === void 0 ? {} : _request$customData3,
         _request$headers = request.headers,
         headers = _request$headers === void 0 ? {} : _request$headers,
-        rest = (0,_babel_runtime_helpers_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_4__["default"])(request, _excluded3);
+        rest = (0,_babel_runtime_helpers_objectWithoutProperties__WEBPACK_IMPORTED_MODULE_0__["default"])(request, _excluded3);
       var report = _objectSpread(_objectSpread({}, rest), {}, {
         headers: _objectSpread({}, headers),
-        customData: _objectSpread(_objectSpread({}, customData), {}, {
+        customData: _objectSpread(_objectSpread({}, customData), {}, (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({
           cmcd: {}
-        })
+        }, CMCD_REQUEST_PROVENANCE, this.createRequestProvenance(data, request.url)))
       });
       if (!((_this$config$enabledK2 = this.config.enabledKeys) !== null && _this$config$enabledK2 !== void 0 && _this$config$enabledK2.length) || !report.url) return report;
-      var url = new URL(report.url);
-      var cmcdData = _objectSpread(_objectSpread(_objectSpread({}, this.data), data), {}, {
-        sn: this.requestTarget.sn++
+      var session = this.session;
+      var merged = _objectSpread(_objectSpread(_objectSpread({}, session.data), data), {}, {
+        sid: session.sid
       });
-      var options = createEncodingOptions(CMCD_REQUEST_MODE, this.config, report.url);
-      if (!isNaN(this.msd) && !this.requestTarget.msdSent) {
-        cmcdData.msd = this.msd;
-        this.requestTarget.msdSent = true;
+      var transform = this.config.transform;
+      var cmcdData = merged;
+      if (transform) {
+        copyReportValues(merged);
+        cmcdData = transform(merged, request);
+        if (cmcdData == null) return report;
       }
-      var cmcd = report.customData.cmcd = prepareCmcdData(cmcdData, options);
+      cmcdData.sn = session.requestTarget.sn++;
+      cmcdData.sid = session.sid;
+      var sendMsd = !isNaN(session.msd) && !session.requestTarget.msdSent;
+      if (sendMsd) cmcdData.msd = session.msd;else delete cmcdData.msd;
+      var options = createEncodingOptions(CMCD_REQUEST_MODE, this.config, report.url);
+      var cmcd = report.customData.cmcd = copyReportValues(prepareCmcdData(cmcdData, options));
+      if (sendMsd && cmcd.msd !== void 0) session.requestTarget.msdSent = true;
+      var encoded = encodePreparedCmcd(cmcd);
       switch (this.config.transmissionMode) {
         case CMCD_QUERY:
-          var param = encodePreparedCmcd(cmcd);
-          if (param) {
-            url.searchParams.set(CMCD_PARAM, param);
-            report.url = url.toString();
-          }
+          if (encoded) report.url = replaceCmcdParam(report.url, encoded);
           break;
         case CMCD_HEADERS:
           Object.assign(report.headers, toPreparedCmcdHeaders(cmcd, options.customHeaderMap));
@@ -20368,116 +22306,115 @@ var CmcdReporter = /*#__PURE__*/function () {
       return report;
     }
     /**
-    * Processes the event targets. Called by the reporter when an event occurs.
+    * Processes the event targets. The reporter calls this method when an event
+    * occurs.
     *
     * @param flush - Whether to flush the event targets.
     */
   }, {
     key: "processEventTargets",
     value: function processEventTargets() {
-      var _this4 = this;
+      var _this6 = this;
       var flush = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
       var reprocess = false;
-      this.eventTargets.forEach(function (target, config) {
-        var queue = target.queue;
-        if (!queue.length) return;
-        if (queue.length < config.batchSize && !flush) return;
-        var deleteCount = flush ? queue.length : config.batchSize;
-        var events = queue.splice(0, deleteCount);
-        _this4.sendEventReport(config, events).catch(function () {
-          var _target$queue;
-          (_target$queue = target.queue).unshift.apply(_target$queue, (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_1__["default"])(events));
+      this.sessions.forEach(function (session) {
+        var drain = flush || session !== _this6.session;
+        session.eventTargets.forEach(function (target, config) {
+          var queue = target.queue;
+          if (target.disposed || !queue.length) return;
+          if (queue.length < config.batchSize && !drain) return;
+          var deleteCount = drain ? queue.length : config.batchSize;
+          var events = queue.splice(0, deleteCount);
+          _this6.sendEventReport(session, config, events).catch(function () {
+            var _target$queue;
+            (_target$queue = target.queue).unshift.apply(_target$queue, (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_2__["default"])(events));
+          });
+          reprocess || (reprocess = queue.length > 0);
         });
-        reprocess || (reprocess = queue.length > 0);
       });
       if (reprocess) this.processEventTargets();
     }
     /**
-    * Sends an event report. Called by the reporter when a batch is ready to be sent.
+    * Sends an event report. The reporter calls this method when a batch is
+    * ready.
     *
     * @param config - The target config to send the event report to.
-    * @param data - The data to send in the event report.
+    * @param data - The encoded report lines to send in the event report.
     */
   }, {
     key: "sendEventReport",
     value: (function () {
-      var _sendEventReport = (0,_babel_runtime_helpers_asyncToGenerator__WEBPACK_IMPORTED_MODULE_0__["default"])(/*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.mark(function _callee(config, data) {
-        var options, _yield$this$requester, status;
-        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.wrap(function (_context) {
-          while (1) switch (_context.prev = _context.next) {
+      var _sendEventReport = (0,_babel_runtime_helpers_asyncToGenerator__WEBPACK_IMPORTED_MODULE_5__["default"])(/*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.mark(function _callee2(session, config, data) {
+        var _yield$this$requester, status;
+        return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_8__.wrap(function (_context2) {
+          while (1) switch (_context2.prev = _context2.next) {
             case 0:
-              options = createEncodingOptions(CMCD_EVENT_MODE, config);
-              _context.next = 1;
+              _context2.next = 1;
               return this.requester({
                 url: config.url,
                 method: "POST",
                 headers: {
                   "Content-Type": CMCD_MIME_TYPE
                 },
-                body: data.map(function (item) {
-                  return encodeCmcd(item, options);
-                }).join("\n") + "\n"
+                body: data.join("\n")
               });
             case 1:
-              _yield$this$requester = _context.sent;
+              _yield$this$requester = _context2.sent;
               status = _yield$this$requester.status;
               if (!(status === 410)) {
-                _context.next = 2;
+                _context2.next = 2;
                 break;
               }
-              this.disposeEventTarget(config);
-              _context.next = 3;
+              this.disposeEventTarget(session, config);
+              _context2.next = 3;
               break;
             case 2:
               if (!(status === 429 || status > 499 && status < 600)) {
-                _context.next = 3;
+                _context2.next = 3;
                 break;
               }
               throw new Error("Event report failed with status ".concat(status));
             case 3:
             case "end":
-              return _context.stop();
+              return _context2.stop();
           }
-        }, _callee, this);
+        }, _callee2, this);
       }));
-      function sendEventReport(_x, _x2) {
+      function sendEventReport(_x6, _x7, _x8) {
         return _sendEventReport.apply(this, arguments);
       }
       return sendEventReport;
     }()
     /**
-    * Cancels the time-interval timer for an event target and clears the stored id.
-    * Safe to call when no timer is armed (clearInterval(undefined) is a no-op).
+    * Cancels the time-interval timer for an event target config and clears the
+    * stored id. Safe to call when no timer is active (clearInterval(undefined)
+    * does nothing).
     */
     )
   }, {
     key: "disarmInterval",
-    value: function disarmInterval(target) {
-      clearInterval(target.intervalId);
-      target.intervalId = void 0;
+    value: function disarmInterval(config) {
+      clearInterval(this.intervals.get(config));
+      this.intervals.delete(config);
     }
     /**
-    * Permanently removes an event target: cancels its timer and removes it from the
-    * eventTargets map. Used when the collector signals the target is gone (HTTP 410).
+    * Silences an event target URL for the remainder of its session after the
+    * collector signals that the target is gone (HTTP 410). The method clears
+    * the queues and blocks further enqueues for every config in the session
+    * that reports to the URL (the CTA-5004-B suppression scope). For the
+    * current session, the method also cancels those configs' timers. A session
+    * started after the disposal gets new target state and is unaffected.
     */
   }, {
     key: "disposeEventTarget",
-    value: function disposeEventTarget(config) {
-      var target = this.eventTargets.get(config);
-      if (!target) return;
-      this.disarmInterval(target);
-      this.eventTargets.delete(config);
-    }
-    /**
-    * Resets the session related data. Called when the session ID changes.
-    */
-  }, {
-    key: "resetSession",
-    value: function resetSession() {
-      this.eventTargets.forEach(function (target) {
-        return target.sn = 0;
+    value: function disposeEventTarget(session, config) {
+      var _this7 = this;
+      session.eventTargets.forEach(function (target, sibling) {
+        if (sibling.url !== config.url || target.disposed) return;
+        target.disposed = true;
+        target.queue.length = 0;
+        if (session === _this7.session) _this7.disarmInterval(sibling);
       });
-      this.requestTarget.sn = 0;
     }
   }]);
 }();
@@ -20542,57 +22479,6 @@ var CmcdValidationSeverity = {
 };
 
 //#endregion
-//#region src/upConvertToV2.ts
-/**
-* Up-convert V1 CMCD data to V2 format.
-*
-* - Wraps plain scalar values in arrays for inner-list keys.
-* - Wraps `nor` string in an array.
-*
-* If the data is already V2 (has `v: 2`), it is returned unchanged.
-*
-* @internal
-*/
-function upConvertToV2(obj) {
-  if (obj["v"] === CMCD_V2) return obj;
-  var result = {};
-  for (var _i4 = 0, _Object$entries3 = Object.entries(obj); _i4 < _Object$entries3.length; _i4++) {
-    var _Object$entries3$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_6__["default"])(_Object$entries3[_i4], 2),
-      key = _Object$entries3$_i[0],
-      value = _Object$entries3$_i[1];
-    if (value == null) {
-      result[key] = value;
-      continue;
-    }
-    if (CMCD_INNER_LIST_KEYS.has(key) && !Array.isArray(value)) result[key] = [value];else if (key === "nor" && typeof value === "string") result[key] = [value];else result[key] = value;
-  }
-  return result;
-}
-
-//#endregion
-//#region src/decodeCmcd.ts
-function reduceValue(value) {
-  if (Array.isArray(value)) return value.map(reduceValue);
-  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_5__["default"])(value) === "symbol") return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.symbolToStr)(value);
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem && !value.params) return reduceValue(value.value);
-  if (typeof value === "string") return value;
-  return value;
-}
-function decodeCmcd(cmcd, options) {
-  if (!cmcd) return {};
-  var sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.decodeSfDict)(cmcd);
-  var result = {};
-  for (var _i5 = 0, _Object$entries4 = Object.entries(sfDict); _i5 < _Object$entries4.length; _i5++) {
-    var _Object$entries4$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_6__["default"])(_Object$entries4[_i5], 2),
-      key = _Object$entries4$_i[0],
-      item = _Object$entries4$_i[1];
-    result[key] = reduceValue(item.value);
-  }
-  if (options !== null && options !== void 0 && options.convertToLatest) return upConvertToV2(result);
-  return result;
-}
-
-//#endregion
 //#region src/ensureHeaders.ts
 /**
 * Converts a record of header fields to a `Headers` instance if necessary.
@@ -20611,18 +22497,18 @@ function ensureHeaders(headers) {
 function fromCmcdHeaders(headers, options) {
   var h = ensureHeaders(headers);
   var result = {};
-  var _iterator3 = _createForOfIteratorHelper(CMCD_HEADER_FIELDS),
-    _step3;
+  var _iterator14 = _createForOfIteratorHelper(CMCD_HEADER_FIELDS),
+    _step14;
   try {
-    for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-      var field = _step3.value;
+    for (_iterator14.s(); !(_step14 = _iterator14.n()).done;) {
+      var field = _step14.value;
       var value = h.get(field);
       if (value) Object.assign(result, decodeCmcd(value));
     }
   } catch (err) {
-    _iterator3.e(err);
+    _iterator14.e(err);
   } finally {
-    _iterator3.f();
+    _iterator14.f();
   }
   if (options !== null && options !== void 0 && options.convertToLatest) return upConvertToV2(result);
   return result;
@@ -20639,7 +22525,64 @@ function fromCmcdQuery(query, options) {
 //#endregion
 //#region src/fromCmcdUrl.ts
 function fromCmcdUrl(url, options) {
-  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "")), options);
+  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "").replace(/\+/g, " ")), options);
+}
+
+//#endregion
+//#region src/isCmcdRequestKey.ts
+var CMCD_REQUEST_KEY_SET = /* @__PURE__ */new Set(CMCD_REQUEST_KEYS);
+/**
+* Check if a key is a valid CMCD request key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
+*/
+function isCmcdRequestKey(key) {
+  return CMCD_REQUEST_KEY_SET.has(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/isCmcdResponseReceivedKey.ts
+var CMCD_RESPONSE_KEY_SET = /* @__PURE__ */new Set(CMCD_RESPONSE_KEYS);
+/**
+* Check if a key is a valid CMCD response key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD response key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdResponseReceivedKey.test.ts#example}
+*/
+function isCmcdResponseReceivedKey(key) {
+  return CMCD_RESPONSE_KEY_SET.has(key);
+}
+
+//#endregion
+//#region src/isCmcdEventKey.ts
+var CMCD_EVENT_KEY_SET = /* @__PURE__ */new Set(CMCD_EVENT_KEYS);
+/**
+* Check if a key is a valid CMCD event key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdEventKey.test.ts#example}
+*/
+function isCmcdEventKey(key) {
+  return isCmcdRequestKey(key) || isCmcdResponseReceivedKey(key) || CMCD_EVENT_KEY_SET.has(key);
 }
 
 //#endregion
@@ -20661,6 +22604,25 @@ function isCmcdV1Data(data) {
 }
 
 //#endregion
+//#region src/isCmcdV1Key.ts
+var CMCD_V1_KEY_SET$1 = /* @__PURE__ */new Set(CMCD_V1_KEYS);
+/**
+* Filter for CMCD version 1 keys.
+*
+* @param key - The CMCD key to filter.
+*
+* @returns `true` if the key should be included, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdV1Key.test.ts#example}
+*/
+function isCmcdV1Key(key) {
+  return CMCD_V1_KEY_SET$1.has(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
 //#region src/isCmcdV2Data.ts
 /**
 * Check if a CMCD data object is version 2.
@@ -20679,18 +22641,64 @@ function isCmcdV2Data(data) {
 }
 
 //#endregion
+//#region src/toCmcdUrl.ts
+/**
+* Convert a CMCD object to a URL encoded string.
+*
+* Only letters, digits, `-`, `.`, `_`, and `~` stay unencoded, as in the
+* query examples of CTA-5004-B.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding.
+*
+* @returns The URL encoded CMCD data.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+*
+* @public
+*/
+function toCmcdUrl(cmcd) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  if (!cmcd) return "";
+  return percentEncode(encodeCmcd(cmcd, options));
+}
+
+//#endregion
+//#region src/toCmcdQuery.ts
+/**
+* Convert a CMCD object to a query arg.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding.
+*
+* @returns The CMCD query arg.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+*
+* @public
+*
+* @example
+* {@includeCode ../test/toCmcdQuery.test.ts#example}
+*/
+function toCmcdQuery(cmcd) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  if (!cmcd) return "";
+  return "".concat(CMCD_PARAM, "=").concat(toCmcdUrl(cmcd, options));
+}
+
+//#endregion
 //#region src/toCmcdValue.ts
 /**
 * Convert a value to a CMCD value.
 *
 * @param value - The value to convert to a CMCD value.
-* @param params - The parameters to convert to a CMCD value.
+* @param params - The parameters of the CMCD value.
 * @returns The CMCD value.
 *
 * @public
 */
 function toCmcdValue(value, params) {
-  return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem(value, params);
+  return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_77__.SfItem(value, params);
 }
 
 //#endregion
@@ -20701,8 +22709,8 @@ function toCmcdValue(value, params) {
 * @internal
 */
 function mergeValidationResults() {
-  for (var _len = arguments.length, results = new Array(_len), _key = 0; _key < _len; _key++) {
-    results[_key] = arguments[_key];
+  for (var _len = arguments.length, results = new Array(_len), _key2 = 0; _key2 < _len; _key2++) {
+    results[_key2] = arguments[_key2];
   }
   var issues = results.flatMap(function (r) {
     return r.issues;
@@ -20718,21 +22726,21 @@ function mergeValidationResults() {
 //#endregion
 //#region src/resolveVersion.ts
 /**
-* Resolves the CMCD version from explicit options, the payload's `v` key, or the default (v1).
+* Resolves the CMCD version from options, the payload's `v` key, or the default (version 1).
 *
 * @internal
 */
 function resolveVersion(data, options) {
   if ((options === null || options === void 0 ? void 0 : options.version) === 1 || (options === null || options === void 0 ? void 0 : options.version) === 2) return options.version;
-  var payloadVersion = data["v"];
+  var payloadVersion = toBareValue(data["v"]);
   if (payloadVersion === 1 || payloadVersion === 2) return payloadVersion;
   return CMCD_V1;
 }
 
 //#endregion
 //#region src/validateCmcdKeys.ts
-var CMCD_V1_KEY_SET = new Set(CMCD_V1_KEYS);
-var CMCD_KEY_SET = new Set(CMCD_KEYS);
+var CMCD_V1_KEY_SET = /* @__PURE__ */new Set(CMCD_V1_KEYS);
+var CMCD_KEY_SET = /* @__PURE__ */new Set(CMCD_KEYS);
 /**
 * Validates that all keys in a CMCD payload are recognized spec keys or valid custom keys.
 *
@@ -20751,8 +22759,8 @@ function validateCmcdKeys(data, options) {
   var version = resolveVersion(data, options);
   var validKeySet = version === CMCD_V1 ? CMCD_V1_KEY_SET : CMCD_KEY_SET;
   var issues = [];
-  for (var _i6 = 0, _Object$keys = Object.keys(data); _i6 < _Object$keys.length; _i6++) {
-    var key = _Object$keys[_i6];
+  for (var _i8 = 0, _Object$keys = Object.keys(data); _i8 < _Object$keys.length; _i8++) {
+    var key = _Object$keys[_i8];
     if (isCmcdCustomKey(key)) continue;
     if (!validKeySet.has(key)) issues.push({
       key: key,
@@ -20765,6 +22773,39 @@ function validateCmcdKeys(data, options) {
     issues: issues
   };
 }
+
+//#endregion
+//#region src/CMCD_AGGREGATE_BITRATE_KEYS.ts
+/**
+* Maps each aggregate bitrate key to the exact bitrate key that supersedes it.
+*
+* Per CTA-5004-B, `ab` MUST NOT be sent when the encoded bitrate `br` is
+* known. `lab` and `tab` follow the same rule for the lowest bitrate `lb`
+* and the top bitrate `tb`.
+*
+* @internal
+*/
+var CMCD_AGGREGATE_BITRATE_KEYS = {
+  ab: "br",
+  lab: "lb",
+  tab: "tb"
+};
+
+//#endregion
+//#region src/CMCD_KEY_OBJECT_TYPES.ts
+/**
+* Maps a key to the object types (`ot`) for which CTA-5004-B allows the key.
+*
+* A key that is absent from this map is allowed for every object type.
+* `d` (Object duration) and `tpb` (Top playable bitrate) MUST NOT be sent for
+* other object types.
+*
+* @internal
+*/
+var CMCD_KEY_OBJECT_TYPES = {
+  d: ["a", "v", "av", "tt", "c", "o"],
+  tpb: ["a", "v", "av", "c"]
+};
 
 //#endregion
 //#region src/validateCmcdStructure.ts
@@ -20786,11 +22827,11 @@ function validateCmcdStructure(data, options) {
   var version = resolveVersion(data, options);
   var issues = [];
   if ((options === null || options === void 0 ? void 0 : options.reportingMode) === CMCD_REQUEST_MODE) {
-    var _iterator4 = _createForOfIteratorHelper(CMCD_EVENT_KEYS),
-      _step4;
+    var _iterator15 = _createForOfIteratorHelper(CMCD_EVENT_KEYS),
+      _step15;
     try {
-      for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-        var key = _step4.value;
+      for (_iterator15.s(); !(_step15 = _iterator15.n()).done;) {
+        var key = _step15.value;
         if (key in data) issues.push({
           key: key,
           message: "Event key \"".concat(key, "\" must not be present in request mode."),
@@ -20798,25 +22839,25 @@ function validateCmcdStructure(data, options) {
         });
       }
     } catch (err) {
-      _iterator4.e(err);
+      _iterator15.e(err);
     } finally {
-      _iterator4.f();
+      _iterator15.f();
     }
-    var _iterator5 = _createForOfIteratorHelper(CMCD_RESPONSE_KEYS),
-      _step5;
+    var _iterator16 = _createForOfIteratorHelper(CMCD_RESPONSE_KEYS),
+      _step16;
     try {
-      for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-        var _key2 = _step5.value;
-        if (_key2 in data) issues.push({
-          key: _key2,
-          message: "Response key \"".concat(_key2, "\" must not be present in request mode."),
+      for (_iterator16.s(); !(_step16 = _iterator16.n()).done;) {
+        var _key3 = _step16.value;
+        if (_key3 in data) issues.push({
+          key: _key3,
+          message: "Response key \"".concat(_key3, "\" must not be present in request mode."),
           severity: CMCD_VALIDATION_SEVERITY_ERROR
         });
       }
     } catch (err) {
-      _iterator5.e(err);
+      _iterator16.e(err);
     } finally {
-      _iterator5.f();
+      _iterator16.f();
     }
   }
   if ((options === null || options === void 0 ? void 0 : options.reportingMode) === CMCD_EVENT_MODE) {
@@ -20832,7 +22873,8 @@ function validateCmcdStructure(data, options) {
     });
   }
   if ("e" in data) {
-    if (data["e"] === CMCD_EVENT_CUSTOM_EVENT) {
+    var eventType = toTokenString(data["e"]);
+    if (eventType === CMCD_EVENT_CUSTOM_EVENT) {
       if (!("cen" in data)) issues.push({
         key: "cen",
         message: "Custom event (e=\"ce\") requires the \"cen\" key to be present.",
@@ -20843,44 +22885,62 @@ function validateCmcdStructure(data, options) {
       message: "The \"cen\" key must only be present when e=\"ce\".",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
-    if (data["e"] === CMCD_EVENT_RESPONSE_RECEIVED) {
+    if (eventType === CMCD_EVENT_RESPONSE_RECEIVED) {
       if (!("url" in data)) issues.push({
         key: "url",
         message: "Response received event (e=\"rr\") requires the \"url\" key to be present.",
         severity: CMCD_VALIDATION_SEVERITY_ERROR
       });
     } else {
-      var _iterator6 = _createForOfIteratorHelper(CMCD_RESPONSE_KEYS),
-        _step6;
+      var _iterator17 = _createForOfIteratorHelper(CMCD_RESPONSE_KEYS),
+        _step17;
       try {
-        for (_iterator6.s(); !(_step6 = _iterator6.n()).done;) {
-          var _key3 = _step6.value;
-          if (_key3 in data) issues.push({
-            key: _key3,
-            message: "Response key \"".concat(_key3, "\" must only be present when e=\"rr\"."),
+        for (_iterator17.s(); !(_step17 = _iterator17.n()).done;) {
+          var _key4 = _step17.value;
+          if (_key4 in data) issues.push({
+            key: _key4,
+            message: "Response key \"".concat(_key4, "\" must only be present when e=\"rr\"."),
             severity: CMCD_VALIDATION_SEVERITY_ERROR
           });
         }
       } catch (err) {
-        _iterator6.e(err);
+        _iterator17.e(err);
       } finally {
-        _iterator6.f();
+        _iterator17.f();
       }
     }
-    if (data["e"] === CMCD_EVENT_PLAY_STATE && !("sta" in data)) issues.push({
+    if (eventType === CMCD_EVENT_PLAY_STATE && !("sta" in data)) issues.push({
       key: "sta",
-      message: "Play state event (e=\"ps\") requires the \"sta\" key to be present.",
+      message: "Play state change event (e=\"ps\") requires the \"sta\" key to be present.",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
-    if (data["e"] === CMCD_EVENT_ERROR && !("ec" in data)) issues.push({
+    if (eventType === CMCD_EVENT_ERROR && !("ec" in data)) issues.push({
       key: "ec",
       message: "Error event (e=\"e\") requires the \"ec\" key to be present.",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
   }
-  if ("v" in data && data["v"] !== 1 && data["v"] !== 2) issues.push({
+  var ot = version > 1 ? toTokenString(data["ot"]) : void 0;
+  if (ot !== void 0) for (var _key5 in CMCD_KEY_OBJECT_TYPES) {
+    var objectTypes = CMCD_KEY_OBJECT_TYPES[_key5];
+    if (_key5 in data && !objectTypes.includes(ot)) issues.push({
+      key: _key5,
+      message: "Key \"".concat(_key5, "\" must not be present when \"ot\" is \"").concat(ot, "\". Expected \"ot\" to be one of: ").concat(objectTypes.join(", "), "."),
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  if (version > 1) for (var _key6 in CMCD_AGGREGATE_BITRATE_KEYS) {
+    var exactKey = CMCD_AGGREGATE_BITRATE_KEYS[_key6];
+    if (_key6 in data && exactKey in data) issues.push({
+      key: _key6,
+      message: "Key \"".concat(_key6, "\" must not be present when \"").concat(exactKey, "\" is present."),
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  var v = toBareValue(data["v"]);
+  if ("v" in data && v !== 1 && v !== 2) issues.push({
     key: "v",
-    message: "Unsupported CMCD version \"".concat(String(data["v"]), "\". Expected 1 or 2."),
+    message: "Unsupported CMCD version \"".concat(String(v), "\". Expected 1 or 2."),
     severity: CMCD_VALIDATION_SEVERITY_ERROR
   });else if (version > 1 && !("v" in data)) issues.push({
     key: "v",
@@ -20902,7 +22962,7 @@ function validateCmcdStructure(data, options) {
 //#endregion
 //#region src/CMCD_KEY_TYPES.ts
 /**
-* CMCD key value type: inner list of numbers with token identifiers.
+* CMCD key value type: inner list of integers with token identifiers.
 *
 * @internal
 */
@@ -20944,8 +23004,8 @@ var CMCD_KEY_TYPE_STRING = "string";
 */
 var CMCD_KEY_TYPE_TOKEN = "token";
 /**
-* Maps each CMCD spec key to its expected value type for v2.
-* Keys that differ between v1 and v2 are handled by CMCD_V1_KEY_TYPE_OVERRIDES.
+* Maps each CMCD key to its value type for version 2.
+* CMCD_V1_KEY_TYPE_OVERRIDES handles the keys that differ between version 1 and version 2.
 *
 * @internal
 */
@@ -21003,15 +23063,15 @@ var CMCD_KEY_TYPES = {
   sta: CMCD_KEY_TYPE_TOKEN
 };
 /**
-* Maps keys to their v1-specific types when they differ from v2.
+* Version 1 types of the keys that differ from version 2.
 *
 * @internal
 */
 var CMCD_V1_KEY_TYPE_OVERRIDES = {
   bl: CMCD_KEY_TYPE_INTEGER,
-  br: CMCD_KEY_TYPE_NUMBER,
+  br: CMCD_KEY_TYPE_INTEGER,
   mtp: CMCD_KEY_TYPE_INTEGER,
-  tb: CMCD_KEY_TYPE_NUMBER,
+  tb: CMCD_KEY_TYPE_INTEGER,
   nor: CMCD_KEY_TYPE_STRING
 };
 
@@ -21044,7 +23104,7 @@ var CMCD_CUSTOM_KEY_VALUE_MAX_LENGTH = 64;
 * @internal
 */
 var CMCD_TOKEN_VALUES = {
-  e: ["bc", "ps", "e", "t", "c", "b", "m", "um", "pe", "pc", "rr", "as", "ae", "abs", "abe", "sk", "ce"],
+  e: ["bc", "ps", "pr", "e", "t", "c", "b", "m", "um", "pe", "pc", "rr", "as", "ae", "abs", "abe", "sk", "ce"],
   ot: ["m", "a", "v", "av", "i", "c", "tt", "k", "o"],
   sf: ["d", "h", "s", "o"],
   st: ["v", "l", "ll"],
@@ -21053,12 +23113,31 @@ var CMCD_TOKEN_VALUES = {
 
 //#endregion
 //#region src/validateCmcdValues.ts
-var HUNDRED_ROUNDING_KEYS = new Set(["bl", "dl", "mtp", "rtp", "tbl"]);
-var INTEGER_ROUNDING_KEYS = new Set(["br", "d", "tb"]);
+var HUNDRED_ROUNDING_UNITS = {
+  bl: "ms",
+  dl: "ms",
+  mtp: "kbps",
+  rtp: "kbps",
+  tbl: "ms"
+};
 function isFiniteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
-function validateListValue(key, value, issues) {
+function isInteger(value) {
+  return Number.isInteger(value);
+}
+function validateRounding(key, value, version, issues, index) {
+  var unit = HUNDRED_ROUNDING_UNITS[key];
+  if (!unit || value % 100 === 0) return;
+  var should = key === "tbl" || key === "bl" && version !== CMCD_V1;
+  var target = index === void 0 ? "Key \"".concat(key, "\"") : "Key \"".concat(key, "\" array element [").concat(index, "]");
+  issues.push({
+    key: key,
+    message: "".concat(target, " ").concat(should ? "should" : "must", " be rounded to the nearest 100 ").concat(unit, ". Received ").concat(value, "."),
+    severity: should ? CMCD_VALIDATION_SEVERITY_WARNING : CMCD_VALIDATION_SEVERITY_ERROR
+  });
+}
+function validateListValue(key, value, version, issues) {
   if (!Array.isArray(value)) {
     issues.push({
       key: key,
@@ -21068,18 +23147,12 @@ function validateListValue(key, value, issues) {
     return;
   }
   for (var i = 0; i < value.length; i++) {
-    var element = value[i];
-    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem) {
-      if (!isFiniteNumber(element.value)) issues.push({
-        key: key,
-        message: "Key \"".concat(key, "\" array element [").concat(i, "] must be a finite number."),
-        severity: CMCD_VALIDATION_SEVERITY_ERROR
-      });
-    } else if (!isFiniteNumber(element)) issues.push({
+    var element = toBareValue(value[i]);
+    if (!isInteger(element)) issues.push({
       key: key,
-      message: "Key \"".concat(key, "\" array element [").concat(i, "] must be a finite number."),
+      message: "Key \"".concat(key, "\" array element [").concat(i, "] must be a finite integer."),
       severity: CMCD_VALIDATION_SEVERITY_ERROR
-    });
+    });else validateRounding(key, element, version, issues, i);
   }
 }
 function validateStringArrayValue(key, value, issues) {
@@ -21091,20 +23164,11 @@ function validateStringArrayValue(key, value, issues) {
     });
     return;
   }
-  for (var i = 0; i < value.length; i++) {
-    var element = value[i];
-    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_70__.SfItem) {
-      if (typeof element.value !== "string") issues.push({
-        key: key,
-        message: "Key \"".concat(key, "\" array element [").concat(i, "] must be a string."),
-        severity: CMCD_VALIDATION_SEVERITY_ERROR
-      });
-    } else if (typeof element !== "string") issues.push({
-      key: key,
-      message: "Key \"".concat(key, "\" array element [").concat(i, "] must be a string."),
-      severity: CMCD_VALIDATION_SEVERITY_ERROR
-    });
-  }
+  for (var i = 0; i < value.length; i++) if (typeof toBareValue(value[i]) !== "string") issues.push({
+    key: key,
+    message: "Key \"".concat(key, "\" array element [").concat(i, "] must be a string."),
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });
 }
 /**
 * Validates that all values in a CMCD payload conform to the expected types and constraints.
@@ -21123,10 +23187,11 @@ function validateStringArrayValue(key, value, issues) {
 function validateCmcdValues(data, options) {
   var version = resolveVersion(data, options);
   var issues = [];
-  for (var _i7 = 0, _Object$entries5 = Object.entries(data); _i7 < _Object$entries5.length; _i7++) {
-    var _Object$entries5$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_6__["default"])(_Object$entries5[_i7], 2),
+  for (var _i9 = 0, _Object$entries5 = Object.entries(data); _i9 < _Object$entries5.length; _i9++) {
+    var _Object$entries5$_i = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_7__["default"])(_Object$entries5[_i9], 2),
       key = _Object$entries5$_i[0],
-      value = _Object$entries5$_i[1];
+      entry = _Object$entries5$_i[1];
+    var value = toBareValue(entry);
     if (isCmcdCustomKey(key)) {
       if (typeof value !== "string") issues.push({
         key: key,
@@ -21152,29 +23217,17 @@ function validateCmcdValues(data, options) {
     if (version === CMCD_V1 && key in CMCD_V1_KEY_TYPE_OVERRIDES) expectedType = CMCD_V1_KEY_TYPE_OVERRIDES[key];
     switch (expectedType) {
       case CMCD_KEY_TYPE_INTEGER:
-        if (!isFiniteNumber(value) || !Number.isInteger(value)) issues.push({
+        if (!isInteger(value)) issues.push({
           key: key,
           message: "Key \"".concat(key, "\" must be a finite integer."),
           severity: CMCD_VALIDATION_SEVERITY_ERROR
-        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
-          key: key,
-          message: "Key \"".concat(key, "\" should be rounded to the nearest 100."),
-          severity: CMCD_VALIDATION_SEVERITY_WARNING
-        });
+        });else validateRounding(key, value, version, issues);
         break;
       case CMCD_KEY_TYPE_NUMBER:
         if (!isFiniteNumber(value)) issues.push({
           key: key,
           message: "Key \"".concat(key, "\" must be a finite number."),
           severity: CMCD_VALIDATION_SEVERITY_ERROR
-        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
-          key: key,
-          message: "Key \"".concat(key, "\" should be rounded to the nearest 100."),
-          severity: CMCD_VALIDATION_SEVERITY_WARNING
-        });else if (INTEGER_ROUNDING_KEYS.has(key) && !Number.isInteger(value)) issues.push({
-          key: key,
-          message: "Key \"".concat(key, "\" should be rounded to an integer."),
-          severity: CMCD_VALIDATION_SEVERITY_WARNING
         });
         break;
       case CMCD_KEY_TYPE_BOOLEAN:
@@ -21198,15 +23251,16 @@ function validateCmcdValues(data, options) {
       case CMCD_KEY_TYPE_TOKEN:
         {
           var validValues = CMCD_TOKEN_VALUES[key];
-          if (validValues && !validValues.includes(value)) issues.push({
+          var token = toTokenString(value);
+          if (validValues && (token === void 0 || !validValues.includes(token))) issues.push({
             key: key,
-            message: "Key \"".concat(key, "\" has invalid token value \"").concat(String(value), "\". Expected one of: ").concat(validValues.join(", "), "."),
+            message: "Key \"".concat(key, "\" has invalid token value \"").concat(token !== null && token !== void 0 ? token : String(value), "\". Expected one of: ").concat(validValues.join(", "), "."),
             severity: CMCD_VALIDATION_SEVERITY_ERROR
           });
           break;
         }
       case CMCD_KEY_TYPE_NUMBER_LIST:
-        validateListValue(key, value, issues);
+        validateListValue(key, value, version, issues);
         break;
       case CMCD_KEY_TYPE_STRING_LIST:
         validateStringArrayValue(key, value, issues);
@@ -21248,8 +23302,8 @@ function validateCmcd(data, options) {
 *
 * This function decodes the string internally and validates it with
 * `reportingMode` set to `'event'`. The input may contain multiple
-* newline-separated events (e.g. an `application/cmcd` POST body), in which
-* case each line is validated independently and the results are merged.
+* newline-separated events, for example an `application/cmcd` POST body.
+* The function validates each line independently and merges the results.
 *
 * @param cmcd - The raw CMCD-encoded string to validate. May contain
 *   multiple newline-separated event lines.
@@ -21278,13 +23332,18 @@ function validateCmcdEvents(cmcd, options) {
     }],
     data: []
   };
+  var bodyIssues = [];
+  if (cmcd.endsWith("\n")) bodyIssues.push({
+    message: "Event report body must not end with a line feed.",
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });
   var decodedLines = [];
   var lineResults = [];
   for (var i = 0; i < lines.length; i++) try {
     var data = decodeCmcd(lines[i]);
     decodedLines.push(data);
     lineResults.push(validateCmcd(data, opts));
-  } catch (_unused) {
+  } catch (_unused5) {
     decodedLines.push({});
     lineResults.push({
       valid: false,
@@ -21294,7 +23353,10 @@ function validateCmcdEvents(cmcd, options) {
       }]
     });
   }
-  return _objectSpread(_objectSpread({}, mergeValidationResults.apply(void 0, lineResults)), {}, {
+  return _objectSpread(_objectSpread({}, mergeValidationResults.apply(void 0, [{
+    valid: true,
+    issues: bodyIssues
+  }].concat(lineResults))), {}, {
     data: decodedLines
   });
 }
@@ -21307,8 +23369,8 @@ function validateCmcdEvents(cmcd, options) {
 * Accepts an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
 *
 * This function validates that the request uses the POST method and has
-* the correct `Content-Type` header (`application/cmcd`) in addition to
-* validating the body content via {@link validateCmcdEvents}.
+* the correct `Content-Type` header (`application/cmcd`). It also
+* validates the body content with {@link validateCmcdEvents}.
 *
 * @param request - An `HttpRequest` to validate.
 * @param options - Validation options (excluding `reportingMode`).
@@ -21321,10 +23383,10 @@ function validateCmcdEvents(cmcd, options) {
 * @public
 */
 function validateCmcdEventReport(request, options) {
-  var _request$method;
+  var _request$method2;
   var issues = [];
   if (request.method !== "POST") issues.push({
-    message: "Invalid HTTP method '".concat((_request$method = request.method) !== null && _request$method !== void 0 ? _request$method : "GET", "'. Event reports must use POST."),
+    message: "Invalid HTTP method '".concat((_request$method2 = request.method) !== null && _request$method2 !== void 0 ? _request$method2 : "GET", "'. Event reports must use POST."),
     severity: CMCD_VALIDATION_SEVERITY_ERROR
   });
   var contentType = request.headers ? ensureHeaders(request.headers).get("Content-Type") : void 0;
@@ -21364,7 +23426,7 @@ function validateCmcdEventReport(request, options) {
   var bodyResult = validateCmcdEvents(body, options);
   return {
     valid: issues.length === 0 && bodyResult.valid,
-    issues: [].concat(issues, (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_1__["default"])(bodyResult.issues)),
+    issues: [].concat(issues, (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_2__["default"])(bodyResult.issues)),
     data: bodyResult.data
   };
 }
@@ -21374,15 +23436,15 @@ function validateCmcdEventReport(request, options) {
 /**
 * Validates CMCD HTTP headers by checking shard placement and payload validity.
 *
-* This function accepts raw CMCD header strings, decodes each shard
-* internally, verifies that each key is placed in its correct header shard,
-* then merges all shards and runs full payload validation (keys, values, and
-* structure) on the merged data.
+* This function accepts raw CMCD header strings and decodes each shard
+* internally. It verifies that each key is in its correct header shard.
+* The function then merges all shards and runs payload validation (keys,
+* values, and structure) on the merged data.
 *
 * @example
 * {@includeCode ../test/validateCmcdHeaders.test.ts#example}
 *
-* @param headers - A `Headers` instance or a record of CMCD header fields to their raw encoded string values.
+* @param headers - A `Headers` instance or a record of CMCD header fields to raw encoded strings.
 * @param options - Validation options (excluding `reportingMode`).
 * @returns The validation result including decoded data.
 *
@@ -21394,17 +23456,17 @@ function validateCmcdHeaders(headers, options) {
   var h = ensureHeaders(headers);
   var issues = [];
   var decoded = {};
-  var _iterator7 = _createForOfIteratorHelper(CMCD_HEADER_FIELDS),
-    _step7;
+  var _iterator18 = _createForOfIteratorHelper(CMCD_HEADER_FIELDS),
+    _step18;
   try {
-    for (_iterator7.s(); !(_step7 = _iterator7.n()).done;) {
-      var headerField = _step7.value;
+    for (_iterator18.s(); !(_step18 = _iterator18.n()).done;) {
+      var headerField = _step18.value;
       var raw = h.get(headerField);
       if (!raw) continue;
       var shard = void 0;
       try {
         shard = decodeCmcd(raw);
-      } catch (_unused2) {
+      } catch (_unused6) {
         issues.push({
           key: headerField,
           message: "Failed to decode \"".concat(headerField, "\" header: invalid structured field syntax."),
@@ -21413,8 +23475,8 @@ function validateCmcdHeaders(headers, options) {
         continue;
       }
       decoded[headerField] = shard;
-      for (var _i8 = 0, _Object$keys2 = Object.keys(shard); _i8 < _Object$keys2.length; _i8++) {
-        var key = _Object$keys2[_i8];
+      for (var _i0 = 0, _Object$keys2 = Object.keys(shard); _i0 < _Object$keys2.length; _i0++) {
+        var key = _Object$keys2[_i0];
         if (isCmcdCustomKey(key)) continue;
         var expectedHeader = CMCD_HEADER_MAP[key];
         if (expectedHeader && expectedHeader !== headerField) issues.push({
@@ -21425,15 +23487,15 @@ function validateCmcdHeaders(headers, options) {
       }
     }
   } catch (err) {
-    _iterator7.e(err);
+    _iterator18.e(err);
   } finally {
-    _iterator7.f();
+    _iterator18.f();
   }
   var shardResult = {
     valid: issues.length === 0,
     issues: issues
   };
-  var merged = Object.assign.apply(Object, [{}].concat((0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_1__["default"])(CMCD_HEADER_FIELDS.map(function (f) {
+  var merged = Object.assign.apply(Object, [{}].concat((0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_2__["default"])(CMCD_HEADER_FIELDS.map(function (f) {
     return decoded[f];
   }).filter(Boolean))));
   return _objectSpread(_objectSpread({}, mergeValidationResults(shardResult, validateCmcd(merged, _objectSpread(_objectSpread({}, options), {}, {
@@ -21452,10 +23514,12 @@ function validateCmcdHeaders(headers, options) {
 * {@link https://developer.mozilla.org/en-US/docs/Web/API/Request | Request}
 * object or an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
 *
-* The function checks for CMCD data in the HTTP headers first. If CMCD
-* headers are found, validation includes shard-placement checks via
-* {@link validateCmcdHeaders}. Otherwise, the CMCD query parameter is
-* extracted from the URL and validated.
+* The function checks the HTTP headers for CMCD data first. If the
+* request has CMCD headers, {@link validateCmcdHeaders} validates them,
+* including shard placement. Otherwise, the function validates the CMCD
+* query parameter of the URL. A request with CMCD data in both the
+* headers and the `CMCD` query parameter is an error. The function still
+* validates the headers and returns their data.
 *
 * @param request - A `Request` or `HttpRequest` to validate.
 * @param options - Validation options (excluding `reportingMode`).
@@ -21470,12 +23534,24 @@ function validateCmcdHeaders(headers, options) {
 */
 function validateCmcdRequest(request, options) {
   var headers = extractHeaderRecord(request.headers);
-  if (headers) return validateCmcdHeaders(headers, options);
-  var param = new URL(request.url).searchParams.get(CMCD_PARAM);
+  var param = getCmcdQueryParam(request.url);
+  if (headers) {
+    var result = validateCmcdHeaders(headers, options);
+    if (!param) return result;
+    return _objectSpread(_objectSpread({}, mergeValidationResults({
+      valid: false,
+      issues: [{
+        message: "CMCD data found in both request headers and the \"CMCD\" query parameter. A request must use only one transmission mode.",
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      }]
+    }, result)), {}, {
+      data: result.data
+    });
+  }
   if (!param) return {
     valid: false,
     issues: [{
-      message: "No CMCD data found in request headers or query parameters.",
+      message: hasCmcdInFragment(request.url) ? "No CMCD data found in request headers or query parameters. The URL fragment contains a \"CMCD\" parameter. A server never receives the fragment." : "No CMCD data found in request headers or query parameters.",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     }],
     data: {}
@@ -21483,7 +23559,7 @@ function validateCmcdRequest(request, options) {
   var data;
   try {
     data = decodeCmcd(param);
-  } catch (_unused3) {
+  } catch (_unused7) {
     return {
       valid: false,
       issues: [{
@@ -21499,16 +23575,28 @@ function validateCmcdRequest(request, options) {
     data: data
   });
 }
+var CMCD_IN_FRAGMENT = /(?:^|[?&])CMCD=/;
+function getCmcdQueryParam(url) {
+  var hash = url.indexOf("#");
+  var path = hash < 0 ? url : url.slice(0, hash);
+  var start = path.indexOf("?");
+  if (start < 0) return null;
+  return new URLSearchParams(path.slice(start + 1)).get(CMCD_PARAM);
+}
+function hasCmcdInFragment(url) {
+  var hash = url.indexOf("#");
+  return hash >= 0 && CMCD_IN_FRAGMENT.test(url.slice(hash + 1));
+}
 function extractHeaderRecord(headers) {
   if (!headers) return;
   var h = ensureHeaders(headers);
   var result = {};
   var found = false;
-  var _iterator8 = _createForOfIteratorHelper(CMCD_HEADER_FIELDS),
-    _step8;
+  var _iterator19 = _createForOfIteratorHelper(CMCD_HEADER_FIELDS),
+    _step19;
   try {
-    for (_iterator8.s(); !(_step8 = _iterator8.n()).done;) {
-      var field = _step8.value;
+    for (_iterator19.s(); !(_step19 = _iterator19.n()).done;) {
+      var field = _step19.value;
       var value = h.get(field);
       if (value) {
         result[field] = value;
@@ -21516,9 +23604,9 @@ function extractHeaderRecord(headers) {
       }
     }
   } catch (err) {
-    _iterator8.e(err);
+    _iterator19.e(err);
   } finally {
-    _iterator8.f();
+    _iterator19.f();
   }
   return found ? result : void 0;
 }
@@ -21577,82 +23665,82 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   serializeToken: function() { return /* binding */ serializeToken; },
 /* harmony export */   symbolToStr: function() { return /* binding */ symbolToStr; }
 /* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
-/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
-/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.symbol.js */ "./node_modules/core-js/modules/es.symbol.js");
-/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.symbol.description.js */ "./node_modules/core-js/modules/es.symbol.description.js");
-/* harmony import */ var core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.error.cause.js */ "./node_modules/core-js/modules/es.error.cause.js");
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
-/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array.from.js */ "./node_modules/core-js/modules/es.array.from.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
-/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.array-buffer.constructor.js */ "./node_modules/core-js/modules/es.array-buffer.constructor.js");
-/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.array-buffer.detached.js */ "./node_modules/core-js/modules/es.array-buffer.detached.js");
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer.js */ "./node_modules/core-js/modules/es.array-buffer.transfer.js");
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer-to-fixed-length.js */ "./node_modules/core-js/modules/es.array-buffer.transfer-to-fixed-length.js");
-/* harmony import */ var core_js_modules_es_iterator_constructor_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.iterator.constructor.js */ "./node_modules/core-js/modules/es.iterator.constructor.js");
-/* harmony import */ var core_js_modules_es_iterator_map_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.iterator.map.js */ "./node_modules/core-js/modules/es.iterator.map.js");
-/* harmony import */ var core_js_modules_es_json_stringify_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.json.stringify.js */ "./node_modules/core-js/modules/es.json.stringify.js");
-/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.map.js */ "./node_modules/core-js/modules/es.map.js");
-/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
-/* harmony import */ var core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.number.is-integer.js */ "./node_modules/core-js/modules/es.number.is-integer.js");
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
-/* harmony import */ var core_js_modules_es_set_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.set.js */ "./node_modules/core-js/modules/es.set.js");
-/* harmony import */ var core_js_modules_es_set_difference_v2_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.set.difference.v2.js */ "./node_modules/core-js/modules/es.set.difference.v2.js");
-/* harmony import */ var core_js_modules_es_set_intersection_v2_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.set.intersection.v2.js */ "./node_modules/core-js/modules/es.set.intersection.v2.js");
-/* harmony import */ var core_js_modules_es_set_is_disjoint_from_v2_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.set.is-disjoint-from.v2.js */ "./node_modules/core-js/modules/es.set.is-disjoint-from.v2.js");
-/* harmony import */ var core_js_modules_es_set_is_subset_of_v2_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.set.is-subset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-subset-of.v2.js");
-/* harmony import */ var core_js_modules_es_set_is_superset_of_v2_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.set.is-superset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-superset-of.v2.js");
-/* harmony import */ var core_js_modules_es_set_symmetric_difference_v2_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.set.symmetric-difference.v2.js */ "./node_modules/core-js/modules/es.set.symmetric-difference.v2.js");
-/* harmony import */ var core_js_modules_es_set_union_v2_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.set.union.v2.js */ "./node_modules/core-js/modules/es.set.union.v2.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
-/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
-/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint8-array.js */ "./node_modules/core-js/modules/es.typed-array.uint8-array.js");
-/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! core-js/modules/es.typed-array.at.js */ "./node_modules/core-js/modules/es.typed-array.at.js");
-/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! core-js/modules/es.typed-array.copy-within.js */ "./node_modules/core-js/modules/es.typed-array.copy-within.js");
-/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! core-js/modules/es.typed-array.every.js */ "./node_modules/core-js/modules/es.typed-array.every.js");
-/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! core-js/modules/es.typed-array.fill.js */ "./node_modules/core-js/modules/es.typed-array.fill.js");
-/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! core-js/modules/es.typed-array.filter.js */ "./node_modules/core-js/modules/es.typed-array.filter.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! core-js/modules/es.typed-array.find.js */ "./node_modules/core-js/modules/es.typed-array.find.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-index.js */ "./node_modules/core-js/modules/es.typed-array.find-index.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last.js */ "./node_modules/core-js/modules/es.typed-array.find-last.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last-index.js */ "./node_modules/core-js/modules/es.typed-array.find-last-index.js");
-/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! core-js/modules/es.typed-array.for-each.js */ "./node_modules/core-js/modules/es.typed-array.for-each.js");
-/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! core-js/modules/es.typed-array.includes.js */ "./node_modules/core-js/modules/es.typed-array.includes.js");
-/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! core-js/modules/es.typed-array.index-of.js */ "./node_modules/core-js/modules/es.typed-array.index-of.js");
-/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! core-js/modules/es.typed-array.iterator.js */ "./node_modules/core-js/modules/es.typed-array.iterator.js");
-/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! core-js/modules/es.typed-array.join.js */ "./node_modules/core-js/modules/es.typed-array.join.js");
-/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! core-js/modules/es.typed-array.last-index-of.js */ "./node_modules/core-js/modules/es.typed-array.last-index-of.js");
-/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! core-js/modules/es.typed-array.map.js */ "./node_modules/core-js/modules/es.typed-array.map.js");
-/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce.js */ "./node_modules/core-js/modules/es.typed-array.reduce.js");
-/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce-right.js */ "./node_modules/core-js/modules/es.typed-array.reduce-right.js");
-/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_61__ = __webpack_require__(/*! core-js/modules/es.typed-array.reverse.js */ "./node_modules/core-js/modules/es.typed-array.reverse.js");
-/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_62__ = __webpack_require__(/*! core-js/modules/es.typed-array.set.js */ "./node_modules/core-js/modules/es.typed-array.set.js");
-/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_63__ = __webpack_require__(/*! core-js/modules/es.typed-array.slice.js */ "./node_modules/core-js/modules/es.typed-array.slice.js");
-/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_64__ = __webpack_require__(/*! core-js/modules/es.typed-array.some.js */ "./node_modules/core-js/modules/es.typed-array.some.js");
-/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_65__ = __webpack_require__(/*! core-js/modules/es.typed-array.sort.js */ "./node_modules/core-js/modules/es.typed-array.sort.js");
-/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_66__ = __webpack_require__(/*! core-js/modules/es.typed-array.subarray.js */ "./node_modules/core-js/modules/es.typed-array.subarray.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_67__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-locale-string.js */ "./node_modules/core-js/modules/es.typed-array.to-locale-string.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_68__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-reversed.js */ "./node_modules/core-js/modules/es.typed-array.to-reversed.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_69__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-sorted.js */ "./node_modules/core-js/modules/es.typed-array.to-sorted.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_70__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-string.js */ "./node_modules/core-js/modules/es.typed-array.to-string.js");
-/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_71__ = __webpack_require__(/*! core-js/modules/es.typed-array.with.js */ "./node_modules/core-js/modules/es.typed-array.with.js");
-/* harmony import */ var core_js_modules_esnext_uint8_array_set_from_base64_js__WEBPACK_IMPORTED_MODULE_72__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.set-from-base64.js */ "./node_modules/core-js/modules/esnext.uint8-array.set-from-base64.js");
-/* harmony import */ var core_js_modules_esnext_uint8_array_set_from_hex_js__WEBPACK_IMPORTED_MODULE_73__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.set-from-hex.js */ "./node_modules/core-js/modules/esnext.uint8-array.set-from-hex.js");
-/* harmony import */ var core_js_modules_esnext_uint8_array_to_base64_js__WEBPACK_IMPORTED_MODULE_74__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.to-base64.js */ "./node_modules/core-js/modules/esnext.uint8-array.to-base64.js");
-/* harmony import */ var core_js_modules_esnext_uint8_array_to_hex_js__WEBPACK_IMPORTED_MODULE_75__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.to-hex.js */ "./node_modules/core-js/modules/esnext.uint8-array.to-hex.js");
+/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
+/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
+/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
+/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.symbol.js */ "./node_modules/core-js/modules/es.symbol.js");
+/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.symbol.description.js */ "./node_modules/core-js/modules/es.symbol.description.js");
+/* harmony import */ var core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.error.cause.js */ "./node_modules/core-js/modules/es.error.cause.js");
+/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
+/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
+/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
+/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
+/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
+/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
+/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.array-buffer.constructor.js */ "./node_modules/core-js/modules/es.array-buffer.constructor.js");
+/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.array-buffer.detached.js */ "./node_modules/core-js/modules/es.array-buffer.detached.js");
+/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer.js */ "./node_modules/core-js/modules/es.array-buffer.transfer.js");
+/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer-to-fixed-length.js */ "./node_modules/core-js/modules/es.array-buffer.transfer-to-fixed-length.js");
+/* harmony import */ var core_js_modules_es_iterator_constructor_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.iterator.constructor.js */ "./node_modules/core-js/modules/es.iterator.constructor.js");
+/* harmony import */ var core_js_modules_es_iterator_for_each_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.iterator.for-each.js */ "./node_modules/core-js/modules/es.iterator.for-each.js");
+/* harmony import */ var core_js_modules_es_iterator_map_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.iterator.map.js */ "./node_modules/core-js/modules/es.iterator.map.js");
+/* harmony import */ var core_js_modules_es_json_stringify_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.json.stringify.js */ "./node_modules/core-js/modules/es.json.stringify.js");
+/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.map.js */ "./node_modules/core-js/modules/es.map.js");
+/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
+/* harmony import */ var core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.number.is-integer.js */ "./node_modules/core-js/modules/es.number.is-integer.js");
+/* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.object.keys.js */ "./node_modules/core-js/modules/es.object.keys.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
+/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
+/* harmony import */ var core_js_modules_es_set_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.set.js */ "./node_modules/core-js/modules/es.set.js");
+/* harmony import */ var core_js_modules_es_set_difference_v2_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.set.difference.v2.js */ "./node_modules/core-js/modules/es.set.difference.v2.js");
+/* harmony import */ var core_js_modules_es_set_intersection_v2_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.set.intersection.v2.js */ "./node_modules/core-js/modules/es.set.intersection.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_disjoint_from_v2_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.set.is-disjoint-from.v2.js */ "./node_modules/core-js/modules/es.set.is-disjoint-from.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_subset_of_v2_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.set.is-subset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-subset-of.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_superset_of_v2_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.set.is-superset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-superset-of.v2.js");
+/* harmony import */ var core_js_modules_es_set_symmetric_difference_v2_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.set.symmetric-difference.v2.js */ "./node_modules/core-js/modules/es.set.symmetric-difference.v2.js");
+/* harmony import */ var core_js_modules_es_set_union_v2_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.set.union.v2.js */ "./node_modules/core-js/modules/es.set.union.v2.js");
+/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
+/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
+/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
+/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint8-array.js */ "./node_modules/core-js/modules/es.typed-array.uint8-array.js");
+/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! core-js/modules/es.typed-array.at.js */ "./node_modules/core-js/modules/es.typed-array.at.js");
+/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! core-js/modules/es.typed-array.copy-within.js */ "./node_modules/core-js/modules/es.typed-array.copy-within.js");
+/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! core-js/modules/es.typed-array.every.js */ "./node_modules/core-js/modules/es.typed-array.every.js");
+/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! core-js/modules/es.typed-array.fill.js */ "./node_modules/core-js/modules/es.typed-array.fill.js");
+/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! core-js/modules/es.typed-array.filter.js */ "./node_modules/core-js/modules/es.typed-array.filter.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! core-js/modules/es.typed-array.find.js */ "./node_modules/core-js/modules/es.typed-array.find.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-index.js */ "./node_modules/core-js/modules/es.typed-array.find-index.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last.js */ "./node_modules/core-js/modules/es.typed-array.find-last.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last-index.js */ "./node_modules/core-js/modules/es.typed-array.find-last-index.js");
+/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! core-js/modules/es.typed-array.for-each.js */ "./node_modules/core-js/modules/es.typed-array.for-each.js");
+/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! core-js/modules/es.typed-array.includes.js */ "./node_modules/core-js/modules/es.typed-array.includes.js");
+/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! core-js/modules/es.typed-array.index-of.js */ "./node_modules/core-js/modules/es.typed-array.index-of.js");
+/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! core-js/modules/es.typed-array.iterator.js */ "./node_modules/core-js/modules/es.typed-array.iterator.js");
+/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! core-js/modules/es.typed-array.join.js */ "./node_modules/core-js/modules/es.typed-array.join.js");
+/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! core-js/modules/es.typed-array.last-index-of.js */ "./node_modules/core-js/modules/es.typed-array.last-index-of.js");
+/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! core-js/modules/es.typed-array.map.js */ "./node_modules/core-js/modules/es.typed-array.map.js");
+/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce.js */ "./node_modules/core-js/modules/es.typed-array.reduce.js");
+/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce-right.js */ "./node_modules/core-js/modules/es.typed-array.reduce-right.js");
+/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! core-js/modules/es.typed-array.reverse.js */ "./node_modules/core-js/modules/es.typed-array.reverse.js");
+/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_61__ = __webpack_require__(/*! core-js/modules/es.typed-array.set.js */ "./node_modules/core-js/modules/es.typed-array.set.js");
+/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_62__ = __webpack_require__(/*! core-js/modules/es.typed-array.slice.js */ "./node_modules/core-js/modules/es.typed-array.slice.js");
+/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_63__ = __webpack_require__(/*! core-js/modules/es.typed-array.some.js */ "./node_modules/core-js/modules/es.typed-array.some.js");
+/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_64__ = __webpack_require__(/*! core-js/modules/es.typed-array.sort.js */ "./node_modules/core-js/modules/es.typed-array.sort.js");
+/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_65__ = __webpack_require__(/*! core-js/modules/es.typed-array.subarray.js */ "./node_modules/core-js/modules/es.typed-array.subarray.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_66__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-locale-string.js */ "./node_modules/core-js/modules/es.typed-array.to-locale-string.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_67__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-reversed.js */ "./node_modules/core-js/modules/es.typed-array.to-reversed.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_68__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-sorted.js */ "./node_modules/core-js/modules/es.typed-array.to-sorted.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_69__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-string.js */ "./node_modules/core-js/modules/es.typed-array.to-string.js");
+/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_70__ = __webpack_require__(/*! core-js/modules/es.typed-array.with.js */ "./node_modules/core-js/modules/es.typed-array.with.js");
+/* harmony import */ var core_js_modules_esnext_uint8_array_set_from_base64_js__WEBPACK_IMPORTED_MODULE_71__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.set-from-base64.js */ "./node_modules/core-js/modules/esnext.uint8-array.set-from-base64.js");
+/* harmony import */ var core_js_modules_esnext_uint8_array_set_from_hex_js__WEBPACK_IMPORTED_MODULE_72__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.set-from-hex.js */ "./node_modules/core-js/modules/esnext.uint8-array.set-from-hex.js");
+/* harmony import */ var core_js_modules_esnext_uint8_array_to_base64_js__WEBPACK_IMPORTED_MODULE_73__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.to-base64.js */ "./node_modules/core-js/modules/esnext.uint8-array.to-base64.js");
+/* harmony import */ var core_js_modules_esnext_uint8_array_to_hex_js__WEBPACK_IMPORTED_MODULE_74__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.to-hex.js */ "./node_modules/core-js/modules/esnext.uint8-array.to-hex.js");
+/* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_75__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each.js */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
 /* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_76__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
 /* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_77__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
 
@@ -21740,7 +23828,7 @@ __webpack_require__.r(__webpack_exports__);
 *
 * @public
 */
-var SfItem = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2__["default"])(
+var SfItem = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(
 /**
 * Creates a new structured field item.
 *
@@ -21748,7 +23836,7 @@ var SfItem = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTE
 * @param params - The parameters of the item.
 */
 function SfItem(value, params) {
-  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_3__["default"])(this, SfItem);
+  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_2__["default"])(this, SfItem);
   if (Array.isArray(value)) value = value.map(function (v) {
     return v instanceof SfItem ? v : new SfItem(v);
   });
@@ -21778,7 +23866,7 @@ function format(value) {
   if (Array.isArray(value)) return JSON.stringify(value);
   if (value instanceof Map) return "Map{}";
   if (value instanceof Set) return "Set{}";
-  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(value) === "object") return JSON.stringify(value);
+  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__["default"])(value) === "object") return JSON.stringify(value);
   return String(value);
 }
 function throwError(action, src, type, cause) {
@@ -21854,10 +23942,6 @@ var DECIMAL = "Decimal";
 var INTEGER = "Integer";
 
 //#endregion
-//#region src/utils/INTEGER_DECIMAL.ts
-var INTEGER_DECIMAL = "".concat(INTEGER, " or ").concat(DECIMAL);
-
-//#endregion
 //#region src/utils/isInvalidInt.ts
 function isInvalidInt(value) {
   return value < -999999999999999 || 999999999999999 < value;
@@ -21865,6 +23949,9 @@ function isInvalidInt(value) {
 
 //#endregion
 //#region src/parse/parseIntegerOrDecimal.ts
+function integerOrDecimalError(src) {
+  return parseError(src, "".concat(INTEGER, " or ").concat(DECIMAL));
+}
 /**
 * @internal
 */
@@ -21873,31 +23960,29 @@ function parseIntegerOrDecimal(src) {
   var sign = 1;
   var num = "";
   var value;
-  var i = 0;
-  var error = parseError(orig, INTEGER_DECIMAL);
-  if (src[i] === "-") {
+  if (src[0] === "-") {
     sign = -1;
     src = src.substring(1);
   }
-  if (src.length <= 0) throw error;
+  if (src.length <= 0) throw integerOrDecimalError(orig);
   var re_integer = /^(\d+)?/g;
   var result_integer = re_integer.exec(src);
-  if (result_integer[0].length === 0) throw error;
+  if (result_integer[0].length === 0) throw integerOrDecimalError(orig);
   num += result_integer[1];
   src = src.substring(re_integer.lastIndex);
   if (src[0] === ".") {
-    if (num.length > 12) throw error;
+    if (num.length > 12) throw integerOrDecimalError(orig);
     var re_decimal = /^(\.\d+)?/g;
     var result_decimal = re_decimal.exec(src);
     src = src.substring(re_decimal.lastIndex);
-    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw error;
+    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw integerOrDecimalError(orig);
     num += result_decimal[1];
-    if (num.length > 16) throw error;
+    if (num.length > 16) throw integerOrDecimalError(orig);
     value = parseFloat(num) * sign;
   } else {
-    if (num.length > 15) throw error;
+    if (num.length > 15) throw integerOrDecimalError(orig);
     value = parseInt(num) * sign;
-    if (isInvalidInt(value)) throw parseError(num, INTEGER_DECIMAL);
+    if (isInvalidInt(value)) throw integerOrDecimalError(num);
   }
   return parsedValue(value, src);
 }
@@ -21953,8 +24038,8 @@ function parseString(src) {
 *
 * @public
 */
-var SfToken = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2__["default"])(function SfToken(description) {
-  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_3__["default"])(this, SfToken);
+var SfToken = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(function SfToken(description) {
+  ;(0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_2__["default"])(this, SfToken);
   this.description = description;
 });
 
@@ -22264,19 +24349,23 @@ function serializeDate(value) {
 */
 function serializeDecimal(value) {
   var roundedValue = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_77__.roundToEven)(value, 3);
-  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) throw serializeError(value, DECIMAL);
+  if (Math.abs(roundedValue) >= 0xe8d4a51000) throw serializeError(value, DECIMAL);
   var stringValue = roundedValue.toString();
   return stringValue.includes(".") ? stringValue : "".concat(stringValue, ".0");
 }
 
 //#endregion
 //#region src/serialize/serializeString.ts
+var ESCAPE_OR_CONTROL_REGEX = /[\x00-\x1f\x7f"\\]/;
+var BACKSLASH_REGEX = /\\/g;
+var DQUOTE_REGEX = /"/g;
 /**
 * @internal
 */
 function serializeString(value) {
+  if (ESCAPE_OR_CONTROL_REGEX.test(value) === false) return "\"".concat(value, "\"");
   if (STRING_REGEX.test(value)) throw serializeError(value, STRING);
-  return "\"".concat(value.replace(/\\/g, "\\\\").replace(/"/g, "\\\""), "\"");
+  return "\"".concat(value.replace(BACKSLASH_REGEX, "\\\\").replace(DQUOTE_REGEX, "\\\""), "\"");
 }
 
 //#endregion
@@ -22296,12 +24385,13 @@ function symbolToStr(symbol) {
 
 //#endregion
 //#region src/serialize/serializeToken.ts
+var TOKEN_REGEX = /^[a-zA-Z*][!#$%&'*+\-.^_`|~\w:/]*$/;
 /**
 * @internal
 */
 function serializeToken(token) {
   var value = symbolToStr(token);
-  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) throw serializeError(value, TOKEN);
+  if (TOKEN_REGEX.test(value) === false) throw serializeError(value, TOKEN);
   return value;
 }
 
@@ -22311,7 +24401,7 @@ function serializeToken(token) {
 * @internal
 */
 function serializeBareItem(value) {
-  switch ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(value)) {
+  switch ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__["default"])(value)) {
     case "number":
       if (!Number.isFinite(value)) throw serializeError(value, BARE_ITEM);
       if (Number.isInteger(value)) return serializeInteger(value);
@@ -22337,7 +24427,13 @@ function serializeBareItem(value) {
 * @internal
 */
 function serializeKey(value) {
-  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) throw serializeError(value, KEY);
+  if (typeof value !== "string" || value.length === 0) throw serializeError(value, KEY);
+  var code = value.charCodeAt(0);
+  if ((code < 97 || code > 122) && code !== 42) throw serializeError(value, KEY);
+  for (var i = 1; i < value.length; i++) {
+    code = value.charCodeAt(i);
+    if ((code < 97 || code > 122) && (code < 48 || code > 57) && code !== 95 && code !== 45 && code !== 46 && code !== 42) throw serializeError(value, KEY);
+  }
   return value;
 }
 
@@ -22348,13 +24444,14 @@ function serializeKey(value) {
 */
 function serializeParams(params) {
   if (params == null) return "";
-  return Object.entries(params).map(function (_ref) {
-    var _ref2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_ref, 2),
-      key = _ref2[0],
-      value = _ref2[1];
-    if (value === true) return ";".concat(serializeKey(key));
-    return ";".concat(serializeKey(key), "=").concat(serializeBareItem(value));
-  }).join("");
+  var output = "";
+  for (var _i = 0, _Object$keys = Object.keys(params); _i < _Object$keys.length; _i++) {
+    var key = _Object$keys[_i];
+    var value = params[key];
+    output += ";".concat(serializeKey(key));
+    if (value !== true) output += "=".concat(serializeBareItem(value));
+  }
+  return output;
 }
 
 //#endregion
@@ -22368,11 +24465,39 @@ function serializeItem(value) {
 
 //#endregion
 //#region src/serialize/serializeInnerList.ts
+function serializeInnerList(value, params) {
+  var list;
+  if (Array.isArray(value)) list = value;else {
+    list = value.value;
+    params = value.params;
+  }
+  var output = "(";
+  for (var i = 0; i < list.length; i++) {
+    if (i > 0) output += " ";
+    output += serializeItem(list[i]);
+  }
+  return "".concat(output, ")").concat(serializeParams(params));
+}
+
+//#endregion
+//#region src/serialize/serializeDictMember.ts
 /**
+* Serialize one dictionary member: the key, then the parameters alone for a `true` value, otherwise `=` and the member.
+*
 * @internal
 */
-function serializeInnerList(value) {
-  return "(".concat(value.value.map(serializeItem).join(" "), ")").concat(serializeParams(value.params));
+function serializeDictMember(key, member) {
+  var output = serializeKey(key);
+  if (member instanceof SfItem) {
+    var value = member.value,
+      params = member.params;
+    if (value === true) return "".concat(output).concat(serializeParams(params));
+    if (Array.isArray(value)) return "".concat(output, "=").concat(serializeInnerList(value, params));
+    return "".concat(output, "=").concat(serializeBareItem(value)).concat(serializeParams(params));
+  }
+  if (member === true) return output;
+  if (Array.isArray(member)) return "".concat(output, "=").concat(serializeInnerList(member));
+  return "".concat(output, "=").concat(serializeBareItem(member));
 }
 
 //#endregion
@@ -22380,31 +24505,22 @@ function serializeInnerList(value) {
 /**
 * @internal
 */
-function serializeDict(dict) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
-    whitespace: true
-  };
-  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(dict) !== "object" || dict == null) throw serializeError(dict, DICT);
-  var entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
-  var optionalWhiteSpace = options !== null && options !== void 0 && options.whitespace ? " " : "";
-  return Array.from(entries).map(function (_ref3) {
-    var _ref4 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_ref3, 2),
-      key = _ref4[0],
-      item = _ref4[1];
-    if (item instanceof SfItem === false) item = new SfItem(item);
-    var output = serializeKey(key);
-    if (item.value === true) output += serializeParams(item.params);else {
-      output += "=";
-      if (Array.isArray(item.value)) output += serializeInnerList(item);else output += serializeItem(item);
-    }
-    return output;
-  }).join(",".concat(optionalWhiteSpace));
+function serializeDict(dict, options) {
+  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__["default"])(dict) !== "object" || dict == null) throw serializeError(dict, DICT);
+  var parts = [];
+  if (dict instanceof Map) dict.forEach(function (member, key) {
+    return parts.push(serializeDictMember(key, member));
+  });else for (var _i2 = 0, _Object$keys2 = Object.keys(dict); _i2 < _Object$keys2.length; _i2++) {
+    var key = _Object$keys2[_i2];
+    parts.push(serializeDictMember(key, dict[key]));
+  }
+  return parts.join((options === null || options === void 0 ? void 0 : options.whitespace) === false ? "," : ", ");
 }
 
 //#endregion
 //#region src/encodeSfDict.ts
 /**
-* Encode an object into a structured field dictionary
+* Encode a structured field dictionary to a string
 *
 * @param value - The structured field dictionary to encode
 * @param options - Encoding options
@@ -22420,8 +24536,26 @@ function encodeSfDict(value, options) {
 //#endregion
 //#region src/encodeSfItem.ts
 function encodeSfItem(value, params) {
-  if (!(value instanceof SfItem)) value = new SfItem(value, params);
-  return serializeItem(value);
+  if (value instanceof SfItem) return serializeItem(value);
+  return "".concat(serializeBareItem(value)).concat(serializeParams(params));
+}
+
+//#endregion
+//#region src/serialize/serializeMember.ts
+/**
+* Serialize a list member: an inner list when the value is an array, an item otherwise.
+*
+* @internal
+*/
+function serializeMember(member) {
+  if (member instanceof SfItem) {
+    var value = member.value,
+      params = member.params;
+    if (Array.isArray(value)) return serializeInnerList(value, params);
+    return "".concat(serializeBareItem(value)).concat(serializeParams(params));
+  }
+  if (Array.isArray(member)) return serializeInnerList(member);
+  return serializeBareItem(member);
 }
 
 //#endregion
@@ -22429,24 +24563,21 @@ function encodeSfItem(value, params) {
 /**
 * @internal
 */
-function serializeList(list) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
-    whitespace: true
-  };
+function serializeList(list, options) {
   if (Array.isArray(list) === false) throw serializeError(list, LIST);
-  var optionalWhiteSpace = options !== null && options !== void 0 && options.whitespace ? " " : "";
-  return list.map(function (item) {
-    if (item instanceof SfItem === false) item = new SfItem(item);
-    var i = item;
-    if (Array.isArray(i.value)) return serializeInnerList(i);
-    return serializeItem(i);
-  }).join(",".concat(optionalWhiteSpace));
+  var separator = (options === null || options === void 0 ? void 0 : options.whitespace) === false ? "," : ", ";
+  var output = "";
+  for (var i = 0; i < list.length; i++) {
+    if (i > 0) output += separator;
+    output += serializeMember(list[i]);
+  }
+  return output;
 }
 
 //#endregion
 //#region src/encodeSfList.ts
 /**
-* Encode a list into a structured field dictionary
+* Encode a structured field list to a string
 *
 * @param value - The structured field list to encode
 * @param options - Encoding options
@@ -22500,72 +24631,80 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   uuidToArrayBuffer: function() { return /* binding */ uuidToArrayBuffer; }
 /* harmony export */ });
 /* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ "./node_modules/@babel/runtime/helpers/esm/toConsumableArray.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
-/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array-buffer.constructor.js */ "./node_modules/core-js/modules/es.array-buffer.constructor.js");
-/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array-buffer.detached.js */ "./node_modules/core-js/modules/es.array-buffer.detached.js");
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer.js */ "./node_modules/core-js/modules/es.array-buffer.transfer.js");
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer-to-fixed-length.js */ "./node_modules/core-js/modules/es.array-buffer.transfer-to-fixed-length.js");
-/* harmony import */ var core_js_modules_es_iterator_constructor_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.iterator.constructor.js */ "./node_modules/core-js/modules/es.iterator.constructor.js");
-/* harmony import */ var core_js_modules_es_iterator_reduce_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.iterator.reduce.js */ "./node_modules/core-js/modules/es.iterator.reduce.js");
-/* harmony import */ var core_js_modules_es_number_epsilon_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.number.epsilon.js */ "./node_modules/core-js/modules/es.number.epsilon.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
-/* harmony import */ var core_js_modules_es_string_from_code_point_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.string.from-code-point.js */ "./node_modules/core-js/modules/es.string.from-code-point.js");
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
-/* harmony import */ var core_js_modules_es_string_pad_start_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.string.pad-start.js */ "./node_modules/core-js/modules/es.string.pad-start.js");
-/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
-/* harmony import */ var core_js_modules_es_string_search_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.string.search.js */ "./node_modules/core-js/modules/es.string.search.js");
-/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint8-array.js */ "./node_modules/core-js/modules/es.typed-array.uint8-array.js");
-/* harmony import */ var core_js_modules_es_typed_array_uint16_array_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint16-array.js */ "./node_modules/core-js/modules/es.typed-array.uint16-array.js");
-/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.typed-array.at.js */ "./node_modules/core-js/modules/es.typed-array.at.js");
-/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.typed-array.copy-within.js */ "./node_modules/core-js/modules/es.typed-array.copy-within.js");
-/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.typed-array.every.js */ "./node_modules/core-js/modules/es.typed-array.every.js");
-/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.typed-array.fill.js */ "./node_modules/core-js/modules/es.typed-array.fill.js");
-/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.typed-array.filter.js */ "./node_modules/core-js/modules/es.typed-array.filter.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.typed-array.find.js */ "./node_modules/core-js/modules/es.typed-array.find.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-index.js */ "./node_modules/core-js/modules/es.typed-array.find-index.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last.js */ "./node_modules/core-js/modules/es.typed-array.find-last.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last-index.js */ "./node_modules/core-js/modules/es.typed-array.find-last-index.js");
-/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.typed-array.for-each.js */ "./node_modules/core-js/modules/es.typed-array.for-each.js");
-/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.typed-array.includes.js */ "./node_modules/core-js/modules/es.typed-array.includes.js");
-/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.typed-array.index-of.js */ "./node_modules/core-js/modules/es.typed-array.index-of.js");
-/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.typed-array.iterator.js */ "./node_modules/core-js/modules/es.typed-array.iterator.js");
-/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.typed-array.join.js */ "./node_modules/core-js/modules/es.typed-array.join.js");
-/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.typed-array.last-index-of.js */ "./node_modules/core-js/modules/es.typed-array.last-index-of.js");
-/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.typed-array.map.js */ "./node_modules/core-js/modules/es.typed-array.map.js");
-/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce.js */ "./node_modules/core-js/modules/es.typed-array.reduce.js");
-/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce-right.js */ "./node_modules/core-js/modules/es.typed-array.reduce-right.js");
-/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! core-js/modules/es.typed-array.reverse.js */ "./node_modules/core-js/modules/es.typed-array.reverse.js");
-/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! core-js/modules/es.typed-array.set.js */ "./node_modules/core-js/modules/es.typed-array.set.js");
-/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! core-js/modules/es.typed-array.slice.js */ "./node_modules/core-js/modules/es.typed-array.slice.js");
-/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! core-js/modules/es.typed-array.some.js */ "./node_modules/core-js/modules/es.typed-array.some.js");
-/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! core-js/modules/es.typed-array.sort.js */ "./node_modules/core-js/modules/es.typed-array.sort.js");
-/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! core-js/modules/es.typed-array.subarray.js */ "./node_modules/core-js/modules/es.typed-array.subarray.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-locale-string.js */ "./node_modules/core-js/modules/es.typed-array.to-locale-string.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-reversed.js */ "./node_modules/core-js/modules/es.typed-array.to-reversed.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-sorted.js */ "./node_modules/core-js/modules/es.typed-array.to-sorted.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-string.js */ "./node_modules/core-js/modules/es.typed-array.to-string.js");
-/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! core-js/modules/es.typed-array.with.js */ "./node_modules/core-js/modules/es.typed-array.with.js");
-/* harmony import */ var core_js_modules_esnext_uint8_array_set_from_base64_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.set-from-base64.js */ "./node_modules/core-js/modules/esnext.uint8-array.set-from-base64.js");
-/* harmony import */ var core_js_modules_esnext_uint8_array_set_from_hex_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.set-from-hex.js */ "./node_modules/core-js/modules/esnext.uint8-array.set-from-hex.js");
-/* harmony import */ var core_js_modules_esnext_uint8_array_to_base64_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.to-base64.js */ "./node_modules/core-js/modules/esnext.uint8-array.to-base64.js");
-/* harmony import */ var core_js_modules_esnext_uint8_array_to_hex_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.to-hex.js */ "./node_modules/core-js/modules/esnext.uint8-array.to-hex.js");
-/* harmony import */ var core_js_modules_web_atob_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! core-js/modules/web.atob.js */ "./node_modules/core-js/modules/web.atob.js");
-/* harmony import */ var core_js_modules_web_btoa_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! core-js/modules/web.btoa.js */ "./node_modules/core-js/modules/web.btoa.js");
-/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
-/* harmony import */ var core_js_modules_web_dom_exception_constructor_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! core-js/modules/web.dom-exception.constructor.js */ "./node_modules/core-js/modules/web.dom-exception.constructor.js");
-/* harmony import */ var core_js_modules_web_dom_exception_stack_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! core-js/modules/web.dom-exception.stack.js */ "./node_modules/core-js/modules/web.dom-exception.stack.js");
-/* harmony import */ var core_js_modules_web_dom_exception_to_string_tag_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! core-js/modules/web.dom-exception.to-string-tag.js */ "./node_modules/core-js/modules/web.dom-exception.to-string-tag.js");
-/* harmony import */ var core_js_modules_web_url_js__WEBPACK_IMPORTED_MODULE_61__ = __webpack_require__(/*! core-js/modules/web.url.js */ "./node_modules/core-js/modules/web.url.js");
-/* harmony import */ var core_js_modules_web_url_to_json_js__WEBPACK_IMPORTED_MODULE_62__ = __webpack_require__(/*! core-js/modules/web.url.to-json.js */ "./node_modules/core-js/modules/web.url.to-json.js");
-/* harmony import */ var core_js_modules_web_url_search_params_js__WEBPACK_IMPORTED_MODULE_63__ = __webpack_require__(/*! core-js/modules/web.url-search-params.js */ "./node_modules/core-js/modules/web.url-search-params.js");
-/* harmony import */ var core_js_modules_web_url_search_params_delete_js__WEBPACK_IMPORTED_MODULE_64__ = __webpack_require__(/*! core-js/modules/web.url-search-params.delete.js */ "./node_modules/core-js/modules/web.url-search-params.delete.js");
-/* harmony import */ var core_js_modules_web_url_search_params_has_js__WEBPACK_IMPORTED_MODULE_65__ = __webpack_require__(/*! core-js/modules/web.url-search-params.has.js */ "./node_modules/core-js/modules/web.url-search-params.has.js");
-/* harmony import */ var core_js_modules_web_url_search_params_size_js__WEBPACK_IMPORTED_MODULE_66__ = __webpack_require__(/*! core-js/modules/web.url-search-params.size.js */ "./node_modules/core-js/modules/web.url-search-params.size.js");
+/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
+/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
+/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
+/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
+/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array-buffer.constructor.js */ "./node_modules/core-js/modules/es.array-buffer.constructor.js");
+/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array-buffer.detached.js */ "./node_modules/core-js/modules/es.array-buffer.detached.js");
+/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer.js */ "./node_modules/core-js/modules/es.array-buffer.transfer.js");
+/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer-to-fixed-length.js */ "./node_modules/core-js/modules/es.array-buffer.transfer-to-fixed-length.js");
+/* harmony import */ var core_js_modules_es_iterator_constructor_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.iterator.constructor.js */ "./node_modules/core-js/modules/es.iterator.constructor.js");
+/* harmony import */ var core_js_modules_es_iterator_reduce_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.iterator.reduce.js */ "./node_modules/core-js/modules/es.iterator.reduce.js");
+/* harmony import */ var core_js_modules_es_number_epsilon_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.number.epsilon.js */ "./node_modules/core-js/modules/es.number.epsilon.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
+/* harmony import */ var core_js_modules_es_string_from_code_point_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.string.from-code-point.js */ "./node_modules/core-js/modules/es.string.from-code-point.js");
+/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
+/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_es_string_pad_start_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.string.pad-start.js */ "./node_modules/core-js/modules/es.string.pad-start.js");
+/* harmony import */ var core_js_modules_es_string_repeat_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.string.repeat.js */ "./node_modules/core-js/modules/es.string.repeat.js");
+/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
+/* harmony import */ var core_js_modules_es_string_search_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.string.search.js */ "./node_modules/core-js/modules/es.string.search.js");
+/* harmony import */ var core_js_modules_es_string_starts_with_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.string.starts-with.js */ "./node_modules/core-js/modules/es.string.starts-with.js");
+/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint8-array.js */ "./node_modules/core-js/modules/es.typed-array.uint8-array.js");
+/* harmony import */ var core_js_modules_es_typed_array_uint16_array_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint16-array.js */ "./node_modules/core-js/modules/es.typed-array.uint16-array.js");
+/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.typed-array.at.js */ "./node_modules/core-js/modules/es.typed-array.at.js");
+/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.typed-array.copy-within.js */ "./node_modules/core-js/modules/es.typed-array.copy-within.js");
+/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.typed-array.every.js */ "./node_modules/core-js/modules/es.typed-array.every.js");
+/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.typed-array.fill.js */ "./node_modules/core-js/modules/es.typed-array.fill.js");
+/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.typed-array.filter.js */ "./node_modules/core-js/modules/es.typed-array.filter.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.typed-array.find.js */ "./node_modules/core-js/modules/es.typed-array.find.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-index.js */ "./node_modules/core-js/modules/es.typed-array.find-index.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last.js */ "./node_modules/core-js/modules/es.typed-array.find-last.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last-index.js */ "./node_modules/core-js/modules/es.typed-array.find-last-index.js");
+/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.typed-array.for-each.js */ "./node_modules/core-js/modules/es.typed-array.for-each.js");
+/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.typed-array.includes.js */ "./node_modules/core-js/modules/es.typed-array.includes.js");
+/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.typed-array.index-of.js */ "./node_modules/core-js/modules/es.typed-array.index-of.js");
+/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/es.typed-array.iterator.js */ "./node_modules/core-js/modules/es.typed-array.iterator.js");
+/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! core-js/modules/es.typed-array.join.js */ "./node_modules/core-js/modules/es.typed-array.join.js");
+/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! core-js/modules/es.typed-array.last-index-of.js */ "./node_modules/core-js/modules/es.typed-array.last-index-of.js");
+/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! core-js/modules/es.typed-array.map.js */ "./node_modules/core-js/modules/es.typed-array.map.js");
+/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce.js */ "./node_modules/core-js/modules/es.typed-array.reduce.js");
+/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce-right.js */ "./node_modules/core-js/modules/es.typed-array.reduce-right.js");
+/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! core-js/modules/es.typed-array.reverse.js */ "./node_modules/core-js/modules/es.typed-array.reverse.js");
+/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! core-js/modules/es.typed-array.set.js */ "./node_modules/core-js/modules/es.typed-array.set.js");
+/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! core-js/modules/es.typed-array.slice.js */ "./node_modules/core-js/modules/es.typed-array.slice.js");
+/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! core-js/modules/es.typed-array.some.js */ "./node_modules/core-js/modules/es.typed-array.some.js");
+/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! core-js/modules/es.typed-array.sort.js */ "./node_modules/core-js/modules/es.typed-array.sort.js");
+/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! core-js/modules/es.typed-array.subarray.js */ "./node_modules/core-js/modules/es.typed-array.subarray.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-locale-string.js */ "./node_modules/core-js/modules/es.typed-array.to-locale-string.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-reversed.js */ "./node_modules/core-js/modules/es.typed-array.to-reversed.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-sorted.js */ "./node_modules/core-js/modules/es.typed-array.to-sorted.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-string.js */ "./node_modules/core-js/modules/es.typed-array.to-string.js");
+/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! core-js/modules/es.typed-array.with.js */ "./node_modules/core-js/modules/es.typed-array.with.js");
+/* harmony import */ var core_js_modules_esnext_uint8_array_set_from_base64_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.set-from-base64.js */ "./node_modules/core-js/modules/esnext.uint8-array.set-from-base64.js");
+/* harmony import */ var core_js_modules_esnext_uint8_array_set_from_hex_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.set-from-hex.js */ "./node_modules/core-js/modules/esnext.uint8-array.set-from-hex.js");
+/* harmony import */ var core_js_modules_esnext_uint8_array_to_base64_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.to-base64.js */ "./node_modules/core-js/modules/esnext.uint8-array.to-base64.js");
+/* harmony import */ var core_js_modules_esnext_uint8_array_to_hex_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! core-js/modules/esnext.uint8-array.to-hex.js */ "./node_modules/core-js/modules/esnext.uint8-array.to-hex.js");
+/* harmony import */ var core_js_modules_web_atob_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! core-js/modules/web.atob.js */ "./node_modules/core-js/modules/web.atob.js");
+/* harmony import */ var core_js_modules_web_btoa_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! core-js/modules/web.btoa.js */ "./node_modules/core-js/modules/web.btoa.js");
+/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_61__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
+/* harmony import */ var core_js_modules_web_dom_exception_constructor_js__WEBPACK_IMPORTED_MODULE_62__ = __webpack_require__(/*! core-js/modules/web.dom-exception.constructor.js */ "./node_modules/core-js/modules/web.dom-exception.constructor.js");
+/* harmony import */ var core_js_modules_web_dom_exception_stack_js__WEBPACK_IMPORTED_MODULE_63__ = __webpack_require__(/*! core-js/modules/web.dom-exception.stack.js */ "./node_modules/core-js/modules/web.dom-exception.stack.js");
+/* harmony import */ var core_js_modules_web_dom_exception_to_string_tag_js__WEBPACK_IMPORTED_MODULE_64__ = __webpack_require__(/*! core-js/modules/web.dom-exception.to-string-tag.js */ "./node_modules/core-js/modules/web.dom-exception.to-string-tag.js");
+/* harmony import */ var core_js_modules_web_url_js__WEBPACK_IMPORTED_MODULE_65__ = __webpack_require__(/*! core-js/modules/web.url.js */ "./node_modules/core-js/modules/web.url.js");
+/* harmony import */ var core_js_modules_web_url_to_json_js__WEBPACK_IMPORTED_MODULE_66__ = __webpack_require__(/*! core-js/modules/web.url.to-json.js */ "./node_modules/core-js/modules/web.url.to-json.js");
+/* harmony import */ var core_js_modules_web_url_search_params_js__WEBPACK_IMPORTED_MODULE_67__ = __webpack_require__(/*! core-js/modules/web.url-search-params.js */ "./node_modules/core-js/modules/web.url-search-params.js");
+/* harmony import */ var core_js_modules_web_url_search_params_delete_js__WEBPACK_IMPORTED_MODULE_68__ = __webpack_require__(/*! core-js/modules/web.url-search-params.delete.js */ "./node_modules/core-js/modules/web.url-search-params.delete.js");
+/* harmony import */ var core_js_modules_web_url_search_params_has_js__WEBPACK_IMPORTED_MODULE_69__ = __webpack_require__(/*! core-js/modules/web.url-search-params.has.js */ "./node_modules/core-js/modules/web.url-search-params.has.js");
+/* harmony import */ var core_js_modules_web_url_search_params_size_js__WEBPACK_IMPORTED_MODULE_70__ = __webpack_require__(/*! core-js/modules/web.url-search-params.size.js */ "./node_modules/core-js/modules/web.url-search-params.size.js");
+
+
+
+
 
 
 
@@ -22702,6 +24841,7 @@ var base64decode = decodeBase64;
 
 //#endregion
 //#region src/encodeBase64.ts
+var CHUNK_SIZE = 32768;
 /**
 * Encodes binary data to base64
 *
@@ -22709,9 +24849,17 @@ var base64decode = decodeBase64;
 * @returns The base64 encoded string
 *
 * @public
+*
+* @example
+* {@includeCode ../test/encodeBase64.test.ts#example}
 */
 function encodeBase64(binary) {
-  return btoa(String.fromCharCode.apply(String, (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__["default"])(binary)));
+  var text = "";
+  for (var i = 0; i < binary.length; i += CHUNK_SIZE) {
+    var chunk = binary.subarray(i, i + CHUNK_SIZE);
+    text += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(text);
 }
 
 //#endregion
@@ -22752,12 +24900,11 @@ function convertUint8ToUint16(input) {
 //#endregion
 //#region src/isArrayBufferLike.ts
 /**
-* Checks if the given value is `ArrayBufferLike` (i.e. an `ArrayBuffer`
-* or a `SharedArrayBuffer`).
+* Checks if the given value is `ArrayBufferLike`: an `ArrayBuffer` or a
+* `SharedArrayBuffer`.
 *
-* This function safely handles environments where
-* `SharedArrayBuffer` is not defined, such as non-cross-origin
-* isolated browser contexts.
+* The function also works where `SharedArrayBuffer` is not defined, such as
+* browser contexts without cross-origin isolation.
 *
 * @param value - The value to check.
 * @returns `true` if the value is an `ArrayBuffer` or `SharedArrayBuffer`.
@@ -22810,8 +24957,8 @@ var UTF_8 = "utf-8";
 //#endregion
 //#region src/decodeText.ts
 /**
-* Converts an ArrayBuffer or ArrayBufferView to a string. Similar to `TextDecoder.decode`
-* but with a fallback for environments that don't support `TextDecoder`.
+* Converts an ArrayBuffer or ArrayBufferView to a string. The function works like
+* `TextDecoder.decode` and also supports environments without `TextDecoder`.
 *
 * @param data - The data to decode.
 * @param options - The options for the decoding.
@@ -22896,8 +25043,8 @@ function decodeText(data) {
 //#endregion
 //#region src/encodeText.ts
 /**
-* Converts a string to a Uint8Array. Similar to `TextEncoder.encode`
-* but with a fallback for environments that don't support `TextEncoder`.
+* Converts a string to a Uint8Array. The function works like
+* `TextEncoder.encode` and also supports environments without `TextEncoder`.
 *
 * @param data - The string to encode.
 * @returns The Uint8Array representation of the string.
@@ -22928,10 +25075,10 @@ var Encoding = {
 //#endregion
 //#region src/getBandwidthBps.ts
 /**
-* Converts a ResourceTiming sample to bandwidth in bits per second (bps).
+* Converts a ResourceTiming sample to bandwidth in bits per second.
 *
 * @param sample - A ResourceTiming sample
-* @returns
+* @returns The bandwidth in bits per second.
 *
 * @public
 */
@@ -22943,7 +25090,7 @@ function getBandwidthBps(sample) {
 //#endregion
 //#region src/getBaseUrl.ts
 /**
-* Get the base URL from a full URL or a URL object.
+* Gets the base URL from a full URL or a URL object.
 *
 * @param fullUrl - The full URL or URL object.
 * @returns The base URL.
@@ -22999,8 +25146,8 @@ var RequestResponseType = {
 //#endregion
 //#region src/roundToEven.ts
 /**
-* This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
-* This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
+* Rounds a value with the procedure from step 2 of the "Serializing a Decimal" specification.
+* The style is known as "even rounding", "banker's rounding", or "commercial rounding".
 *
 * @param value - The value to round
 * @param precision - The number of decimal places to round to
@@ -23086,7 +25233,7 @@ function unescapeHtml(text) {
 /**
 * Constructs a relative path from a URL.
 *
-* If `url` is already a relative path, or its origin differs from `base`, it is returned unchanged.
+* If `url` is already relative, or its origin differs from `base`, the function returns `url` unchanged.
 *
 * @param url - The destination URL
 * @param base - The base URL
@@ -23108,44 +25255,40 @@ function urlToRelativePath(url, base) {
   if (to.origin !== from.origin) return url;
   var toPath = to.pathname.split("/").slice(1);
   var fromPath = from.pathname.split("/").slice(1, -1);
-  var length = Math.min(toPath.length, fromPath.length);
-  for (var i = 0; i < length; i++) {
-    if (toPath[i] !== fromPath[i]) break;
-    toPath.shift();
-    fromPath.shift();
-  }
-  while (fromPath.length) {
-    fromPath.shift();
-    toPath.unshift("..");
-  }
-  return toPath.join("/") + to.search + to.hash;
+  var common = 0;
+  while (common < toPath.length - 1 && common < fromPath.length && toPath[common] === fromPath[common]) common++;
+  var ups = fromPath.length - common;
+  var relativePath = "../".repeat(ups) + toPath.slice(common).join("/");
+  if (ups === 0 && (relativePath === "" || relativePath.startsWith("/") || toPath[common].includes(":"))) relativePath = "./" + relativePath;
+  return relativePath + to.search + to.hash;
 }
 
 //#endregion
 //#region src/uuid.ts
 /**
-* Generate a random v4 UUID
+* Generates a random v4 UUID
 *
 * @returns A random v4 UUID
 *
 * @public
+*
+* @example
+* {@includeCode ../test/uuid.test.ts#example}
 */
 function uuid() {
   try {
     return crypto.randomUUID();
   } catch (error) {
     try {
+      var bytes = crypto.getRandomValues(new Uint8Array(16));
+      bytes[6] = bytes[6] & 15 | 64;
+      bytes[8] = bytes[8] & 63 | 128;
+      return arrayBufferToUuid(bytes.buffer);
+    } catch (error$1) {
       var url = URL.createObjectURL(new Blob());
       var uuid$1 = url.toString();
       URL.revokeObjectURL(url);
       return uuid$1.slice(uuid$1.lastIndexOf("/") + 1);
-    } catch (error$1) {
-      var dt = (/* @__PURE__ */new Date()).getTime();
-      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-        var r = (dt + Math.random() * 16) % 16 | 0;
-        dt = Math.floor(dt / 16);
-        return (c == "x" ? r : r & 3 | 8).toString(16);
-      });
     }
   }
 }
@@ -23545,7 +25688,7 @@ __webpack_require__.r(__webpack_exports__);
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-
+;
 
 
 
@@ -24324,6 +26467,7 @@ __webpack_require__.r(__webpack_exports__);
   ORDER: 'order',
   ORIGINAL_MPD_ID: 'mpdId',
   ORIGINAL_PUBLISH_TIME: 'originalPublishTime',
+  OUTPUT_PROTECTION: 'OutputProtection',
   PATCH_LOCATION: 'PatchLocation',
   PERIOD: 'Period',
   PRESELECTION: 'Preselection',
@@ -24631,7 +26775,7 @@ __webpack_require__.r(__webpack_exports__);
    *  @memberof Constants#
    *  @static
    */
-  CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+  CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other', 'license'],
   /**
    *  @constant {integer} CMCD_DEFAULT_TIME_INTERVAL specifies the default value for time interval in seconds.
    *  @memberof Constants#
@@ -24811,6 +26955,10 @@ __webpack_require__.r(__webpack_exports__);
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
+/* harmony import */ var core_js_modules_es_object_freeze_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.object.freeze.js */ "./node_modules/core-js/modules/es.object.freeze.js");
+
+
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -24846,7 +26994,7 @@ __webpack_require__.r(__webpack_exports__);
  * Protection Constants declaration
  * @ignore
  */
-/* harmony default export */ __webpack_exports__["default"] = ({
+var ProtectionConstants = {
   CLEARKEY_KEYSTEM_STRING: 'org.w3.clearkey',
   CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
   ENCRYPTION_SCHEME_CBCS: 'cbcs',
@@ -24874,6 +27022,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
   PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+  PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING: 'com.microsoft.playready.recommendation.3000',
   PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
   ROBUSTNESS_STRINGS: {
     WIDEVINE: {
@@ -24887,7 +27036,16 @@ __webpack_require__.r(__webpack_exports__);
   W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
   WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
   WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed'
-});
+};
+
+// System strings tried in order by requestMediaKeySystemAccess if the application does not define a
+// systemStringPriority. Key systems without an entry only use their own system string.
+// PlayReady: Edge accepts the plain string, Firefox uses '.recommendation'. Chrome on Windows only supports SL3000
+// via '.recommendation.3000'. It is opt-in via systemStringPriority, otherwise multi-DRM content would silently
+// switch from Widevine to PlayReady in Chrome.
+// Frozen as it is shared by all player instances
+ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = Object.freeze((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_0__["default"])({}, ProtectionConstants.PLAYREADY_KEYSTEM_STRING, Object.freeze([ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING])));
+/* harmony default export */ __webpack_exports__["default"] = (ProtectionConstants);
 
 /***/ }),
 
@@ -25334,7 +27492,7 @@ function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+;
 
 /**
  * @class
@@ -25496,7 +27654,7 @@ var ProtectionEvents = /*#__PURE__*/function (_EventsBase) {
     _this.KEY_SESSION_UPDATED = 'public_keySessionUpdated';
     return _this;
   }
-  (0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(ProtectionEvents, _EventsBase);
+  ;(0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(ProtectionEvents, _EventsBase);
   return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(ProtectionEvents);
 }(_core_events_EventsBase_js__WEBPACK_IMPORTED_MODULE_6__["default"]);
 var protectionEvents = new ProtectionEvents();
@@ -28980,7 +31138,7 @@ function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
+;
 
 /**
  * @class
@@ -29068,7 +31226,7 @@ var ProtectionErrors = /*#__PURE__*/function (_ErrorsBase) {
     _this.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE = 'DRM: licenser error! --';
     return _this;
   }
-  (0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(ProtectionErrors, _ErrorsBase);
+  ;(0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(ProtectionErrors, _ErrorsBase);
   return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(ProtectionErrors);
 }(_core_errors_ErrorsBase_js__WEBPACK_IMPORTED_MODULE_6__["default"]);
 var protectionErrors = new ProtectionErrors();
@@ -29101,8 +31259,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
 /* harmony import */ var _vo_KeyMessage_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../vo/KeyMessage.js */ "./src/streaming/protection/vo/KeyMessage.js");
 /* harmony import */ var _vo_KeySystemAccess_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../vo/KeySystemAccess.js */ "./src/streaming/protection/vo/KeySystemAccess.js");
-/* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
-/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../vo/KeySystemMetadata.js */ "./src/streaming/protection/vo/KeySystemMetadata.js");
+/* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 
 
 
@@ -29161,11 +31320,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-var SYSTEM_STRING_PRIORITY = {};
-SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].PLAYREADY_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].PLAYREADY_KEYSTEM_STRING, _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].WIDEVINE_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].WIDEVINE_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].FAIRPLAY_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].FAIRPLAY_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].CLEARKEY_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].CLEARKEY_KEYSTEM_STRING];
+
 function DefaultProtectionModel(config) {
   config = config || {};
   var context = this.context;
@@ -29260,16 +31415,9 @@ function DefaultProtectionModel(config) {
       });
       return;
     }
-
-    // If a systemStringPriority is defined by the application we use these values. Otherwise, we use the default system string
-    // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
-    var protDataSystemStringPriority = keySystemConfigurationsToRequest[idx].protData && keySystemConfigurationsToRequest[idx].protData.systemStringPriority ? keySystemConfigurationsToRequest[idx].protData.systemStringPriority : null;
     var configs = keySystemConfigurationsToRequest[idx].configs;
     var currentKeySystem = keySystemConfigurationsToRequest[idx].ks;
-    var systemString = currentKeySystem.systemString;
-
-    // Use the default values in case no values are provided by the application
-    var systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : SYSTEM_STRING_PRIORITY[systemString] ? SYSTEM_STRING_PRIORITY[systemString] : [systemString];
+    var systemStringsToApply = _vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_17__["default"].getSystemStringsToApply(currentKeySystem, keySystemConfigurationsToRequest[idx].protData);
 
     // Check all the available system strings and the available configurations for support
     _checkAccessForKeySystem(systemStringsToApply, configs).then(function (data) {
@@ -29414,12 +31562,12 @@ function DefaultProtectionModel(config) {
     // - FairPlay: use 'sinf'
     // - All others: use 'cenc'
     var dataType;
-    if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || keySystemMetadata.protData && keySystemMetadata.protData.clearkeys)) {
-      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].INITIALIZATION_DATA_TYPE_KEYIDS;
-    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].FAIRPLAY_KEYSTEM_STRING) {
-      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].INITIALIZATION_DATA_TYPE_SINF;
+    if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_18__["default"].CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || keySystemMetadata.protData && keySystemMetadata.protData.clearkeys)) {
+      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_18__["default"].INITIALIZATION_DATA_TYPE_KEYIDS;
+    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_18__["default"].FAIRPLAY_KEYSTEM_STRING) {
+      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_18__["default"].INITIALIZATION_DATA_TYPE_SINF;
     } else {
-      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].INITIALIZATION_DATA_TYPE_CENC;
+      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_18__["default"].INITIALIZATION_DATA_TYPE_CENC;
     }
     mediaKeySession.generateRequest(dataType, keySystemMetadata.initData).then(function () {
       logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
@@ -29618,7 +31766,7 @@ function DefaultProtectionModel(config) {
         var usable = false;
         session.keyStatuses.forEach(function () {
           var keyStatus = _parseKeyStatus(arguments);
-          if (keyStatus.status === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_17__["default"].MEDIA_KEY_STATUSES.USABLE) {
+          if (keyStatus.status === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_18__["default"].MEDIA_KEY_STATUSES.USABLE) {
             usable = true;
           }
         });
@@ -29686,7 +31834,7 @@ function DefaultProtectionModel(config) {
   return instance;
 }
 DefaultProtectionModel.__dashjs_factory_name = 'DefaultProtectionModel';
-/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_18__["default"].getClassFactory(DefaultProtectionModel));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_19__["default"].getClassFactory(DefaultProtectionModel));
 
 /***/ }),
 
@@ -32378,8 +34526,9 @@ function KeySystemConfiguration(audioCapabilities, videoCapabilities, distinctiv
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
+/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
+/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
+/* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
 
 
 /**
@@ -32412,20 +34561,39 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 /**
  * @classdesc A model class to save metadata about a key system
  * @ignore
  */
-var KeySystemMetadata = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__["default"])(function KeySystemMetadata(config) {
-  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__["default"])(this, KeySystemMetadata);
-  this.ks = config.ks;
-  this.keyId = config.keyId;
-  this.initData = config.initData;
-  this.protData = config.protData;
-  this.cdmData = config.cdmData;
-  this.sessionId = config.sessionId;
-  this.sessionType = config.sessionType;
-});
+var KeySystemMetadata = /*#__PURE__*/function () {
+  function KeySystemMetadata(config) {
+    (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__["default"])(this, KeySystemMetadata);
+    this.ks = config.ks;
+    this.keyId = config.keyId;
+    this.initData = config.initData;
+    this.protData = config.protData;
+    this.cdmData = config.cdmData;
+    this.sessionId = config.sessionId;
+    this.sessionType = config.sessionType;
+  }
+
+  /**
+   * Returns the system strings to try in order for a key system. A systemStringPriority defined by the application
+   * takes precedence over the defaults, e.g. com.microsoft.playready and com.microsoft.playready.recommendation
+   * @param {object} ks
+   * @param {object} protData
+   * @return {Array.<string>}
+   */
+  return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(KeySystemMetadata, null, [{
+    key: "getSystemStringsToApply",
+    value: function getSystemStringsToApply(ks, protData) {
+      // An empty systemStringPriority would leave nothing to request, so it falls back to the defaults
+      return protData && protData.systemStringPriority && protData.systemStringPriority.length > 0 && protData.systemStringPriority || _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].DEFAULT_SYSTEM_STRING_PRIORITY[ks.systemString] || [ks.systemString];
+    }
+  }]);
+}();
 /* harmony default export */ __webpack_exports__["default"] = (KeySystemMetadata);
 
 /***/ }),
@@ -32985,8 +35153,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   HTTPRequest: function() { return /* binding */ HTTPRequest; },
 /* harmony export */   HTTPRequestTrace: function() { return /* binding */ HTTPRequestTrace; }
 /* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
+/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
+/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
 
 
 /**
@@ -33025,121 +35193,134 @@ __webpack_require__.r(__webpack_exports__);
  * by Metrics Reporting code.
  * @ignore
  */
-var HTTPRequest = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__["default"])(
-/**
- * @class
- */
-function HTTPRequest() {
-  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__["default"])(this, HTTPRequest);
+var HTTPRequest = /*#__PURE__*/function () {
   /**
-   * Identifier of the TCP connection on which the HTTP request was sent.
-   * @public
+   * @class
    */
-  this.tcpid = null;
-  /**
-   * This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
-   * The type of the request:
-   * - MPD
-   * - XLink expansion
-   * - Initialization Fragment
-   * - Index Fragment
-   * - Media Fragment
-   * - Bitstream Switching Fragment
-   * - CMCD Response
-   * - other
-   * @public
-   */
-  this.type = null;
-  /**
-   * The original URL (before any redirects or failures)
-   * @public
-   */
-  this.url = null;
-  /**
-   * The actual URL requested, if different from above
-   * @public
-   */
-  this.actualurl = null;
-  /**
-   * The contents of the byte-range-spec part of the HTTP Range header.
-   * @public
-   */
-  this.range = null;
-  /**
-   * Real-Time | The real time at which the request was sent.
-   * @public
-   */
-  this.trequest = null;
-  /**
-   * Real-Time | The real time at which the first byte of the response was received.
-   * @public
-   */
-  this.tresponse = null;
-  /**
-   * The HTTP response code.
-   * @public
-   */
-  this.responsecode = null;
-  /**
-   * The duration of the throughput trace intervals (ms), for successful requests only.
-   * @public
-   */
-  this.interval = null;
-  /**
-   * Throughput traces, for successful requests only.
-   * @public
-   */
-  this.trace = [];
-  /**
-   * The CMSD static and dynamic values retrieved from CMSD response headers.
-   * @public
-   */
-  this.cmsd = null;
+  function HTTPRequest() {
+    (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__["default"])(this, HTTPRequest);
+    /**
+     * Identifier of the TCP connection on which the HTTP request was sent.
+     * @public
+     */
+    this.tcpid = null;
+    /**
+     * This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
+     * The type of the request:
+     * - MPD
+     * - XLink expansion
+     * - Initialization Fragment
+     * - Index Fragment
+     * - Media Fragment
+     * - Bitstream Switching Fragment
+     * - CMCD Response
+     * - other
+     * @public
+     */
+    this.type = null;
+    /**
+     * The original URL (before any redirects or failures)
+     * @public
+     */
+    this.url = null;
+    /**
+     * The actual URL requested, if different from above
+     * @public
+     */
+    this.actualurl = null;
+    /**
+     * The contents of the byte-range-spec part of the HTTP Range header.
+     * @public
+     */
+    this.range = null;
+    /**
+     * Real-Time | The real time at which the request was sent.
+     * @public
+     */
+    this.trequest = null;
+    /**
+     * Real-Time | The real time at which the first byte of the response was received.
+     * @public
+     */
+    this.tresponse = null;
+    /**
+     * The HTTP response code.
+     * @public
+     */
+    this.responsecode = null;
+    /**
+     * The duration of the throughput trace intervals (ms), for successful requests only.
+     * @public
+     */
+    this.interval = null;
+    /**
+     * Throughput traces, for successful requests only.
+     * @public
+     */
+    this.trace = [];
+
+    /**
+     * Type of stream ("audio" | "video" etc..)
+     * @public
+     */
+    this._stream = null;
+    /**
+     * Real-Time | The real time at which the request finished.
+     * @public
+     */
+    this._tfinish = null;
+    /**
+     * The duration of the media requests, if available, in seconds.
+     * @public
+     */
+    this._mediaduration = null;
+    /**
+     * all the response headers from request.
+     * @public
+     */
+    this._responseHeaders = null;
+    /**
+     * The selected service location for the request. string.
+     * @public
+     */
+    this._serviceLocation = null;
+    /**
+     * The type of the loader that was used. Distinguish between fetch loader and xhr loader
+     */
+    this._fileLoaderType = null;
+    /**
+     * The values derived from the ResourceTimingAPI.
+     */
+    this._resourceTimingValues = null;
+    /**
+     * The CMSD static and dynamic values retrieved from CMSD response headers.
+     * Not part of the HttpList metric defined in ISO/IEC 23009-1 Annex D.4.3, hence private.
+     * @public
+     */
+    this._cmsd = null;
+  }
 
   /**
-   * Type of stream ("audio" | "video" etc..)
-   * @public
+   * Prototype getter, so it is not serialised as part of the HttpList metric.
+   * @deprecated since 5.3.0, use `_cmsd` instead. Will be removed in v6.
    */
-  this._stream = null;
-  /**
-   * Real-Time | The real time at which the request finished.
-   * @public
-   */
-  this._tfinish = null;
-  /**
-   * The duration of the media requests, if available, in seconds.
-   * @public
-   */
-  this._mediaduration = null;
-  /**
-   * all the response headers from request.
-   * @public
-   */
-  this._responseHeaders = null;
-  /**
-   * The selected service location for the request. string.
-   * @public
-   */
-  this._serviceLocation = null;
-  /**
-   * The type of the loader that was used. Distinguish between fetch loader and xhr loader
-   */
-  this._fileLoaderType = null;
-  /**
-   * The values derived from the ResourceTimingAPI.
-   */
-  this._resourceTimingValues = null;
-});
+  return (0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(HTTPRequest, [{
+    key: "cmsd",
+    get: function get() {
+      return this._cmsd;
+    }
+  }]);
+}();
 /**
  * @classdesc This Object holds reference to the progress of the HTTPRequest.
  * @ignore
  */
-var HTTPRequestTrace = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__["default"])(
+var HTTPRequestTrace = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(
 /**
  * @class
  */
 function HTTPRequestTrace() {
-  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__["default"])(this, HTTPRequestTrace);
+  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_0__["default"])(this, HTTPRequestTrace);
   /**
    * Real-Time | Measurement stream start.
    * @public
@@ -33196,6 +35377,12 @@ HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
+/******/ 		if (!(moduleId in __webpack_modules__)) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
 /******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
@@ -33204,48 +35391,40 @@ HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/define property getters */
-/******/ 	!function() {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = function(exports, definition) {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
+/******/ 	// define getter/value functions for harmony exports
+/******/ 	__webpack_require__.d = function(exports, definition) {
+/******/ 		for(var key in definition) {
+/******/ 			if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 			}
-/******/ 		};
-/******/ 	}();
+/******/ 		}
+/******/ 	};
 /******/ 	
 /******/ 	/* webpack/runtime/global */
-/******/ 	!function() {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
-/******/ 	}();
+/******/ 	__webpack_require__.g = (function() {
+/******/ 		if (typeof globalThis === 'object') return globalThis;
+/******/ 		try {
+/******/ 			return this || new Function('return this')();
+/******/ 		} catch (e) {
+/******/ 			if (typeof window === 'object') return window;
+/******/ 		}
+/******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	!function() {
-/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
-/******/ 	}();
+/******/ 	__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); };
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
-/******/ 	!function() {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = function(exports) {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	}();
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
 !function() {
 "use strict";
 /*!************************************************!*\

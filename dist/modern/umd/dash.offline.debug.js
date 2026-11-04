@@ -67,7 +67,8 @@ module.exports = function equal(a, b) {
 (function (f) {
   if (true) {
     module.exports = f();
-  } else { var g; }
+  } else // removed by dead control flow
+{ var g; }
 })(function () {
   var define, module, exports;
   return function e(t, n, r) {
@@ -3092,6 +3093,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; },
 /* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; },
 /* harmony export */   CMCD_EVENT_MUTE: function() { return /* binding */ CMCD_EVENT_MUTE; },
+/* harmony export */   CMCD_EVENT_PLAYBACK_RATE: function() { return /* binding */ CMCD_EVENT_PLAYBACK_RATE; },
 /* harmony export */   CMCD_EVENT_PLAYER_COLLAPSE: function() { return /* binding */ CMCD_EVENT_PLAYER_COLLAPSE; },
 /* harmony export */   CMCD_EVENT_PLAYER_EXPAND: function() { return /* binding */ CMCD_EVENT_PLAYER_EXPAND; },
 /* harmony export */   CMCD_EVENT_PLAY_STATE: function() { return /* binding */ CMCD_EVENT_PLAY_STATE; },
@@ -3109,9 +3111,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; },
 /* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; },
 /* harmony export */   CMCD_QUERY: function() { return /* binding */ CMCD_QUERY; },
+/* harmony export */   CMCD_RECORDED_REPORT_MODE_EVENT: function() { return /* binding */ CMCD_RECORDED_REPORT_MODE_EVENT; },
+/* harmony export */   CMCD_RECORDED_REPORT_MODE_HEADER: function() { return /* binding */ CMCD_RECORDED_REPORT_MODE_HEADER; },
+/* harmony export */   CMCD_RECORDED_REPORT_MODE_QUERY: function() { return /* binding */ CMCD_RECORDED_REPORT_MODE_QUERY; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_EVENT: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_EVENT; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_MANIFEST: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_MANIFEST; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_SEGMENT: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_SEGMENT; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_UNKNOWN: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_UNKNOWN; },
 /* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; },
 /* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; },
 /* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; },
+/* harmony export */   CMCD_REQUEST_PROVENANCE: function() { return /* binding */ CMCD_REQUEST_PROVENANCE; },
 /* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; },
 /* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; },
 /* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; },
@@ -3124,6 +3134,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; },
 /* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; },
 /* harmony export */   CmcdPlayerState: function() { return /* binding */ CmcdPlayerState; },
+/* harmony export */   CmcdRecordedReportMode: function() { return /* binding */ CmcdRecordedReportMode; },
+/* harmony export */   CmcdRecordedRequestType: function() { return /* binding */ CmcdRecordedRequestType; },
+/* harmony export */   CmcdReportRecorder: function() { return /* binding */ CmcdReportRecorder; },
 /* harmony export */   CmcdReporter: function() { return /* binding */ CmcdReporter; },
 /* harmony export */   CmcdReportingMode: function() { return /* binding */ CmcdReportingMode; },
 /* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; },
@@ -3132,6 +3145,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CmcdValidationSeverity: function() { return /* binding */ CmcdValidationSeverity; },
 /* harmony export */   appendCmcdHeaders: function() { return /* binding */ appendCmcdHeaders; },
 /* harmony export */   appendCmcdQuery: function() { return /* binding */ appendCmcdQuery; },
+/* harmony export */   createFetchTransport: function() { return /* binding */ createFetchTransport; },
+/* harmony export */   createXhrTransport: function() { return /* binding */ createXhrTransport; },
 /* harmony export */   decodeCmcd: function() { return /* binding */ decodeCmcd; },
 /* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; },
 /* harmony export */   fromCmcdHeaders: function() { return /* binding */ fromCmcdHeaders; },
@@ -3164,51 +3179,296 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-//#region src/CMCD_FORMATTER_MAP.ts
-const roundValue = value => {
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(Math.round(value.value), value.params);
-  return Math.round(value);
-};
-const toRounded = value => {
-  if (Array.isArray(value)) return value.map(roundValue);
-  return roundValue(value);
-};
-const toUrlSafe = (value, options) => {
-  if (Array.isArray(value)) return value.map(item => toUrlSafe(item, options));
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(toUrlSafe(value.value, options), value.params);else {
-    if (options.baseUrl) value = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.urlToRelativePath)(value, (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.getBaseUrl)(options.baseUrl));
-    return options.version === 1 ? encodeURIComponent(value) : value;
-  }
-};
-const hundredValue = value => {
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(Math.round(value.value / 100) * 100, value.params);
-  return Math.round(value / 100) * 100;
-};
-const toHundred = value => {
-  if (Array.isArray(value)) return value.map(hundredValue);
-  return hundredValue(value);
-};
-const nor = (value, options) => {
-  let norValue = value;
-  if (options.version >= 2) {
-    if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") norValue = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem([value]);else if (typeof value === "string") norValue = [value];
-  }
-  return toUrlSafe(norValue, options);
-};
+//#region src/CMCD_INNER_LIST_KEYS.ts
 /**
-* The default formatters for CMCD values.
+* Inner-list keys in version 2 that are scalars in version 1.
 *
-* @public
+* Used by both encoding (down-conversion) and decoding (up-conversion).
+*
+* @internal
 */
-const CMCD_FORMATTER_MAP = {
-  br: toRounded,
-  d: toRounded,
-  bl: toHundred,
-  dl: toHundred,
-  mtp: toHundred,
-  nor,
-  rtp: toHundred,
-  tb: toRounded
+const CMCD_INNER_LIST_KEYS = /* @__PURE__ */new Set(["ab", "bl", "br", "bsa", "bsd", "bsda", "lab", "lb", "mtp", "pb", "tab", "tb", "tbl", "tpb"]);
+
+//#endregion
+//#region src/CMCD_KEY_SPECS.ts
+const MEDIA = ["a", "v", "av", "tt", "c", "o"];
+/**
+* The encoder rules of each key. The table has one row for each key of CTA-5004-B Table 1, plus `nrr` of CTA-5004 and `cdn`.
+*
+* @internal
+*/
+const CMCD_KEY_SPECS = {
+  ab: {
+    type: "ot-list",
+    round: 1,
+    supersededBy: "br",
+    version: 2
+  },
+  bg: {
+    type: "boolean",
+    omitDefault: false,
+    requiredOn: "b",
+    version: 2
+  },
+  bl: {
+    type: "ot-list",
+    round: 100
+  },
+  br: {
+    type: "ot-list",
+    round: 1,
+    requiredOn: "bc"
+  },
+  bs: {
+    type: "boolean",
+    omitDefault: false
+  },
+  bsa: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  bsd: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  bsda: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  cdn: {
+    type: "string",
+    max: 128,
+    version: 2
+  },
+  cen: {
+    type: "string",
+    max: 64,
+    mode: "event",
+    onlyOn: "ce",
+    requiredOn: "ce",
+    version: 2
+  },
+  cid: {
+    type: "string",
+    max: 128,
+    v1Max: 64,
+    requiredOn: "c"
+  },
+  cmsdd: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  cmsds: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  cs: {
+    type: "string",
+    version: 2
+  },
+  d: {
+    type: "integer",
+    round: 1,
+    ot: MEDIA
+  },
+  dfa: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  dl: {
+    type: "integer",
+    round: 100
+  },
+  e: {
+    type: "token",
+    mode: "event",
+    requiredOn: "always",
+    version: 2
+  },
+  ec: {
+    type: "string-list",
+    requiredOn: "e",
+    version: 2
+  },
+  h: {
+    type: "string",
+    max: 128,
+    mode: "event",
+    requiredOn: "h",
+    version: 2
+  },
+  lab: {
+    type: "ot-list",
+    round: 1,
+    supersededBy: "lb",
+    version: 2
+  },
+  lb: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  ltc: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  msd: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  mtp: {
+    type: "ot-list",
+    round: 100
+  },
+  nor: {
+    type: "nor"
+  },
+  nr: {
+    type: "boolean",
+    omitDefault: false,
+    version: 2
+  },
+  nrr: {
+    type: "string",
+    version: 1
+  },
+  ot: {
+    type: "token"
+  },
+  pb: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  pr: {
+    type: "decimal",
+    omitDefault: 1,
+    requiredOn: "pr"
+  },
+  pt: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  rc: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  rtp: {
+    type: "integer",
+    round: 100
+  },
+  sf: {
+    type: "token",
+    v1Map: {
+      e: "o"
+    }
+  },
+  sid: {
+    type: "string",
+    max: 64
+  },
+  smrt: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  sn: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  st: {
+    type: "token",
+    v1Map: {
+      ll: "l"
+    }
+  },
+  sta: {
+    type: "token",
+    requiredOn: "ps",
+    version: 2
+  },
+  su: {
+    type: "boolean",
+    omitDefault: false
+  },
+  tab: {
+    type: "ot-list",
+    round: 1,
+    supersededBy: "tb",
+    version: 2
+  },
+  tb: {
+    type: "ot-list",
+    round: 1
+  },
+  tbl: {
+    type: "ot-list",
+    round: 100,
+    version: 2
+  },
+  tpb: {
+    type: "ot-list",
+    round: 1,
+    ot: ["a", "v", "av", "c"],
+    version: 2
+  },
+  ts: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    requiredOn: "always",
+    version: 2
+  },
+  ttfb: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  ttfbb: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  ttlb: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  url: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    requiredOn: "rr",
+    version: 2
+  },
+  v: {
+    type: "integer",
+    round: 1,
+    requiredOn: "always",
+    version: 2
+  }
 };
 
 //#endregion
@@ -3219,139 +3479,6 @@ const CMCD_FORMATTER_MAP = {
 * @public
 */
 const CMCD_V2 = 2;
-
-//#endregion
-//#region src/CmcdEventType.ts
-/**
-* CMCD event type for the 'bc' key (bitrate change).
-*
-* @public
-*/
-const CMCD_EVENT_BITRATE_CHANGE = "bc";
-/**
-* CMCD event type for the 'ps' key (play state change).
-*
-* @public
-*/
-const CMCD_EVENT_PLAY_STATE = "ps";
-/**
-* CMCD event type for the 'e' key (error).
-*
-* @public
-*/
-const CMCD_EVENT_ERROR = "e";
-/**
-* CMCD event type for the 't' key (time interval).
-*
-* @public
-*/
-const CMCD_EVENT_TIME_INTERVAL = "t";
-/**
-* CMCD event type for the 'c' key (content ID).
-*
-* @public
-*/
-const CMCD_EVENT_CONTENT_ID = "c";
-/**
-* CMCD event type for the 'b' key (backgrounded mode).
-*
-* @public
-*/
-const CMCD_EVENT_BACKGROUNDED_MODE = "b";
-/**
-* CMCD event type for the 'm' key (mute).
-*
-* @public
-*/
-const CMCD_EVENT_MUTE = "m";
-/**
-* CMCD event type for the 'um' key (unmute).
-*
-* @public
-*/
-const CMCD_EVENT_UNMUTE = "um";
-/**
-* CMCD event type for the 'pe' key (player expand).
-*
-* @public
-*/
-const CMCD_EVENT_PLAYER_EXPAND = "pe";
-/**
-* CMCD event type for the 'pc' key (player collapse).
-*
-* @public
-*/
-const CMCD_EVENT_PLAYER_COLLAPSE = "pc";
-/**
-* CMCD event type for the 'rr' key (response received).
-*
-* @public
-*/
-const CMCD_EVENT_RESPONSE_RECEIVED = "rr";
-/**
-* CMCD event type for the 'as' key (ad start).
-*
-* @public
-*/
-const CMCD_EVENT_AD_START = "as";
-/**
-* CMCD event type for the 'ae' key (ad end).
-*
-* @public
-*/
-const CMCD_EVENT_AD_END = "ae";
-/**
-* CMCD event type for the 'abs' key (ad break start).
-*
-* @public
-*/
-const CMCD_EVENT_AD_BREAK_START = "abs";
-/**
-* CMCD event type for the 'abe' key (ad break end).
-*
-* @public
-*/
-const CMCD_EVENT_AD_BREAK_END = "abe";
-/**
-* CMCD event type for the 'sk' key (skip).
-*
-* @public
-*/
-const CMCD_EVENT_SKIP = "sk";
-/**
-* CMCD event type for the 'ce' key (custom event).
-*
-* @public
-*/
-const CMCD_EVENT_CUSTOM_EVENT = "ce";
-/**
-* CMCD event types for the 'e' key (event mode).
-*
-* @enum
-*
-* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event | CTA-5004-B Event}
-*
-* @public
-*/
-const CmcdEventType = {
-  BITRATE_CHANGE: CMCD_EVENT_BITRATE_CHANGE,
-  PLAY_STATE: CMCD_EVENT_PLAY_STATE,
-  ERROR: CMCD_EVENT_ERROR,
-  TIME_INTERVAL: CMCD_EVENT_TIME_INTERVAL,
-  CONTENT_ID: CMCD_EVENT_CONTENT_ID,
-  BACKGROUNDED_MODE: CMCD_EVENT_BACKGROUNDED_MODE,
-  MUTE: CMCD_EVENT_MUTE,
-  UNMUTE: CMCD_EVENT_UNMUTE,
-  PLAYER_EXPAND: CMCD_EVENT_PLAYER_EXPAND,
-  PLAYER_COLLAPSE: CMCD_EVENT_PLAYER_COLLAPSE,
-  RESPONSE_RECEIVED: CMCD_EVENT_RESPONSE_RECEIVED,
-  AD_START: CMCD_EVENT_AD_START,
-  AD_END: CMCD_EVENT_AD_END,
-  AD_BREAK_START: CMCD_EVENT_AD_BREAK_START,
-  AD_BREAK_END: CMCD_EVENT_AD_BREAK_END,
-  SKIP: CMCD_EVENT_SKIP,
-  CUSTOM_EVENT: CMCD_EVENT_CUSTOM_EVENT
-};
 
 //#endregion
 //#region src/CmcdReportingMode.ts
@@ -3380,202 +3507,41 @@ const CmcdReportingMode = {
 };
 
 //#endregion
-//#region src/CMCD_EVENT_KEYS.ts
-/**
-* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
-*
-* @public
-*/
-const CMCD_EVENT_KEYS = ["cen", "e", "h", "ts"];
-
-//#endregion
-//#region src/CMCD_REQUEST_KEYS.ts
-/**
-* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
-*
-* @public
-*/
-const CMCD_REQUEST_KEYS = ["ab", "bg", "bl", "br", "bs", "bsa", "bsd", "bsda", "cdn", "cid", "cs", "d", "dfa", "dl", "ec", "lab", "lb", "ltc", "msd", "mtp", "nor", "nr", "ot", "pb", "pr", "pt", "rtp", "sf", "sid", "sn", "st", "sta", "su", "tab", "tb", "tbl", "tpb", "v"];
-
-//#endregion
-//#region src/isCmcdCustomKey.ts
-const CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
-/**
-* Check if a key is a custom key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a custom key, `false` otherwise.
-*
-* @public
-*/
-function isCmcdCustomKey(key) {
-  return CUSTOM_KEY_REGEX.test(key);
+//#region src/downConvertToV1.ts
+function hasParams(params) {
+  for (const _ in params) return true;
+  return false;
 }
-
-//#endregion
-//#region src/isCmcdRequestKey.ts
-const CMCD_REQUEST_KEY_SET = new Set(CMCD_REQUEST_KEYS);
 /**
-* Check if a key is a valid CMCD request key.
+* Unwrap an inner list or SfItem value to a scalar.
 *
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
-*/
-function isCmcdRequestKey(key) {
-  return CMCD_REQUEST_KEY_SET.has(key) || isCmcdCustomKey(key);
-}
-
-//#endregion
-//#region src/CMCD_RESPONSE_KEYS.ts
-/**
-* CMCD v2 - Response-only and timing keys.
-*
-* @public
-*/
-const CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
-
-//#endregion
-//#region src/isCmcdResponseReceivedKey.ts
-const CMCD_RESPONSE_KEY_SET = new Set(CMCD_RESPONSE_KEYS);
-/**
-* Check if a key is a valid CMCD response key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdResponseReceivedKey.test.ts#example}
-*/
-function isCmcdResponseReceivedKey(key) {
-  return CMCD_RESPONSE_KEY_SET.has(key);
-}
-
-//#endregion
-//#region src/isCmcdEventKey.ts
-const CMCD_EVENT_KEY_SET = new Set(CMCD_EVENT_KEYS);
-/**
-* Check if a key is a valid CMCD event key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdEventKey.test.ts#example}
-*/
-function isCmcdEventKey(key) {
-  return isCmcdRequestKey(key) || isCmcdResponseReceivedKey(key) || CMCD_EVENT_KEY_SET.has(key);
-}
-
-//#endregion
-//#region src/CMCD_INNER_LIST_KEYS.ts
-/**
-* Keys that are inner lists in V2 but plain scalars in V1.
-*
-* Used by both encoding (down-conversion) and decoding (up-conversion).
-*
-* @internal
-*/
-const CMCD_INNER_LIST_KEYS = new Set(["ab", "bl", "br", "bsa", "bsd", "bsda", "lab", "lb", "mtp", "pb", "tab", "tb", "tbl", "tpb"]);
-
-//#endregion
-//#region src/CMCD_V1_KEYS.ts
-/**
-* Defines the keys for CMCD (Common Media Client Data) version 1.
-*
-* @public
-*/
-const CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
-
-//#endregion
-//#region src/isCmcdV1Key.ts
-const CMCD_V1_KEY_SET$1 = new Set(CMCD_V1_KEYS);
-/**
-* Filter function for CMCD v1 keys.
-*
-* @param key - The CMCD key to filter.
-*
-* @returns `true` if the key should be included, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdV1Key.test.ts#example}
-*/
-function isCmcdV1Key(key) {
-  return CMCD_V1_KEY_SET$1.has(key) || isCmcdCustomKey(key);
-}
-
-//#endregion
-//#region src/isTokenField.ts
-const TOKEN_FIELDS = new Set(["ot", "sf", "st", "e", "sta"]);
-/**
-* Checks if the given key is a token field.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a token field.
-*
-* @internal
-*/
-function isTokenField(key) {
-  return TOKEN_FIELDS.has(key);
-}
-
-//#endregion
-//#region src/isValid.ts
-/**
-* Checks if the given value is valid
-*
-* @param value - The value to check.
-*
-* @returns `true` if the key is a value is valid.
-*
-* @internal
-*/
-function isValid(value) {
-  if (typeof value === "number") return Number.isFinite(value);
-  return value != null && value !== "" && value !== false;
-}
-
-//#endregion
-//#region src/prepareCmcdData.ts
-const filterMap = {
-  [CMCD_EVENT_MODE]: isCmcdEventKey,
-  [CMCD_REQUEST_MODE]: isCmcdRequestKey
-};
-/**
-* Unwrap an inner list or SfItem value to a plain scalar.
+* The scalar is the value of the item with the object type flag of `ot`
+* (CTA-5004-B section 4.1, item 14). Without that item, it is the value
+* of the first item without parameters. Otherwise it is `undefined`.
 */
 function unwrapValue(value, ot) {
-  if (Array.isArray(value)) {
-    let item;
-    if (ot) item = value.find(item$1 => item$1.params?.ot === ot);
-    if (!item) item = value[0];
-    return unwrapValue(item);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) value = value.value;
+  if (!Array.isArray(value)) return value;
+  let fallback;
+  for (const item of value) {
+    if (!(item instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem)) {
+      if (fallback === void 0) fallback = item;
+      continue;
+    }
+    if (ot && item.params?.[ot] === true) return item.value;
+    if (fallback === void 0 && !hasParams(item.params)) fallback = item.value;
   }
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return value.value;
-  return value;
+  return fallback;
 }
 /**
-* Down-convert V2 CMCD data to V1 format.
+* Down-convert version 2 CMCD data to version 1.
 *
-* - Extracts `nrr` from `nor` SfItem `r` parameter.
-* - Unwraps inner-list values to plain scalars.
+* - Extracts `nrr` from the `nor` SfItem's `r` parameter.
+* - Unwraps inner-list values to scalars for the object type `ot`.
+*
+* @internal
 */
-function downConvertToV1(obj) {
+function downConvertToV1(obj, ot) {
   const result = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value == null) {
@@ -3583,14 +3549,287 @@ function downConvertToV1(obj) {
       continue;
     }
     if (key === "nor") {
-      const first = (Array.isArray(value) ? value : [value])[0];
+      const list = value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && Array.isArray(value.value) ? value.value : value;
+      const first = Array.isArray(list) ? list[0] : list;
       if (first instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
         result["nor"] = first.value;
         if (first.params?.r) result["nrr"] = first.params.r;
       } else result["nor"] = first;
-    } else if (CMCD_INNER_LIST_KEYS.has(key)) result[key] = unwrapValue(value, obj["ot"]);else result[key] = value;
+    } else if (CMCD_INNER_LIST_KEYS.has(key)) result[key] = unwrapValue(value, ot);else result[key] = value;
   }
   return result;
+}
+
+//#endregion
+//#region src/isCmcdCustomKey.ts
+const CUSTOM_KEY_REGEX = /^[a-z][a-z0-9.-]*$/;
+/**
+* Check if a key is a valid custom key: a lowercase first letter, then
+* characters from `a-z 0-9 . -`. The key needs a hyphen, not at the start
+* or end. This check applies the CTA-5004-B custom-key rules, restricted
+* to names that RFC 8941 key serialization accepts.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdCustomKey.test.ts#example}
+*/
+function isCmcdCustomKey(key) {
+  const separator = key.indexOf("-", 1);
+  return separator > 0 && separator < key.length - 1 && CUSTOM_KEY_REGEX.test(key);
+}
+
+//#endregion
+//#region src/getKeySpec.ts
+const CUSTOM_KEY_SPEC = {
+  type: "custom",
+  omitDefault: false,
+  max: 64,
+  v1Max: Infinity
+};
+/**
+* Returns the row of a key in the key table.
+*
+* @param key - The key to look up.
+*
+* @returns The row of a reserved key, the custom row for a valid custom key, or `undefined`.
+*
+* @internal
+*/
+function getKeySpec(key) {
+  if (Object.prototype.hasOwnProperty.call(CMCD_KEY_SPECS, key)) return CMCD_KEY_SPECS[key];
+  return isCmcdCustomKey(key) ? CUSTOM_KEY_SPEC : void 0;
+}
+
+//#endregion
+//#region src/isValid.ts
+/**
+* Checks if the given value is valid to send as a CMCD value.
+*
+* `undefined`, `null`, an empty string, `false`, an empty array, and a
+* number that is not finite are not valid. CTA-5004-B requires omitting
+* the key when its value is unknown.
+*
+* @param value - The value to check.
+*
+* @returns `true` if the value is valid.
+*
+* @internal
+*/
+function isValid(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.length > 0;
+  return value != null && value !== "" && value !== false;
+}
+
+//#endregion
+//#region src/formatNor.ts
+function toBase(baseUrl) {
+  if (!baseUrl) return;
+  try {
+    return new URL((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.getBaseUrl)(baseUrl)).href;
+  } catch {
+    return;
+  }
+}
+function formatPath(path, base, version) {
+  if (typeof path !== "string" || path === "") return;
+  const relative = base ? (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.urlToRelativePath)(path, base) : path;
+  return version === 1 ? encodeURIComponent(relative) : relative;
+}
+function formatEntry(entry, base, version) {
+  if (entry instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+    const path = formatPath(entry.value, base, version);
+    return path === void 0 ? void 0 : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(path, entry.params);
+  }
+  return formatPath(entry, base, version);
+}
+function formatEntries(entries, base, version) {
+  const list = [];
+  for (const entry of entries) {
+    const formatted = formatEntry(entry, base, version);
+    if (formatted !== void 0) list.push(formatted);
+  }
+  return list.length > 0 ? list : void 0;
+}
+/**
+* Formats a `nor` value. Each path becomes relative to `baseUrl` when `baseUrl` is a valid URL.
+* Version 1 encodes the path with `encodeURIComponent`. Version 2 wraps one path in a list.
+* The parameters of an entry and of an inner list stay on the value.
+*
+* @param value - A path, an `SfItem` of a path, or a list of them. An `SfItem` can also wrap the list.
+* @param options - The version and `baseUrl` of the report.
+*
+* @returns The formatted value, or `undefined` when no entry is a non-empty string.
+*
+* @internal
+*/
+function formatNor(value, options) {
+  const base = toBase(options.baseUrl);
+  const version = options.version;
+  if (Array.isArray(value)) return formatEntries(value, base, version);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && Array.isArray(value.value)) {
+    const list = formatEntries(value.value, base, version);
+    return list && new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(list, value.params);
+  }
+  const entry = formatEntry(value, base, version);
+  return version === 1 || entry === void 0 ? entry : [entry];
+}
+
+//#endregion
+//#region src/toTokenString.ts
+/**
+* Resolve the text of a token value.
+*
+* A token may be a plain string, a registry `Symbol`, an `SfToken`, or an
+* `SfItem` that wraps such a value.
+*
+* @param value - The value to resolve.
+*
+* @returns The token text, or `undefined` when the value is not a token.
+*
+* @internal
+*/
+function toTokenString(value) {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return toTokenString(value.value);
+  if (typeof value === "string") return value;
+  if (typeof value === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken) return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value);
+}
+
+//#endregion
+//#region src/normalizeValue.ts
+function toText(value, spec, version) {
+  const max = (version === 1 ? spec.v1Max : void 0) ?? spec.max ?? Infinity;
+  return typeof value === "string" && value !== "" && value.length <= max ? value : void 0;
+}
+function normalizeBare(value, spec, version) {
+  switch (spec.type) {
+    case "boolean":
+      return typeof value === "boolean" ? value : void 0;
+    case "integer":
+    case "ot-list":
+      return typeof value === "number" && Number.isFinite(value) ? Math.round(value / spec.round) * spec.round : void 0;
+    case "decimal":
+      return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+    case "string":
+      return toText(value, spec, version);
+    case "string-list":
+      return typeof value === "string" && value !== "" ? value : void 0;
+    case "token":
+      {
+        const text = toTokenString(value);
+        const v1Map = version === 1 ? spec.v1Map : void 0;
+        const token = text !== void 0 && v1Map !== void 0 && Object.prototype.hasOwnProperty.call(v1Map, text) ? v1Map[text] : text;
+        return token ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(token) : void 0;
+      }
+    case "custom":
+      if (typeof value === "string") return toText(value, spec, version);
+      if (typeof value === "number") return Number.isFinite(value) ? value : void 0;
+      if (Array.isArray(value)) return value.length > 0 ? value : void 0;
+      return typeof value === "boolean" || typeof value === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken ? value : void 0;
+    default:
+      return;
+  }
+}
+function normalizeItem(value, spec, version) {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+    const bare = normalizeBare(value.value, spec, version);
+    return bare === void 0 ? void 0 : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(bare, value.params);
+  }
+  return normalizeBare(value, spec, version);
+}
+function normalizeList(value, spec, version) {
+  const wrapper = value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && Array.isArray(value.value) ? value : void 0;
+  const items = wrapper ? wrapper.value : Array.isArray(value) ? value : [value];
+  const list = [];
+  for (const item of items) {
+    const normalized = normalizeItem(item, spec, version);
+    if (normalized !== void 0) list.push(normalized);
+  }
+  if (list.length === 0) return;
+  return wrapper ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(list, wrapper.params) : list;
+}
+/**
+* Applies the value rule of a key type from the key table.
+*
+* An `SfItem` keeps its parameters, and the rule applies to the value inside it.
+* In version 2, a list key wraps one value in a list.
+* The rules do not check the limits of RFC 8941, such as the integer range.
+*
+* @param value - The value to prepare.
+* @param spec - The row of the key in the key table.
+* @param options - The version and `baseUrl` of the report.
+*
+* @returns The value to send, or `undefined` when the value fails the rule.
+*
+* @internal
+*/
+function normalizeValue(value, spec, options) {
+  if (spec.type === "nor") return formatNor(value, options);
+  if (spec.type === "string-list" || spec.type === "ot-list" && options.version !== 1) return normalizeList(value, spec, options.version);
+  return normalizeItem(value, spec, options.version);
+}
+
+//#endregion
+//#region src/toBareValue.ts
+/**
+* Returns the value inside an `SfItem`, or the value itself.
+*
+* `decodeCmcd` returns a member with parameters as an `SfItem`. For an
+* inner list with parameters, the value of the `SfItem` is the list.
+*
+* @param value - The value to read.
+* @returns The value without its parameters.
+*
+* @internal
+*/
+function toBareValue(value) {
+  return value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem ? value.value : value;
+}
+
+//#endregion
+//#region src/prepareCmcdData.ts
+function hasKey(spec, reportingMode, isV1) {
+  return (spec.mode === void 0 || spec.mode === reportingMode) && (spec.version === void 0 || spec.version === 1 === isV1);
+}
+function isRequired(spec, event) {
+  return spec.requiredOn === "always" || event !== void 0 && spec.requiredOn === event;
+}
+function hasObjectTypes(spec) {
+  return (spec.type === "integer" || spec.type === "ot-list") && spec.ot !== void 0;
+}
+function needsV1ObjectType(obj, filter) {
+  if (typeof filter !== "function" || filter("ot")) return true;
+  for (const key of CMCD_INNER_LIST_KEYS) if (Array.isArray(toBareValue(obj[key])) && filter(key)) return true;
+  return false;
+}
+function allowsObjectType(spec, objectType) {
+  if (objectType === void 0 || spec.type !== "integer" && spec.type !== "ot-list" || spec.ot === void 0) return true;
+  return spec.ot.includes(objectType);
+}
+function isDefaultValue(spec, value) {
+  return "omitDefault" in spec && toBareValue(value) === spec.omitDefault;
+}
+function insertKey(keys, specs, key) {
+  let index = 0;
+  while (index < keys.length && keys[index] < key) index++;
+  keys.splice(index, 0, key);
+  specs.splice(index, 0, CMCD_KEY_SPECS[key]);
+}
+function prepareValue(key, value, spec, options, formatterOptions) {
+  const formatter = options.formatters?.[key];
+  if (typeof formatter !== "function") return value == null ? void 0 : normalizeValue(value, spec, formatterOptions);
+  const formatted = isValid(value) ? formatter(value, formatterOptions) : value;
+  if (!isValid(formatted) && !(formatted === false && spec.type === "boolean")) return;
+  if (spec.type === "token") {
+    if (typeof formatted === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(formatted);
+    if (formatted instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof formatted.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(formatted.value), formatted.params);
+  }
+  return formatted;
 }
 /**
 * Convert a generic object to CMCD data.
@@ -3599,43 +3838,69 @@ function downConvertToV1(obj) {
 * @param options - Options for encoding.
 *
 * @public
+*
+* @example
+* {@includeCode ../test/prepareCmcdData.test.ts#example}
 */
 function prepareCmcdData(obj, options = {}) {
   const results = {};
   if (obj == null || typeof obj !== "object") return results;
-  const version = options.version || obj["v"] || CMCD_V2;
+  const version = options.version || toBareValue(obj["v"]) || CMCD_V2;
   const reportingMode = options.reportingMode || CMCD_REQUEST_MODE;
-  const data = version === 1 ? downConvertToV1(obj) : obj;
-  const keyFilter = version === 1 ? isCmcdV1Key : filterMap[reportingMode];
-  let keys = Object.keys(data).filter(keyFilter);
-  if (data["e"] && data["e"] !== CMCD_EVENT_RESPONSE_RECEIVED) keys = keys.filter(key => !isCmcdResponseReceivedKey(key));
-  const filter = options.filter;
-  if (typeof filter === "function") keys = keys.filter(filter);
-  const isEventMode = reportingMode === CMCD_EVENT_MODE;
-  if (isEventMode) {
-    const eventType = data["e"];
-    if (!keys.includes("e") && eventType != null) keys.push("e");
-    if (!keys.includes("ts")) keys.push("ts");
-    if (!keys.includes("cen") && data["cen"] != null && eventType === CMCD_EVENT_CUSTOM_EVENT) keys.push("cen");
-  }
-  if (keys.length === 0) return results;
-  if (version > 1 && !keys.includes("v")) keys.push("v");
+  const isV1 = version === 1;
+  const isEventReport = !isV1 && reportingMode === CMCD_EVENT_MODE;
   const formatterOptions = {
     version,
     reportingMode,
     baseUrl: options.baseUrl
   };
-  keys.sort();
-  for (const key of keys) {
-    let value = data[key];
-    const formatter = options.formatters?.[key] ?? CMCD_FORMATTER_MAP[key];
-    if (typeof formatter === "function") value = formatter(value, formatterOptions);
-    if (key === "v") if (version === 1) continue;else value = version;
-    if (key === "pr" && value === 1) continue;
-    if (isEventMode && key === "ts" && !Number.isFinite(value)) value = Date.now();
-    if (!isValid(value)) continue;
-    if (isTokenField(key) && typeof value === "string") value = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(value);
-    results[key] = value;
+  const filter = options.filter;
+  let objectTypeValue;
+  let objectType;
+  if (isV1 && needsV1ObjectType(obj, filter)) {
+    objectTypeValue = prepareValue("ot", obj["ot"], CMCD_KEY_SPECS["ot"], options, formatterOptions);
+    objectType = toTokenString(objectTypeValue);
+  }
+  const data = isV1 ? downConvertToV1(obj, objectType) : obj;
+  const eventValue = isEventReport ? prepareValue("e", data["e"], CMCD_KEY_SPECS["e"], options, formatterOptions) : void 0;
+  const event = toTokenString(eventValue);
+  const keys = [];
+  const specs = [];
+  let passed = false;
+  let needsObjectType = false;
+  for (const key of Object.keys(data).sort()) {
+    const spec = getKeySpec(key);
+    if (spec === void 0 || !hasKey(spec, reportingMode, isV1)) continue;
+    if (typeof filter !== "function" || filter(key)) passed = true;else if (!isRequired(spec, event)) continue;
+    if (spec.onlyOn !== void 0 && spec.onlyOn !== event) continue;
+    if (key === "ot" || hasObjectTypes(spec)) needsObjectType = true;
+    keys.push(key);
+    specs.push(spec);
+  }
+  if (!passed && !isEventReport) return results;
+  if (needsObjectType && !isV1) {
+    objectTypeValue = prepareValue("ot", data["ot"], CMCD_KEY_SPECS["ot"], options, formatterOptions);
+    objectType = toTokenString(objectTypeValue);
+  }
+  if (isEventReport && !keys.includes("ts")) insertKey(keys, specs, "ts");
+  if (!isV1 && !keys.includes("v")) insertKey(keys, specs, "v");
+  const values = new Array(keys.length);
+  for (let i = keys.length - 1; i >= 0; i--) {
+    const key = keys[i];
+    const spec = specs[i];
+    if (spec.type === "ot-list" && spec.supersededBy !== void 0) {
+      const exact = keys.indexOf(spec.supersededBy, i + 1);
+      if (exact !== -1 && values[exact] !== void 0) continue;
+    }
+    if (key === "v") values[i] = version;else if (key === "ot") values[i] = objectTypeValue;else if (key === "e") values[i] = eventValue;else if (isV1 || allowsObjectType(spec, objectType)) values[i] = prepareValue(key, data[key], spec, options, formatterOptions);
+    if (key === "ts") {
+      const timestamp = toBareValue(values[i]);
+      if (typeof timestamp !== "number" || !Number.isFinite(timestamp)) values[i] = Date.now();
+    }
+  }
+  for (let i = 0; i < keys.length; i++) {
+    const value = values[i];
+    if (value !== void 0 && (!isDefaultValue(specs[i], value) || isRequired(specs[i], event))) results[keys[i]] = value;
   }
   return results;
 }
@@ -3692,9 +3957,9 @@ const CMCD_HEADER_FIELDS = [CMCD_OBJECT, CMCD_REQUEST, CMCD_SESSION, CMCD_STATUS
 /**
 * The map of CMCD keys to their appropriate header shard.
 *
-* Note: Event-only keys (e, ts, cen, h) and response-received keys
-* (rc, ttfb, ttlb, url, etc.) are intentionally absent. They are
-* transmitted via the event-mode POST body, not HTTP headers.
+* Event-only keys (e, ts, cen, h) and response-received keys (rc, ttfb,
+* ttlb, url, and others) are intentionally absent. They are transmitted
+* in the event-mode POST body, not HTTP headers.
 *
 * @public
 */
@@ -3749,9 +4014,9 @@ function createHeaderMap(headerMap) {
   }, {});
 }
 /**
-* Group a CMCD data object into header shards
+* Group a CMCD object into header shards
 *
-* @param cmcd - The CMCD data object to convert.
+* @param cmcd - The CMCD object to convert.
 * @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
 *
 * @returns The CMCD header shards.
@@ -3799,10 +4064,10 @@ function toPreparedCmcdHeaders(data, customHeaderMap) {
 //#endregion
 //#region src/toCmcdHeaders.ts
 /**
-* Convert a CMCD data object to request headers
+* Convert a CMCD object to request headers
 *
-* @param cmcd - The CMCD data object to convert.
-* @param options - Options for encoding the CMCD object.
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding.
 *
 * @returns The CMCD header shards.
 *
@@ -3821,13 +4086,13 @@ function toCmcdHeaders(cmcd, options = {}) {
 //#endregion
 //#region src/appendCmcdHeaders.ts
 /**
-* Append CMCD query args to a header object.
+* Append CMCD header shards to a header object.
 *
 * @param headers - The headers to append to.
 * @param cmcd - The CMCD object to append.
-* @param options - Encode options.
+* @param options - Options for encoding.
 *
-* @returns The headers with the CMCD header shards appended.
+* @returns The headers with CMCD header shards appended.
 *
 * @public
 *
@@ -3839,15 +4104,6 @@ function toCmcdHeaders(cmcd, options = {}) {
 function appendCmcdHeaders(headers, cmcd, options) {
   return Object.assign(headers, toCmcdHeaders(cmcd, options));
 }
-
-//#endregion
-//#region src/CMCD_PARAM.ts
-/**
-* CMCD parameter name.
-*
-* @public
-*/
-const CMCD_PARAM = "CMCD";
 
 //#endregion
 //#region src/encodePreparedCmcd.ts
@@ -3888,56 +4144,101 @@ function encodeCmcd(cmcd, options = {}) {
 }
 
 //#endregion
-//#region src/toCmcdUrl.ts
+//#region src/CMCD_PARAM.ts
 /**
-* Convert a CMCD data object to a URL encoded string.
-*
-* @param cmcd - The CMCD object to convert.
-* @param options - Options for encoding the CMCD object.
-*
-* @returns The URL encoded CMCD data.
-*
-* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+* CMCD parameter name.
 *
 * @public
 */
-function toCmcdUrl(cmcd, options = {}) {
-  if (!cmcd) return "";
-  const params = encodeCmcd(cmcd, options);
-  return encodeURIComponent(params);
+const CMCD_PARAM = "CMCD";
+
+//#endregion
+//#region src/percentEncode.ts
+const SUB_DELIMS_REGEX = /[!'()*]/g;
+const SURROGATE_REGEX = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g;
+function encodeSubDelim(char) {
+  return `%${char.charCodeAt(0).toString(16).toUpperCase()}`;
+}
+function replaceUnpaired(match) {
+  return match.length === 2 ? match : "�";
+}
+/**
+* Percent-encode a string for the `CMCD` query parameter.
+*
+* Only the unreserved characters of RFC 3986 stay unencoded: letters, digits,
+* `-`, `.`, `_`, and `~`. The query examples of CTA-5004-B use this encoding.
+* An unpaired surrogate becomes U+FFFD.
+*
+* @param value - The string to encode.
+* @returns The encoded string.
+*
+* @internal
+*/
+function percentEncode(value) {
+  let encoded;
+  try {
+    encoded = encodeURIComponent(value);
+  } catch {
+    encoded = encodeURIComponent(value.replace(SURROGATE_REGEX, replaceUnpaired));
+  }
+  return encoded.replace(SUB_DELIMS_REGEX, encodeSubDelim);
 }
 
 //#endregion
-//#region src/toCmcdQuery.ts
+//#region src/replaceCmcdParam.ts
+function isCmcdParam(param) {
+  return param === CMCD_PARAM || param.startsWith(`${CMCD_PARAM}=`);
+}
 /**
-* Convert a CMCD data object to a query arg.
+* Replace the `CMCD` query parameter of a URL.
 *
-* @param cmcd - The CMCD object to convert.
-* @param options - Options for encoding the CMCD object.
+* The first `CMCD` parameter takes the new value in place. The function
+* removes the other `CMCD` parameters. If the URL has no `CMCD` parameter,
+* the new parameter goes at the end of the query. An empty `value` only
+* removes the parameters. The function does not change the rest of the URL.
+* The URL can be relative.
 *
-* @returns The CMCD query arg.
+* @param url - The URL.
+* @param value - The encoded CMCD data, before percent-encoding.
+* @returns The URL with at most one `CMCD` parameter.
 *
-* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
-*
-* @public
-*
-* @example
-* {@includeCode ../test/toCmcdQuery.test.ts#example}
+* @internal
 */
-function toCmcdQuery(cmcd, options = {}) {
-  if (!cmcd) return "";
-  return `${CMCD_PARAM}=${toCmcdUrl(cmcd, options)}`;
+function replaceCmcdParam(url, value) {
+  const hashIndex = url.indexOf("#");
+  const end = hashIndex === -1 ? url.length : hashIndex;
+  const queryIndex = url.indexOf("?");
+  const start = queryIndex === -1 || queryIndex > end ? end : queryIndex;
+  const params = [];
+  let param = value ? `${CMCD_PARAM}=${percentEncode(value)}` : "";
+  let found = false;
+  for (const item of start < end ? url.slice(start + 1, end).split("&") : []) if (!isCmcdParam(item)) params.push(item);else {
+    found = true;
+    if (param) {
+      params.push(param);
+      param = "";
+    }
+  }
+  if (param) {
+    if (params[params.length - 1] === "") params.pop();
+    params.push(param);
+  } else if (!found) return url;
+  const query = params.join("&");
+  return `${url.slice(0, start)}${query ? `?${query}` : ""}${url.slice(end)}`;
 }
 
 //#endregion
 //#region src/appendCmcdQuery.ts
-const REGEX = /CMCD=[^&#]+/;
 /**
 * Append CMCD query args to a URL.
 *
+* If the URL has a `CMCD` parameter, the new value replaces it in place. The
+* other parameters and the fragment stay as they are. If the data has no keys
+* to send, the function returns the URL unchanged.
+*
 * @param url - The URL to append to.
 * @param cmcd - The CMCD object to append.
-* @param options - Options for encoding the CMCD object.
+* @param options - Options for encoding.
 *
 * @returns The URL with the CMCD query args appended.
 *
@@ -3949,20 +4250,116 @@ const REGEX = /CMCD=[^&#]+/;
 * @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
 */
 function appendCmcdQuery(url, cmcd, options) {
-  const query = toCmcdQuery(cmcd, options);
-  if (!query) return url;
-  if (REGEX.test(url)) return url.replace(REGEX, query);
-  return `${url}${url.includes("?") ? "&" : "?"}${query}`;
+  const value = cmcd ? encodeCmcd(cmcd, options) : "";
+  return value ? replaceCmcdParam(url, value) : url;
 }
 
 //#endregion
 //#region src/CMCD_DEFAULT_TIME_INTERVAL.ts
 /**
-* The default time interval in seconds when using using event mode
+* The default time interval in seconds when using event mode
 *
 * @public
 */
 const CMCD_DEFAULT_TIME_INTERVAL = 30;
+
+//#endregion
+//#region src/CMCD_EVENT_KEYS.ts
+/**
+* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+const CMCD_EVENT_KEYS = ["cen", "e", "h", "ts"];
+
+//#endregion
+//#region src/CMCD_FORMATTER_MAP.ts
+const formatNumbers = (value, format) => {
+  if (Array.isArray(value)) {
+    const list = [];
+    for (const item of value) {
+      const formatted = formatNumbers(item, format);
+      if (Number.isFinite(formatted instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem ? formatted.value : formatted)) list.push(formatted);
+    }
+    return list;
+  }
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+    const formatted = formatNumbers(value.value, format);
+    return isValid(formatted) ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(formatted, value.params) : NaN;
+  }
+  return typeof value === "number" ? format(value) : NaN;
+};
+const toRounded = value => formatNumbers(value, Math.round);
+const toNumber = value => formatNumbers(value, Number);
+const roundToHundred = value => Math.round(value / 100) * 100;
+const toHundred = value => formatNumbers(value, roundToHundred);
+/**
+* Formatters for CMCD values.
+*
+* The encoder applies the same rounding through its key table, and `nor` is the `nor` rule of the encoder.
+* Use an entry to build a custom formatter for `CmcdEncodeOptions.formatters`.
+* The formatter of a numeric key drops a value or a list element that is not a finite number.
+*
+* @public
+*/
+const CMCD_FORMATTER_MAP = {
+  br: toRounded,
+  d: toRounded,
+  bl: toHundred,
+  dl: toHundred,
+  mtp: toHundred,
+  nor: (value, options) => formatNor(value, options) ?? "",
+  rtp: toHundred,
+  tb: toRounded,
+  tbl: toHundred,
+  ab: toRounded,
+  bsa: toRounded,
+  bsd: toRounded,
+  bsda: toRounded,
+  dfa: toRounded,
+  lab: toRounded,
+  lb: toRounded,
+  ltc: toRounded,
+  msd: toRounded,
+  pb: toRounded,
+  pr: toNumber,
+  pt: toRounded,
+  rc: toRounded,
+  sn: toRounded,
+  tab: toRounded,
+  tpb: toRounded,
+  ts: toRounded,
+  ttfb: toRounded,
+  ttfbb: toRounded,
+  ttlb: toRounded
+};
+
+//#endregion
+//#region src/CMCD_REQUEST_KEYS.ts
+/**
+* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+const CMCD_REQUEST_KEYS = ["ab", "bg", "bl", "br", "bs", "bsa", "bsd", "bsda", "cdn", "cid", "cs", "d", "dfa", "dl", "ec", "lab", "lb", "ltc", "msd", "mtp", "nor", "nr", "ot", "pb", "pr", "pt", "rtp", "sf", "sid", "sn", "st", "sta", "su", "tab", "tb", "tbl", "tpb", "v"];
+
+//#endregion
+//#region src/CMCD_RESPONSE_KEYS.ts
+/**
+* Response-only and timing keys for version 2.
+*
+* @public
+*/
+const CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
+
+//#endregion
+//#region src/CMCD_V1_KEYS.ts
+/**
+* Defines the keys for CMCD (Common Media Client Data) version 1.
+*
+* @public
+*/
+const CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
 
 //#endregion
 //#region src/CMCD_KEYS.ts
@@ -3971,7 +4368,7 @@ const CMCD_DEFAULT_TIME_INTERVAL = 30;
 *
 * @public
 */
-const CMCD_KEYS = [...CMCD_V1_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS, ...CMCD_EVENT_KEYS].filter((key, index, arr) => arr.indexOf(key) === index);
+const CMCD_KEYS = /* @__PURE__ */[...CMCD_V1_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS, ...CMCD_EVENT_KEYS].filter((key, index, arr) => arr.indexOf(key) === index);
 
 //#endregion
 //#region src/CMCD_MIME_TYPE.ts
@@ -3983,6 +4380,34 @@ const CMCD_KEYS = [...CMCD_V1_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS,
 const CMCD_MIME_TYPE = "application/cmcd";
 
 //#endregion
+//#region src/CMCD_REQUEST_PROVENANCE.ts
+/**
+* The `customData` property where `CmcdReporter.createRequestReport()`
+* writes session provenance on every request it returns.
+*
+* The value is a frozen `CmcdRequestProvenance` record. `sid` names the
+* session that issued the request. `cid` is the content id at the time the
+* request was issued. `data` is the request's per-call data as an encoded
+* CMCD string. `CmcdReporter.recordResponseReceived()` reads the record to
+* attribute a late response to its session and to rebuild the request-time
+* report keys.
+* Spread and `Object.assign` copy the record into ordinary request clones.
+* `JSON.stringify` and structured clone drop symbol-keyed properties. Before
+* either operation, read the value and restore it afterward. JSON preserves
+* the record's fields. Attribution uses the `sid` value rather than object
+* identity, so a parsed plain-object copy attributes correctly. For a record
+* naming a `sid` the reporter does not retain, the reporter drops the
+* response rather than reattributing it.
+*
+* The symbol registry provides the symbol, so duplicated copies of this
+* library in one bundle interoperate. The registry key is stable across
+* versions.
+*
+* @public
+*/
+const CMCD_REQUEST_PROVENANCE = /* @__PURE__ */Symbol.for("@svta/cml-cmcd/request-provenance");
+
+//#endregion
 //#region src/CMCD_V1.ts
 /**
 * CMCD Version 1
@@ -3990,6 +4415,146 @@ const CMCD_MIME_TYPE = "application/cmcd";
 * @public
 */
 const CMCD_V1 = 1;
+
+//#endregion
+//#region src/CmcdEventType.ts
+/**
+* CMCD event type 'bc' (bitrate change).
+*
+* @public
+*/
+const CMCD_EVENT_BITRATE_CHANGE = "bc";
+/**
+* CMCD event type 'ps' (play state change).
+*
+* @public
+*/
+const CMCD_EVENT_PLAY_STATE = "ps";
+/**
+* CMCD event type 'pr' (playback rate change).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYBACK_RATE = "pr";
+/**
+* CMCD event type 'e' (error).
+*
+* @public
+*/
+const CMCD_EVENT_ERROR = "e";
+/**
+* CMCD event type 't' (time interval).
+*
+* @public
+*/
+const CMCD_EVENT_TIME_INTERVAL = "t";
+/**
+* CMCD event type 'c' (content ID).
+*
+* @public
+*/
+const CMCD_EVENT_CONTENT_ID = "c";
+/**
+* CMCD event type 'b' (backgrounded mode).
+*
+* @public
+*/
+const CMCD_EVENT_BACKGROUNDED_MODE = "b";
+/**
+* CMCD event type 'm' (mute).
+*
+* @public
+*/
+const CMCD_EVENT_MUTE = "m";
+/**
+* CMCD event type 'um' (unmute).
+*
+* @public
+*/
+const CMCD_EVENT_UNMUTE = "um";
+/**
+* CMCD event type 'pe' (player expand).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYER_EXPAND = "pe";
+/**
+* CMCD event type 'pc' (player collapse).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYER_COLLAPSE = "pc";
+/**
+* CMCD event type 'rr' (response received).
+*
+* @public
+*/
+const CMCD_EVENT_RESPONSE_RECEIVED = "rr";
+/**
+* CMCD event type 'as' (ad start).
+*
+* @public
+*/
+const CMCD_EVENT_AD_START = "as";
+/**
+* CMCD event type 'ae' (ad end).
+*
+* @public
+*/
+const CMCD_EVENT_AD_END = "ae";
+/**
+* CMCD event type 'abs' (ad break start).
+*
+* @public
+*/
+const CMCD_EVENT_AD_BREAK_START = "abs";
+/**
+* CMCD event type 'abe' (ad break end).
+*
+* @public
+*/
+const CMCD_EVENT_AD_BREAK_END = "abe";
+/**
+* CMCD event type 'sk' (skip).
+*
+* @public
+*/
+const CMCD_EVENT_SKIP = "sk";
+/**
+* CMCD event type 'ce' (custom event).
+*
+* @public
+*/
+const CMCD_EVENT_CUSTOM_EVENT = "ce";
+/**
+* CMCD event types for the 'e' key (event mode).
+*
+* @enum
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event | CTA-5004-B Event}
+*
+* @public
+*/
+const CmcdEventType = {
+  BITRATE_CHANGE: CMCD_EVENT_BITRATE_CHANGE,
+  PLAY_STATE: CMCD_EVENT_PLAY_STATE,
+  PLAYBACK_RATE: CMCD_EVENT_PLAYBACK_RATE,
+  ERROR: CMCD_EVENT_ERROR,
+  TIME_INTERVAL: CMCD_EVENT_TIME_INTERVAL,
+  CONTENT_ID: CMCD_EVENT_CONTENT_ID,
+  BACKGROUNDED_MODE: CMCD_EVENT_BACKGROUNDED_MODE,
+  MUTE: CMCD_EVENT_MUTE,
+  UNMUTE: CMCD_EVENT_UNMUTE,
+  PLAYER_EXPAND: CMCD_EVENT_PLAYER_EXPAND,
+  PLAYER_COLLAPSE: CMCD_EVENT_PLAYER_COLLAPSE,
+  RESPONSE_RECEIVED: CMCD_EVENT_RESPONSE_RECEIVED,
+  AD_START: CMCD_EVENT_AD_START,
+  AD_END: CMCD_EVENT_AD_END,
+  AD_BREAK_START: CMCD_EVENT_AD_BREAK_START,
+  AD_BREAK_END: CMCD_EVENT_AD_BREAK_END,
+  SKIP: CMCD_EVENT_SKIP,
+  CUSTOM_EVENT: CMCD_EVENT_CUSTOM_EVENT
+};
 
 //#endregion
 //#region src/CmcdObjectType.ts
@@ -4017,7 +4582,7 @@ const CmcdObjectType = {
 //#endregion
 //#region src/CmcdPlayerState.ts
 /**
-* CMCD v2 player states for the 'sta' key.
+* CMCD version 2 player states for the 'sta' key.
 *
 *
 * @enum
@@ -4038,6 +4603,450 @@ const CmcdPlayerState = {
   QUIT: "q",
   PRELOADING: "d"
 };
+
+//#endregion
+//#region src/CmcdRecordedReportMode.ts
+/**
+* CMCD query reporting mode: CMCD data transmitted as a `CMCD=` URL
+* query parameter.
+*
+* @public
+*/
+const CMCD_RECORDED_REPORT_MODE_QUERY = "query";
+/**
+* CMCD header reporting mode: CMCD data transmitted as `CMCD-*` HTTP
+* headers.
+*
+* @public
+*/
+const CMCD_RECORDED_REPORT_MODE_HEADER = "header";
+/**
+* CMCD event reporting mode: CMCD data transmitted as a POST body to an
+* event-target URL.
+*
+* @public
+*/
+const CMCD_RECORDED_REPORT_MODE_EVENT = "event";
+/**
+* Reporting mode in which `CmcdReportRecorder` observed a captured
+* report.
+*
+* @enum
+*
+* @public
+*/
+const CmcdRecordedReportMode = {
+  QUERY: CMCD_RECORDED_REPORT_MODE_QUERY,
+  HEADER: CMCD_RECORDED_REPORT_MODE_HEADER,
+  EVENT: CMCD_RECORDED_REPORT_MODE_EVENT
+};
+
+//#endregion
+//#region src/CmcdRecordedRequestType.ts
+/**
+* Manifest or playlist request classification.
+*
+* @public
+*/
+const CMCD_RECORDED_REQUEST_TYPE_MANIFEST = "manifest";
+/**
+* Media segment request classification.
+*
+* @public
+*/
+const CMCD_RECORDED_REQUEST_TYPE_SEGMENT = "segment";
+/**
+* CMCD event-mode report request classification (POST to a URL in
+* `eventTargetUrls`).
+*
+* @public
+*/
+const CMCD_RECORDED_REQUEST_TYPE_EVENT = "event";
+/**
+* Default classification for requests the recorder did not recognize
+* as manifest, segment, or event.
+*
+* @public
+*/
+const CMCD_RECORDED_REQUEST_TYPE_UNKNOWN = "unknown";
+/**
+* Classification of a captured request, used by `CmcdReportRecorder`
+* for filtering.
+*
+* @enum
+*
+* @public
+*/
+const CmcdRecordedRequestType = {
+  MANIFEST: CMCD_RECORDED_REQUEST_TYPE_MANIFEST,
+  SEGMENT: CMCD_RECORDED_REQUEST_TYPE_SEGMENT,
+  EVENT: CMCD_RECORDED_REQUEST_TYPE_EVENT,
+  UNKNOWN: CMCD_RECORDED_REQUEST_TYPE_UNKNOWN
+};
+
+//#endregion
+//#region src/createFetchTransport.ts
+async function toHttpRequest(request) {
+  const headers = {};
+  request.headers.forEach((value, name) => {
+    headers[name.toLowerCase()] = value;
+  });
+  let body;
+  if (request.body) try {
+    body = await request.text();
+  } catch {
+    body = void 0;
+  }
+  return {
+    url: request.url,
+    method: request.method,
+    headers,
+    body
+  };
+}
+/**
+* Create a transport adapter for `CmcdReportRecorder` that patches
+* `globalThis.fetch` to capture requests with CMCD data. The patched
+* `fetch` normalizes each request to `HttpRequest` (lowercase headers,
+* body read as a UTF-8 string).
+*
+* The patched `fetch` reads each body once with `Request.text()` for
+* inspection. This read is safe for the body types that CMCD reports use
+* in practice: `string`, `Blob`, `ArrayBuffer`, `FormData`, and
+* `URLSearchParams`. The underlying `fetch` can read those bodies again.
+* Do not pass a `ReadableStream` as `init.body`. The patched `fetch`
+* consumes the stream, and the underlying `fetch` receives an
+* already-disturbed stream.
+*
+* @public
+*/
+function createFetchTransport() {
+  return {
+    attach(deliver) {
+      const origFetch = globalThis.fetch;
+      globalThis.fetch = async (input, init) => {
+        const synthetic = deliver(await toHttpRequest(input instanceof Request ? input.clone() : new Request(input, init)));
+        if (synthetic) return synthetic;
+        return origFetch.call(globalThis, input, init);
+      };
+      return () => {
+        globalThis.fetch = origFetch;
+      };
+    }
+  };
+}
+
+//#endregion
+//#region src/createXhrTransport.ts
+async function completeXhrWith(xhr, response) {
+  const text = await response.clone().text().catch(() => "");
+  const ProgressEventCtor = typeof ProgressEvent !== "undefined" ? ProgressEvent : Event;
+  queueMicrotask(() => {
+    try {
+      Object.defineProperty(xhr, "status", {
+        value: response.status,
+        configurable: true
+      });
+      Object.defineProperty(xhr, "statusText", {
+        value: response.statusText,
+        configurable: true
+      });
+      Object.defineProperty(xhr, "readyState", {
+        value: 4,
+        configurable: true
+      });
+      Object.defineProperty(xhr, "responseURL", {
+        value: xhr._cmcdUrl ?? "",
+        configurable: true
+      });
+      Object.defineProperty(xhr, "response", {
+        value: text,
+        configurable: true
+      });
+      Object.defineProperty(xhr, "responseText", {
+        value: text,
+        configurable: true
+      });
+      if (typeof xhr.onload === "function") xhr.onload.call(xhr, new ProgressEventCtor("load"));
+      if (typeof xhr.onloadend === "function") xhr.onloadend.call(xhr, new ProgressEventCtor("loadend"));
+    } catch {
+      const target = xhr;
+      target["status"] = response.status;
+      target["statusText"] = response.statusText;
+      target["readyState"] = 4;
+      target["responseURL"] = xhr._cmcdUrl ?? "";
+      target["response"] = text;
+      target["responseText"] = text;
+      if (typeof xhr.onload === "function") xhr.onload.call(xhr, new ProgressEventCtor("load"));
+      if (typeof xhr.onloadend === "function") xhr.onloadend.call(xhr, new ProgressEventCtor("loadend"));
+    }
+  });
+}
+/**
+* Create a transport adapter for `CmcdReportRecorder` that patches
+* `XMLHttpRequest.prototype` to capture requests with CMCD data.
+*
+* @public
+*/
+function createXhrTransport() {
+  return {
+    attach(deliver) {
+      const Xhr = globalThis.XMLHttpRequest;
+      if (!Xhr) return () => {};
+      const origOpen = Xhr.prototype.open;
+      const origSetRequestHeader = Xhr.prototype.setRequestHeader;
+      const origSend = Xhr.prototype.send;
+      Xhr.prototype.open = function (method, url) {
+        this._cmcdMethod = method;
+        this._cmcdUrl = typeof url === "string" ? url : url.toString();
+        this._cmcdHeaders = {};
+        return origOpen.apply(this, arguments);
+      };
+      Xhr.prototype.setRequestHeader = function (name, value) {
+        if (this._cmcdHeaders) this._cmcdHeaders[name.toLowerCase()] = value;
+        return origSetRequestHeader.apply(this, [name, value]);
+      };
+      Xhr.prototype.send = function (body) {
+        const synthetic = deliver({
+          url: this._cmcdUrl ?? "",
+          method: (this._cmcdMethod ?? "GET").toUpperCase(),
+          headers: this._cmcdHeaders ?? {},
+          body: (typeof Document !== "undefined" && body instanceof Document ? void 0 : body) ?? void 0
+        });
+        if (synthetic) {
+          completeXhrWith(this, synthetic);
+          return;
+        }
+        return origSend.apply(this, [body]);
+      };
+      return () => {
+        Xhr.prototype.open = origOpen;
+        Xhr.prototype.setRequestHeader = origSetRequestHeader;
+        Xhr.prototype.send = origSend;
+      };
+    }
+  };
+}
+
+//#endregion
+//#region src/CmcdReportRecorder.ts
+const MANIFEST_EXTENSIONS = /\.(m3u8|mpd)(\?|$|\/)/i;
+const SEGMENT_EXTENSIONS = /\.(m4s|m4v|m4a|mp4|ts|aac)(\?|$|\/)/i;
+function classifyUrl(url, isEventTarget) {
+  if (isEventTarget) return CmcdRecordedRequestType.EVENT;
+  if (MANIFEST_EXTENSIONS.test(url)) return CmcdRecordedRequestType.MANIFEST;
+  if (SEGMENT_EXTENSIONS.test(url)) return CmcdRecordedRequestType.SEGMENT;
+  return CmcdRecordedRequestType.UNKNOWN;
+}
+function hasCmcdHeader(headers) {
+  if (!headers) return false;
+  for (const name in headers) if (name.toLowerCase().startsWith("cmcd-")) return true;
+  return false;
+}
+function detectReportingMode(url, headers, isEventTarget) {
+  if (isEventTarget) return "event";
+  if (hasCmcdHeader(headers)) return "header";
+  return url.includes(`${CMCD_PARAM}=`) ? "query" : null;
+}
+/**
+* Test helper that records CMCD reports from the XHR and fetch
+* transports for assertions in e2e tests. The recorder normalizes each
+* captured request to {@link @svta/cml-utils!HttpRequest | HttpRequest},
+* so tests are identical regardless of which transport the player uses.
+*
+* @example
+* {@includeCode ../test/CmcdReportRecorder.test.ts#example}
+*
+* @public
+*/
+var CmcdReportRecorder = class {
+  constructor() {
+    this.reports = [];
+    this.detachers = [];
+    this.attached = false;
+    this.eventTargetUrls = [];
+    this.waiters = /* @__PURE__ */new Map();
+    this.waitTimeout = 15e3;
+    this.deliver = request => {
+      const url = request.url;
+      const isEventTarget = (request.method ?? "GET").toUpperCase() === "POST" && this.eventTargetUrls.some(t => url.startsWith(t));
+      const reportingMode = detectReportingMode(url, request.headers, isEventTarget);
+      if (reportingMode === null) return;
+      const captured = {
+        request,
+        type: classifyUrl(url, isEventTarget),
+        reportingMode,
+        timestamp: Date.now()
+      };
+      this.reports.push(captured);
+      if (this.onReport) try {
+        this.onReport(captured);
+      } catch (err) {
+        console.error("CmcdReportRecorder onReport listener threw:", err);
+      }
+      this.notifyWaiters();
+      return isEventTarget ? new Response(null, {
+        status: 204
+      }) : void 0;
+    };
+  }
+  getMatching(type) {
+    return type === void 0 ? [...this.reports] : this.reports.filter(r => r.type === type);
+  }
+  notifyWaiters() {
+    for (const [timer, waiter] of this.waiters) {
+      const matching = this.getMatching(waiter.type);
+      if (matching.length >= waiter.count) {
+        clearTimeout(timer);
+        this.waiters.delete(timer);
+        waiter.resolve(matching);
+      }
+    }
+  }
+  waitFor(type, options) {
+    const count = options.count ?? 1;
+    const timeout = options.timeout ?? this.waitTimeout;
+    const matching = this.getMatching(type);
+    if (matching.length >= count) return Promise.resolve(matching);
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.waiters.delete(timer);
+        const current = this.getMatching(type);
+        reject(/* @__PURE__ */new Error(`Timeout waiting for ${count} ${type ?? "any"} CMCD report(s). Got ${current.length}. Total recorded: ${this.reports.length}.`));
+      }, timeout);
+      this.waiters.set(timer, {
+        type,
+        count,
+        resolve,
+        reject
+      });
+    });
+  }
+  /**
+  * Install transport patches and start recording CMCD reports.
+  * If the recorder is already attached, this call does nothing. The
+  * recorder keeps the previous options and silently ignores the new
+  * `options` argument. To re-attach with different options, call
+  * `detach()` first.
+  *
+  * @public
+  */
+  attach(options = {}) {
+    if (this.attached) return;
+    this.attached = true;
+    this.eventTargetUrls = options.eventTargetUrls ?? [];
+    this.onReport = options.onReport;
+    this.waitTimeout = options.waitTimeout ?? 15e3;
+    const transports = options.transports ?? [createXhrTransport(), createFetchTransport()];
+    for (const transport of transports) this.detachers.push(transport.attach(this.deliver));
+  }
+  /**
+  * Remove transport patches and stop recording. Rejects any pending
+  * wait promises with `Error('Recorder detached while waiting')`.
+  *
+  * @public
+  */
+  detach() {
+    if (!this.attached) return;
+    for (const detacher of this.detachers) detacher();
+    this.detachers = [];
+    this.attached = false;
+    this.eventTargetUrls = [];
+    this.onReport = void 0;
+    for (const [timer, waiter] of this.waiters) {
+      clearTimeout(timer);
+      waiter.reject(/* @__PURE__ */new Error("Recorder detached while waiting"));
+    }
+    this.waiters.clear();
+  }
+  /**
+  * Discard all recorded reports. Does not affect the attached state.
+  *
+  * @public
+  */
+  clear() {
+    this.reports = [];
+  }
+  /**
+  * Return a copy of all recorded reports.
+  *
+  * @public
+  */
+  getReports() {
+    return [...this.reports];
+  }
+  /**
+  * Wait until at least `count` reports of any type are recorded.
+  * Resolves with all matching reports. Rejects with a diagnostic error
+  * on timeout. `count` defaults to 1. `timeout` defaults to the
+  * recorder's `waitTimeout` option (default 15000 ms).
+  *
+  * @public
+  */
+  waitForReports(options = {}) {
+    return this.waitFor(void 0, options);
+  }
+  /**
+  * Wait until at least `count` manifest reports are recorded.
+  * Resolves with all matching reports. Rejects with a diagnostic error
+  * on timeout. `count` defaults to 1. `timeout` defaults to the
+  * recorder's `waitTimeout` option (default 15000 ms).
+  *
+  * @public
+  */
+  waitForManifest(options = {}) {
+    return this.waitFor(CmcdRecordedRequestType.MANIFEST, options);
+  }
+  /**
+  * Wait until at least `count` segment reports are recorded.
+  * Resolves with all matching reports. Rejects with a diagnostic error
+  * on timeout. `count` defaults to 1. `timeout` defaults to the
+  * recorder's `waitTimeout` option (default 15000 ms).
+  *
+  * @public
+  */
+  waitForSegments(options = {}) {
+    return this.waitFor(CmcdRecordedRequestType.SEGMENT, options);
+  }
+  /**
+  * Wait until at least `count` event-mode reports are recorded.
+  * Resolves with all matching reports. Rejects with a diagnostic error
+  * on timeout. `count` defaults to 1. `timeout` defaults to the
+  * recorder's `waitTimeout` option (default 15000 ms).
+  *
+  * @public
+  */
+  waitForEvents(options = {}) {
+    return this.waitFor(CmcdRecordedRequestType.EVENT, options);
+  }
+};
+
+//#endregion
+//#region src/CMCD_STATE_EVENT_FIELDS.ts
+/**
+* Maps each state-change event type to the persistent field whose value
+* the event signals.
+*
+* The key table (`CMCD_KEY_SPECS`) marks the field as always sent on its
+* event, so the key filter of `prepareCmcdData` does not remove it.
+* `CmcdReporter` deduplicates events against the field value. It drops an
+* event whose field has no value and restores the field if a transform
+* removes it.
+*
+* Sending the field with each state-change event is a library choice.
+* The exception is the exit from backgrounded mode, which CTA-5004-B
+* defines as a `b` event without `bg`. CTA-5004-B requires the field only
+* on the `ps` event, which MUST carry `sta`. CTA-5004-B states no such rule
+* for `pr`, `c`, or `bc`. `validateCmcdStructure` follows CTA-5004-B and
+* does not read this map.
+*
+* Iteration order matters: `CmcdReporter.update()` records state-change
+* events in map order when several tracked fields change in one call.
+* Do not reorder entries without auditing reporter behavior.
+*
+* @internal
+*/
+const CMCD_STATE_EVENT_FIELDS = /* @__PURE__ */new Map([[CMCD_EVENT_PLAY_STATE, "sta"], [CMCD_EVENT_PLAYBACK_RATE, "pr"], [CMCD_EVENT_CONTENT_ID, "cid"], [CMCD_EVENT_BACKGROUNDED_MODE, "bg"], [CMCD_EVENT_BITRATE_CHANGE, "br"]]);
 
 //#endregion
 //#region src/CmcdTransmissionMode.ts
@@ -4075,6 +5084,50 @@ const CmcdTransmissionMode = {
 };
 
 //#endregion
+//#region src/upConvertToV2.ts
+/**
+* Up-convert version 1 CMCD data to version 2.
+*
+* - Wraps scalar values in arrays for inner-list keys.
+* - Wraps `nor` string in an array.
+*
+* The function returns version 2 data (has `v: 2`) unchanged. An inner list
+* with parameters, which `decodeCmcd` returns as an `SfItem` that wraps the
+* list, also stays unchanged.
+*
+* @internal
+*/
+function upConvertToV2(obj) {
+  if (toBareValue(obj["v"]) === CMCD_V2) return obj;
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value == null) {
+      result[key] = value;
+      continue;
+    }
+    if (CMCD_INNER_LIST_KEYS.has(key) && !Array.isArray(toBareValue(value))) result[key] = [value];else if (key === "nor" && typeof value === "string") result[key] = [value];else result[key] = value;
+  }
+  return result;
+}
+
+//#endregion
+//#region src/decodeCmcd.ts
+function reduceValue(value, useSymbol) {
+  if (Array.isArray(value)) return value.map(item => reduceValue(item, useSymbol));
+  if (typeof value === "symbol") return useSymbol === void 0 ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value) : value;
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return value.params ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(reduceValue(value.value, useSymbol), value.params) : reduceValue(value.value, useSymbol);
+  return value;
+}
+function decodeCmcd(cmcd, options) {
+  if (!cmcd) return {};
+  const sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.decodeSfDict)(cmcd, options);
+  const result = {};
+  for (const [key, item] of Object.entries(sfDict)) result[key] = reduceValue(item, options?.useSymbol);
+  if (options?.convertToLatest) return upConvertToV2(result);
+  return result;
+}
+
+//#endregion
 //#region src/CmcdReporter.ts
 function createEncodingOptions(reportingMode, config, baseUrl) {
   const enabledKeySet = new Set(config.enabledKeys ?? []);
@@ -4082,8 +5135,152 @@ function createEncodingOptions(reportingMode, config, baseUrl) {
     version: config.version || CMCD_V2,
     reportingMode,
     filter: key => enabledKeySet.has(key),
-    baseUrl
+    baseUrl,
+    customHeaderMap: config.customHeaderMap
   };
+}
+/**
+* Deep equality for CmcdObjectTypeList (used for `br` deduplication).
+*
+* Arrays with the same elements in different positions count as different.
+* Players that construct `br` consistently get correct deduplication.
+* Reordered arrays produce extra events, which is the safer failure.
+*/
+function cmcdObjectTypeListEqual(a, b) {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const ai = a[i];
+    const bi = b[i];
+    if (ai === bi) continue;
+    if ((typeof ai === "number" ? ai : ai.value) !== (typeof bi === "number" ? bi : bi.value)) return false;
+    const ap = typeof ai === "number" ? void 0 : ai.params;
+    const bp = typeof bi === "number" ? void 0 : bi.params;
+    const ak = ap && Object.keys(ap)[0];
+    const bk = bp && Object.keys(bp)[0];
+    if (ak !== bk) return false;
+    if (ak !== void 0 && bk !== void 0 && ap && bp && ap[ak] !== bp[bk]) return false;
+  }
+  return true;
+}
+/**
+* Equality for `br` deduplication. A `br` value can be an `SfItem` that
+* wraps the list, as `decodeCmcd` returns for an inner list with
+* parameters. Two values are equal when their lists are equal. The
+* parameters of the list are not compared.
+*/
+function brEqual(a, b) {
+  const listA = toBareValue(a);
+  const listB = toBareValue(b);
+  if (!Array.isArray(listA) || !Array.isArray(listB)) return Object.is(a, b);
+  return cmcdObjectTypeListEqual(listA, listB);
+}
+const equal = Object.is;
+const identity = v => v;
+/**
+* Maps each tracked state field to its event type and equality function.
+* Order matters: `update()` fires events in this order for multi-field updates.
+*/
+const STATE_FIELDS = /* @__PURE__ */Array.from(CMCD_STATE_EVENT_FIELDS, ([event, field]) => {
+  if (field === "br") return {
+    event,
+    field,
+    equal: brEqual,
+    snapshot: v => Array.isArray(v) ? v.slice() : copyItemValue(v)
+  };
+  return {
+    event,
+    field,
+    equal,
+    snapshot: identity
+  };
+});
+const STATE_FIELDS_BY_EVENT = /* @__PURE__ */new Map(/* @__PURE__ */STATE_FIELDS.map(e => [e.event, e]));
+function buildRequiredEventKeys() {
+  return new Map([...CMCD_STATE_EVENT_FIELDS, [CMCD_EVENT_CUSTOM_EVENT, "cen"], [CMCD_EVENT_ERROR, "ec"], [CMCD_EVENT_RESPONSE_RECEIVED, "url"]]);
+}
+/**
+* Maps each event type to the key that a report of that type must keep,
+* beyond `e` and `ts`. Built from the state-change table plus the three
+* event types whose required key is event data, not player state.
+*/
+const CMCD_REQUIRED_EVENT_KEYS = /* @__PURE__ */buildRequiredEventKeys();
+/**
+* Copies a value with the `SfItem` structure, including its `params` record
+* and the list of an `SfItem` that wraps a list.
+*
+* The copy keeps the prototype because `prepareCmcdData`, the formatter map,
+* validation, and the structured-field encoder all branch on
+* `instanceof SfItem`. A plain spread (and `structuredClone`) would return a
+* prototype-less object and silently change the encoded output.
+*/
+function copyItemValue(value) {
+  if (value === null || typeof value !== "object") return value;
+  const copy = Object.assign(Object.create(Object.getPrototypeOf(value)), value);
+  if (copy.params !== null && typeof copy.params === "object") copy.params = {
+    ...copy.params
+  };
+  if (Array.isArray(copy.value)) copy.value = copy.value.map(copyItemValue);
+  return copy;
+}
+/**
+* Copies the nested values of a report in place. A transform cannot mutate
+* the reporter's data store, or another target's report for the same event,
+* through an array or an `SfItem` it received.
+*
+* The copy is complete for the CMCD value space. `CmcdValue` and
+* `CmcdCustomValue` admit only primitives, `SfItem<primitive>`, and arrays of
+* those. `decodeCmcd` also returns an `SfItem` that wraps a list, and the
+* copy includes that list. `SfItem.params` is a flat record. The reporter calls this function
+* where a transform is configured, at session end on the ended session's
+* store, and on the request's stored player-facing view. The session-end
+* copy detaches the frozen snapshot from caller-held references.
+*/
+function copyReportValues(data) {
+  const record = data;
+  for (const key in record) {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      const copy = new Array(value.length);
+      for (let i = 0; i < value.length; i++) copy[i] = copyItemValue(value[i]);
+      record[key] = copy;
+    } else if (value !== null && typeof value === "object") record[key] = copyItemValue(value);
+  }
+  return data;
+}
+/**
+* Decodes the per-call data snapshot of a provenance record into new,
+* encodable report data. Tokens decode as `SfToken` and items with params
+* as `SfItem` (`useSymbol: false`), so every value re-encodes with its
+* original type. Only `recordResponseReceived()` calls this function.
+* Returns an empty object when the record is absent, has no snapshot, or
+* the snapshot does not parse (a value this reporter did not write). The
+* response then reports its derived keys over the session's data alone.
+*/
+function decodeSnapshot(provenance) {
+  const encoded = provenance !== null && typeof provenance === "object" ? provenance.data : void 0;
+  if (typeof encoded !== "string" || !encoded) return {};
+  try {
+    return decodeCmcd(encoded, {
+      useSymbol: false
+    });
+  } catch {
+    return {};
+  }
+}
+/**
+* Creates a session's frozen base provenance record: the issuing `sid`, and
+* the `cid` that is current at creation time. `update()` creates a new record
+* on every `cid` change. Requests issued before a mid-session content change
+* keep their original `cid`, while later requests get the new one.
+*/
+function mintProvenance(sid, cid) {
+  return Object.freeze(typeof cid === "string" && cid ? {
+    sid,
+    cid
+  } : {
+    sid
+  });
 }
 function defaultRequester(request) {
   const {
@@ -4100,11 +5297,14 @@ function createCmcdReporterConfig(config) {
     transmissionMode = CMCD_QUERY,
     ...rest
   } = config;
+  const retention = config.sessionRetention;
+  const sessionRetention = typeof retention === "number" ? Math.floor(retention) : NaN;
   return {
     ...rest,
     version,
     transmissionMode,
     sid,
+    sessionRetention: sessionRetention >= 0 ? sessionRetention : 2,
     eventTargets: eventTargets.reduce((acc, target) => {
       if (target?.url && target.events?.length) acc.push({
         version: target.version || CMCD_V2,
@@ -4112,7 +5312,8 @@ function createCmcdReporterConfig(config) {
         url: target.url,
         events: target.events.slice(),
         interval: target.interval ?? CMCD_DEFAULT_TIME_INTERVAL,
-        batchSize: target.batchSize || 1
+        batchSize: target.batchSize || 1,
+        transform: target.transform
       });
       return acc;
     }, [])
@@ -4120,6 +5321,14 @@ function createCmcdReporterConfig(config) {
 }
 /**
 * The CMCD reporter.
+*
+* `C` describes the player's own `customData`, which the reporter passes to
+* each configured `transform`. TypeScript infers `C` from the configuration,
+* so an annotation on one `transform` types the request in every other
+* `transform`. The default leaves `customData` values `unknown`.
+*
+* @typeParam C - The type of the player's `customData`. Defaults to
+*                `Record<string, unknown>`.
 *
 * @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#reporting-modes-when-we-send-data | CTA-5004-B Reporting Modes}
 *
@@ -4130,129 +5339,363 @@ var CmcdReporter = class {
   * Creates a new CMCD reporter.
   *
   * @param config - The configuration for the CMCD reporter.
-  * @param requester - The function to use to send the request.
+  * @param requester - The function that sends the request.
   *                    The default is a simple wrapper around the
   *                    native `fetch` API.
   */
   constructor(config, requester = defaultRequester) {
     this.timeOrigin = performance.timeOrigin || performance.timing?.fetchStart || Date.now() - performance.now();
-    this.data = {};
-    this.msd = NaN;
-    this.eventTargets = /* @__PURE__ */new Map();
-    this.requestTarget = {
-      sn: 0,
-      msdSent: false
-    };
+    this.sessions = /* @__PURE__ */new Map();
+    this.intervals = /* @__PURE__ */new Map();
+    this.started = false;
     this.config = createCmcdReporterConfig(config);
-    this.data = {
+    this.session = this.createSession(this.config.sid, {
       cid: this.config.cid,
-      sid: this.config.sid,
       v: this.config.version
-    };
+    });
+    this.sessions.set(this.session.sid, this.session);
     this.requester = requester;
-    for (const target of this.config.eventTargets) this.eventTargets.set(target, {
-      intervalId: void 0,
+  }
+  /**
+  * Creates the state for a new session: initial counters, flags, queues, and
+  * deduplication baseline for every configured target.
+  */
+  createSession(sid, data) {
+    const eventTargets = /* @__PURE__ */new Map();
+    for (const target of this.config.eventTargets) eventTargets.set(target, {
       sn: 0,
       msdSent: false,
-      queue: []
+      queue: [],
+      disposed: false
     });
+    return {
+      sid,
+      provenance: mintProvenance(sid, data.cid),
+      data,
+      msd: NaN,
+      lastEmitted: toBareValue(data.bg) === true ? {} : {
+        bg: false
+      },
+      eventTargets,
+      requestTarget: {
+        sn: 0,
+        msdSent: false
+      }
+    };
   }
   /**
-  * Starts the CMCD reporter. Called by the player when the reporter is enabled.
+  * Starts the CMCD reporter. The player calls this method when it enables the
+  * reporter.
   *
-  * Note: This fires an initial time-interval event immediately (synchronously)
-  * before the first interval elapses. Ensure CMCD data (sid, cid, etc.) is
-  * populated before calling start().
+  * This method fires an initial time-interval event immediately (synchronously),
+  * before the first interval elapses. Populate the CMCD data (sid, cid, and
+  * others) before calling start().
   */
   start() {
-    this.eventTargets.forEach((target, config) => {
-      this.disarmInterval(target);
-      if (config.interval === 0 || !config.events.includes(CmcdEventType.TIME_INTERVAL)) return;
-      const timeIntervalEvent = () => {
-        this.recordTargetEvent(target, config, CMCD_EVENT_TIME_INTERVAL);
+    this.started = true;
+    let failure;
+    const session = this.session;
+    session.eventTargets.forEach((target, config) => {
+      this.disarmInterval(config);
+      if (target.disposed || !this.armInterval(config)) return;
+      try {
+        this.recordTargetEvent(session, target, config, CMCD_EVENT_TIME_INTERVAL);
         this.processEventTargets();
-      };
-      target.intervalId = setInterval(timeIntervalEvent, config.interval * 1e3);
-      timeIntervalEvent();
+      } catch (error) {
+        failure ??= {
+          error
+        };
+      }
     });
+    if (failure) throw failure.error;
   }
   /**
-  * Stops the CMCD reporter. Called by the player when the reporter is disabled.
+  * Starts the time-interval timer for an event target when its config
+  * requires one. Returns whether a timer started. The callback reports into
+  * whichever session is current when the timer fires.
+  */
+  armInterval(config) {
+    if (config.interval === 0 || !config.events.includes(CMCD_EVENT_TIME_INTERVAL)) return false;
+    this.intervals.set(config, setInterval(() => {
+      const session = this.session;
+      const target = session.eventTargets.get(config);
+      if (target) {
+        this.recordTargetEvent(session, target, config, CMCD_EVENT_TIME_INTERVAL);
+        this.processEventTargets();
+      }
+    }, config.interval * 1e3));
+    return true;
+  }
+  /**
+  * Stops the CMCD reporter. The player calls this method when it disables the
+  * reporter.
   *
   * @param flush - Whether to flush the event targets.
   */
   stop(flush = false) {
+    this.started = false;
     if (flush) this.flush();
-    this.eventTargets.forEach(target => {
-      this.disarmInterval(target);
-    });
+    for (const config of this.config.eventTargets) this.disarmInterval(config);
   }
   /**
-  * Forces the sending of all event reports, regardless of the batch size or interval.
-  * Useful for sending outstanding reports when the player is destroyed or a playback
+  * Sends all outstanding event reports, regardless of the batch size or
+  * interval. Use this method when the player is destroyed or a playback
   * session ends.
   */
   flush() {
     this.processEventTargets(true);
   }
   /**
-  * Updates the CMCD data. Called by the player when the data changes.
+  * Updates the CMCD data.
+  *
+  * The player calls this method when data changes. The tracked state fields
+  * are `sta`, `pr`, `cid`, `bg`, and `br`. If a new value for one of them
+  * differs from the last reported value for that field, the reporter fires
+  * the matching state-change event. The comparison uses the last reported
+  * value, not the previous persisted value. The first state-change event in
+  * a new session therefore always fires, even when the persisted value did
+  * not change across the `sid` boundary.
+  *
+  * The `bg` field is an exception. A session that does not start with
+  * `bg: true` begins with `false` as its last reported `bg` value.
+  * `bg: false` therefore fires `BACKGROUNDED_MODE` only if the session
+  * started with `bg: true` or reported `bg: true`. CTA-5004-B defines a
+  * `b` event without `bg` as the exit from backgrounded mode, so the exit
+  * report does not carry `bg`. A target transform can add `bg: false` to
+  * the exit report. The encoder writes that value as `?0`.
+  *
+  * Multi-field updates fire the events in this order: `sta`, `pr`, `cid`,
+  * `bg`, `br`. The order of keys in the input object does not affect the
+  * firing order.
+  *
+  * A state-change event can include context fields, for example `bl`, `mtp`,
+  * `pt`, `ltc`. Those fields must be in the data store before the state field
+  * changes. Either pass them with the state field in the same `update()`
+  * call, or persist them with earlier `update()` calls. An auto-fired event
+  * reports the current content of the data store. `TIME_INTERVAL` events also
+  * read the data store, and the caller cannot add per-call data to them. The
+  * player must therefore update the fields it wants in periodic reports with
+  * this method.
+  *
+  * A `sid` change resets the deduplication baseline.
+  *
+  * `sid` and `msd` are session-owned. The reporter tracks them itself and
+  * writes them into every outgoing report, so this method is the only way
+  * to change them. A per-call value on {@link CmcdReporter.recordEvent},
+  * {@link CmcdReporter.createRequestReport}, or
+  * {@link CmcdReporter.recordResponseReceived} has no effect.
+  * `msd` must be a finite number of milliseconds between `0` and
+  * `999_999_999_999_999` (the RFC 8941 integer maximum). The reporter
+  * rounds `msd` to the nearest integer and ignores invalid values.
   *
   * @param data - The data to update.
   */
   update(data) {
-    if (data.sid && data.sid !== this.data.sid) this.resetSession();
-    if (data.msd && !isNaN(data.msd)) this.msd = data.msd;
-    this.data = {
-      ...this.data,
+    if (data.sid && data.sid !== this.session.sid) this.startSession(data.sid);
+    const session = this.session;
+    const {
+      msd
+    } = data;
+    if (typeof msd === "number" && Number.isFinite(msd) && msd >= 0) {
+      const rounded = Math.round(msd);
+      if (rounded <= 999999999999999) session.msd = rounded;
+    }
+    session.data = {
+      ...session.data,
       ...data,
+      sid: void 0,
       msd: void 0
     };
+    if (session.data.cid !== session.provenance.cid) session.provenance = mintProvenance(session.sid, session.data.cid);
+    for (const entry of STATE_FIELDS) if (entry.field in data && !entry.equal(session.data[entry.field], session.lastEmitted[entry.field])) this.recordEvent(entry.event);
   }
   /**
-  * Records an event. Called by the player when an event occurs.
+  * Starts a new session. The reporter retains the current session for late
+  * responses and creates a new current session. It then sends the ended
+  * sessions' queued reports and removes the oldest sessions beyond the
+  * configured retention.
+  *
+  * The ended session's snapshot is frozen: the reporter detaches its value
+  * graph, so nested values from earlier `update()` calls cannot mutate the
+  * snapshot. The new session starts from a shallow copy of that graph, which
+  * preserves the data store. All fields, including `cid`, `br`, and custom
+  * keys, survive a `sid` change as before. CTA-5004-B expects a `sid` to be
+  * unique per playback session, so a reused `sid` replaces the retained
+  * session with that `sid`. The replaced session's remaining state is lost,
+  * as if removed, and the reporter attributes its late responses to the
+  * replacement.
+  */
+  startSession(sid) {
+    this.session.data = copyReportValues({
+      ...this.session.data
+    });
+    this.session = this.createSession(sid, {
+      ...this.session.data
+    });
+    this.sessions.delete(sid);
+    this.sessions.set(sid, this.session);
+    this.processEventTargets();
+    for (const key of this.sessions.keys()) {
+      if (this.sessions.size <= this.config.sessionRetention + 1) break;
+      this.sessions.delete(key);
+    }
+    if (this.started) {
+      for (const config of this.config.eventTargets) if (!this.intervals.has(config)) this.armInterval(config);
+    }
+  }
+  /**
+  * Records an event. The player calls this method when an event occurs.
+  *
+  * For state-change events (`PLAY_STATE`, `PLAYBACK_RATE`, `CONTENT_ID`,
+  * `BACKGROUNDED_MODE`, `BITRATE_CHANGE`), this method:
+  * 1. Writes the state field from `data` (if present) into the reporter's
+  *    data store, as `update()` would.
+  * 2. Discards the event if the state field has no value after that write
+  *    (never set, or cleared with `update({ field: undefined })`).
+  * 3. Suppresses the event if the field's current value equals the
+  *    last reported value (no state transition). {@link CmcdReporter.update}
+  *    describes the `bg` value that a new session starts with.
+  *
+  * The reporter always records all other event types.
+  *
+  * For state-change events, prefer {@link CmcdReporter.update}, also for
+  * context fields in a combined call like
+  * `update({ sta: 'p', bl: [3000], mtp: [8500] })`. After `update()`
+  * auto-fires a state-change event, deduplication suppresses a
+  * `recordEvent()` call for the same event, and that call's `data` is
+  * silently lost.
+  *
+  * Call `recordEvent()` directly for events whose data comes with the event
+  * call. Examples: `CUSTOM_EVENT` with `cen`, `ERROR` with `ec`, ad lifecycle
+  * events, `MUTE`/`UNMUTE`, `PLAYER_EXPAND`/`PLAYER_COLLAPSE`, `SKIP`. For
+  * `RESPONSE_RECEIVED`, prefer {@link CmcdReporter.recordResponseReceived},
+  * which derives the per-response fields automatically.
   *
   * @param type - The type of event to record.
-  * @param data - Additional data to record with the event. This data
-  *               only applies to this event report. Persistent data should
-  *               be updated using `update()`.
+  * @param data - Additional data to record with the event. This data applies
+  *               only to this event report. The exception is the state field
+  *               of a state-change event, which the reporter also writes into
+  *               its data store. The reporter ignores session-owned keys
+  *               (`sid`, `msd`) supplied here and writes its own values.
   */
   recordEvent(type, data = {}) {
-    this.eventTargets.forEach((target, config) => {
-      this.recordTargetEvent(target, config, type, data);
-    });
-    this.processEventTargets();
+    this.emitEvent(this.session, type, data);
   }
   /**
-  * Records an event for a target. Called by the reporter when an event occurs.
+  * Records an event for every configured target of a session. State-change
+  * deduplication runs once, before the per-target loop.
+  *
+  * @param session - The session the event belongs to. Everything the event
+  *                  touches (data store, deduplication baseline, counters,
+  *                  queues) is that session's. Only `recordResponseReceived()`
+  *                  ever passes an ended session.
+  * @param type - The type of event to record.
+  * @param data - Additional data to record with the event.
+  * @param request - The media request that triggered the event, when
+  *                  one exists. Only `recordResponseReceived()` sets this
+  *                  parameter, which the reporter passes to each target's
+  *                  `transform`.
+  */
+  emitEvent(session, type, data, request) {
+    const entry = STATE_FIELDS_BY_EVENT.get(type);
+    if (entry) {
+      const field = entry.field;
+      const incoming = data[field];
+      if (incoming !== void 0) Object.assign(session.data, {
+        [field]: incoming
+      });
+      const current = session.data[field];
+      if (current === void 0) return;
+      if (entry.equal(current, session.lastEmitted[field])) return;
+      Object.assign(session.lastEmitted, {
+        [field]: entry.snapshot(current)
+      });
+    }
+    let failure;
+    session.eventTargets.forEach((target, config) => {
+      try {
+        this.recordTargetEvent(session, target, config, type, data, request);
+      } catch (error) {
+        failure ??= {
+          error
+        };
+      }
+    });
+    this.processEventTargets();
+    if (failure) throw failure.error;
+  }
+  /**
+  * Records an event for a target. The reporter calls this method when an
+  * event occurs.
   *
   * @param target - The target to record the event for.
   * @param config - The configuration for the target.
   * @param type - The type of event to record.
   * @param data - Additional data to record with the event. This data
-  *               only applies to this event report. Persistent data should
-  *               be updated using `update()`.
+  *               only applies to this event report. Use `update()` for
+  *               persistent data.
+  * @param request - The media request that triggered the event, when
+  *                  one exists. The target's `transform` receives it.
   */
-  recordTargetEvent(target, config, type, data = {}) {
-    if (!config.events.includes(type)) return;
+  recordTargetEvent(session, target, config, type, data = {}, request) {
+    if (target.disposed || !config.events.includes(type)) return;
     const item = {
-      ...this.data,
+      ...session.data,
       ...data,
+      sid: session.sid,
       e: type,
-      ts: data.ts ?? Date.now(),
-      sn: target.sn++
+      ts: data.ts ?? Date.now()
     };
-    if (!isNaN(this.msd) && !target.msdSent) {
-      item.msd = this.msd;
-      target.msdSent = true;
+    if (type === CMCD_EVENT_BACKGROUNDED_MODE && toBareValue(item.bg) === false) delete item.bg;
+    const {
+      transform
+    } = config;
+    if (!transform) {
+      this.queueTargetEvent(session, target, config, item, type);
+      return;
     }
-    target.queue.push(item);
+    copyReportValues(item);
+    const requiredKey = CMCD_REQUIRED_EVENT_KEYS.get(type);
+    const requiredValue = requiredKey ? item[requiredKey] : void 0;
+    const ts = item.ts;
+    const report = transform(item, request);
+    if (report == null) return;
+    if (!isValid(report.ts)) report.ts = ts;
+    if (requiredKey && isValid(requiredValue) && !isValid(report[requiredKey])) Object.assign(report, {
+      [requiredKey]: requiredValue
+    });
+    this.queueTargetEvent(session, target, config, report, type);
   }
   /**
-  * Records a response-received event. Called by the player when a media
-  * request response has been fully received.
+  * Writes the reporter-owned fields into a finished event report, encodes
+  * the report, and pushes the encoded line to the target's queue.
   *
-  * This method automatically derives the `rr` event keys from the
+  * This method runs after any transform. A transform cannot bypass the
+  * target's `events` filter through `e`, break `sn` continuity, or replace
+  * the session identity in `sid` and `msd`. Encoding here makes a report
+  * that cannot serialize throw inside the recording call, instead of failing
+  * the batch send and re-queueing forever.
+  *
+  * @param target - The target to queue the report for.
+  * @param config - The configuration for the target.
+  * @param report - The finished report data.
+  * @param type - The type of event being reported.
+  */
+  queueTargetEvent(session, target, config, report, type) {
+    report.e = type;
+    report.sn = target.sn++;
+    report.sid = session.sid;
+    if (!isNaN(session.msd) && !target.msdSent && config.enabledKeys?.includes("msd")) {
+      report.msd = session.msd;
+      target.msdSent = true;
+    } else delete report.msd;
+    target.queue.push(encodeCmcd(report, createEncodingOptions(CMCD_EVENT_MODE, config)));
+  }
+  /**
+  * Records a response-received event. The player calls this method when a
+  * media request response has fully arrived.
+  *
+  * This method derives these `rr` event keys automatically:
   *
   * - `url` - the original requested URL (before any redirects)
   * - `rc` - the HTTP response status code
@@ -4260,12 +5703,47 @@ var CmcdReporter = class {
   * - `ttfb` - time to first byte (from `resourceTiming.responseStart`)
   * - `ttlb` - time to last byte (from `resourceTiming.duration`)
   *
-  * Additional keys like `ttfbb`, `cmsdd`, `cmsds`, and `smrt` can be
-  * supplied via the `data` parameter if the player has access to them.
+  * If the player has additional keys like `ttfbb`, `cmsdd`, `cmsds`, and
+  * `smrt`, pass them in the `data` parameter.
+  *
+  * The request's `customData` is generic, so a player can pass a request with
+  * its own keys (for example `{ requestType: 'segment' }`) without a cast. The
+  * reporter reads only the provenance record that
+  * {@link CmcdReporter.createRequestReport} writes there. Every other key
+  * stays unchanged and visible to an event target's `transform` through its
+  * `request` argument.
+  *
+  * A reporter with a concrete `C` requires the request to satisfy that type.
+  * TypeScript therefore rejects a call whose request the configured
+  * transforms could not read. See {@link CmcdReporterCustomData}.
+  *
+  * The provenance record that {@link CmcdReporter.createRequestReport}
+  * stored on the request's `customData` (under
+  * {@link CMCD_REQUEST_PROVENANCE}) selects the session by `sid`. A record
+  * that names no retained session drops the response (see
+  * `CmcdReporterConfig.sessionRetention`). A request without a record reports
+  * under the current session, as in version 2.4.0. The request-time data then
+  * comes from `customData.cmcd`. A per-call `data.sid` cannot substitute. The
+  * reporter accepts any record whose `sid` names a retained session. The
+  * record may come from another reporter with the same session attributes,
+  * or be hand-built. If the request has a record, a response that completes
+  * after a `sid` change reports under its own retained session, with that
+  * session's data snapshot and sequence numbers.
+  *
+  * With a record, request-time report keys come from the record's encoded
+  * per-call `data` snapshot, which the reporter decodes for each response.
+  * The record's `cid` replaces the session's current `cid` in the report. A
+  * response that completes after a mid-session content change therefore
+  * reports its request-time values.
+  *
+  * @typeParam RD - The `customData` of this request. Defaults to the
+  *                reporter's own `C`.
   *
   * @param response - The HTTP response received.
   * @param data - Additional CMCD data to include with the event.
-  *               Values provided here override any auto-derived values.
+  *               Values provided here override the derived values.
+  *               The reporter ignores session-owned keys (`sid`, `msd`)
+  *               supplied here.
   */
   recordResponseReceived(response, data = {}) {
     const {
@@ -4273,10 +5751,17 @@ var CmcdReporter = class {
     } = response;
     const url = data.url ?? request?.url;
     if (!url) return;
-    const urlObj = new URL(url);
-    urlObj.searchParams.delete(CMCD_PARAM);
+    const provenance = request.customData?.[CMCD_REQUEST_PROVENANCE];
+    const session = provenance === void 0 ? this.session : this.resolveSession(provenance);
+    if (!session) return;
+    const cmcd = provenance === void 0 ? {
+      ...request.customData?.cmcd
+    } : decodeSnapshot(provenance);
+    const {
+      cid
+    } = provenance ?? {};
     const derived = {
-      url: urlObj.toString(),
+      url: replaceCmcdParam(url),
       rc: response.status
     };
     const timing = response.resourceTiming;
@@ -4287,16 +5772,34 @@ var CmcdReporter = class {
       }
       if (timing.duration != null) derived.ttlb = Math.round(timing.duration);
     }
-    const cmcd = request.customData?.cmcd ?? {};
-    this.recordEvent(CMCD_EVENT_RESPONSE_RECEIVED, {
+    this.emitEvent(session, CMCD_EVENT_RESPONSE_RECEIVED, {
+      ...(typeof cid === "string" && cid ? {
+        cid
+      } : void 0),
       ...cmcd,
       ...derived,
       ...data
-    });
+    }, request);
   }
   /**
-  * Applies the CMCD request report data to the request. Called by the player
-  * before sending the request.
+  * Resolves the session that a provenance record names. The record's `sid`
+  * must name one of this reporter's retained sessions, or the reporter
+  * discards the response. A record that names a removed or unknown `sid`
+  * resolves nothing. Any other attribution would be wrong. The reporter reads
+  * the `sid` as a plain property. A record
+  * copied through JSON therefore resolves the same session, and a hand-built
+  * record that names a retained session is accepted.
+  */
+  resolveSession(provenance) {
+    if (provenance === null || typeof provenance !== "object") return;
+    const {
+      sid
+    } = provenance;
+    return typeof sid === "string" ? this.sessions.get(sid) : void 0;
+  }
+  /**
+  * Applies the CMCD request report data to the request. The player calls this
+  * method before sending the request.
   *
   * @param req - The request to apply the CMCD request report to.
   * @returns The request with the CMCD request report applied.
@@ -4307,21 +5810,56 @@ var CmcdReporter = class {
     return this.createRequestReport(req) ?? req;
   }
   /**
-  * Checks if the request reporting is enabled.
+  * Checks whether request reporting is enabled.
   *
-  * @returns `true` if the request reporting is enabled, `false` otherwise.
+  * @returns `true` if request reporting is enabled, `false` otherwise.
   */
   isRequestReportingEnabled() {
     return !!this.config.enabledKeys?.length;
   }
   /**
-  * Creates a new request with the CMCD request report data applied. Called by the player
-  * before sending the request.
+  * The provenance record to write on a returned request. It is the session's
+  * frozen base record, extended with the caller's per-call data encoded as a
+  * CMCD string when there is any. Requests without per-call data share the
+  * base record, so the reporter writes only one property. The snapshot never
+  * contains reporter-written fields. A value that cannot encode contributes
+  * no snapshot and does not fail the request. The response still attributes
+  * and reports derived keys over session data, matching the tolerance of
+  * `decodeSnapshot()` when reading.
+  */
+  createRequestProvenance(data, baseUrl) {
+    const base = this.session.provenance;
+    if (!data) return base;
+    try {
+      const encoded = encodeCmcd(data, {
+        version: this.config.version,
+        reportingMode: CMCD_REQUEST_MODE,
+        baseUrl
+      });
+      return encoded ? Object.freeze({
+        ...base,
+        data: encoded
+      }) : base;
+    } catch {
+      return base;
+    }
+  }
+  /**
+  * Creates a new request with the CMCD request report data applied. The
+  * player calls this method before sending the request.
+  *
+  * A reporter with a concrete `C` requires the request's `customData` to
+  * satisfy that type. TypeScript therefore rejects a call whose request the
+  * configured transform could not read. See
+  * {@link CmcdReporterCustomData}.
+  *
+  * @typeParam R - The type of the request. Its `customData` must satisfy
+  *                the reporter's `C`.
   *
   * @param request - The request to apply the CMCD request report to.
   * @param data - The data to apply to the request. This data only
-  *               applies to this request report. Persistent data
-  *               should be updated using `update()`.
+  *               applies to this request report. Use `update()` for
+  *               persistent data.
   * @returns The request with the CMCD request report applied.
   */
   createRequestReport(request, data) {
@@ -4337,29 +5875,37 @@ var CmcdReporter = class {
       },
       customData: {
         ...customData,
-        cmcd: {}
+        cmcd: {},
+        [CMCD_REQUEST_PROVENANCE]: this.createRequestProvenance(data, request.url)
       }
     };
     if (!this.config.enabledKeys?.length || !report.url) return report;
-    const url = new URL(report.url);
-    const cmcdData = {
-      ...this.data,
+    const session = this.session;
+    const merged = {
+      ...session.data,
       ...data,
-      sn: this.requestTarget.sn++
+      sid: session.sid
     };
-    const options = createEncodingOptions(CMCD_REQUEST_MODE, this.config, report.url);
-    if (!isNaN(this.msd) && !this.requestTarget.msdSent) {
-      cmcdData.msd = this.msd;
-      this.requestTarget.msdSent = true;
+    const {
+      transform
+    } = this.config;
+    let cmcdData = merged;
+    if (transform) {
+      copyReportValues(merged);
+      cmcdData = transform(merged, request);
+      if (cmcdData == null) return report;
     }
-    const cmcd = report.customData.cmcd = prepareCmcdData(cmcdData, options);
+    cmcdData.sn = session.requestTarget.sn++;
+    cmcdData.sid = session.sid;
+    const sendMsd = !isNaN(session.msd) && !session.requestTarget.msdSent;
+    if (sendMsd) cmcdData.msd = session.msd;else delete cmcdData.msd;
+    const options = createEncodingOptions(CMCD_REQUEST_MODE, this.config, report.url);
+    const cmcd = report.customData.cmcd = copyReportValues(prepareCmcdData(cmcdData, options));
+    if (sendMsd && cmcd.msd !== void 0) session.requestTarget.msdSent = true;
+    const encoded = encodePreparedCmcd(cmcd);
     switch (this.config.transmissionMode) {
       case CMCD_QUERY:
-        const param = encodePreparedCmcd(cmcd);
-        if (param) {
-          url.searchParams.set(CMCD_PARAM, param);
-          report.url = url.toString();
-        }
+        if (encoded) report.url = replaceCmcdParam(report.url, encoded);
         break;
       case CMCD_HEADERS:
         Object.assign(report.headers, toPreparedCmcdHeaders(cmcd, options.customHeaderMap));
@@ -4368,35 +5914,39 @@ var CmcdReporter = class {
     return report;
   }
   /**
-  * Processes the event targets. Called by the reporter when an event occurs.
+  * Processes the event targets. The reporter calls this method when an event
+  * occurs.
   *
   * @param flush - Whether to flush the event targets.
   */
   processEventTargets(flush = false) {
     let reprocess = false;
-    this.eventTargets.forEach((target, config) => {
-      const {
-        queue
-      } = target;
-      if (!queue.length) return;
-      if (queue.length < config.batchSize && !flush) return;
-      const deleteCount = flush ? queue.length : config.batchSize;
-      const events = queue.splice(0, deleteCount);
-      this.sendEventReport(config, events).catch(() => {
-        target.queue.unshift(...events);
+    this.sessions.forEach(session => {
+      const drain = flush || session !== this.session;
+      session.eventTargets.forEach((target, config) => {
+        const {
+          queue
+        } = target;
+        if (target.disposed || !queue.length) return;
+        if (queue.length < config.batchSize && !drain) return;
+        const deleteCount = drain ? queue.length : config.batchSize;
+        const events = queue.splice(0, deleteCount);
+        this.sendEventReport(session, config, events).catch(() => {
+          target.queue.unshift(...events);
+        });
+        reprocess ||= queue.length > 0;
       });
-      reprocess ||= queue.length > 0;
     });
     if (reprocess) this.processEventTargets();
   }
   /**
-  * Sends an event report. Called by the reporter when a batch is ready to be sent.
+  * Sends an event report. The reporter calls this method when a batch is
+  * ready.
   *
   * @param config - The target config to send the event report to.
-  * @param data - The data to send in the event report.
+  * @param data - The encoded report lines to send in the event report.
   */
-  async sendEventReport(config, data) {
-    const options = createEncodingOptions(CMCD_EVENT_MODE, config);
+  async sendEventReport(session, config, data) {
     const {
       status
     } = await this.requester({
@@ -4405,34 +5955,34 @@ var CmcdReporter = class {
       headers: {
         "Content-Type": CMCD_MIME_TYPE
       },
-      body: data.map(item => encodeCmcd(item, options)).join("\n") + "\n"
+      body: data.join("\n")
     });
-    if (status === 410) this.disposeEventTarget(config);else if (status === 429 || status > 499 && status < 600) throw new Error(`Event report failed with status ${status}`);
+    if (status === 410) this.disposeEventTarget(session, config);else if (status === 429 || status > 499 && status < 600) throw new Error(`Event report failed with status ${status}`);
   }
   /**
-  * Cancels the time-interval timer for an event target and clears the stored id.
-  * Safe to call when no timer is armed (clearInterval(undefined) is a no-op).
+  * Cancels the time-interval timer for an event target config and clears the
+  * stored id. Safe to call when no timer is active (clearInterval(undefined)
+  * does nothing).
   */
-  disarmInterval(target) {
-    clearInterval(target.intervalId);
-    target.intervalId = void 0;
+  disarmInterval(config) {
+    clearInterval(this.intervals.get(config));
+    this.intervals.delete(config);
   }
   /**
-  * Permanently removes an event target: cancels its timer and removes it from the
-  * eventTargets map. Used when the collector signals the target is gone (HTTP 410).
+  * Silences an event target URL for the remainder of its session after the
+  * collector signals that the target is gone (HTTP 410). The method clears
+  * the queues and blocks further enqueues for every config in the session
+  * that reports to the URL (the CTA-5004-B suppression scope). For the
+  * current session, the method also cancels those configs' timers. A session
+  * started after the disposal gets new target state and is unaffected.
   */
-  disposeEventTarget(config) {
-    const target = this.eventTargets.get(config);
-    if (!target) return;
-    this.disarmInterval(target);
-    this.eventTargets.delete(config);
-  }
-  /**
-  * Resets the session related data. Called when the session ID changes.
-  */
-  resetSession() {
-    this.eventTargets.forEach(target => target.sn = 0);
-    this.requestTarget.sn = 0;
+  disposeEventTarget(session, config) {
+    session.eventTargets.forEach((target, sibling) => {
+      if (sibling.url !== config.url || target.disposed) return;
+      target.disposed = true;
+      target.queue.length = 0;
+      if (session === this.session) this.disarmInterval(sibling);
+    });
   }
 };
 
@@ -4496,49 +6046,6 @@ const CmcdValidationSeverity = {
 };
 
 //#endregion
-//#region src/upConvertToV2.ts
-/**
-* Up-convert V1 CMCD data to V2 format.
-*
-* - Wraps plain scalar values in arrays for inner-list keys.
-* - Wraps `nor` string in an array.
-*
-* If the data is already V2 (has `v: 2`), it is returned unchanged.
-*
-* @internal
-*/
-function upConvertToV2(obj) {
-  if (obj["v"] === CMCD_V2) return obj;
-  const result = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (value == null) {
-      result[key] = value;
-      continue;
-    }
-    if (CMCD_INNER_LIST_KEYS.has(key) && !Array.isArray(value)) result[key] = [value];else if (key === "nor" && typeof value === "string") result[key] = [value];else result[key] = value;
-  }
-  return result;
-}
-
-//#endregion
-//#region src/decodeCmcd.ts
-function reduceValue(value) {
-  if (Array.isArray(value)) return value.map(reduceValue);
-  if (typeof value === "symbol") return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value);
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && !value.params) return reduceValue(value.value);
-  if (typeof value === "string") return value;
-  return value;
-}
-function decodeCmcd(cmcd, options) {
-  if (!cmcd) return {};
-  const sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.decodeSfDict)(cmcd);
-  const result = {};
-  for (const [key, item] of Object.entries(sfDict)) result[key] = reduceValue(item.value);
-  if (options?.convertToLatest) return upConvertToV2(result);
-  return result;
-}
-
-//#endregion
 //#region src/ensureHeaders.ts
 /**
 * Converts a record of header fields to a `Headers` instance if necessary.
@@ -4575,7 +6082,64 @@ function fromCmcdQuery(query, options) {
 //#endregion
 //#region src/fromCmcdUrl.ts
 function fromCmcdUrl(url, options) {
-  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "")), options);
+  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "").replace(/\+/g, " ")), options);
+}
+
+//#endregion
+//#region src/isCmcdRequestKey.ts
+const CMCD_REQUEST_KEY_SET = /* @__PURE__ */new Set(CMCD_REQUEST_KEYS);
+/**
+* Check if a key is a valid CMCD request key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
+*/
+function isCmcdRequestKey(key) {
+  return CMCD_REQUEST_KEY_SET.has(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/isCmcdResponseReceivedKey.ts
+const CMCD_RESPONSE_KEY_SET = /* @__PURE__ */new Set(CMCD_RESPONSE_KEYS);
+/**
+* Check if a key is a valid CMCD response key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD response key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdResponseReceivedKey.test.ts#example}
+*/
+function isCmcdResponseReceivedKey(key) {
+  return CMCD_RESPONSE_KEY_SET.has(key);
+}
+
+//#endregion
+//#region src/isCmcdEventKey.ts
+const CMCD_EVENT_KEY_SET = /* @__PURE__ */new Set(CMCD_EVENT_KEYS);
+/**
+* Check if a key is a valid CMCD event key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdEventKey.test.ts#example}
+*/
+function isCmcdEventKey(key) {
+  return isCmcdRequestKey(key) || isCmcdResponseReceivedKey(key) || CMCD_EVENT_KEY_SET.has(key);
 }
 
 //#endregion
@@ -4597,6 +6161,25 @@ function isCmcdV1Data(data) {
 }
 
 //#endregion
+//#region src/isCmcdV1Key.ts
+const CMCD_V1_KEY_SET$1 = /* @__PURE__ */new Set(CMCD_V1_KEYS);
+/**
+* Filter for CMCD version 1 keys.
+*
+* @param key - The CMCD key to filter.
+*
+* @returns `true` if the key should be included, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdV1Key.test.ts#example}
+*/
+function isCmcdV1Key(key) {
+  return CMCD_V1_KEY_SET$1.has(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
 //#region src/isCmcdV2Data.ts
 /**
 * Check if a CMCD data object is version 2.
@@ -4615,12 +6198,56 @@ function isCmcdV2Data(data) {
 }
 
 //#endregion
+//#region src/toCmcdUrl.ts
+/**
+* Convert a CMCD object to a URL encoded string.
+*
+* Only letters, digits, `-`, `.`, `_`, and `~` stay unencoded, as in the
+* query examples of CTA-5004-B.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding.
+*
+* @returns The URL encoded CMCD data.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+*
+* @public
+*/
+function toCmcdUrl(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return percentEncode(encodeCmcd(cmcd, options));
+}
+
+//#endregion
+//#region src/toCmcdQuery.ts
+/**
+* Convert a CMCD object to a query arg.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding.
+*
+* @returns The CMCD query arg.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+*
+* @public
+*
+* @example
+* {@includeCode ../test/toCmcdQuery.test.ts#example}
+*/
+function toCmcdQuery(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return `${CMCD_PARAM}=${toCmcdUrl(cmcd, options)}`;
+}
+
+//#endregion
 //#region src/toCmcdValue.ts
 /**
 * Convert a value to a CMCD value.
 *
 * @param value - The value to convert to a CMCD value.
-* @param params - The parameters to convert to a CMCD value.
+* @param params - The parameters of the CMCD value.
 * @returns The CMCD value.
 *
 * @public
@@ -4647,21 +6274,21 @@ function mergeValidationResults(...results) {
 //#endregion
 //#region src/resolveVersion.ts
 /**
-* Resolves the CMCD version from explicit options, the payload's `v` key, or the default (v1).
+* Resolves the CMCD version from options, the payload's `v` key, or the default (version 1).
 *
 * @internal
 */
 function resolveVersion(data, options) {
   if (options?.version === 1 || options?.version === 2) return options.version;
-  const payloadVersion = data["v"];
+  const payloadVersion = toBareValue(data["v"]);
   if (payloadVersion === 1 || payloadVersion === 2) return payloadVersion;
   return CMCD_V1;
 }
 
 //#endregion
 //#region src/validateCmcdKeys.ts
-const CMCD_V1_KEY_SET = new Set(CMCD_V1_KEYS);
-const CMCD_KEY_SET = new Set(CMCD_KEYS);
+const CMCD_V1_KEY_SET = /* @__PURE__ */new Set(CMCD_V1_KEYS);
+const CMCD_KEY_SET = /* @__PURE__ */new Set(CMCD_KEYS);
 /**
 * Validates that all keys in a CMCD payload are recognized spec keys or valid custom keys.
 *
@@ -4693,6 +6320,39 @@ function validateCmcdKeys(data, options) {
     issues
   };
 }
+
+//#endregion
+//#region src/CMCD_AGGREGATE_BITRATE_KEYS.ts
+/**
+* Maps each aggregate bitrate key to the exact bitrate key that supersedes it.
+*
+* Per CTA-5004-B, `ab` MUST NOT be sent when the encoded bitrate `br` is
+* known. `lab` and `tab` follow the same rule for the lowest bitrate `lb`
+* and the top bitrate `tb`.
+*
+* @internal
+*/
+const CMCD_AGGREGATE_BITRATE_KEYS = {
+  ab: "br",
+  lab: "lb",
+  tab: "tb"
+};
+
+//#endregion
+//#region src/CMCD_KEY_OBJECT_TYPES.ts
+/**
+* Maps a key to the object types (`ot`) for which CTA-5004-B allows the key.
+*
+* A key that is absent from this map is allowed for every object type.
+* `d` (Object duration) and `tpb` (Top playable bitrate) MUST NOT be sent for
+* other object types.
+*
+* @internal
+*/
+const CMCD_KEY_OBJECT_TYPES = {
+  d: ["a", "v", "av", "tt", "c", "o"],
+  tpb: ["a", "v", "av", "c"]
+};
 
 //#endregion
 //#region src/validateCmcdStructure.ts
@@ -4738,7 +6398,8 @@ function validateCmcdStructure(data, options) {
     });
   }
   if ("e" in data) {
-    if (data["e"] === CMCD_EVENT_CUSTOM_EVENT) {
+    const eventType = toTokenString(data["e"]);
+    if (eventType === CMCD_EVENT_CUSTOM_EVENT) {
       if (!("cen" in data)) issues.push({
         key: "cen",
         message: "Custom event (e=\"ce\") requires the \"cen\" key to be present.",
@@ -4749,7 +6410,7 @@ function validateCmcdStructure(data, options) {
       message: "The \"cen\" key must only be present when e=\"ce\".",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
-    if (data["e"] === CMCD_EVENT_RESPONSE_RECEIVED) {
+    if (eventType === CMCD_EVENT_RESPONSE_RECEIVED) {
       if (!("url" in data)) issues.push({
         key: "url",
         message: "Response received event (e=\"rr\") requires the \"url\" key to be present.",
@@ -4760,20 +6421,38 @@ function validateCmcdStructure(data, options) {
       message: `Response key "${key}" must only be present when e="rr".`,
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
-    if (data["e"] === CMCD_EVENT_PLAY_STATE && !("sta" in data)) issues.push({
+    if (eventType === CMCD_EVENT_PLAY_STATE && !("sta" in data)) issues.push({
       key: "sta",
-      message: "Play state event (e=\"ps\") requires the \"sta\" key to be present.",
+      message: "Play state change event (e=\"ps\") requires the \"sta\" key to be present.",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
-    if (data["e"] === CMCD_EVENT_ERROR && !("ec" in data)) issues.push({
+    if (eventType === CMCD_EVENT_ERROR && !("ec" in data)) issues.push({
       key: "ec",
       message: "Error event (e=\"e\") requires the \"ec\" key to be present.",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
   }
-  if ("v" in data && data["v"] !== 1 && data["v"] !== 2) issues.push({
+  const ot = version > 1 ? toTokenString(data["ot"]) : void 0;
+  if (ot !== void 0) for (const key in CMCD_KEY_OBJECT_TYPES) {
+    const objectTypes = CMCD_KEY_OBJECT_TYPES[key];
+    if (key in data && !objectTypes.includes(ot)) issues.push({
+      key,
+      message: `Key "${key}" must not be present when "ot" is "${ot}". Expected "ot" to be one of: ${objectTypes.join(", ")}.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  if (version > 1) for (const key in CMCD_AGGREGATE_BITRATE_KEYS) {
+    const exactKey = CMCD_AGGREGATE_BITRATE_KEYS[key];
+    if (key in data && exactKey in data) issues.push({
+      key,
+      message: `Key "${key}" must not be present when "${exactKey}" is present.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  const v = toBareValue(data["v"]);
+  if ("v" in data && v !== 1 && v !== 2) issues.push({
     key: "v",
-    message: `Unsupported CMCD version "${String(data["v"])}". Expected 1 or 2.`,
+    message: `Unsupported CMCD version "${String(v)}". Expected 1 or 2.`,
     severity: CMCD_VALIDATION_SEVERITY_ERROR
   });else if (version > 1 && !("v" in data)) issues.push({
     key: "v",
@@ -4793,7 +6472,7 @@ function validateCmcdStructure(data, options) {
 //#endregion
 //#region src/CMCD_KEY_TYPES.ts
 /**
-* CMCD key value type: inner list of numbers with token identifiers.
+* CMCD key value type: inner list of integers with token identifiers.
 *
 * @internal
 */
@@ -4835,8 +6514,8 @@ const CMCD_KEY_TYPE_STRING = "string";
 */
 const CMCD_KEY_TYPE_TOKEN = "token";
 /**
-* Maps each CMCD spec key to its expected value type for v2.
-* Keys that differ between v1 and v2 are handled by CMCD_V1_KEY_TYPE_OVERRIDES.
+* Maps each CMCD key to its value type for version 2.
+* CMCD_V1_KEY_TYPE_OVERRIDES handles the keys that differ between version 1 and version 2.
 *
 * @internal
 */
@@ -4894,15 +6573,15 @@ const CMCD_KEY_TYPES = {
   sta: CMCD_KEY_TYPE_TOKEN
 };
 /**
-* Maps keys to their v1-specific types when they differ from v2.
+* Version 1 types of the keys that differ from version 2.
 *
 * @internal
 */
 const CMCD_V1_KEY_TYPE_OVERRIDES = {
   bl: CMCD_KEY_TYPE_INTEGER,
-  br: CMCD_KEY_TYPE_NUMBER,
+  br: CMCD_KEY_TYPE_INTEGER,
   mtp: CMCD_KEY_TYPE_INTEGER,
-  tb: CMCD_KEY_TYPE_NUMBER,
+  tb: CMCD_KEY_TYPE_INTEGER,
   nor: CMCD_KEY_TYPE_STRING
 };
 
@@ -4935,7 +6614,7 @@ const CMCD_CUSTOM_KEY_VALUE_MAX_LENGTH = 64;
 * @internal
 */
 const CMCD_TOKEN_VALUES = {
-  e: ["bc", "ps", "e", "t", "c", "b", "m", "um", "pe", "pc", "rr", "as", "ae", "abs", "abe", "sk", "ce"],
+  e: ["bc", "ps", "pr", "e", "t", "c", "b", "m", "um", "pe", "pc", "rr", "as", "ae", "abs", "abe", "sk", "ce"],
   ot: ["m", "a", "v", "av", "i", "c", "tt", "k", "o"],
   sf: ["d", "h", "s", "o"],
   st: ["v", "l", "ll"],
@@ -4944,12 +6623,31 @@ const CMCD_TOKEN_VALUES = {
 
 //#endregion
 //#region src/validateCmcdValues.ts
-const HUNDRED_ROUNDING_KEYS = new Set(["bl", "dl", "mtp", "rtp", "tbl"]);
-const INTEGER_ROUNDING_KEYS = new Set(["br", "d", "tb"]);
+const HUNDRED_ROUNDING_UNITS = {
+  bl: "ms",
+  dl: "ms",
+  mtp: "kbps",
+  rtp: "kbps",
+  tbl: "ms"
+};
 function isFiniteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
-function validateListValue(key, value, issues) {
+function isInteger(value) {
+  return Number.isInteger(value);
+}
+function validateRounding(key, value, version, issues, index) {
+  const unit = HUNDRED_ROUNDING_UNITS[key];
+  if (!unit || value % 100 === 0) return;
+  const should = key === "tbl" || key === "bl" && version !== CMCD_V1;
+  const target = index === void 0 ? `Key "${key}"` : `Key "${key}" array element [${index}]`;
+  issues.push({
+    key,
+    message: `${target} ${should ? "should" : "must"} be rounded to the nearest 100 ${unit}. Received ${value}.`,
+    severity: should ? CMCD_VALIDATION_SEVERITY_WARNING : CMCD_VALIDATION_SEVERITY_ERROR
+  });
+}
+function validateListValue(key, value, version, issues) {
   if (!Array.isArray(value)) {
     issues.push({
       key,
@@ -4959,18 +6657,12 @@ function validateListValue(key, value, issues) {
     return;
   }
   for (let i = 0; i < value.length; i++) {
-    const element = value[i];
-    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
-      if (!isFiniteNumber(element.value)) issues.push({
-        key,
-        message: `Key "${key}" array element [${i}] must be a finite number.`,
-        severity: CMCD_VALIDATION_SEVERITY_ERROR
-      });
-    } else if (!isFiniteNumber(element)) issues.push({
+    const element = toBareValue(value[i]);
+    if (!isInteger(element)) issues.push({
       key,
-      message: `Key "${key}" array element [${i}] must be a finite number.`,
+      message: `Key "${key}" array element [${i}] must be a finite integer.`,
       severity: CMCD_VALIDATION_SEVERITY_ERROR
-    });
+    });else validateRounding(key, element, version, issues, i);
   }
 }
 function validateStringArrayValue(key, value, issues) {
@@ -4982,20 +6674,11 @@ function validateStringArrayValue(key, value, issues) {
     });
     return;
   }
-  for (let i = 0; i < value.length; i++) {
-    const element = value[i];
-    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
-      if (typeof element.value !== "string") issues.push({
-        key,
-        message: `Key "${key}" array element [${i}] must be a string.`,
-        severity: CMCD_VALIDATION_SEVERITY_ERROR
-      });
-    } else if (typeof element !== "string") issues.push({
-      key,
-      message: `Key "${key}" array element [${i}] must be a string.`,
-      severity: CMCD_VALIDATION_SEVERITY_ERROR
-    });
-  }
+  for (let i = 0; i < value.length; i++) if (typeof toBareValue(value[i]) !== "string") issues.push({
+    key,
+    message: `Key "${key}" array element [${i}] must be a string.`,
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });
 }
 /**
 * Validates that all values in a CMCD payload conform to the expected types and constraints.
@@ -5014,7 +6697,8 @@ function validateStringArrayValue(key, value, issues) {
 function validateCmcdValues(data, options) {
   const version = resolveVersion(data, options);
   const issues = [];
-  for (const [key, value] of Object.entries(data)) {
+  for (const [key, entry] of Object.entries(data)) {
+    const value = toBareValue(entry);
     if (isCmcdCustomKey(key)) {
       if (typeof value !== "string") issues.push({
         key,
@@ -5040,29 +6724,17 @@ function validateCmcdValues(data, options) {
     if (version === CMCD_V1 && key in CMCD_V1_KEY_TYPE_OVERRIDES) expectedType = CMCD_V1_KEY_TYPE_OVERRIDES[key];
     switch (expectedType) {
       case CMCD_KEY_TYPE_INTEGER:
-        if (!isFiniteNumber(value) || !Number.isInteger(value)) issues.push({
+        if (!isInteger(value)) issues.push({
           key,
           message: `Key "${key}" must be a finite integer.`,
           severity: CMCD_VALIDATION_SEVERITY_ERROR
-        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
-          key,
-          message: `Key "${key}" should be rounded to the nearest 100.`,
-          severity: CMCD_VALIDATION_SEVERITY_WARNING
-        });
+        });else validateRounding(key, value, version, issues);
         break;
       case CMCD_KEY_TYPE_NUMBER:
         if (!isFiniteNumber(value)) issues.push({
           key,
           message: `Key "${key}" must be a finite number.`,
           severity: CMCD_VALIDATION_SEVERITY_ERROR
-        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
-          key,
-          message: `Key "${key}" should be rounded to the nearest 100.`,
-          severity: CMCD_VALIDATION_SEVERITY_WARNING
-        });else if (INTEGER_ROUNDING_KEYS.has(key) && !Number.isInteger(value)) issues.push({
-          key,
-          message: `Key "${key}" should be rounded to an integer.`,
-          severity: CMCD_VALIDATION_SEVERITY_WARNING
         });
         break;
       case CMCD_KEY_TYPE_BOOLEAN:
@@ -5086,15 +6758,16 @@ function validateCmcdValues(data, options) {
       case CMCD_KEY_TYPE_TOKEN:
         {
           const validValues = CMCD_TOKEN_VALUES[key];
-          if (validValues && !validValues.includes(value)) issues.push({
+          const token = toTokenString(value);
+          if (validValues && (token === void 0 || !validValues.includes(token))) issues.push({
             key,
-            message: `Key "${key}" has invalid token value "${String(value)}". Expected one of: ${validValues.join(", ")}.`,
+            message: `Key "${key}" has invalid token value "${token ?? String(value)}". Expected one of: ${validValues.join(", ")}.`,
             severity: CMCD_VALIDATION_SEVERITY_ERROR
           });
           break;
         }
       case CMCD_KEY_TYPE_NUMBER_LIST:
-        validateListValue(key, value, issues);
+        validateListValue(key, value, version, issues);
         break;
       case CMCD_KEY_TYPE_STRING_LIST:
         validateStringArrayValue(key, value, issues);
@@ -5134,8 +6807,8 @@ function validateCmcd(data, options) {
 *
 * This function decodes the string internally and validates it with
 * `reportingMode` set to `'event'`. The input may contain multiple
-* newline-separated events (e.g. an `application/cmcd` POST body), in which
-* case each line is validated independently and the results are merged.
+* newline-separated events, for example an `application/cmcd` POST body.
+* The function validates each line independently and merges the results.
 *
 * @param cmcd - The raw CMCD-encoded string to validate. May contain
 *   multiple newline-separated event lines.
@@ -5163,6 +6836,11 @@ function validateCmcdEvents(cmcd, options) {
     }],
     data: []
   };
+  const bodyIssues = [];
+  if (cmcd.endsWith("\n")) bodyIssues.push({
+    message: "Event report body must not end with a line feed.",
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });
   const decodedLines = [];
   const lineResults = [];
   for (let i = 0; i < lines.length; i++) try {
@@ -5180,7 +6858,10 @@ function validateCmcdEvents(cmcd, options) {
     });
   }
   return {
-    ...mergeValidationResults(...lineResults),
+    ...mergeValidationResults({
+      valid: true,
+      issues: bodyIssues
+    }, ...lineResults),
     data: decodedLines
   };
 }
@@ -5193,8 +6874,8 @@ function validateCmcdEvents(cmcd, options) {
 * Accepts an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
 *
 * This function validates that the request uses the POST method and has
-* the correct `Content-Type` header (`application/cmcd`) in addition to
-* validating the body content via {@link validateCmcdEvents}.
+* the correct `Content-Type` header (`application/cmcd`). It also
+* validates the body content with {@link validateCmcdEvents}.
 *
 * @param request - An `HttpRequest` to validate.
 * @param options - Validation options (excluding `reportingMode`).
@@ -5259,15 +6940,15 @@ function validateCmcdEventReport(request, options) {
 /**
 * Validates CMCD HTTP headers by checking shard placement and payload validity.
 *
-* This function accepts raw CMCD header strings, decodes each shard
-* internally, verifies that each key is placed in its correct header shard,
-* then merges all shards and runs full payload validation (keys, values, and
-* structure) on the merged data.
+* This function accepts raw CMCD header strings and decodes each shard
+* internally. It verifies that each key is in its correct header shard.
+* The function then merges all shards and runs payload validation (keys,
+* values, and structure) on the merged data.
 *
 * @example
 * {@includeCode ../test/validateCmcdHeaders.test.ts#example}
 *
-* @param headers - A `Headers` instance or a record of CMCD header fields to their raw encoded string values.
+* @param headers - A `Headers` instance or a record of CMCD header fields to raw encoded strings.
 * @param options - Validation options (excluding `reportingMode`).
 * @returns The validation result including decoded data.
 *
@@ -5327,10 +7008,12 @@ function validateCmcdHeaders(headers, options) {
 * {@link https://developer.mozilla.org/en-US/docs/Web/API/Request | Request}
 * object or an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
 *
-* The function checks for CMCD data in the HTTP headers first. If CMCD
-* headers are found, validation includes shard-placement checks via
-* {@link validateCmcdHeaders}. Otherwise, the CMCD query parameter is
-* extracted from the URL and validated.
+* The function checks the HTTP headers for CMCD data first. If the
+* request has CMCD headers, {@link validateCmcdHeaders} validates them,
+* including shard placement. Otherwise, the function validates the CMCD
+* query parameter of the URL. A request with CMCD data in both the
+* headers and the `CMCD` query parameter is an error. The function still
+* validates the headers and returns their data.
 *
 * @param request - A `Request` or `HttpRequest` to validate.
 * @param options - Validation options (excluding `reportingMode`).
@@ -5345,12 +7028,25 @@ function validateCmcdHeaders(headers, options) {
 */
 function validateCmcdRequest(request, options) {
   const headers = extractHeaderRecord(request.headers);
-  if (headers) return validateCmcdHeaders(headers, options);
-  const param = new URL(request.url).searchParams.get(CMCD_PARAM);
+  const param = getCmcdQueryParam(request.url);
+  if (headers) {
+    const result = validateCmcdHeaders(headers, options);
+    if (!param) return result;
+    return {
+      ...mergeValidationResults({
+        valid: false,
+        issues: [{
+          message: "CMCD data found in both request headers and the \"CMCD\" query parameter. A request must use only one transmission mode.",
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        }]
+      }, result),
+      data: result.data
+    };
+  }
   if (!param) return {
     valid: false,
     issues: [{
-      message: "No CMCD data found in request headers or query parameters.",
+      message: hasCmcdInFragment(request.url) ? "No CMCD data found in request headers or query parameters. The URL fragment contains a \"CMCD\" parameter. A server never receives the fragment." : "No CMCD data found in request headers or query parameters.",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     }],
     data: {}
@@ -5375,6 +7071,18 @@ function validateCmcdRequest(request, options) {
     }),
     data
   };
+}
+const CMCD_IN_FRAGMENT = /(?:^|[?&])CMCD=/;
+function getCmcdQueryParam(url) {
+  const hash = url.indexOf("#");
+  const path = hash < 0 ? url : url.slice(0, hash);
+  const start = path.indexOf("?");
+  if (start < 0) return null;
+  return new URLSearchParams(path.slice(start + 1)).get(CMCD_PARAM);
+}
+function hasCmcdInFragment(url) {
+  const hash = url.indexOf("#");
+  return hash >= 0 && CMCD_IN_FRAGMENT.test(url.slice(hash + 1));
 }
 function extractHeaderRecord(headers) {
   if (!headers) return;
@@ -5415,7 +7123,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   decodeCmsdDynamic: function() { return /* binding */ decodeCmsdDynamic; },
 /* harmony export */   decodeCmsdStatic: function() { return /* binding */ decodeCmsdStatic; },
 /* harmony export */   encodeCmsdDynamic: function() { return /* binding */ encodeCmsdDynamic; },
-/* harmony export */   encodeCmsdStatic: function() { return /* binding */ encodeCmsdStatic; }
+/* harmony export */   encodeCmsdStatic: function() { return /* binding */ encodeCmsdStatic; },
+/* harmony export */   isCmsdCustomKey: function() { return /* binding */ isCmsdCustomKey; }
 /* harmony export */ });
 /* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
 /* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
@@ -5584,6 +7293,29 @@ function encodeCmsdStatic(cmsd, options) {
   return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.encodeSfDict)(processCmsd(cmsd, options), {
     whitespace: false
   });
+}
+
+//#endregion
+//#region src/isCmsdCustomKey.ts
+const CUSTOM_KEY_REGEX = /^[a-z][a-z0-9.-]*$/;
+/**
+* Check if a key is a valid custom key: a lowercase first letter, then
+* characters from `a-z 0-9 . -`, with a hyphen that is neither the first
+* nor the last character. These are the CMSD custom-key rules restricted
+* to names that survive RFC 8941 key serialization.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmsdCustomKey.test.ts#example}
+*/
+function isCmsdCustomKey(key) {
+  const separator = key.indexOf("-", 1);
+  return separator > 0 && separator < key.length - 1 && CUSTOM_KEY_REGEX.test(key);
 }
 
 //#endregion
@@ -5974,10 +7706,6 @@ const DECIMAL = "Decimal";
 const INTEGER = "Integer";
 
 //#endregion
-//#region src/utils/INTEGER_DECIMAL.ts
-const INTEGER_DECIMAL = `${INTEGER} or ${DECIMAL}`;
-
-//#endregion
 //#region src/utils/isInvalidInt.ts
 function isInvalidInt(value) {
   return value < -999999999999999 || 999999999999999 < value;
@@ -5985,6 +7713,9 @@ function isInvalidInt(value) {
 
 //#endregion
 //#region src/parse/parseIntegerOrDecimal.ts
+function integerOrDecimalError(src) {
+  return parseError(src, `${INTEGER} or ${DECIMAL}`);
+}
 /**
 * @internal
 */
@@ -5993,31 +7724,29 @@ function parseIntegerOrDecimal(src) {
   let sign = 1;
   let num = "";
   let value;
-  const i = 0;
-  const error = parseError(orig, INTEGER_DECIMAL);
-  if (src[i] === "-") {
+  if (src[0] === "-") {
     sign = -1;
     src = src.substring(1);
   }
-  if (src.length <= 0) throw error;
+  if (src.length <= 0) throw integerOrDecimalError(orig);
   const re_integer = /^(\d+)?/g;
   const result_integer = re_integer.exec(src);
-  if (result_integer[0].length === 0) throw error;
+  if (result_integer[0].length === 0) throw integerOrDecimalError(orig);
   num += result_integer[1];
   src = src.substring(re_integer.lastIndex);
   if (src[0] === ".") {
-    if (num.length > 12) throw error;
+    if (num.length > 12) throw integerOrDecimalError(orig);
     const re_decimal = /^(\.\d+)?/g;
     const result_decimal = re_decimal.exec(src);
     src = src.substring(re_decimal.lastIndex);
-    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw error;
+    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw integerOrDecimalError(orig);
     num += result_decimal[1];
-    if (num.length > 16) throw error;
+    if (num.length > 16) throw integerOrDecimalError(orig);
     value = parseFloat(num) * sign;
   } else {
-    if (num.length > 15) throw error;
+    if (num.length > 15) throw integerOrDecimalError(orig);
     value = parseInt(num) * sign;
-    if (isInvalidInt(value)) throw parseError(num, INTEGER_DECIMAL);
+    if (isInvalidInt(value)) throw integerOrDecimalError(num);
   }
   return parsedValue(value, src);
 }
@@ -6388,19 +8117,23 @@ function serializeDate(value) {
 */
 function serializeDecimal(value) {
   const roundedValue = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.roundToEven)(value, 3);
-  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) throw serializeError(value, DECIMAL);
+  if (Math.abs(roundedValue) >= 0xe8d4a51000) throw serializeError(value, DECIMAL);
   const stringValue = roundedValue.toString();
   return stringValue.includes(".") ? stringValue : `${stringValue}.0`;
 }
 
 //#endregion
 //#region src/serialize/serializeString.ts
+const ESCAPE_OR_CONTROL_REGEX = /[\x00-\x1f\x7f"\\]/;
+const BACKSLASH_REGEX = /\\/g;
+const DQUOTE_REGEX = /"/g;
 /**
 * @internal
 */
 function serializeString(value) {
+  if (ESCAPE_OR_CONTROL_REGEX.test(value) === false) return `"${value}"`;
   if (STRING_REGEX.test(value)) throw serializeError(value, STRING);
-  return `"${value.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`)}"`;
+  return `"${value.replace(BACKSLASH_REGEX, "\\\\").replace(DQUOTE_REGEX, "\\\"")}"`;
 }
 
 //#endregion
@@ -6420,12 +8153,13 @@ function symbolToStr(symbol) {
 
 //#endregion
 //#region src/serialize/serializeToken.ts
+const TOKEN_REGEX = /^[a-zA-Z*][!#$%&'*+\-.^_`|~\w:/]*$/;
 /**
 * @internal
 */
 function serializeToken(token) {
   const value = symbolToStr(token);
-  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) throw serializeError(value, TOKEN);
+  if (TOKEN_REGEX.test(value) === false) throw serializeError(value, TOKEN);
   return value;
 }
 
@@ -6461,7 +8195,13 @@ function serializeBareItem(value) {
 * @internal
 */
 function serializeKey(value) {
-  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) throw serializeError(value, KEY);
+  if (typeof value !== "string" || value.length === 0) throw serializeError(value, KEY);
+  let code = value.charCodeAt(0);
+  if ((code < 97 || code > 122) && code !== 42) throw serializeError(value, KEY);
+  for (let i = 1; i < value.length; i++) {
+    code = value.charCodeAt(i);
+    if ((code < 97 || code > 122) && (code < 48 || code > 57) && code !== 95 && code !== 45 && code !== 46 && code !== 42) throw serializeError(value, KEY);
+  }
   return value;
 }
 
@@ -6472,10 +8212,13 @@ function serializeKey(value) {
 */
 function serializeParams(params) {
   if (params == null) return "";
-  return Object.entries(params).map(([key, value]) => {
-    if (value === true) return `;${serializeKey(key)}`;
-    return `;${serializeKey(key)}=${serializeBareItem(value)}`;
-  }).join("");
+  let output = "";
+  for (const key of Object.keys(params)) {
+    const value = params[key];
+    output += `;${serializeKey(key)}`;
+    if (value !== true) output += `=${serializeBareItem(value)}`;
+  }
+  return output;
 }
 
 //#endregion
@@ -6489,11 +8232,41 @@ function serializeItem(value) {
 
 //#endregion
 //#region src/serialize/serializeInnerList.ts
+function serializeInnerList(value, params) {
+  let list;
+  if (Array.isArray(value)) list = value;else {
+    list = value.value;
+    params = value.params;
+  }
+  let output = "(";
+  for (let i = 0; i < list.length; i++) {
+    if (i > 0) output += " ";
+    output += serializeItem(list[i]);
+  }
+  return `${output})${serializeParams(params)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeDictMember.ts
 /**
+* Serialize one dictionary member: the key, then the parameters alone for a `true` value, otherwise `=` and the member.
+*
 * @internal
 */
-function serializeInnerList(value) {
-  return `(${value.value.map(serializeItem).join(" ")})${serializeParams(value.params)}`;
+function serializeDictMember(key, member) {
+  const output = serializeKey(key);
+  if (member instanceof SfItem) {
+    const {
+      value,
+      params
+    } = member;
+    if (value === true) return `${output}${serializeParams(params)}`;
+    if (Array.isArray(value)) return `${output}=${serializeInnerList(value, params)}`;
+    return `${output}=${serializeBareItem(value)}${serializeParams(params)}`;
+  }
+  if (member === true) return output;
+  if (Array.isArray(member)) return `${output}=${serializeInnerList(member)}`;
+  return `${output}=${serializeBareItem(member)}`;
 }
 
 //#endregion
@@ -6501,27 +8274,17 @@ function serializeInnerList(value) {
 /**
 * @internal
 */
-function serializeDict(dict, options = {
-  whitespace: true
-}) {
+function serializeDict(dict, options) {
   if (typeof dict !== "object" || dict == null) throw serializeError(dict, DICT);
-  const entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
-  const optionalWhiteSpace = options?.whitespace ? " " : "";
-  return Array.from(entries).map(([key, item]) => {
-    if (item instanceof SfItem === false) item = new SfItem(item);
-    let output = serializeKey(key);
-    if (item.value === true) output += serializeParams(item.params);else {
-      output += "=";
-      if (Array.isArray(item.value)) output += serializeInnerList(item);else output += serializeItem(item);
-    }
-    return output;
-  }).join(`,${optionalWhiteSpace}`);
+  const parts = [];
+  if (dict instanceof Map) dict.forEach((member, key) => parts.push(serializeDictMember(key, member)));else for (const key of Object.keys(dict)) parts.push(serializeDictMember(key, dict[key]));
+  return parts.join(options?.whitespace === false ? "," : ", ");
 }
 
 //#endregion
 //#region src/encodeSfDict.ts
 /**
-* Encode an object into a structured field dictionary
+* Encode a structured field dictionary to a string
 *
 * @param value - The structured field dictionary to encode
 * @param options - Encoding options
@@ -6537,8 +8300,28 @@ function encodeSfDict(value, options) {
 //#endregion
 //#region src/encodeSfItem.ts
 function encodeSfItem(value, params) {
-  if (!(value instanceof SfItem)) value = new SfItem(value, params);
-  return serializeItem(value);
+  if (value instanceof SfItem) return serializeItem(value);
+  return `${serializeBareItem(value)}${serializeParams(params)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeMember.ts
+/**
+* Serialize a list member: an inner list when the value is an array, an item otherwise.
+*
+* @internal
+*/
+function serializeMember(member) {
+  if (member instanceof SfItem) {
+    const {
+      value,
+      params
+    } = member;
+    if (Array.isArray(value)) return serializeInnerList(value, params);
+    return `${serializeBareItem(value)}${serializeParams(params)}`;
+  }
+  if (Array.isArray(member)) return serializeInnerList(member);
+  return serializeBareItem(member);
 }
 
 //#endregion
@@ -6546,23 +8329,21 @@ function encodeSfItem(value, params) {
 /**
 * @internal
 */
-function serializeList(list, options = {
-  whitespace: true
-}) {
+function serializeList(list, options) {
   if (Array.isArray(list) === false) throw serializeError(list, LIST);
-  const optionalWhiteSpace = options?.whitespace ? " " : "";
-  return list.map(item => {
-    if (item instanceof SfItem === false) item = new SfItem(item);
-    const i = item;
-    if (Array.isArray(i.value)) return serializeInnerList(i);
-    return serializeItem(i);
-  }).join(`,${optionalWhiteSpace}`);
+  const separator = options?.whitespace === false ? "," : ", ";
+  let output = "";
+  for (let i = 0; i < list.length; i++) {
+    if (i > 0) output += separator;
+    output += serializeMember(list[i]);
+  }
+  return output;
 }
 
 //#endregion
 //#region src/encodeSfList.ts
 /**
-* Encode a list into a structured field dictionary
+* Encode a structured field list to a string
 *
 * @param value - The structured field list to encode
 * @param options - Encoding options
@@ -6680,6 +8461,7 @@ const base64decode = decodeBase64;
 
 //#endregion
 //#region src/encodeBase64.ts
+const CHUNK_SIZE = 32768;
 /**
 * Encodes binary data to base64
 *
@@ -6687,9 +8469,17 @@ const base64decode = decodeBase64;
 * @returns The base64 encoded string
 *
 * @public
+*
+* @example
+* {@includeCode ../test/encodeBase64.test.ts#example}
 */
 function encodeBase64(binary) {
-  return btoa(String.fromCharCode(...binary));
+  let text = "";
+  for (let i = 0; i < binary.length; i += CHUNK_SIZE) {
+    const chunk = binary.subarray(i, i + CHUNK_SIZE);
+    text += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(text);
 }
 
 //#endregion
@@ -6730,12 +8520,11 @@ function convertUint8ToUint16(input) {
 //#endregion
 //#region src/isArrayBufferLike.ts
 /**
-* Checks if the given value is `ArrayBufferLike` (i.e. an `ArrayBuffer`
-* or a `SharedArrayBuffer`).
+* Checks if the given value is `ArrayBufferLike`: an `ArrayBuffer` or a
+* `SharedArrayBuffer`.
 *
-* This function safely handles environments where
-* `SharedArrayBuffer` is not defined, such as non-cross-origin
-* isolated browser contexts.
+* The function also works where `SharedArrayBuffer` is not defined, such as
+* browser contexts without cross-origin isolation.
 *
 * @param value - The value to check.
 * @returns `true` if the value is an `ArrayBuffer` or `SharedArrayBuffer`.
@@ -6788,8 +8577,8 @@ const UTF_8 = "utf-8";
 //#endregion
 //#region src/decodeText.ts
 /**
-* Converts an ArrayBuffer or ArrayBufferView to a string. Similar to `TextDecoder.decode`
-* but with a fallback for environments that don't support `TextDecoder`.
+* Converts an ArrayBuffer or ArrayBufferView to a string. The function works like
+* `TextDecoder.decode` and also supports environments without `TextDecoder`.
 *
 * @param data - The data to decode.
 * @param options - The options for the decoding.
@@ -6876,8 +8665,8 @@ function decodeText(data, options = {}) {
 //#endregion
 //#region src/encodeText.ts
 /**
-* Converts a string to a Uint8Array. Similar to `TextEncoder.encode`
-* but with a fallback for environments that don't support `TextEncoder`.
+* Converts a string to a Uint8Array. The function works like
+* `TextEncoder.encode` and also supports environments without `TextEncoder`.
 *
 * @param data - The string to encode.
 * @returns The Uint8Array representation of the string.
@@ -6908,10 +8697,10 @@ const Encoding = {
 //#endregion
 //#region src/getBandwidthBps.ts
 /**
-* Converts a ResourceTiming sample to bandwidth in bits per second (bps).
+* Converts a ResourceTiming sample to bandwidth in bits per second.
 *
 * @param sample - A ResourceTiming sample
-* @returns
+* @returns The bandwidth in bits per second.
 *
 * @public
 */
@@ -6923,7 +8712,7 @@ function getBandwidthBps(sample) {
 //#endregion
 //#region src/getBaseUrl.ts
 /**
-* Get the base URL from a full URL or a URL object.
+* Gets the base URL from a full URL or a URL object.
 *
 * @param fullUrl - The full URL or URL object.
 * @returns The base URL.
@@ -6979,8 +8768,8 @@ const RequestResponseType = {
 //#endregion
 //#region src/roundToEven.ts
 /**
-* This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
-* This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
+* Rounds a value with the procedure from step 2 of the "Serializing a Decimal" specification.
+* The style is known as "even rounding", "banker's rounding", or "commercial rounding".
 *
 * @param value - The value to round
 * @param precision - The number of decimal places to round to
@@ -7066,7 +8855,7 @@ function unescapeHtml(text) {
 /**
 * Constructs a relative path from a URL.
 *
-* If `url` is already a relative path, or its origin differs from `base`, it is returned unchanged.
+* If `url` is already relative, or its origin differs from `base`, the function returns `url` unchanged.
 *
 * @param url - The destination URL
 * @param base - The base URL
@@ -7088,44 +8877,40 @@ function urlToRelativePath(url, base) {
   if (to.origin !== from.origin) return url;
   const toPath = to.pathname.split("/").slice(1);
   const fromPath = from.pathname.split("/").slice(1, -1);
-  const length = Math.min(toPath.length, fromPath.length);
-  for (let i = 0; i < length; i++) {
-    if (toPath[i] !== fromPath[i]) break;
-    toPath.shift();
-    fromPath.shift();
-  }
-  while (fromPath.length) {
-    fromPath.shift();
-    toPath.unshift("..");
-  }
-  return toPath.join("/") + to.search + to.hash;
+  let common = 0;
+  while (common < toPath.length - 1 && common < fromPath.length && toPath[common] === fromPath[common]) common++;
+  const ups = fromPath.length - common;
+  let relativePath = "../".repeat(ups) + toPath.slice(common).join("/");
+  if (ups === 0 && (relativePath === "" || relativePath.startsWith("/") || toPath[common].includes(":"))) relativePath = "./" + relativePath;
+  return relativePath + to.search + to.hash;
 }
 
 //#endregion
 //#region src/uuid.ts
 /**
-* Generate a random v4 UUID
+* Generates a random v4 UUID
 *
 * @returns A random v4 UUID
 *
 * @public
+*
+* @example
+* {@includeCode ../test/uuid.test.ts#example}
 */
 function uuid() {
   try {
     return crypto.randomUUID();
   } catch (error) {
     try {
+      const bytes = crypto.getRandomValues(new Uint8Array(16));
+      bytes[6] = bytes[6] & 15 | 64;
+      bytes[8] = bytes[8] & 63 | 128;
+      return arrayBufferToUuid(bytes.buffer);
+    } catch (error$1) {
       const url = URL.createObjectURL(new Blob());
       const uuid$1 = url.toString();
       URL.revokeObjectURL(url);
       return uuid$1.slice(uuid$1.lastIndexOf("/") + 1);
-    } catch (error$1) {
-      let dt = (/* @__PURE__ */new Date()).getTime();
-      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
-        const r = (dt + Math.random() * 16) % 16 | 0;
-        dt = Math.floor(dt / 16);
-        return (c == "x" ? r : r & 3 | 8).toString(16);
-      });
     }
   }
 }
@@ -7188,7 +8973,7 @@ function getElementsByName(node, name, found = []) {
 }
 
 //#endregion
-//#region src/parseXml.ts
+//#region src/scan.ts
 const OPEN_BRACKET_CC = 60;
 const CLOSE_BRACKET_CC = 62;
 const MINUS_CC = 45;
@@ -7199,13 +8984,260 @@ const SINGLE_QUOTE_CC = 39;
 const DOUBLE_QUOTE_CC = 34;
 const OPEN_CORNER_BRACKET_CC = 91;
 const CLOSE_CORNER_BRACKET_CC = 93;
-const NAME_SPACER_SET = new Set([13, 10, 9, 62, 47, 61, 32]);
+const AMPERSAND_CC = 38;
+const EQUALS_CC = 61;
+const COLON_CC = 58;
+const SPACE_CC = 32;
+const TAB_CC = 9;
+const CR_CC = 13;
+const LF_CC = 10;
+const UPPER_A_CC = 65;
+const UPPER_Z_CC = 90;
+const LOWER_A_CC = 97;
+const LOWER_Z_CC = 122;
 /**
-* Parse XML into a JS object with no validation and some failure tolerance
+* Creates an error that reports the line and column of `pos`
+*/
+function syntaxError(input, pos, message) {
+  const parsedText = input.substring(0, pos).split("\n");
+  return /* @__PURE__ */new Error(message + "\nLine: " + (parsedText.length - 1) + "\nColumn: " + (parsedText[parsedText.length - 1].length + 1) + "\nChar: " + (pos < input.length ? input[pos] : "end of input"));
+}
+/**
+* Scans `input` from `start` to its end and reports every construct to `builder`. `stack` holds the open
+* elements with the document at index 0 and the innermost element on top, and `names` holds their tag
+* names. Elements still open when the input ends are appended to their parents.
+*
+* @param input - The whole XML document
+* @param start - The index to start scanning at
+* @param keepWhitespace - Whether whitespace-only text is reported and text is left untrimmed
+* @param builder - The builder callbacks
+* @param stack - The open-element stack, containing the document
+* @param names - The tag names of the open elements, containing `''` for the document
+*/
+function scan(input, start, keepWhitespace, builder, stack, names) {
+  const createElement = builder.createElement;
+  const appendChild = builder.appendChild;
+  const appendText = builder.appendText;
+  const appendCdata = builder.appendCdata;
+  const appendComment = builder.appendComment;
+  const appendDoctype = builder.appendDoctype;
+  const length = input.length;
+  let current = stack[stack.length - 1];
+  let currentName = names[names.length - 1];
+  let pos = start;
+  while (pos < length) {
+    let cc = input.charCodeAt(pos);
+    if (cc !== OPEN_BRACKET_CC) {
+      const textStart = pos;
+      let hasAmpersand = false;
+      let blank = true;
+      do {
+        if (cc !== SPACE_CC && cc !== LF_CC && cc !== CR_CC && cc !== TAB_CC) {
+          blank = false;
+          if (cc === AMPERSAND_CC) hasAmpersand = true;
+        }
+        cc = ++pos < length ? input.charCodeAt(pos) : 0;
+      } while (pos < length && cc !== OPEN_BRACKET_CC);
+      if (appendText !== void 0 && (keepWhitespace || !blank)) {
+        let text = input.slice(textStart, pos);
+        if (hasAmpersand) text = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(text);
+        if (!keepWhitespace) text = text.trim();
+        if (text.length > 0) appendText(current, text);
+      }
+      continue;
+    }
+    const next = pos + 1 < length ? input.charCodeAt(pos + 1) : 0;
+    if (next === SLASH_CC) {
+      const closeStart = pos + 2;
+      const nameEnd = closeStart + currentName.length;
+      const afterName = nameEnd < length ? input.charCodeAt(nameEnd) : 0;
+      const closesTag = input.startsWith(currentName, closeStart) && (nameEnd >= length || currentName !== "" && (afterName === CLOSE_BRACKET_CC || afterName === SPACE_CC || afterName === TAB_CC || afterName === CR_CC || afterName === LF_CC));
+      const end = input.indexOf(">", closeStart);
+      pos = end === -1 ? length : end;
+      if (!closesTag) throw syntaxError(input, pos, "Unexpected close tag");
+      if (pos < length) pos++;
+      if (stack.length > 1) {
+        const child = current;
+        stack.pop();
+        names.pop();
+        current = stack[stack.length - 1];
+        currentName = names[names.length - 1];
+        if (appendChild !== void 0) appendChild(current, child);
+      }
+      continue;
+    }
+    if (next === QUESTION_CC) {
+      const end = input.indexOf(">", pos + 2);
+      pos = end === -1 ? length : end + 1;
+      continue;
+    }
+    if (next === EXCLAMATION_CC) {
+      const third = pos + 2 < length ? input.charCodeAt(pos + 2) : 0;
+      if (third === MINUS_CC) {
+        const end = input.indexOf("-->", pos + 2);
+        const stop = end === -1 ? length : end + 3;
+        if (appendComment !== void 0) appendComment(current, input.slice(pos, stop));
+        pos = stop;
+        continue;
+      }
+      if (third === OPEN_CORNER_BRACKET_CC && pos + 8 < length && input.charCodeAt(pos + 8) === OPEN_CORNER_BRACKET_CC && input.startsWith("CDATA", pos + 3)) {
+        const end = input.indexOf("]]>", pos + 9);
+        if (appendCdata !== void 0) appendCdata(current, end === -1 ? input.slice(pos + 9) : input.slice(pos + 9, end));
+        pos = end === -1 ? length : end + 3;
+        continue;
+      }
+      const doctypeStart = pos + 1;
+      let bracketed = false;
+      pos += 2;
+      while (pos < length) {
+        cc = input.charCodeAt(pos);
+        if (cc === CLOSE_BRACKET_CC && !bracketed) break;
+        if (cc === OPEN_CORNER_BRACKET_CC) bracketed = true;else if (bracketed && cc === CLOSE_CORNER_BRACKET_CC) bracketed = false;
+        pos++;
+      }
+      if (appendDoctype !== void 0) appendDoctype(current, input.slice(doctypeStart, pos));
+      pos++;
+      continue;
+    }
+    const nameStart = ++pos;
+    let colon = -1;
+    cc = pos < length ? input.charCodeAt(pos) : 0;
+    while (pos < length && cc !== SPACE_CC && cc !== CLOSE_BRACKET_CC && cc !== SLASH_CC && cc !== EQUALS_CC && cc !== LF_CC && cc !== CR_CC && cc !== TAB_CC) {
+      if (cc === COLON_CC && colon === -1) colon = pos;
+      cc = ++pos < length ? input.charCodeAt(pos) : 0;
+    }
+    const name = input.slice(nameStart, pos);
+    const attributes = {};
+    while (pos < length && cc !== CLOSE_BRACKET_CC) {
+      if (cc >= UPPER_A_CC && cc <= UPPER_Z_CC || cc >= LOWER_A_CC && cc <= LOWER_Z_CC) {
+        const attributeStart = pos;
+        cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        while (pos < length && cc !== SPACE_CC && cc !== CLOSE_BRACKET_CC && cc !== SLASH_CC && cc !== EQUALS_CC && cc !== LF_CC && cc !== CR_CC && cc !== TAB_CC) cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        const attributeName = input.slice(attributeStart, pos);
+        if (cc !== EQUALS_CC) {
+          while (cc === SPACE_CC || cc === TAB_CC || cc === CR_CC || cc === LF_CC) cc = ++pos < length ? input.charCodeAt(pos) : 0;
+          if (cc !== EQUALS_CC) throw syntaxError(input, pos, "Malformed attribute \"" + attributeName + "\": expected \"=\" after name");
+        }
+        cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        if (cc !== SINGLE_QUOTE_CC && cc !== DOUBLE_QUOTE_CC) {
+          while (cc === SPACE_CC || cc === TAB_CC || cc === CR_CC || cc === LF_CC) cc = ++pos < length ? input.charCodeAt(pos) : 0;
+          if (cc !== SINGLE_QUOTE_CC && cc !== DOUBLE_QUOTE_CC) throw syntaxError(input, pos, "Malformed attribute \"" + attributeName + "\": expected quoted value after \"=\"");
+        }
+        const quote = cc;
+        const valueStart = ++pos;
+        let hasAmpersand = false;
+        cc = pos < length ? input.charCodeAt(pos) : 0;
+        while (pos < length && cc !== quote) {
+          if (cc === AMPERSAND_CC) hasAmpersand = true;
+          cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        }
+        if (pos >= length) throw new Error("Missing closing quote");
+        const value = input.slice(valueStart, pos);
+        attributes[attributeName] = hasAmpersand ? (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(value) : value;
+        cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        continue;
+      }
+      cc = ++pos < length ? input.charCodeAt(pos) : 0;
+    }
+    const selfClosing = input.charCodeAt(pos - 1) === SLASH_CC;
+    pos++;
+    const element = createElement(current, name, attributes, colon === -1 ? name : name.slice(colon - nameStart + 1), colon === -1 ? null : name.slice(0, colon - nameStart));
+    if (selfClosing) {
+      if (appendChild !== void 0) appendChild(current, element);
+    } else {
+      stack.push(element);
+      names.push(name);
+      current = element;
+      currentName = name;
+    }
+  }
+  while (stack.length > 1) {
+    const child = current;
+    stack.pop();
+    names.pop();
+    current = stack[stack.length - 1];
+    if (appendChild !== void 0) appendChild(current, child);
+  }
+}
+
+//#endregion
+//#region src/parseXml.ts
+const HASH_CC = 35;
+/**
+* The parent element of a node whose parent is `parent`: null when the parent is the document
+*/
+function parentElementOf(parent) {
+  return parent.nodeName.charCodeAt(0) === HASH_CC ? null : parent;
+}
+/**
+* Creates a builder that produces the `XmlNode` tree
+*/
+function createTreeBuilder(keepComments, includeParentElement) {
+  const createLeaf = includeParentElement ? (parent, nodeName, nodeValue) => ({
+    nodeName,
+    nodeValue,
+    attributes: {},
+    childNodes: [],
+    parentElement: parentElementOf(parent)
+  }) : (_parent, nodeName, nodeValue) => ({
+    nodeName,
+    nodeValue,
+    attributes: {},
+    childNodes: []
+  });
+  const appendLeaf = (parent, nodeName, nodeValue) => {
+    parent.childNodes.push(createLeaf(parent, nodeName, nodeValue));
+  };
+  return {
+    createDocument: includeParentElement ? () => ({
+      nodeName: "#document",
+      nodeValue: null,
+      childNodes: [],
+      attributes: {},
+      parentElement: null
+    }) : () => ({
+      nodeName: "#document",
+      nodeValue: null,
+      childNodes: [],
+      attributes: {}
+    }),
+    createElement: includeParentElement ? (parent, nodeName, attributes, localName, prefix) => ({
+      nodeName,
+      nodeValue: null,
+      attributes,
+      childNodes: [],
+      prefix,
+      localName,
+      parentElement: parentElementOf(parent)
+    }) : (_parent, nodeName, attributes, localName, prefix) => ({
+      nodeName,
+      nodeValue: null,
+      attributes,
+      childNodes: [],
+      prefix,
+      localName
+    }),
+    appendChild: (parent, child) => {
+      parent.childNodes.push(child);
+    },
+    appendText: (parent, text) => appendLeaf(parent, "#text", text),
+    appendCdata: (parent, text) => appendLeaf(parent, "#cdata", text),
+    appendComment: keepComments ? (parent, text) => appendLeaf(parent, "#comment", text) : void 0,
+    appendDoctype: (parent, text) => appendLeaf(parent, "#doctype", text)
+  };
+}
+const TREE_BUILDERS = [/* @__PURE__ */createTreeBuilder(false, false), /* @__PURE__ */createTreeBuilder(true, false), /* @__PURE__ */createTreeBuilder(false, true), /* @__PURE__ */createTreeBuilder(true, true)];
+/**
+* Parse XML into a JS object
+*
+* The parser does not validate against a DTD or schema, and it does not check every
+* well-formedness constraint; the errors it does report are listed below under Throws.
+* Input cut off between tags yields the nodes parsed so far.
 *
 * @param input - The input XML string
 * @param options - Optional parsing options
 * @returns The parsed XML
+* @throws If an attribute is not `name="value"` or `name='value'`, if a quoted value is not closed, if a close tag does not match its open tag, or if a close tag appears with no element open
 *
 * @public
 *
@@ -7213,179 +9245,9 @@ const NAME_SPACER_SET = new Set([13, 10, 9, 62, 47, 61, 32]);
 * {@includeCode ../test/parseXml.test.ts#example}
 */
 function parseXml(input, options = {}) {
-  let pos = options.pos || 0;
-  const length = input.length;
-  const keepComments = !!options.keepComments;
-  const keepWhitespace = !!options.keepWhitespace;
-  const includeParentElement = !!options.includeParentElement;
-  /**
-  * Creates a text node
-  */
-  function createTextNode(value, nodeName = "#text") {
-    return {
-      nodeName,
-      nodeValue: value,
-      attributes: {},
-      childNodes: []
-    };
-  }
-  /**
-  * Parses a list of entries
-  */
-  function parseChildren(tagName = "") {
-    const children = [];
-    while (pos < length) if (input.charCodeAt(pos) === OPEN_BRACKET_CC) {
-      const next = input.charCodeAt(pos + 1);
-      if (next === SLASH_CC) {
-        const closeStart = pos + 2;
-        pos = input.indexOf(">", pos);
-        if (!input.startsWith(tagName, closeStart)) {
-          const parsedText = input.substring(0, pos).split("\n");
-          throw new Error("Unexpected close tag\nLine: " + (parsedText.length - 1) + "\nColumn: " + (parsedText[parsedText.length - 1].length + 1) + "\nChar: " + input[pos]);
-        }
-        if (pos + 1) pos += 1;
-        return children;
-      } else if (next === QUESTION_CC) {
-        pos = input.indexOf(">", pos);
-        pos++;
-        continue;
-      } else if (next === EXCLAMATION_CC) {
-        const third = input.charCodeAt(pos + 2);
-        if (third === MINUS_CC) {
-          const startCommentPos = pos;
-          while (pos !== -1 && !(input.charCodeAt(pos) === CLOSE_BRACKET_CC && input.charCodeAt(pos - 1) === MINUS_CC && input.charCodeAt(pos - 2) === MINUS_CC)) pos = input.indexOf(">", pos + 1);
-          if (pos === -1) pos = length;
-          if (keepComments) children.push(createTextNode(input.substring(startCommentPos, pos + 1), "#comment"));
-        } else if (third === OPEN_CORNER_BRACKET_CC && input.charCodeAt(pos + 8) === OPEN_CORNER_BRACKET_CC && input.startsWith("CDATA", pos + 3)) {
-          const cdataEndIndex = input.indexOf("]]>", pos);
-          if (cdataEndIndex === -1) {
-            children.push(createTextNode(input.substr(pos + 9), "#cdata"));
-            pos = length;
-          } else {
-            children.push(createTextNode(input.substring(pos + 9, cdataEndIndex), "#cdata"));
-            pos = cdataEndIndex + 3;
-          }
-          continue;
-        } else {
-          const startDoctype = pos + 1;
-          pos += 2;
-          let encapsuled = false;
-          while (pos < length && (input.charCodeAt(pos) !== CLOSE_BRACKET_CC || encapsuled)) {
-            const cc = input.charCodeAt(pos);
-            if (cc === OPEN_CORNER_BRACKET_CC) encapsuled = true;else if (encapsuled && cc === CLOSE_CORNER_BRACKET_CC) encapsuled = false;
-            pos++;
-          }
-          children.push(createTextNode(input.substring(startDoctype, pos), "#doctype"));
-        }
-        pos++;
-        continue;
-      }
-      const node = parseNode();
-      children.push(node);
-    } else {
-      const text = parseText();
-      if (keepWhitespace) {
-        if (text.length > 0) children.push(createTextNode(text));
-      } else {
-        const trimmed = text.trim();
-        if (trimmed.length > 0) children.push(createTextNode(trimmed));
-      }
-      pos++;
-    }
-    return children;
-  }
-  /**
-  * Returns the text outside of texts until the first '&lt;'
-  */
-  function parseText() {
-    const start = pos;
-    pos = input.indexOf("<", pos) - 1;
-    if (pos === -2) pos = length;
-    return (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(input.slice(start, pos + 1));
-  }
-  /**
-  * Returns text until the first nonAlphabetic letter
-  */
-  function parseName() {
-    const start = pos;
-    while (pos < length && !NAME_SPACER_SET.has(input.charCodeAt(pos))) pos++;
-    return input.slice(start, pos);
-  }
-  /**
-  * Parses the attributes of a node
-  */
-  function parseAttributes() {
-    const attributes = {};
-    while (pos < length && input.charCodeAt(pos) !== CLOSE_BRACKET_CC) {
-      const c = input.charCodeAt(pos);
-      if (c > 64 && c < 91 || c > 96 && c < 123) {
-        const name = parseName();
-        let value = "";
-        let code = input.charCodeAt(pos);
-        while (code !== SINGLE_QUOTE_CC && code !== DOUBLE_QUOTE_CC) {
-          pos++;
-          code = input.charCodeAt(pos);
-        }
-        if (code === SINGLE_QUOTE_CC || code === DOUBLE_QUOTE_CC) {
-          value = parseString();
-          if (pos === -1) throw new Error("Missing closing quote");
-        } else pos--;
-        attributes[name] = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(value);
-      }
-      pos++;
-    }
-    return attributes;
-  }
-  /**
-  * Parses a node
-  */
-  function parseNode() {
-    pos++;
-    const nodeName = parseName();
-    let localName = nodeName;
-    let prefix = null;
-    const nsIndex = nodeName.indexOf(":");
-    if (nsIndex !== -1) {
-      prefix = nodeName.slice(0, nsIndex);
-      localName = nodeName.slice(nsIndex + 1);
-    }
-    const attributes = parseAttributes();
-    let childNodes = [];
-    const prev = input.charCodeAt(pos - 1);
-    pos++;
-    if (prev !== SLASH_CC) childNodes = parseChildren(nodeName);
-    return {
-      nodeName,
-      nodeValue: null,
-      attributes,
-      childNodes,
-      prefix,
-      localName
-    };
-  }
-  /**
-  * Parses a string, that starts with a char and with the same usually ' or "
-  */
-  function parseString() {
-    const startChar = input[pos];
-    const startpos = pos + 1;
-    pos = input.indexOf(startChar, startpos);
-    return input.slice(startpos, pos);
-  }
-  /**
-  * Recursively sets parentElement on all nodes in the tree
-  */
-  function setParentElements(node, parent) {
-    node.parentElement = parent?.nodeName.startsWith("#") ? null : parent;
-    for (const child of node.childNodes) setParentElements(child, node);
-  }
-  const document = {
-    nodeName: "#document",
-    nodeValue: null,
-    childNodes: parseChildren(""),
-    attributes: {}
-  };
-  if (includeParentElement) setParentElements(document, null);
+  const builder = TREE_BUILDERS[(options.keepComments ? 1 : 0) | (options.includeParentElement ? 2 : 0)];
+  const document = builder.createDocument();
+  scan(input, options.pos || 0, !!options.keepWhitespace, builder, [document], [""]);
   return document;
 }
 
@@ -8513,15 +10375,16 @@ __webpack_require__.r(__webpack_exports__);
  *                maximumAllowedDrift: 100,
  *                enableBackgroundSyncAfterSegmentDownloadError: true,
  *                defaultTimingSource: {
- *                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
- *                    value: 'http://time.akamai.com/?iso&ms'
+ *                    scheme: 'urn:mpeg:dash:utc:http-iso:2014',
+ *                    value: 'https://time.akamai.com/?iso&ms'
  *                },
  *                artificialTimeOffsetToApply: 0
  *            },
  *            scheduling: {
  *                defaultTimeout: 500,
  *                lowLatencyTimeout: 0,
- *                scheduleWhilePaused: true
+ *                scheduleWhilePaused: true,
+ *                segmentListRetryDelay: 10000
  *            },
  *            text: {
  *                defaultEnabled: true,
@@ -8689,11 +10552,13 @@ __webpack_require__.r(__webpack_exports__);
  *                cid: null,
  *                rtp: null,
  *                rtpSafetyFactor: 5,
+ *                maxBufferedErrorCodes: 10,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
- *                includeInRequests: ['segment', 'mpd'],
+ *                includeInRequests: ['segment', 'mpd', 'license'],
  *                version: 1,
- *                eventTargets: []
+ *                eventTargets: [],
+ *                customKeys: []
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -8750,6 +10615,10 @@ __webpack_require__.r(__webpack_exports__);
  * Changing this value will lower or increase live stream latency.
  *
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
+ *
+ * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the maximum effective segment duration across all audio, video and fragmented text adaptation sets is used instead.
+ * The effective segment duration is the partial segment duration (segment duration / k) for adaptation sets using partial segments, and the full segment duration otherwise.
+ * Consequently, the partial segment duration is only applied if all these adaptation sets use partial segments.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
  * @property {number} [liveDelay=NaN]
@@ -8971,7 +10840,7 @@ __webpack_require__.r(__webpack_exports__);
  * @property {boolean} [enableBackgroundSyncAfterSegmentDownloadError=true]
  * Enables or disables the background sync after the player ran into a segment download error.
  *
- * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
+ * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-iso:2014',value: 'https://time.akamai.com/?iso&ms'}]
  * The default timing source to be used. The timing sources in the MPD take precedence over this one.
  *
  * @property {number} [artificialTimeOffsetToApply=0]
@@ -8987,6 +10856,9 @@ __webpack_require__.r(__webpack_exports__);
  * Default timeout between two consecutive low-latency segment scheduling attempts
  * @property {boolean} [scheduleWhilePaused=true]
  * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
+ * @property {number} [segmentListRetryDelay=10000]
+ * SegmentBase: Time in milliseconds after which the segment list (sidx) of a Representation is requested again once loading it failed.
+ * In the meantime the Representation is excluded from ABR decisions. The delay doubles with every failure in a row, up to eight times this value.
  */
 
 /**
@@ -9317,6 +11189,11 @@ __webpack_require__.r(__webpack_exports__);
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
+ * @property {number} [maxBufferedErrorCodes=10]
+ * The maximum number of error codes (ec) buffered per CMCD v2 report destination until its next report.
+ * When the limit is reached, the oldest code is dropped. This bounds the buffer of a destination that does not report again.
+ *
+ * If not specified this value defaults to 10.
  * @property {number} [mode="query"]
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
@@ -9326,13 +11203,24 @@ __webpack_require__.r(__webpack_exports__);
  * @property {Array.<string>} [includeInRequests]
  * Specifies which HTTP GET requests shall carry parameters.
  *
- * If not specified this value defaults to ['segment', 'mpd].
+ * Possible values are 'segment', 'mpd', 'xlink', 'steering', 'other' and 'license'.
+ *
+ * If not specified this value defaults to ['segment', 'mpd', 'license'].
  * @property {number} [version=1]
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
  * @property {Array.<CmcdEventTarget>} [eventTargets]
  * List of CMCD reporting targets.
+ * @property {Array.<CmcdCustomKey>} [customKeys=[]]
+ * Custom CMCD keys to include in reports as persistent session data, e.g. [{ key: 'org.svta-p-n', value: 'dash.js' }].
+ *
+ * Per the CMCD specification, custom keys must carry a hyphenated prefix (reverse-DNS syntax recommended)
+ * to avoid namespace collisions, e.g. 'com.example-mykey'. Keys without a valid prefix are ignored.
+ * See the SVTA CMCD custom keys registry for registered keys.
+ *
+ * Note: event/response targets filter keys by their own enabledKeys; add custom keys there to include
+ * them in target reports.
  */
 
 /**
@@ -9347,10 +11235,19 @@ __webpack_require__.r(__webpack_exports__);
  * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {Array.<string>} [includeInRequests]
- * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {Array.<string>} [responseReceivedTypes]
+ * Types of requests whose responses trigger a response received (rr) report (e.g., 'mpd', 'segment').
+ * If not specified, rr is reported for every request type.
  * @property {number} [batchSize]
  * The batch size for the CMCD reporting.
+ */
+
+/**
+ * @typedef {Object} CmcdCustomKey
+ * @property {string} key
+ * The custom key name. Must carry a hyphenated prefix, e.g. 'com.example-mykey'.
+ * @property {string|number|boolean} value
+ * The value reported for the custom key.
  */
 
 /**
@@ -9684,7 +11581,7 @@ function Settings() {
         maximumAllowedDrift: 100,
         enableBackgroundSyncAfterSegmentDownloadError: true,
         defaultTimingSource: {
-          scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+          scheme: 'urn:mpeg:dash:utc:http-iso:2014',
           value: 'https://time.akamai.com/?iso&ms'
         },
         artificialTimeOffsetToApply: 0
@@ -9692,7 +11589,8 @@ function Settings() {
       scheduling: {
         defaultTimeout: 500,
         lowLatencyTimeout: 0,
-        scheduleWhilePaused: true
+        scheduleWhilePaused: true,
+        segmentListRetryDelay: 10000
       },
       text: {
         defaultEnabled: true,
@@ -9888,11 +11786,13 @@ function Settings() {
         cid: null,
         rtp: null,
         rtpSafetyFactor: 5,
+        maxBufferedErrorCodes: 10,
         mode: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_MODE_QUERY,
         enabledKeys: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_KEYS,
-        includeInRequests: ['segment', 'mpd'],
+        includeInRequests: ['segment', 'mpd', 'license'],
         version: 1,
-        eventTargets: []
+        eventTargets: [],
+        customKeys: []
       },
       cmsd: {
         enabled: false,
@@ -10971,6 +12871,11 @@ function DashHandler(config) {
       return false;
     }
 
+    // SegmentBase and BaseURL: without a segment list (not loaded yet or failed) the last segment can not have been requested
+    if (!representation.hasSegments() && !representation.segments) {
+      return false;
+    }
+
     // Either transition from dynamic to static was done or no next static segment found
     if (mediaHasFinished) {
       return true;
@@ -11390,6 +13295,7 @@ __webpack_require__.r(__webpack_exports__);
   ORDER: 'order',
   ORIGINAL_MPD_ID: 'mpdId',
   ORIGINAL_PUBLISH_TIME: 'originalPublishTime',
+  OUTPUT_PROTECTION: 'OutputProtection',
   PATCH_LOCATION: 'PatchLocation',
   PERIOD: 'Period',
   PRESELECTION: 'Preselection',
@@ -11477,8 +13383,10 @@ __webpack_require__.r(__webpack_exports__);
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/SegmentsUtils.js */ "./src/dash/utils/SegmentsUtils.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/SegmentsUtils.js */ "./src/dash/utils/SegmentsUtils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -11513,8 +13421,14 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+// The retry delay doubles with every failed segment list load in a row, up to this factor of segmentListRetryDelay
+const MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR = 8;
 function RepresentationController(config) {
   config = config || {};
+  const context = this.context;
   const eventBus = config.eventBus;
   const events = config.events;
   const abrController = config.abrController;
@@ -11524,11 +13438,13 @@ function RepresentationController(config) {
   const type = config.type;
   const streamInfo = config.streamInfo;
   const segmentsController = config.segmentsController;
+  const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance();
   let isDynamic = config.isDynamic;
-  let instance, voAvailableRepresentations, currentVoRepresentation;
+  let instance, voAvailableRepresentations, currentVoRepresentation, hasSegmentData, logger, segmentListFailures, segmentListLoads;
   function setup() {
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance().getLogger(instance);
     resetInitialSettings();
-    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_4__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
   }
   function getStreamId() {
     return streamInfo.id;
@@ -11576,9 +13492,12 @@ function RepresentationController(config) {
   function resetInitialSettings() {
     currentVoRepresentation = null;
     voAvailableRepresentations = [];
+    hasSegmentData = false;
+    segmentListFailures = new WeakMap();
+    segmentListLoads = new WeakMap();
   }
   function reset() {
-    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_4__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     resetInitialSettings();
   }
   function updateData(availableRepresentations, isFragmented, selectedRepresentationId) {
@@ -11586,15 +13505,27 @@ function RepresentationController(config) {
       voAvailableRepresentations = availableRepresentations;
       const selectedRepresentation = getRepresentationById(selectedRepresentationId);
       _setCurrentVoRepresentation(selectedRepresentation);
-      if (type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].ENHANCEMENT && type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && (type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || !isFragmented)) {
+
+      // Non-fragmented text (e.g. a single WebVTT file) has no segment data to load
+      hasSegmentData = type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO || type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].ENHANCEMENT || type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO || type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && isFragmented;
+      if (!hasSegmentData) {
         _endDataUpdate();
         resolve();
         return;
       }
+
+      // The dependent Representation is scheduled on as well (e.g. the base layer of an enhancement Representation)
+      const dependentRepresentationId = selectedRepresentation?.dependentRepresentation?.id;
       const promises = [];
       for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
         const currentRep = voAvailableRepresentations[i];
-        promises.push(_updateRepresentation(currentRep));
+        const isSelected = currentRep.id === selectedRepresentationId || currentRep.id === dependentRepresentationId;
+        const update = _updateRepresentation(currentRep, isSelected);
+        // Share the segment list load with loadSegmentList()
+        if (isSelected && !currentRep.hasSegments()) {
+          _trackSegmentListLoad(currentRep, update);
+        }
+        promises.push(update);
       }
       Promise.all(promises).then(() => {
         _onAllRepresentationsUpdated();
@@ -11614,7 +13545,7 @@ function RepresentationController(config) {
     }
     _endDataUpdate();
   }
-  function _updateRepresentation(currentRep) {
+  function _updateRepresentation(currentRep, isSelected) {
     return new Promise((resolve, reject) => {
       const hasInitialization = currentRep.hasInitialization();
       const hasSegments = currentRep.hasSegments();
@@ -11623,7 +13554,9 @@ function RepresentationController(config) {
       // otherwise, it means that a request has to be made to get initialization and/or segments information
       const promises = [];
       promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
-      promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
+      // For SegmentBase streams the segment list is only fetched for the Representation we
+      // are about to play. The others are loaded by the ScheduleController via loadSegmentList() once scheduled on.
+      promises.push(isSelected ? segmentsController.updateSegmentData(currentRep, hasSegments) : Promise.resolve());
       Promise.all(promises).then(data => {
         if (data[0] && !data[0].error) {
           currentRep = _onInitDataUpdated(currentRep, data[0]);
@@ -11659,7 +13592,7 @@ function RepresentationController(config) {
     let i, len, s, seg;
     for (i = 0, len = fragments ? fragments.length : 0; i < len; i++) {
       s = fragments[i];
-      seg = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_3__.getTimeBasedSegment)({
+      seg = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_5__.getTimeBasedSegment)({
         durationInTimescale: s.duration,
         fTimescale: s.timescale,
         index: count,
@@ -11688,7 +13621,7 @@ function RepresentationController(config) {
     if (currentRepresentation) {
       dashMetrics.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
     }
-    eventBus.trigger(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].REPRESENTATION_SWITCH, {
+    eventBus.trigger(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_4__["default"].REPRESENTATION_SWITCH, {
       mediaType: type,
       streamId: streamInfo.id,
       currentRepresentation
@@ -11742,12 +13675,65 @@ function RepresentationController(config) {
    * @param newRep
    */
   function prepareQualityChange(newRep) {
-    const voRepresentations = voAvailableRepresentations.filter(rep => {
-      return rep.id === newRep.id;
-    });
-    if (voRepresentations.length > 0) {
-      _setCurrentVoRepresentation(voRepresentations[0]);
+    const rep = getRepresentationById(newRep.id);
+    if (rep) {
+      _setCurrentVoRepresentation(rep);
+      // Start loading the segment list right away, so it overlaps with the init segment request
+      loadSegmentList(rep);
+      loadSegmentList(rep.dependentRepresentation);
     }
+  }
+
+  /**
+   * Loads the segment list of a SegmentBase Representation that was skipped in updateData().
+   * Concurrent calls for the same Representation share one request.
+   * @param newRep
+   * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded or the load failed recently
+   */
+  function loadSegmentList(newRep) {
+    if (!isSegmentListMissing(newRep)) {
+      return null;
+    }
+    const rep = getRepresentationById(newRep.id);
+    // A failed load is excluded from ABR and only retried after its retry delay, callers must not wait for it in the meantime
+    const failure = segmentListFailures.get(rep);
+    if (failure && Date.now() - failure.failedAt < failure.retryDelay) {
+      return null;
+    }
+    if (!segmentListLoads.has(rep)) {
+      _trackSegmentListLoad(rep, _updateRepresentation(rep, true));
+    }
+    return segmentListLoads.get(rep);
+  }
+  function _trackSegmentListLoad(rep, update) {
+    const load = update.catch(e => {
+      logger.warn(`Updating representation ${rep.id} for ${type} failed`, e);
+    }).then(() => {
+      // Ignore loads that outlived a reset() or an updateData() with new Representations
+      if (!rep.segments && voAvailableRepresentations.includes(rep)) {
+        const failureCount = (segmentListFailures.get(rep)?.failureCount || 0) + 1;
+        const retryDelay = settings.get().streaming.scheduling.segmentListRetryDelay * Math.min(2 ** (failureCount - 1), MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR);
+        segmentListFailures.set(rep, {
+          failureCount,
+          failedAt: Date.now(),
+          retryDelay
+        });
+        segmentListLoads.delete(rep);
+        abrController.excludeRepresentation(rep, retryDelay);
+      }
+      return rep;
+    });
+    segmentListLoads.set(rep, load);
+  }
+
+  /**
+   * SegmentBase: true while the segment list of the Representation is not loaded yet, or could not be loaded
+   * @param newRep
+   * @return {boolean}
+   */
+  function isSegmentListMissing(newRep) {
+    const rep = newRep ? getRepresentationById(newRep.id) : null;
+    return hasSegmentData && !!rep && !rep.hasSegments() && !rep.segments;
   }
   function _setCurrentVoRepresentation(value) {
     if (!currentVoRepresentation || currentVoRepresentation.id !== value.id) {
@@ -11770,6 +13756,8 @@ function RepresentationController(config) {
     getRepresentationById,
     getStreamId,
     getType,
+    isSegmentListMissing,
+    loadSegmentList,
     prepareQualityChange,
     reset,
     setIsDynamic,
@@ -11857,7 +13845,8 @@ function SegmentsController(config) {
     });
   }
   function updateSegmentData(voRepresentation, hasSegments) {
-    if (hasSegments) {
+    // The segment list is fetched once per Representation instance; callers may ask again (lazy SegmentBase loading).
+    if (hasSegments || voRepresentation.segments) {
       return Promise.resolve();
     }
     return segmentBaseController.getSegmentList({
@@ -12163,58 +14152,31 @@ function DashManifestModel() {
     return lang;
   }
   function getViewpointForAdaptation(adaptation) {
-    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT].length) {
-      return [];
-    }
-    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT].map(viewpoint => {
-      const vp = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      vp.init(viewpoint);
-      return vp;
-    });
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT, adaptation);
   }
   function getRolesForAdaptation(adaptation) {
     if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE].length) {
       return [];
     }
     return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE].map(role => {
-      // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
-      if (role.schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].DASH_ROLE_SCHEME_ID && role.value === 'Main') {
-        role.value = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAIN;
-      }
       const r = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
       r.init(role);
+
+      // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+      if (role.schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].DASH_ROLE_SCHEME_ID && role.value === 'Main') {
+        r.value = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAIN;
+      }
       return r;
     });
   }
   function getAccessibilityForAdaptation(adaptation) {
-    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY].length) {
-      return [];
-    }
-    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY].map(accessibility => {
-      const a = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      a.init(accessibility);
-      return a;
-    });
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY, adaptation);
   }
   function getAudioChannelConfigurationForAdaptation(adaptation) {
-    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].length) {
-      return [];
-    }
-    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
-      const acc = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      acc.init(audioChanCfg);
-      return acc;
-    });
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION, adaptation);
   }
   function getAudioChannelConfigurationForRepresentation(representation) {
-    if (!representation || !representation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION) || !representation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].length) {
-      return [];
-    }
-    return representation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
-      const acc = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      acc.init(audioChanCfg);
-      return acc;
-    });
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION, representation);
   }
   function getRepresentationSortFunction() {
     return (a, b) => a.bandwidth - b.bandwidth;
@@ -12478,16 +14440,14 @@ function DashManifestModel() {
       return 1;
     }
   }
-
-  // propertyType is one of { DashConstants.ESSENTIAL_PROPERTY, DashConstants.SUPPLEMENTAL_PROPERTY }
-  function _getProperties(propertyType, element) {
-    if (!element || !element.hasOwnProperty(propertyType) || !element[propertyType].length) {
+  function _getDescriptorTypes(propertyName, element) {
+    if (!element || !element.hasOwnProperty(propertyName) || !element[propertyName].length) {
       return [];
     }
-    return element[propertyType].map(property => {
-      const s = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      s.init(property);
-      return s;
+    return element[propertyName].map(data => {
+      const descriptor = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
+      descriptor.init(data);
+      return descriptor;
     });
   }
   function _getPropertiesCommonToAllRepresentations(propertyType, repr) {
@@ -12499,7 +14459,7 @@ function DashManifestModel() {
       return [];
     }
     if (repr.length === 1) {
-      return propertiesOfFirstRepresentation;
+      return propertiesOfFirstRepresentation.slice();
     }
 
     // now, only return properties present on all Representations
@@ -12536,13 +14496,13 @@ function DashManifestModel() {
     });
   }
   function getEssentialProperties(element) {
-    return _getProperties(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ESSENTIAL_PROPERTY, element);
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ESSENTIAL_PROPERTY, element);
   }
   function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
     return _getCombinedPropertiesForAdaptationSet(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ESSENTIAL_PROPERTY, adaptation);
   }
   function getSupplementalProperties(element) {
-    return _getProperties(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUPPLEMENTAL_PROPERTY, element);
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUPPLEMENTAL_PROPERTY, element);
   }
   function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
     return _getCombinedPropertiesForAdaptationSet(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUPPLEMENTAL_PROPERTY, adaptation);
@@ -12770,7 +14730,7 @@ function DashManifestModel() {
     }
   }
   function calcSegmentDuration(segmentTimeline) {
-    if (!segmentTimeline || !segmentTimeline.S) {
+    if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
       return NaN;
     }
     let s0 = segmentTimeline.S[0];
@@ -12778,11 +14738,12 @@ function DashManifestModel() {
     return s0.hasOwnProperty('d') ? s0.d : s1.t - s0.t;
   }
   function _getKValue(segmentTimeline) {
-    if (!segmentTimeline || !segmentTimeline.S) {
+    if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
       return 1;
     }
-    const s0 = segmentTimeline.S[0];
-    return s0.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].K) ? s0.k : 1;
+    // @k may vary between S elements; consumers of Representation.k (low latency mode, live delay) care about the live edge, which is the last S element
+    const s = segmentTimeline.S[segmentTimeline.S.length - 1];
+    return s.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].K) ? s.k : 1;
   }
   function _calcMseTimeOffset(representation) {
     // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
@@ -13518,7 +15479,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 // List of node that shall be represented as arrays
-const arrayNodes = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].BASE_URL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_COMPONENT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LABEL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LOCATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].METRICS, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PATCH_LOCATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRESELECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCER_REFERENCE_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REMOVE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPLACE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPORTING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].S, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_SEQUENCE_PROPERTIES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_URL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_DESCRIPTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].UTC_TIMING];
+const arrayNodes = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].BASE_URL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_COMPONENT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LABEL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LOCATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].METRICS, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PATCH_LOCATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRESELECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCER_REFERENCE_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REMOVE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPLACE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPORTING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].S, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_SEQUENCE_PROPERTIES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_URL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_DESCRIPTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].UTC_TIMING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT];
 function DashParser(config) {
   config = config || {};
   const context = this.context;
@@ -13906,6 +15867,7 @@ class BaseMatcher {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseMatcher_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseMatcher.js */ "./src/dash/parser/matchers/BaseMatcher.js");
+/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -13937,16 +15899,25 @@ __webpack_require__.r(__webpack_exports__);
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @classdesc matches and converts xs:datetime to Date
+ * @classdesc matches and converts known timestamp attributes to Date
  */
+
 
 const SECONDS_IN_MIN = 60;
 const MINUTES_IN_HOUR = 60;
 const MILLISECONDS_IN_SECONDS = 1000;
 const datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})(?::?)([0-9]{2}))?/;
+
+// Only known timestamp attributes are converted; other strings may also start with a date.
+const dateTimeAttributes = {
+  [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].MPD]: [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_START_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_END_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PUBLISH_TIME],
+  Patch: [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PUBLISH_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ORIGINAL_PUBLISH_TIME],
+  LeapSecondInformation: ['nextLeapChangeTime'],
+  [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCER_REFERENCE_TIME]: [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].WALL_CLOCK_TIME]
+};
 class DateTimeMatcher extends _BaseMatcher_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor() {
-    super((tagName, attrName, value) => datetimeRegex.test(value), str => {
+    super((tagName, attrName, value) => dateTimeAttributes.hasOwnProperty(tagName) && dateTimeAttributes[tagName].includes(attrName) && datetimeRegex.test(value), str => {
       const match = datetimeRegex.exec(str);
       let utcDate;
 
@@ -14176,9 +16147,12 @@ __webpack_require__.r(__webpack_exports__);
 
 const numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
 const StringAttributeList = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ID];
+
+// DescriptorType@value is xs:string; converting numeric-looking values would alter them (e.g. "01" -> 1)
+const StringValueTagList = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ASSET_IDENTIFIER, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CLIENT_DATA_REPORTING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].FRAME_PACKING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].OUTPUT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].RATING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPORTING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_DESCRIPTION_SCOPE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].UTC_TIMING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT];
 class NumericMatcher extends _BaseMatcher_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor() {
-    super((tagName, attrName, value) => numericRegex.test(value) && StringAttributeList.indexOf(attrName) === -1, str => parseFloat(str));
+    super((tagName, attrName, value) => numericRegex.test(value) && StringAttributeList.indexOf(attrName) === -1 && !(attrName === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE && StringValueTagList.indexOf(tagName) !== -1), str => parseFloat(str));
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (NumericMatcher);
@@ -15132,6 +17106,16 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
     const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate || representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
     const timeline = base.SegmentTimeline;
+
+    // A dynamic manifest can be read while the SegmentTimeline is absent or
+    // carries no S elements yet. Report that nothing is available instead of
+    // throwing; the next manifest refresh recovers.
+    if (!timeline || !timeline.S) {
+      return {
+        numberOfSegments: 0,
+        mediaTimeOfLastSignaledSegment: NaN
+      };
+    }
     let mediaTime = 0;
     let mediaTimeInSeconds = 0;
     let availableSegments = 0;
@@ -15175,6 +17159,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
     const segmentBase = _getSegmentBase(representation);
     const segmentTimeline = segmentBase.SegmentTimeline;
     const segmentURL = segmentBase.SegmentURL;
+
+    // Nothing to iterate while the timeline is absent or has no S elements
+    // yet; leave the caller with no segment rather than throwing.
+    if (!segmentTimeline || !segmentTimeline.S) {
+      return;
+    }
     let mediaTime = 0;
     let sElementCounterIncludingRepeats = -1;
     let parsedSElements, currentSElement, sElementCounter, j, repeat, fTimescale;
@@ -16438,6 +18428,12 @@ class Representation {
     this.startNumber = 1;
     this.timescale = 1;
     this.width = NaN;
+  }
+  usesPartialSegments() {
+    return this.k > 1;
+  }
+  getEffectiveSegmentDuration() {
+    return this.usesPartialSegments() ? this.segmentDuration / this.k : this.segmentDuration;
   }
   hasInitialization() {
     return this.initialization !== null || this.range !== null;
@@ -21178,6 +23174,19 @@ const CmcdPropertyMap = {
     }]
   },
   /**
+   * Maximum number of error codes (ec) buffered per report destination
+   * Priority: settings > default (10)
+   */
+  maxBufferedErrorCodes: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.maxBufferedErrorCodes',
+      priority: 1,
+      type: 'number',
+      default: 10
+    }]
+  },
+  /**
    * Global enabled CMCD keys
    * Priority: manifest > settings > default (all keys)
    *
@@ -21205,8 +23214,22 @@ const CmcdPropertyMap = {
     }]
   },
   /**
+   * Custom CMCD keys as a list of { key, value } entries
+   * (hyphenated key prefix required, e.g. 'org.svta-p-n').
+   * Settings only; not configurable via manifest.
+   */
+  customKeys: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.customKeys',
+      priority: 1,
+      type: 'array',
+      default: []
+    }]
+  },
+  /**
    * Request types to include CMCD data in
-   * Priority: manifest > settings > default (['segment', 'mpd'])
+   * Priority: manifest > settings > default (['segment', 'mpd', 'license'])
    */
   includeInRequests: {
     version: [1, 2],
@@ -21225,7 +23248,7 @@ const CmcdPropertyMap = {
       path: 'settings.streaming.cmcd.includeInRequests',
       priority: 2,
       type: 'array',
-      default: ['segment', 'mpd']
+      default: ['segment', 'mpd', 'license']
     }]
   },
   /**
@@ -21333,20 +23356,15 @@ const CmcdPropertyMap = {
     }]
   },
   /**
-   * V2: Target includeInRequests filter
-   * Note: This is target-specific, requires context
+   * V2: Target filter for response received (rr) reports
+   * Note: This is target-specific, requires context. No default: rr is reported for every request type.
    */
-  targetIncludeInRequests: {
+  targetResponseReceivedTypes: {
     version: [2],
     sources: [{
-      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeInRequests',
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].responseReceivedTypes',
       priority: 1,
       type: 'array'
-    }, {
-      path: 'settings.streaming.cmcd.includeInRequests',
-      priority: 2,
-      type: 'array',
-      default: ['segment', 'mpd']
     }]
   }
 };
@@ -21584,7 +23602,7 @@ __webpack_require__.r(__webpack_exports__);
    *  @memberof Constants#
    *  @static
    */
-  CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+  CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other', 'license'],
   /**
    *  @constant {integer} CMCD_DEFAULT_TIME_INTERVAL specifies the default value for time interval in seconds.
    *  @memberof Constants#
@@ -21821,7 +23839,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 function CmcdController() {
-  let cmcdConfigAccessor, cmcdModel, cmcdReporter, dashMetrics, errHandler, instance, logger, mediaPlayerModel, reporterNeedsRebuild, urlLoader;
+  let cmcdConfigAccessor, cmcdModel, cmcdReporter, dashMetrics, errHandler, eventTargetErrorCodes, instance, logger, mediaPlayerModel, reporterConfigKey, reporterNeedsRebuild, requestErrorCodes, urlLoader;
   let context = this.context;
   let eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
   let debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
@@ -21883,6 +23901,8 @@ function CmcdController() {
   }
   function _resetInitialSettings() {
     reporterNeedsRebuild = false;
+    requestErrorCodes = [];
+    eventTargetErrorCodes = [];
   }
   function _initializeEventBus(autoPlay) {
     eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
@@ -21909,20 +23929,65 @@ function CmcdController() {
     });
   }
   function _onPlaybackStateChange(state) {
-    // Update CmcdReporter with the new player state
-    if (cmcdReporter) {
-      cmcdReporter.update({
-        sta: state
-      });
-    }
-    triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.PLAY_STATE);
+    // update({ sta }) before recordEvent() would send the ps report without the event-mode data
+    triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.PLAY_STATE, {
+      sta: state
+    });
   }
-  function _createCmcdReporter() {
+  function _createCmcdReporter(cmcdConfig = _getReporterConfig()) {
+    reporterConfigKey = JSON.stringify(cmcdConfig);
+    const {
+      customKeys,
+      ...reporterConfig
+    } = cmcdConfig;
+
+    // Error codes not yet reported to the previous event targets are dropped on a rebuild
+    eventTargetErrorCodes = [];
+    const eventTargets = cmcdConfig.eventTargets.map(({
+      responseReceivedTypes,
+      ...target
+    }) => {
+      const errorCodes = [];
+      eventTargetErrorCodes.push(errorCodes);
+      return {
+        ...target,
+        transform: (data, request) => {
+          // Only rr reports carry the request. Filter before attaching ec, so a dropped report keeps the buffered codes
+          if (request && responseReceivedTypes && !cmcdModel.isIncludedInRequestFilter(request.customData?.request?.type, responseReceivedTypes)) {
+            return null;
+          }
+          return _attachErrorCodes(errorCodes, data);
+        }
+      };
+    });
+    const reporter = new _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CmcdReporter({
+      ...reporterConfig,
+      // Every decorated request carries the buffered error codes, i.e. every request that passes the request filter
+      transform: data => _attachErrorCodes(requestErrorCodes, data),
+      eventTargets
+    }, _customRequester);
+
+    // Custom keys are persistent session data and included in all reports
+    if (Object.keys(customKeys).length > 0) {
+      reporter.update(customKeys);
+    }
+    return reporter;
+  }
+
+  /**
+   * Returns the reporter configuration as plain data, so two configurations can be compared.
+   * @return {object}
+   * @private
+   */
+  function _getReporterConfig() {
+    const customKeys = _getValidatedCustomKeys();
     const cmcdConfig = {
       version: cmcdConfigAccessor.getVersion(),
       transmissionMode: cmcdConfigAccessor.get('mode') === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_MODE_HEADERS ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_HEADERS : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_QUERY,
-      enabledKeys: cmcdConfigAccessor.get('keys'),
-      eventTargets: _buildReporterTargets()
+      // Configured custom keys are enabled implicitly, otherwise the reporter's key filter would drop them
+      enabledKeys: [...cmcdConfigAccessor.get('keys'), ...Object.keys(customKeys)],
+      eventTargets: _buildReporterTargets(),
+      customKeys
     };
 
     // Only pass sid/cid if they have actual values, so CmcdReporter
@@ -21935,7 +24000,29 @@ function CmcdController() {
     if (cid) {
       cmcdConfig.cid = cid;
     }
-    return new _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CmcdReporter(cmcdConfig, _customRequester);
+    return cmcdConfig;
+  }
+
+  /**
+   * Returns the configured custom CMCD keys as a data object, dropping entries whose key
+   * lacks the hyphenated prefix required by the CMCD specification (e.g. 'com.example-mykey').
+   * @returns {object}
+   * @private
+   */
+  function _getValidatedCustomKeys() {
+    const customKeys = cmcdConfigAccessor.get('customKeys') ?? [];
+    if (!Array.isArray(customKeys)) {
+      logger.warn('Ignoring CMCD customKeys setting: expected an array of { key, value } entries');
+      return {};
+    }
+    return customKeys.reduce((result, entry) => {
+      if (entry && typeof entry.key === 'string' && (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.isCmcdCustomKey)(entry.key) && entry.value !== undefined) {
+        result[entry.key] = entry.value;
+      } else {
+        logger.warn(`Ignoring CMCD custom key entry "${entry ? entry.key : entry}": entries require a value and a key with a hyphenated prefix, e.g. "com.example-mykey"`);
+      }
+      return result;
+    }, {});
   }
   function _buildReporterTargets() {
     const targets = cmcdConfigAccessor.getEventTargets();
@@ -21949,10 +24036,37 @@ function CmcdController() {
         events: accessor.get('targetEvents'),
         interval: accessor.get('targetInterval') ?? _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_DEFAULT_TIME_INTERVAL,
         batchSize: accessor.get('targetBatchSize') || 1,
-        enabledKeys: accessor.get('targetKeys')
+        enabledKeys: accessor.get('targetKeys'),
+        responseReceivedTypes: accessor.get('targetResponseReceivedTypes')
       });
       return result;
     }, []);
+  }
+
+  /**
+   * Per the CMCD v2 specification, error codes are buffered per report destination and reported
+   * as an inner list of strings with the next report to that destination, e.g. ec=("16" "27").
+   * Codes a destination does not report (e.g. ec not in its enabled keys) are dropped with that report.
+   * @param {string[]} errorCodes - The buffer of the report destination, emptied by this call
+   * @param {object} data - The report data
+   * @return {object}
+   * @private
+   */
+  function _attachErrorCodes(errorCodes, data) {
+    // Response reports copy the request report's ec, which belongs to the request destination
+    delete data.ec;
+    if (errorCodes.length > 0) {
+      data.ec = errorCodes.splice(0);
+    }
+    return data;
+  }
+
+  // Bounds the buffer of a destination that never reports again (e.g. HTTP 410 or no matching request type)
+  function _bufferErrorCode(errorCodes, code) {
+    errorCodes.push(code);
+    if (errorCodes.length > cmcdConfigAccessor.get('maxBufferedErrorCodes')) {
+      errorCodes.shift();
+    }
   }
   function _customRequester(request) {
     return new Promise(resolve => {
@@ -21987,14 +24101,20 @@ function CmcdController() {
     if (errorData.error?.data?.request?.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__.HTTPRequest.CMCD_EVENT) {
       return;
     }
-    // Update CmcdReporter with the error code
-    if (cmcdReporter) {
-      const errorCode = errorData.error?.code || errorData.error?.data?.code;
-      if (errorCode) {
-        cmcdReporter.update({
-          ec: errorCode
-        });
+    if (!cmcdReporter) {
+      return;
+    }
+
+    // A pending rebuild recreates the event target buffers, so run it before buffering
+    _rebuildReporterIfNeeded();
+    const errorCode = errorData.error?.code || errorData.error?.data?.code;
+    if (errorCode) {
+      const code = String(errorCode);
+      // Without request mode nothing would ever flush the request buffer
+      if (isCmcdEnabled()) {
+        _bufferErrorCode(requestErrorCodes, code);
       }
+      eventTargetErrorCodes.forEach(errorCodes => _bufferErrorCode(errorCodes, code));
     }
     triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.ERROR);
   }
@@ -22014,23 +24134,34 @@ function CmcdController() {
       return;
     }
 
-    // Reset flag only after confirming we will rebuild
+    // Reset flag only once the manifest params are available
     reporterNeedsRebuild = false;
+
+    // Most manifest refreshes do not change the CMCD config. Rebuilding would restart sn
+    // and drop the reporter state (e.g. msd sent once) and the buffered error codes.
+    const cmcdConfig = _getReporterConfig();
+    if (JSON.stringify(cmcdConfig) === reporterConfigKey) {
+      return;
+    }
     cmcdReporter.stop(true);
-    cmcdReporter = _createCmcdReporter();
+    cmcdReporter = _createCmcdReporter(cmcdConfig);
     cmcdReporter.start();
   }
 
   /**
    * The handler that is triggered for CMCD event mode events (e.g., play, pause, error). Note that response recevived (rr) events are handled by getCmcdResponseReceivedInterceptors.
    * @param event
+   * @param {object} [additionalData] - Keys to send with the event in addition to the event-mode data
    */
-  function triggerCmcdEventMode(event) {
+  function triggerCmcdEventMode(event, additionalData = {}) {
     if (!cmcdReporter) {
       return;
     }
     _rebuildReporterIfNeeded();
-    const cmcdData = cmcdModel.getEventModeData();
+    const cmcdData = {
+      ...cmcdModel.getEventModeData(),
+      ...additionalData
+    };
 
     // Route media start delay (MSD) through update() for the reporter's internal send-once tracking
     const msdData = cmcdModel.calculateMsd();
@@ -22049,12 +24180,14 @@ function CmcdController() {
    *
    * @param {object} request - The request object with at least { url, type }.
    *                           Will be mutated with CMCD-decorated url/headers.
+   * @return {boolean} True if the request was decorated
    */
   function applyCmcdToRequest(request) {
-    if (!cmcdReporter || !isCmcdEnabled()) {
-      return;
+    if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(request.type)) {
+      return false;
     }
     _rebuildReporterIfNeeded();
+    let applied = false;
     try {
       const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
 
@@ -22067,11 +24200,13 @@ function CmcdController() {
       request.url = decorated.url;
       request.headers = decorated.headers;
       request.cmcd = decorated.customData?.cmcd || {};
+      // Set before the event: a throwing listener must not drop the decoration and its buffered ec
+      applied = true;
       _triggerCmcdDataGeneratedEvent(request);
     } catch (e) {
       logger.warn(e);
-      return null;
     }
+    return applied;
   }
   function _triggerCmcdDataGeneratedEvent(request) {
     const effectiveMode = cmcdConfigAccessor.get('mode');
@@ -22096,7 +24231,7 @@ function CmcdController() {
   }
   function isCmcdEnabled(targetIndex = null) {
     if (targetIndex !== null) {
-      return _targetCanBeEnabled(targetIndex) && _checkTargetIncludeInRequests(targetIndex);
+      return _targetCanBeEnabled(targetIndex);
     } else {
       return _canBeEnabled() && _checkIncludeInRequests();
     }
@@ -22143,23 +24278,6 @@ function CmcdController() {
     }
     return enabled && url;
   }
-  function _checkTargetIncludeInRequests(targetIndex) {
-    const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
-    let enabledRequests = targetAccessor.get('targetIncludeInRequests');
-    if (!enabledRequests) {
-      return true;
-    }
-    const defaultAvailableRequests = _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_AVAILABLE_REQUESTS;
-    const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
-    if (invalidRequests.length === enabledRequests.length) {
-      logger.error(`None of the request types are supported.`);
-      return false;
-    }
-    invalidRequests.forEach(k => {
-      logger.warn(`request type ${k} is not supported.`);
-    });
-    return true;
-  }
   function _onPlaybackRateChanged(data) {
     const prData = cmcdModel.onPlaybackRateChanged(data);
     if (cmcdReporter && prData) {
@@ -22202,13 +24320,11 @@ function CmcdController() {
     return [_cmcdRequestModeInterceptor];
   }
   function _cmcdRequestModeInterceptor(commonMediaRequest) {
-    const requestType = commonMediaRequest.customData.request.type;
-    if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(requestType)) {
-      commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
+    const request = commonMediaRequest.customData.request;
+    if (!applyCmcdToRequest(request)) {
+      commonMediaRequest.cmcd = request.cmcd;
       return commonMediaRequest;
     }
-    let request = commonMediaRequest.customData.request;
-    applyCmcdToRequest(request);
     commonMediaRequest = {
       ...commonMediaRequest,
       url: request.url,
@@ -22722,7 +24838,8 @@ const REQUEST_TYPE_TO_CMCD_FILTER = {
   [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
   [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE]: 'mpd',
   [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
-  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE]: 'other'
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE]: 'other',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.LICENSE]: 'license'
 };
 function CmcdModel() {
   let instance,
@@ -22737,6 +24854,7 @@ function CmcdModel() {
     _bufferLevelStarved,
     _initialMediaRequestsDone,
     _playbackStartedTime,
+    _msd,
     _isSeeking,
     streamProcessors,
     _rebufferingStartTime = {},
@@ -23124,11 +25242,16 @@ function CmcdModel() {
     _updateStreamProcessors();
   }
   function onPlaybackStarted() {
-    if (!_playbackStartedTime) {
+    if (_playbackStartedTime === undefined) {
       _playbackStartedTime = Date.now();
     }
   }
   function onPlaybackPlaying() {
+    // MSD is the wall-clock time between the player being instructed to play (play event,
+    // or start of manifest loading for autoplay) and the first transition to the playing state.
+    if (_msd === undefined && _playbackStartedTime !== undefined) {
+      _msd = Date.now() - _playbackStartedTime;
+    }
     for (const mediaType in _rebufferingStartTime) {
       if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
         onRebufferingCompleted(mediaType);
@@ -23147,10 +25270,7 @@ function CmcdModel() {
     }
   }
   function _calculateMsd() {
-    if (!_playbackStartedTime) {
-      return null;
-    }
-    return Date.now() - _playbackStartedTime;
+    return _msd !== undefined ? _msd : null;
   }
   function getGenericCmcdData(mediaType) {
     const data = {};
@@ -23197,6 +25317,7 @@ function CmcdModel() {
     _isSeeking = false;
     _lastMediaTypeRequest = undefined;
     _playbackStartedTime = undefined;
+    _msd = undefined;
     _rebufferingStartTime = {};
     _rebufferingDuration = {};
     _streamType = undefined;
@@ -23317,24 +25438,21 @@ function CmcdModel() {
     _topBitrateCache = new Map();
     try {
       _updateLastMediaTypeRequest(request.type, request.mediaType);
-      let cmcdData = {};
-      if (isIncludedInRequestFilter(request.type)) {
-        if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE) {
-          return _calculateCmcdDataForRequestForMpd(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
-          _initForMediaType(request.mediaType);
-          return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.INIT_SEGMENT_TYPE) {
-          return _calculateCmcdDataForRequestForInitSegment(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE) {
-          return _calculateCmcdDataForRequestForOther(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.LICENSE) {
-          return _calculateCmcdDataForRequestForLicense(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE) {
-          return _calculateCmcdDataForRequestForSteering(request);
-        }
+      if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE) {
+        return _calculateCmcdDataForRequestForMpd(request);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+        _initForMediaType(request.mediaType);
+        return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.INIT_SEGMENT_TYPE) {
+        return _calculateCmcdDataForRequestForInitSegment(request);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE) {
+        return _calculateCmcdDataForRequestForOther(request);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.LICENSE) {
+        return _calculateCmcdDataForRequestForLicense(request);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE) {
+        return _calculateCmcdDataForRequestForSteering(request);
       }
-      return cmcdData;
+      return {};
     } catch (e) {
       return null;
     } finally {
@@ -23717,8 +25835,24 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
+function createCallbackRegistry(callbacks = []) {
+  return {
+    add(callback) {
+      callbacks.push(callback);
+    },
+    getAll() {
+      return callbacks;
+    },
+    remove(callback) {
+      const index = callbacks.indexOf(callback);
+      if (index !== -1) {
+        callbacks.splice(index, 1);
+      }
+    }
+  };
+}
 function CustomParametersModel() {
-  let instance, utcTimingSources, xhrWithCredentials, requestInterceptors, responseInterceptors, licenseRequestFilters, certificateRequestFilters, certificateResponseFilters, licenseResponseFilters, customCapabilitiesFilters, customInitialTrackSelectionFunction, externalSubtitles, customAbrRules, cmcdController;
+  let instance, utcTimingSources, xhrWithCredentials, requestInterceptorRegistry, responseInterceptorRegistry, licenseRequestFilterRegistry, certificateRequestFilterRegistry, certificateResponseFilterRegistry, licenseResponseFilterRegistry, customCapabilitiesFilterRegistry, customInitialTrackSelectionFunction, externalSubtitles, customAbrRules, cmcdController;
   const context = this.context;
   const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
   function setup() {
@@ -23729,18 +25863,18 @@ function CustomParametersModel() {
     _resetInitialSettings();
   }
   function _resetInitialSettings() {
-    licenseRequestFilters = [];
-    licenseResponseFilters = [];
-    certificateRequestFilters = [];
-    certificateResponseFilters = [];
-    customCapabilitiesFilters = [];
+    licenseRequestFilterRegistry = createCallbackRegistry();
+    licenseResponseFilterRegistry = createCallbackRegistry();
+    certificateRequestFilterRegistry = createCallbackRegistry();
+    certificateResponseFilterRegistry = createCallbackRegistry();
+    customCapabilitiesFilterRegistry = createCallbackRegistry();
     customAbrRules = [];
     customInitialTrackSelectionFunction = null;
     utcTimingSources = [];
 
     // Initialize request interceptors with default CMCD interceptors
-    requestInterceptors = cmcdController.getCmcdRequestInterceptors();
-    responseInterceptors = cmcdController.getCmcdResponseReceivedInterceptors();
+    requestInterceptorRegistry = createCallbackRegistry(cmcdController.getCmcdRequestInterceptors());
+    responseInterceptorRegistry = createCallbackRegistry(cmcdController.getCmcdResponseReceivedInterceptors());
     externalSubtitles = new Set();
   }
   function reset() {
@@ -23779,7 +25913,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getCertificateRequestFilters() {
-    return certificateRequestFilters;
+    return certificateRequestFilterRegistry.getAll();
   }
 
   /**
@@ -23787,7 +25921,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getCertificateResponseFilters() {
-    return certificateResponseFilters;
+    return certificateResponseFilterRegistry.getAll();
   }
 
   /**
@@ -23797,7 +25931,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license request filter callback
    */
   function registerCertificateRequestFilter(filter) {
-    certificateRequestFilters.push(filter);
+    certificateRequestFilterRegistry.add(filter);
   }
 
   /**
@@ -23807,7 +25941,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license response filter callback
    */
   function registerCertificateResponseFilter(filter) {
-    certificateResponseFilters.push(filter);
+    certificateResponseFilterRegistry.add(filter);
   }
 
   /**
@@ -23815,7 +25949,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license request filter callback
    */
   function unregisterCertificateRequestFilter(filter) {
-    _unregisterFilter(certificateRequestFilters, filter);
+    certificateRequestFilterRegistry.remove(filter);
   }
 
   /**
@@ -23823,7 +25957,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license response filter callback
    */
   function unregisterCertificateResponseFilter(filter) {
-    _unregisterFilter(certificateResponseFilters, filter);
+    certificateResponseFilterRegistry.remove(filter);
   }
 
   /**
@@ -23831,7 +25965,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getLicenseRequestFilters() {
-    return licenseRequestFilters;
+    return licenseRequestFilterRegistry.getAll();
   }
 
   /**
@@ -23839,7 +25973,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getLicenseResponseFilters() {
-    return licenseResponseFilters;
+    return licenseResponseFilterRegistry.getAll();
   }
 
   /**
@@ -23849,7 +25983,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license request filter callback
    */
   function registerLicenseRequestFilter(filter) {
-    licenseRequestFilters.push(filter);
+    licenseRequestFilterRegistry.add(filter);
   }
 
   /**
@@ -23859,7 +25993,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license response filter callback
    */
   function registerLicenseResponseFilter(filter) {
-    licenseResponseFilters.push(filter);
+    licenseResponseFilterRegistry.add(filter);
   }
 
   /**
@@ -23867,7 +26001,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license request filter callback
    */
   function unregisterLicenseRequestFilter(filter) {
-    _unregisterFilter(licenseRequestFilters, filter);
+    licenseRequestFilterRegistry.remove(filter);
   }
 
   /**
@@ -23875,7 +26009,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license response filter callback
    */
   function unregisterLicenseResponseFilter(filter) {
-    _unregisterFilter(licenseResponseFilters, filter);
+    licenseResponseFilterRegistry.remove(filter);
   }
 
   /**
@@ -23883,7 +26017,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getCustomCapabilitiesFilters() {
-    return customCapabilitiesFilters;
+    return customCapabilitiesFilterRegistry.getAll();
   }
 
   /**
@@ -23893,7 +26027,7 @@ function CustomParametersModel() {
    * @param {function} filter - the custom capabilities filter callback
    */
   function registerCustomCapabilitiesFilter(filter) {
-    customCapabilitiesFilters.push(filter);
+    customCapabilitiesFilterRegistry.add(filter);
   }
 
   /**
@@ -23901,27 +26035,7 @@ function CustomParametersModel() {
    * @param {function} filter - the custom capabilities filter callback
    */
   function unregisterCustomCapabilitiesFilter(filter) {
-    _unregisterFilter(customCapabilitiesFilters, filter);
-  }
-
-  /**
-   * Unregister a filter from the list of existing filers.
-   * @param {array} filters
-   * @param {function} filter
-   * @private
-   */
-  function _unregisterFilter(filters, filter) {
-    let index = -1;
-    filters.some((item, i) => {
-      if (item === filter) {
-        index = i;
-        return true;
-      }
-    });
-    if (index < 0) {
-      return;
-    }
-    filters.splice(index, 1);
+    customCapabilitiesFilterRegistry.remove(filter);
   }
 
   /**
@@ -24008,7 +26122,7 @@ function CustomParametersModel() {
    * @param {function} interceptor - the request interceptor callback
    */
   function addRequestInterceptor(interceptor) {
-    requestInterceptors.push(interceptor);
+    requestInterceptorRegistry.add(interceptor);
   }
 
   /**
@@ -24018,7 +26132,7 @@ function CustomParametersModel() {
    * @param {function} interceptor - the response interceptor callback
    */
   function addResponseInterceptor(interceptor) {
-    responseInterceptors.push(interceptor);
+    responseInterceptorRegistry.add(interceptor);
   }
 
   /**
@@ -24026,7 +26140,7 @@ function CustomParametersModel() {
    * @param {function} interceptor - the request interceptor callback
    */
   function removeRequestInterceptor(interceptor) {
-    _unregisterFilter(requestInterceptors, interceptor);
+    requestInterceptorRegistry.remove(interceptor);
   }
 
   /**
@@ -24034,7 +26148,7 @@ function CustomParametersModel() {
    * @param {function} interceptor - the request interceptor callback
    */
   function removeResponseInterceptor(interceptor) {
-    _unregisterFilter(responseInterceptors, interceptor);
+    responseInterceptorRegistry.remove(interceptor);
   }
 
   /**
@@ -24042,7 +26156,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getRequestInterceptors() {
-    return requestInterceptors;
+    return requestInterceptorRegistry.getAll();
   }
 
   /**
@@ -24050,7 +26164,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getResponseInterceptors() {
-    return responseInterceptors;
+    return responseInterceptorRegistry.getAll();
   }
   function addExternalSubtitle(externalSubtitleObj) {
     if (!externalSubtitleObj || typeof externalSubtitleObj.id === 'undefined' || !externalSubtitleObj.url || !externalSubtitleObj.language || !externalSubtitleObj.mimeType || typeof externalSubtitleObj.bandwidth === 'undefined') {
@@ -24115,7 +26229,7 @@ function CustomParametersModel() {
    * @param {string} value
    */
   function removeUTCTimingSource(schemeIdUri, value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_3__.checkParameterType)(schemeIdUri, 'string');
+    ;(0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_3__.checkParameterType)(schemeIdUri, 'string');
     (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_3__.checkParameterType)(value, 'string');
     utcTimingSources.forEach(function (obj, idx) {
       if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
@@ -25157,7 +27271,11 @@ function HTTPLoader(cfg) {
         // If lengthComputable is false within the XMLHttpRequestProgressEvent, that means the server never sent a Content-Length header in the response.
         if (!event.lengthComputable || event.lengthComputable && event.total !== event.loaded) {
           requestObject.firstByteDate = currentTime;
-          commonMediaResponse.resourceTiming.responseStart = currentTime.getTime();
+          // resourceTiming values are DOMHighResTimeStamps relative to performance.timeOrigin
+          // (like the Resource Timing API values they mirror), not epoch timestamps.
+          // startTime and responseEnd use performance.now(), so responseStart must too,
+          // otherwise derived durations (e.g. CMCD ttfb) mix the two clocks.
+          commonMediaResponse.resourceTiming.responseStart = performance.now();
         }
       }
 
@@ -26121,9 +28239,16 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * Lightweight BCP-47 tag normalization.
  *
- * Handles:
- * 1. Case normalization per RFC 5646 section 2.1.1
- * 2. ISO 639-2/B and 639-2/T (3-letter) to ISO 639-1 (2-letter) conversion
+ * Produces the RFC 5646 section 4.5 canonical tag in "extlang form":
+ * 1. Grandfathered and redundant tags replaced by their IANA Preferred-Value
+ * 2. Deprecated language and region subtags replaced by their IANA Preferred-Value
+ * 3. ISO 639-2/B and 639-2/T (3-letter) to ISO 639-1 (2-letter) conversion (RFC 5646 section 2.2.1)
+ * 4. Extended language subtags prefixed with their macrolanguage (e.g. cmn -> zh-cmn)
+ * 5. Extension sequences ordered by singleton, private use kept last
+ * 6. Case normalization per RFC 5646 section 2.1.1
+ *
+ * CLDR canonicalization (likely-subtag minimization such as nl-NL -> nl, macrolanguage
+ * folding such as zh-cmn -> zh, und -> en) is not part of BCP 47 and deliberately not applied.
  *
  * Replaces the heavy bcp-47-normalize package (~280 KB) which carried
  * a full IANA subtag registry (8039 entries) that dash.js never needed.
@@ -26338,25 +28463,150 @@ const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescriptors({
   zho: 'zh',
   zul: 'zu'
 }));
+
+/**
+ * IANA Language Subtag Registry: grandfathered and redundant tags that have a Preferred-Value.
+ * Grandfathered tags without a Preferred-Value (e.g. i-default, zh-min) are kept as they are.
+ */
+const TAG_PREFERRED_VALUES = Object.create(null, Object.getOwnPropertyDescriptors({
+  'art-lojban': 'jbo',
+  'en-gb-oed': 'en-GB-oxendict',
+  'i-ami': 'ami',
+  'i-bnn': 'bnn',
+  'i-hak': 'hak',
+  'i-klingon': 'tlh',
+  'i-lux': 'lb',
+  'i-navajo': 'nv',
+  'i-pwn': 'pwn',
+  'i-tao': 'tao',
+  'i-tay': 'tay',
+  'i-tsu': 'tsu',
+  'no-bok': 'nb',
+  'no-nyn': 'nn',
+  'sgn-be-fr': 'sfb',
+  'sgn-be-nl': 'vgt',
+  'sgn-ch-de': 'sgg',
+  'zh-guoyu': 'cmn',
+  'zh-hakka': 'hak',
+  'zh-min-nan': 'nan',
+  'zh-xiang': 'hsn',
+  'sgn-br': 'bzs',
+  'sgn-co': 'csn',
+  'sgn-de': 'gsg',
+  'sgn-dk': 'dsl',
+  'sgn-es': 'ssp',
+  'sgn-fr': 'fsl',
+  'sgn-gb': 'bfi',
+  'sgn-gr': 'gss',
+  'sgn-ie': 'isg',
+  'sgn-it': 'ise',
+  'sgn-jp': 'jsl',
+  'sgn-mx': 'mfs',
+  'sgn-ni': 'ncs',
+  'sgn-nl': 'dse',
+  'sgn-no': 'nsl',
+  'sgn-pt': 'psr',
+  'sgn-se': 'swl',
+  'sgn-us': 'ase',
+  'sgn-za': 'sfs'
+}));
+
+/**
+ * IANA Language Subtag Registry: deprecated language subtags with a Preferred-Value.
+ * ponytail: only the 2-letter ones; add deprecated 3-letter codes if they show up in content
+ */
+const DEPRECATED_LANGUAGES = Object.create(null, Object.getOwnPropertyDescriptors({
+  in: 'id',
+  iw: 'he',
+  ji: 'yi',
+  jw: 'jv',
+  mo: 'ro'
+}));
+
+/**
+ * IANA Language Subtag Registry: deprecated region subtags with a Preferred-Value.
+ */
+const DEPRECATED_REGIONS = Object.create(null, Object.getOwnPropertyDescriptors({
+  BU: 'MM',
+  DD: 'DE',
+  FX: 'FR',
+  TP: 'TL',
+  YD: 'YE',
+  ZR: 'CD'
+}));
+
+/**
+ * IANA Language Subtag Registry: extlang subtags and their Prefix, used to produce the extlang form.
+ * ponytail: Chinese, Arabic, Malay, Swahili and sign language families only; add other extlangs from the registry if needed
+ */
+const EXTLANG_PREFIXES = Object.create(null);
+[['zh', 'cdo cjy cmn cpx czh czo gan hak hsn lzh mnp nan wuu yue'], ['ar', 'acm afb aeb ajp apc apd arb arq ars ary arz ayl'], ['ms', 'min zlm zsm'], ['sw', 'swc swh'], ['sgn', 'ase bfi bzs csn dse dsl fsl gsg gss isg ise jsl mfs ncs nsl psr sfb sfs sgg ssp swl vgt']].forEach(([prefix, extlangs]) => extlangs.split(' ').forEach(extlang => EXTLANG_PREFIXES[extlang] = prefix));
+
+// Grandfathered and redundant tags, longest match first (zh-min-nan before zh-min)
+function _replacePreferredTag(parts) {
+  for (let n = Math.min(3, parts.length); n > 1; n--) {
+    const preferredValue = TAG_PREFERRED_VALUES[parts.slice(0, n).join('-')];
+    if (preferredValue) {
+      return preferredValue.toLowerCase().split('-').concat(parts.slice(n));
+    }
+  }
+  return parts;
+}
 function normalizeBcp47(tag) {
   if (!tag || typeof tag !== 'string') {
     return tag;
   }
-  const parts = tag.split('-');
+  let parts = _replacePreferredTag(tag.toLowerCase().split('-'));
 
-  // Language: lowercase + ISO 639-2 to 639-1 conversion
-  parts[0] = parts[0].toLowerCase();
-  parts[0] = ISO_639_2_TO_1[parts[0]] || parts[0];
-  for (let i = 1; i < parts.length; i++) {
+  // Private use (x-...) and irregular grandfathered tags without Preferred-Value (i-default) stay lowercase
+  if (parts[0].length === 1) {
+    return parts.join('-');
+  }
+
+  // Language: deprecated subtags and ISO 639-2 to 639-1
+  parts[0] = DEPRECATED_LANGUAGES[parts[0]] || ISO_639_2_TO_1[parts[0]] || parts[0];
+
+  // Deprecated regions, up to the first singleton
+  for (let i = 1; i < parts.length && parts[i].length !== 1; i++) {
+    const region = DEPRECATED_REGIONS[parts[i].toUpperCase()];
+    if (parts[i].length === 2 && region) {
+      parts[i] = region.toLowerCase();
+    }
+  }
+
+  // The replacements above can produce a redundant tag (sgn-DD -> sgn-DE -> gsg), resolve it in the same call
+  parts = _replacePreferredTag(parts);
+
+  // Extlang form (cmn -> zh-cmn)
+  if (EXTLANG_PREFIXES[parts[0]]) {
+    parts.unshift(EXTLANG_PREFIXES[parts[0]]);
+  }
+
+  // Script and region casing applies only up to the first singleton, extension subtags stay lowercase
+  let i = 1;
+  for (; i < parts.length && parts[i].length !== 1; i++) {
     if (parts[i].length === 4) {
       // Script: titlecase (e.g. latn -> Latn)
-      parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1).toLowerCase();
-    } else if (parts[i].length === 2 && /^[a-zA-Z]+$/.test(parts[i])) {
+      parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
+    } else if (parts[i].length === 2 && /^[a-z]+$/.test(parts[i])) {
       // Region (2 alpha): uppercase (e.g. us -> US)
       parts[i] = parts[i].toUpperCase();
     }
   }
-  return parts.join('-');
+
+  // Extension sequences ordered by singleton, private use sequence kept last
+  const privateUseIndex = parts.indexOf('x', i);
+  const end = privateUseIndex === -1 ? parts.length : privateUseIndex;
+  const extensions = [];
+  for (let j = i; j < end; j++) {
+    if (parts[j].length === 1) {
+      extensions.push([parts[j]]);
+    } else {
+      extensions[extensions.length - 1].push(parts[j]);
+    }
+  }
+  extensions.sort((a, b) => a[0] < b[0] ? -1 : 1);
+  return parts.slice(0, i).concat(...extensions, parts.slice(end)).join('-');
 }
 
 /***/ }),
@@ -27658,11 +29908,6 @@ class HTTPRequest {
      * @public
      */
     this.trace = [];
-    /**
-     * The CMSD static and dynamic values retrieved from CMSD response headers.
-     * @public
-     */
-    this.cmsd = null;
 
     /**
      * Type of stream ("audio" | "video" etc..)
@@ -27697,6 +29942,20 @@ class HTTPRequest {
      * The values derived from the ResourceTimingAPI.
      */
     this._resourceTimingValues = null;
+    /**
+     * The CMSD static and dynamic values retrieved from CMSD response headers.
+     * Not part of the HttpList metric defined in ISO/IEC 23009-1 Annex D.4.3, hence private.
+     * @public
+     */
+    this._cmsd = null;
+  }
+
+  /**
+   * Prototype getter, so it is not serialised as part of the HttpList metric.
+   * @deprecated since 5.3.0, use `_cmsd` instead. Will be removed in v6.
+   */
+  get cmsd() {
+    return this._cmsd;
   }
 }
 
@@ -27766,6 +30025,12 @@ HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
+/******/ 		if (!(moduleId in __webpack_modules__)) {
+/******/ 			delete __webpack_module_cache__[moduleId];
+/******/ 			var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 			e.code = 'MODULE_NOT_FOUND';
+/******/ 			throw e;
+/******/ 		}
 /******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
@@ -27774,48 +30039,40 @@ HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 /******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/define property getters */
-/******/ 	!function() {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = function(exports, definition) {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
+/******/ 	// define getter/value functions for harmony exports
+/******/ 	__webpack_require__.d = function(exports, definition) {
+/******/ 		for(var key in definition) {
+/******/ 			if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 			}
-/******/ 		};
-/******/ 	}();
+/******/ 		}
+/******/ 	};
 /******/ 	
 /******/ 	/* webpack/runtime/global */
-/******/ 	!function() {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
-/******/ 	}();
+/******/ 	__webpack_require__.g = (function() {
+/******/ 		if (typeof globalThis === 'object') return globalThis;
+/******/ 		try {
+/******/ 			return this || new Function('return this')();
+/******/ 		} catch (e) {
+/******/ 			if (typeof window === 'object') return window;
+/******/ 		}
+/******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	!function() {
-/******/ 		__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
-/******/ 	}();
+/******/ 	__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); };
 /******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
-/******/ 	!function() {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = function(exports) {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	}();
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 		}
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
 !function() {
 "use strict";
 /*!******************************!*\

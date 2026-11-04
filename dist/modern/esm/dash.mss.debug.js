@@ -4897,7 +4897,7 @@ __webpack_require__.r(__webpack_exports__);
  * Protection Constants declaration
  * @ignore
  */
-/* harmony default export */ __webpack_exports__["default"] = ({
+const ProtectionConstants = {
   CLEARKEY_KEYSTEM_STRING: 'org.w3.clearkey',
   CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
   ENCRYPTION_SCHEME_CBCS: 'cbcs',
@@ -4925,6 +4925,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
   PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+  PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING: 'com.microsoft.playready.recommendation.3000',
   PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
   ROBUSTNESS_STRINGS: {
     WIDEVINE: {
@@ -4938,7 +4939,18 @@ __webpack_require__.r(__webpack_exports__);
   W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
   WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
   WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed'
+};
+
+// System strings tried in order by requestMediaKeySystemAccess if the application does not define a
+// systemStringPriority. Key systems without an entry only use their own system string.
+// PlayReady: Edge accepts the plain string, Firefox uses '.recommendation'. Chrome on Windows only supports SL3000
+// via '.recommendation.3000'. It is opt-in via systemStringPriority, otherwise multi-DRM content would silently
+// switch from Widevine to PlayReady in Chrome.
+// Frozen as it is shared by all player instances
+ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = Object.freeze({
+  [ProtectionConstants.PLAYREADY_KEYSTEM_STRING]: Object.freeze([ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING])
 });
+/* harmony default export */ __webpack_exports__["default"] = (ProtectionConstants);
 
 /***/ }),
 
@@ -5256,11 +5268,6 @@ class HTTPRequest {
      * @public
      */
     this.trace = [];
-    /**
-     * The CMSD static and dynamic values retrieved from CMSD response headers.
-     * @public
-     */
-    this.cmsd = null;
 
     /**
      * Type of stream ("audio" | "video" etc..)
@@ -5295,6 +5302,20 @@ class HTTPRequest {
      * The values derived from the ResourceTimingAPI.
      */
     this._resourceTimingValues = null;
+    /**
+     * The CMSD static and dynamic values retrieved from CMSD response headers.
+     * Not part of the HttpList metric defined in ISO/IEC 23009-1 Annex D.4.3, hence private.
+     * @public
+     */
+    this._cmsd = null;
+  }
+
+  /**
+   * Prototype getter, so it is not serialised as part of the HttpList metric.
+   * @deprecated since 5.3.0, use `_cmsd` instead. Will be removed in v6.
+   */
+  get cmsd() {
+    return this._cmsd;
   }
 }
 
@@ -5364,6 +5385,12 @@ HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 /******/ 	};
 /******/ 
 /******/ 	// Execute the module function
+/******/ 	if (!(moduleId in __webpack_modules__)) {
+/******/ 		delete __webpack_module_cache__[moduleId];
+/******/ 		var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 		e.code = 'MODULE_NOT_FOUND';
+/******/ 		throw e;
+/******/ 	}
 /******/ 	__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
 /******/ 
 /******/ 	// Return the exports of the module
@@ -5372,35 +5399,31 @@ HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 /******/ 
 /************************************************************************/
 /******/ /* webpack/runtime/define property getters */
-/******/ !function() {
-/******/ 	// define getter functions for harmony exports
-/******/ 	__webpack_require__.d = function(exports, definition) {
-/******/ 		for(var key in definition) {
-/******/ 			if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 			}
+/******/ // define getter/value functions for harmony exports
+/******/ __webpack_require__.d = function(exports, definition) {
+/******/ 	for(var key in definition) {
+/******/ 		if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 			Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 		}
-/******/ 	};
-/******/ }();
+/******/ 	}
+/******/ };
 /******/ 
 /******/ /* webpack/runtime/hasOwnProperty shorthand */
-/******/ !function() {
-/******/ 	__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
-/******/ }();
+/******/ __webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); };
 /******/ 
 /******/ /* webpack/runtime/make namespace object */
-/******/ !function() {
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/ }();
+/******/ // define __esModule on exports
+/******/ __webpack_require__.r = function(exports) {
+/******/ 	if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 		Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 	}
+/******/ 	Object.defineProperty(exports, '__esModule', { value: true });
+/******/ };
 /******/ 
 /************************************************************************/
 var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
+!function() {
 /*!**************************!*\
   !*** ./src/mss/index.js ***!
   \**************************/
@@ -5451,6 +5474,7 @@ if (!dashjs) {
 dashjs.MssHandler = _MssHandler_js__WEBPACK_IMPORTED_MODULE_0__["default"];
 /* harmony default export */ __webpack_exports__["default"] = (dashjs);
 
+}();
 var __webpack_exports__MssHandler = __webpack_exports__.MssHandler;
 var __webpack_exports__default = __webpack_exports__["default"];
 export { __webpack_exports__MssHandler as MssHandler, __webpack_exports__default as default };

@@ -13254,6 +13254,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   StyledUnicodeChar: function() { return /* binding */ StyledUnicodeChar; },
 /* harmony export */   VerboseLevel: function() { return /* binding */ VerboseLevel; },
 /* harmony export */   extractCta608Data: function() { return /* binding */ extractCta608Data; },
+/* harmony export */   extractCta608DataFromAv1Sample: function() { return /* binding */ extractCta608DataFromAv1Sample; },
 /* harmony export */   extractCta608DataFromSample: function() { return /* binding */ extractCta608DataFromSample; },
 /* harmony export */   findCta608Nalus: function() { return /* binding */ findCta608Nalus; }
 /* harmony export */ });
@@ -13865,6 +13866,7 @@ var Cta608Channel = class {
     if (!styles.italics) styles.foreground = ["white", "green", "blue", "cyan", "red", "yellow", "magenta"][Math.floor(secondByte / 2) - 16];else styles.foreground = "white";
     this.logger.log(VerboseLevel.INFO, "MIDROW: " + JSON.stringify(styles));
     this.writeScreen.setPen(styles);
+    this.writeScreen.moveCursor(1);
   }
   outputDataUpdate(dispatch = false) {
     const time = this.logger.time;
@@ -14180,6 +14182,47 @@ var Cta608Parser = class {
 };
 
 //#endregion
+//#region src/utils/parseCcData.ts
+function isCCType(type) {
+  return type === 0 || type === 1;
+}
+function isNonEmptyCCData(ccData1, ccData2) {
+  return (ccData1 & 127) > 0 || (ccData2 & 127) > 0;
+}
+/**
+* Parse an ATSC A/53 Part 4 `cc_data()` structure into per-field byte pairs.
+*
+* The payload is identical for every carriage format — an AVC/HEVC/VVC SEI message and
+* an AV1 `metadata_itu_t_t35` OBU carry the same bytes under the same T.35/GA94
+* identifier — so this is the single parser shared by all of them. Only the envelope
+* around it differs.
+*
+* `cc_data()` is self-delimiting: `cc_count` states how many 3-byte constructs follow,
+* so anything after them (SEI `rbsp_trailing_bits`, an AV1 OBU `trailing_bits` byte) is
+* ignored without needing to be recognized.
+*
+* @param raw - The DataView holding the `cc_data()` structure
+* @param pos - The position of the first `cc_data()` byte, holding `cc_count`
+* @param endPos - The exclusive upper bound to read within
+* @param fieldData - Field 1 and field 2 byte arrays, appended to in place
+*/
+function parseCcData(raw, pos, endPos, fieldData) {
+  if (pos + 2 > endPos) return;
+  const ccCount = raw.getUint8(pos) & 31;
+  let cursor = pos + 2;
+  const ccEnd = Math.min(cursor + ccCount * 3, endPos);
+  for (; cursor + 2 < ccEnd; cursor += 3) {
+    const byte = raw.getUint8(cursor);
+    if (!(byte & 4)) continue;
+    const ccType = byte & 3;
+    if (!isCCType(ccType)) continue;
+    const ccData1 = raw.getUint8(cursor + 1);
+    const ccData2 = raw.getUint8(cursor + 2);
+    if (isNonEmptyCCData(ccData1, ccData2)) fieldData[ccType].push(ccData1, ccData2);
+  }
+}
+
+//#endregion
 //#region src/extractCta608Data.ts
 /**
 * Extract CTA-608 data from a DataView
@@ -14191,29 +14234,163 @@ var Cta608Parser = class {
 * @public
 */
 function extractCta608Data(raw, cta608Range) {
-  let pos = cta608Range[0];
   const fieldData = [[], []];
-  pos += 8;
-  const ccCount = raw.getUint8(pos) & 31;
-  pos += 2;
-  for (let i = 0; i < ccCount; i++) {
-    const byte = raw.getUint8(pos);
-    const ccValid = byte & 4;
-    const ccType = byte & 3;
-    pos++;
-    const ccData1 = raw.getUint8(pos);
-    pos++;
-    const ccData2 = raw.getUint8(pos);
-    pos++;
-    if (ccValid && (ccData1 & 127) + (ccData2 & 127) !== 0) {
-      if (ccType === 0) {
-        fieldData[0].push(ccData1);
-        fieldData[0].push(ccData2);
-      } else if (ccType === 1) {
-        fieldData[1].push(ccData1);
-        fieldData[1].push(ccData2);
-      }
-    }
+  parseCcData(raw, cta608Range[0] + 8, cta608Range[0] + cta608Range[1], fieldData);
+  return fieldData;
+}
+
+//#endregion
+//#region src/utils/isCta608UserData.ts
+/**
+* The 8-byte ATSC A/53 user identifier that prefixes a `cc_data()` payload, per
+* ANSI-SCTE 128: `itu_t_t35_country_code` (0xB5, USA), `terminal_provider_code`
+* (0x0031, ATSC), `terminal_provider_oriented_code` ('GA94'), and
+* `user_data_type_code` (0x03, cc_data).
+*
+* Both carriage formats use it unchanged — an AVC/HEVC/VVC
+* `user_data_registered_itu_t_t35` SEI message and an AV1 `metadata_itu_t_t35` OBU — so
+* this identifies CTA-608 user data for either.
+*
+* @param raw - The DataView holding the T.35 payload
+* @param pos - The position of `itu_t_t35_country_code`
+* @returns true when the 8 bytes at `pos` identify CTA-608 caption data
+*/
+function isCta608UserData(raw, pos) {
+  return raw.getUint8(pos) === 181 && raw.getUint16(pos + 1) === 49 && raw.getUint32(pos + 3) === 1195456820 && raw.getUint8(pos + 7) === 3;
+}
+
+//#endregion
+//#region src/utils/obuHelpers.ts
+/**
+* AV1 `OBU_METADATA` unit type
+*/
+const OBU_METADATA = 5;
+/**
+* AV1 `METADATA_TYPE_ITUT_T35` metadata type
+*/
+const METADATA_TYPE_ITUT_T35 = 4;
+/**
+* The maximum number of bytes in an AV1 leb128() value
+*/
+const LEB128_MAX_BYTES = 8;
+/**
+* Read an AV1 `leb128()` variable-length integer (AV1 spec section 4.10.5): up to 8
+* bytes, 7 value bits each, least significant group first, with the high bit marking
+* continuation.
+*
+* Groups are combined by multiplication rather than by `<<`, because a leb128 value may
+* exceed the 32 bits a JavaScript shift operates on.
+*
+* @param raw - The DataView to read from
+* @param pos - The position of the first leb128 byte
+* @param endPos - The exclusive upper bound to read within
+* @returns The value and its byte length, or null when it is truncated or overlong
+*/
+function readLeb128(raw, pos, endPos) {
+  let value = 0;
+  for (let i = 0; i < LEB128_MAX_BYTES; i++) {
+    if (pos + i >= endPos) return null;
+    const byte = raw.getUint8(pos + i);
+    value += (byte & 127) * 2 ** (i * 7);
+    if (!(byte & 128)) return {
+      value,
+      size: i + 1
+    };
+  }
+  return null;
+}
+/**
+* Detects whether an AV1 OBU header starts an `OBU_METADATA` unit and locates its
+* payload.
+*
+* The header is one byte — `obu_forbidden_bit` (1), `obu_type` (4),
+* `obu_extension_flag` (1), `obu_has_size_field` (1), `obu_reserved_1bit` (1) — followed
+* by an optional extension byte and, when `obu_has_size_field` is set, `obu_size` as a
+* leb128. An OBU without `obu_size` runs to the end of the temporal unit, which mp4
+* permits only for the final OBU in a sample.
+*
+* @param raw - The DataView containing the OBU
+* @param pos - The position of the OBU header byte
+* @param endPos - The exclusive end of the enclosing sample
+* @returns The payload bounds and whether this is a metadata OBU, or null if malformed
+*/
+function readObu(raw, pos, endPos) {
+  const header = raw.getUint8(pos);
+  if (header & 128) return null;
+  let payloadStart = pos + 1;
+  if (header & 4) payloadStart++;
+  let payloadEnd = endPos;
+  if (header & 2) {
+    const obuSize = readLeb128(raw, payloadStart, endPos);
+    if (!obuSize) return null;
+    payloadStart += obuSize.size;
+    payloadEnd = payloadStart + obuSize.value;
+    if (payloadEnd > endPos) return null;
+  }
+  return {
+    isMetadata: (header >> 3 & 15) === OBU_METADATA,
+    payloadStart,
+    payloadEnd
+  };
+}
+/**
+* Parse CTA-608 field data out of an AV1 metadata OBU payload, ignoring metadata OBUs
+* of any other type.
+*
+* The payload is `metadata_type` as a leb128, then — for ITU-T T.35 — the 8-byte A/53
+* user identifier and the `cc_data()` structure. Unlike an SEI NAL unit an OBU carries
+* no emulation prevention, so the bytes are read verbatim.
+*
+* @param raw - The DataView containing the OBU payload
+* @param pos - The position of `metadata_type`
+* @param endPos - The exclusive end of the OBU payload
+* @param fieldData - Field 1 and field 2 byte arrays, appended to in place
+*/
+function parseCta608DataFromMetadataObu(raw, pos, endPos, fieldData) {
+  const metadataType = readLeb128(raw, pos, endPos);
+  if (!metadataType || metadataType.value !== METADATA_TYPE_ITUT_T35) return;
+  const userDataStart = pos + metadataType.size;
+  if (userDataStart + 10 > endPos || !isCta608UserData(raw, userDataStart)) return;
+  parseCcData(raw, userDataStart + 8, endPos, fieldData);
+}
+
+//#endregion
+//#region src/extractCta608DataFromAv1Sample.ts
+/**
+* Extracts CTA-608 data from an AV1 (`av01`) sample.
+*
+* AV1 has no NAL units, so captions ride in an `metadata_itu_t_t35` OBU rather than in
+* an SEI message. The caption payload is unchanged — the same A/53 `cc_data()` under the
+* same T.35/GA94 identifier that {@link extractCta608DataFromSample} reads — so the
+* returned field data feeds {@link Cta608Parser} identically.
+*
+* This is a separate function rather than a codec branch inside
+* {@link extractCta608DataFromSample} because the two carriages are framed differently and
+* neither sample is self-identifying. A NAL unit sample puts a fixed-width big-endian
+* length in front of each unit, and that width is only known from `lengthSizeMinusOne` in
+* the `avcC`/`hvcC` config. An AV1 sample uses the low-overhead format, where each OBU
+* carries its own `obu_size` after the header — and may omit it on the last OBU. Select on
+* the sample entry type (`av01`) instead.
+*
+* @param raw - The DataView with media data
+* @param startPos - The start position of the sample within the DataView
+* @param sampleSize - The size of the sample in bytes
+* @returns fieldData array containing field 1 and field 2 data arrays
+*
+* @example
+* {@includeCode ../test/extractCta608DataFromAv1Sample.test.ts#example}
+*
+* @public
+*/
+function extractCta608DataFromAv1Sample(raw, startPos, sampleSize) {
+  const fieldData = [[], []];
+  const endPos = Math.min(startPos + sampleSize, raw.byteLength);
+  let cursor = startPos;
+  while (cursor < endPos) {
+    const obu = readObu(raw, cursor, endPos);
+    if (!obu) break;
+    if (obu.isMetadata) parseCta608DataFromMetadataObu(raw, obu.payloadStart, obu.payloadEnd, fieldData);
+    cursor = Math.max(obu.payloadEnd, cursor + 1);
   }
   return fieldData;
 }
@@ -14231,17 +14408,7 @@ function getSeiData(raw, startPos, endPos) {
 }
 function isCea608Sei(payloadType, payloadSize, sei, pos) {
   if (payloadType !== 4 || payloadSize < 8) return false;
-  if (sei.getUint8(pos) !== 181) return false;
-  if (sei.getUint16(pos + 1) !== 49) return false;
-  if (sei.getUint32(pos + 3) !== 1195456820) return false;
-  if (sei.getUint8(pos + 7) !== 3) return false;
-  return true;
-}
-function isCCType(type) {
-  return type === 0 || type === 1;
-}
-function isNonEmptyCCData(ccData1, ccData2) {
-  return (ccData1 & 127) > 0 || (ccData2 & 127) > 0;
+  return isCta608UserData(sei, pos);
 }
 /**
 * H.264 SEI NAL unit type
@@ -14304,21 +14471,7 @@ function parseCta608DataFromSei(sei, fieldData) {
     let now;
     do payloadType += now = sei.getUint8(cursor++); while (now === 255);
     do payloadSize += now = sei.getUint8(cursor++); while (now === 255);
-    if (isCea608Sei(payloadType, payloadSize, sei, cursor)) {
-      const pos = cursor + 10;
-      const ccCount = pos + (sei.getUint8(pos - 2) & 31) * 3;
-      for (let i = pos; i < ccCount; i += 3) {
-        const byte = sei.getUint8(i);
-        if (byte & 4) {
-          const ccType = byte & 3;
-          if (isCCType(ccType)) {
-            const ccData1 = sei.getUint8(i + 1);
-            const ccData2 = sei.getUint8(i + 2);
-            if (isNonEmptyCCData(ccData1, ccData2)) fieldData[ccType].push(ccData1, ccData2);
-          }
-        }
-      }
-    }
+    if (isCea608Sei(payloadType, payloadSize, sei, cursor)) parseCcData(sei, cursor + 8, cursor + payloadSize, fieldData);
     cursor += payloadSize;
   }
 }
@@ -14526,6 +14679,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; },
 /* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; },
 /* harmony export */   CMCD_EVENT_MUTE: function() { return /* binding */ CMCD_EVENT_MUTE; },
+/* harmony export */   CMCD_EVENT_PLAYBACK_RATE: function() { return /* binding */ CMCD_EVENT_PLAYBACK_RATE; },
 /* harmony export */   CMCD_EVENT_PLAYER_COLLAPSE: function() { return /* binding */ CMCD_EVENT_PLAYER_COLLAPSE; },
 /* harmony export */   CMCD_EVENT_PLAYER_EXPAND: function() { return /* binding */ CMCD_EVENT_PLAYER_EXPAND; },
 /* harmony export */   CMCD_EVENT_PLAY_STATE: function() { return /* binding */ CMCD_EVENT_PLAY_STATE; },
@@ -14543,9 +14697,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; },
 /* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; },
 /* harmony export */   CMCD_QUERY: function() { return /* binding */ CMCD_QUERY; },
+/* harmony export */   CMCD_RECORDED_REPORT_MODE_EVENT: function() { return /* binding */ CMCD_RECORDED_REPORT_MODE_EVENT; },
+/* harmony export */   CMCD_RECORDED_REPORT_MODE_HEADER: function() { return /* binding */ CMCD_RECORDED_REPORT_MODE_HEADER; },
+/* harmony export */   CMCD_RECORDED_REPORT_MODE_QUERY: function() { return /* binding */ CMCD_RECORDED_REPORT_MODE_QUERY; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_EVENT: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_EVENT; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_MANIFEST: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_MANIFEST; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_SEGMENT: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_SEGMENT; },
+/* harmony export */   CMCD_RECORDED_REQUEST_TYPE_UNKNOWN: function() { return /* binding */ CMCD_RECORDED_REQUEST_TYPE_UNKNOWN; },
 /* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; },
 /* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; },
 /* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; },
+/* harmony export */   CMCD_REQUEST_PROVENANCE: function() { return /* binding */ CMCD_REQUEST_PROVENANCE; },
 /* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; },
 /* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; },
 /* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; },
@@ -14558,6 +14720,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; },
 /* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; },
 /* harmony export */   CmcdPlayerState: function() { return /* binding */ CmcdPlayerState; },
+/* harmony export */   CmcdRecordedReportMode: function() { return /* binding */ CmcdRecordedReportMode; },
+/* harmony export */   CmcdRecordedRequestType: function() { return /* binding */ CmcdRecordedRequestType; },
+/* harmony export */   CmcdReportRecorder: function() { return /* binding */ CmcdReportRecorder; },
 /* harmony export */   CmcdReporter: function() { return /* binding */ CmcdReporter; },
 /* harmony export */   CmcdReportingMode: function() { return /* binding */ CmcdReportingMode; },
 /* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; },
@@ -14566,6 +14731,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CmcdValidationSeverity: function() { return /* binding */ CmcdValidationSeverity; },
 /* harmony export */   appendCmcdHeaders: function() { return /* binding */ appendCmcdHeaders; },
 /* harmony export */   appendCmcdQuery: function() { return /* binding */ appendCmcdQuery; },
+/* harmony export */   createFetchTransport: function() { return /* binding */ createFetchTransport; },
+/* harmony export */   createXhrTransport: function() { return /* binding */ createXhrTransport; },
 /* harmony export */   decodeCmcd: function() { return /* binding */ decodeCmcd; },
 /* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; },
 /* harmony export */   fromCmcdHeaders: function() { return /* binding */ fromCmcdHeaders; },
@@ -14598,51 +14765,296 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-//#region src/CMCD_FORMATTER_MAP.ts
-const roundValue = value => {
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(Math.round(value.value), value.params);
-  return Math.round(value);
-};
-const toRounded = value => {
-  if (Array.isArray(value)) return value.map(roundValue);
-  return roundValue(value);
-};
-const toUrlSafe = (value, options) => {
-  if (Array.isArray(value)) return value.map(item => toUrlSafe(item, options));
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(toUrlSafe(value.value, options), value.params);else {
-    if (options.baseUrl) value = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.urlToRelativePath)(value, (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.getBaseUrl)(options.baseUrl));
-    return options.version === 1 ? encodeURIComponent(value) : value;
-  }
-};
-const hundredValue = value => {
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(Math.round(value.value / 100) * 100, value.params);
-  return Math.round(value / 100) * 100;
-};
-const toHundred = value => {
-  if (Array.isArray(value)) return value.map(hundredValue);
-  return hundredValue(value);
-};
-const nor = (value, options) => {
-  let norValue = value;
-  if (options.version >= 2) {
-    if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") norValue = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem([value]);else if (typeof value === "string") norValue = [value];
-  }
-  return toUrlSafe(norValue, options);
-};
+//#region src/CMCD_INNER_LIST_KEYS.ts
 /**
-* The default formatters for CMCD values.
+* Inner-list keys in version 2 that are scalars in version 1.
 *
-* @public
+* Used by both encoding (down-conversion) and decoding (up-conversion).
+*
+* @internal
 */
-const CMCD_FORMATTER_MAP = {
-  br: toRounded,
-  d: toRounded,
-  bl: toHundred,
-  dl: toHundred,
-  mtp: toHundred,
-  nor,
-  rtp: toHundred,
-  tb: toRounded
+const CMCD_INNER_LIST_KEYS = /* @__PURE__ */new Set(["ab", "bl", "br", "bsa", "bsd", "bsda", "lab", "lb", "mtp", "pb", "tab", "tb", "tbl", "tpb"]);
+
+//#endregion
+//#region src/CMCD_KEY_SPECS.ts
+const MEDIA = ["a", "v", "av", "tt", "c", "o"];
+/**
+* The encoder rules of each key. The table has one row for each key of CTA-5004-B Table 1, plus `nrr` of CTA-5004 and `cdn`.
+*
+* @internal
+*/
+const CMCD_KEY_SPECS = {
+  ab: {
+    type: "ot-list",
+    round: 1,
+    supersededBy: "br",
+    version: 2
+  },
+  bg: {
+    type: "boolean",
+    omitDefault: false,
+    requiredOn: "b",
+    version: 2
+  },
+  bl: {
+    type: "ot-list",
+    round: 100
+  },
+  br: {
+    type: "ot-list",
+    round: 1,
+    requiredOn: "bc"
+  },
+  bs: {
+    type: "boolean",
+    omitDefault: false
+  },
+  bsa: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  bsd: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  bsda: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  cdn: {
+    type: "string",
+    max: 128,
+    version: 2
+  },
+  cen: {
+    type: "string",
+    max: 64,
+    mode: "event",
+    onlyOn: "ce",
+    requiredOn: "ce",
+    version: 2
+  },
+  cid: {
+    type: "string",
+    max: 128,
+    v1Max: 64,
+    requiredOn: "c"
+  },
+  cmsdd: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  cmsds: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  cs: {
+    type: "string",
+    version: 2
+  },
+  d: {
+    type: "integer",
+    round: 1,
+    ot: MEDIA
+  },
+  dfa: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  dl: {
+    type: "integer",
+    round: 100
+  },
+  e: {
+    type: "token",
+    mode: "event",
+    requiredOn: "always",
+    version: 2
+  },
+  ec: {
+    type: "string-list",
+    requiredOn: "e",
+    version: 2
+  },
+  h: {
+    type: "string",
+    max: 128,
+    mode: "event",
+    requiredOn: "h",
+    version: 2
+  },
+  lab: {
+    type: "ot-list",
+    round: 1,
+    supersededBy: "lb",
+    version: 2
+  },
+  lb: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  ltc: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  msd: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  mtp: {
+    type: "ot-list",
+    round: 100
+  },
+  nor: {
+    type: "nor"
+  },
+  nr: {
+    type: "boolean",
+    omitDefault: false,
+    version: 2
+  },
+  nrr: {
+    type: "string",
+    version: 1
+  },
+  ot: {
+    type: "token"
+  },
+  pb: {
+    type: "ot-list",
+    round: 1,
+    version: 2
+  },
+  pr: {
+    type: "decimal",
+    omitDefault: 1,
+    requiredOn: "pr"
+  },
+  pt: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  rc: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  rtp: {
+    type: "integer",
+    round: 100
+  },
+  sf: {
+    type: "token",
+    v1Map: {
+      e: "o"
+    }
+  },
+  sid: {
+    type: "string",
+    max: 64
+  },
+  smrt: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  sn: {
+    type: "integer",
+    round: 1,
+    version: 2
+  },
+  st: {
+    type: "token",
+    v1Map: {
+      ll: "l"
+    }
+  },
+  sta: {
+    type: "token",
+    requiredOn: "ps",
+    version: 2
+  },
+  su: {
+    type: "boolean",
+    omitDefault: false
+  },
+  tab: {
+    type: "ot-list",
+    round: 1,
+    supersededBy: "tb",
+    version: 2
+  },
+  tb: {
+    type: "ot-list",
+    round: 1
+  },
+  tbl: {
+    type: "ot-list",
+    round: 100,
+    version: 2
+  },
+  tpb: {
+    type: "ot-list",
+    round: 1,
+    ot: ["a", "v", "av", "c"],
+    version: 2
+  },
+  ts: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    requiredOn: "always",
+    version: 2
+  },
+  ttfb: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  ttfbb: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  ttlb: {
+    type: "integer",
+    round: 1,
+    mode: "event",
+    onlyOn: "rr",
+    version: 2
+  },
+  url: {
+    type: "string",
+    mode: "event",
+    onlyOn: "rr",
+    requiredOn: "rr",
+    version: 2
+  },
+  v: {
+    type: "integer",
+    round: 1,
+    requiredOn: "always",
+    version: 2
+  }
 };
 
 //#endregion
@@ -14653,139 +15065,6 @@ const CMCD_FORMATTER_MAP = {
 * @public
 */
 const CMCD_V2 = 2;
-
-//#endregion
-//#region src/CmcdEventType.ts
-/**
-* CMCD event type for the 'bc' key (bitrate change).
-*
-* @public
-*/
-const CMCD_EVENT_BITRATE_CHANGE = "bc";
-/**
-* CMCD event type for the 'ps' key (play state change).
-*
-* @public
-*/
-const CMCD_EVENT_PLAY_STATE = "ps";
-/**
-* CMCD event type for the 'e' key (error).
-*
-* @public
-*/
-const CMCD_EVENT_ERROR = "e";
-/**
-* CMCD event type for the 't' key (time interval).
-*
-* @public
-*/
-const CMCD_EVENT_TIME_INTERVAL = "t";
-/**
-* CMCD event type for the 'c' key (content ID).
-*
-* @public
-*/
-const CMCD_EVENT_CONTENT_ID = "c";
-/**
-* CMCD event type for the 'b' key (backgrounded mode).
-*
-* @public
-*/
-const CMCD_EVENT_BACKGROUNDED_MODE = "b";
-/**
-* CMCD event type for the 'm' key (mute).
-*
-* @public
-*/
-const CMCD_EVENT_MUTE = "m";
-/**
-* CMCD event type for the 'um' key (unmute).
-*
-* @public
-*/
-const CMCD_EVENT_UNMUTE = "um";
-/**
-* CMCD event type for the 'pe' key (player expand).
-*
-* @public
-*/
-const CMCD_EVENT_PLAYER_EXPAND = "pe";
-/**
-* CMCD event type for the 'pc' key (player collapse).
-*
-* @public
-*/
-const CMCD_EVENT_PLAYER_COLLAPSE = "pc";
-/**
-* CMCD event type for the 'rr' key (response received).
-*
-* @public
-*/
-const CMCD_EVENT_RESPONSE_RECEIVED = "rr";
-/**
-* CMCD event type for the 'as' key (ad start).
-*
-* @public
-*/
-const CMCD_EVENT_AD_START = "as";
-/**
-* CMCD event type for the 'ae' key (ad end).
-*
-* @public
-*/
-const CMCD_EVENT_AD_END = "ae";
-/**
-* CMCD event type for the 'abs' key (ad break start).
-*
-* @public
-*/
-const CMCD_EVENT_AD_BREAK_START = "abs";
-/**
-* CMCD event type for the 'abe' key (ad break end).
-*
-* @public
-*/
-const CMCD_EVENT_AD_BREAK_END = "abe";
-/**
-* CMCD event type for the 'sk' key (skip).
-*
-* @public
-*/
-const CMCD_EVENT_SKIP = "sk";
-/**
-* CMCD event type for the 'ce' key (custom event).
-*
-* @public
-*/
-const CMCD_EVENT_CUSTOM_EVENT = "ce";
-/**
-* CMCD event types for the 'e' key (event mode).
-*
-* @enum
-*
-* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event | CTA-5004-B Event}
-*
-* @public
-*/
-const CmcdEventType = {
-  BITRATE_CHANGE: CMCD_EVENT_BITRATE_CHANGE,
-  PLAY_STATE: CMCD_EVENT_PLAY_STATE,
-  ERROR: CMCD_EVENT_ERROR,
-  TIME_INTERVAL: CMCD_EVENT_TIME_INTERVAL,
-  CONTENT_ID: CMCD_EVENT_CONTENT_ID,
-  BACKGROUNDED_MODE: CMCD_EVENT_BACKGROUNDED_MODE,
-  MUTE: CMCD_EVENT_MUTE,
-  UNMUTE: CMCD_EVENT_UNMUTE,
-  PLAYER_EXPAND: CMCD_EVENT_PLAYER_EXPAND,
-  PLAYER_COLLAPSE: CMCD_EVENT_PLAYER_COLLAPSE,
-  RESPONSE_RECEIVED: CMCD_EVENT_RESPONSE_RECEIVED,
-  AD_START: CMCD_EVENT_AD_START,
-  AD_END: CMCD_EVENT_AD_END,
-  AD_BREAK_START: CMCD_EVENT_AD_BREAK_START,
-  AD_BREAK_END: CMCD_EVENT_AD_BREAK_END,
-  SKIP: CMCD_EVENT_SKIP,
-  CUSTOM_EVENT: CMCD_EVENT_CUSTOM_EVENT
-};
 
 //#endregion
 //#region src/CmcdReportingMode.ts
@@ -14814,202 +15093,41 @@ const CmcdReportingMode = {
 };
 
 //#endregion
-//#region src/CMCD_EVENT_KEYS.ts
-/**
-* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
-*
-* @public
-*/
-const CMCD_EVENT_KEYS = ["cen", "e", "h", "ts"];
-
-//#endregion
-//#region src/CMCD_REQUEST_KEYS.ts
-/**
-* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
-*
-* @public
-*/
-const CMCD_REQUEST_KEYS = ["ab", "bg", "bl", "br", "bs", "bsa", "bsd", "bsda", "cdn", "cid", "cs", "d", "dfa", "dl", "ec", "lab", "lb", "ltc", "msd", "mtp", "nor", "nr", "ot", "pb", "pr", "pt", "rtp", "sf", "sid", "sn", "st", "sta", "su", "tab", "tb", "tbl", "tpb", "v"];
-
-//#endregion
-//#region src/isCmcdCustomKey.ts
-const CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
-/**
-* Check if a key is a custom key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a custom key, `false` otherwise.
-*
-* @public
-*/
-function isCmcdCustomKey(key) {
-  return CUSTOM_KEY_REGEX.test(key);
+//#region src/downConvertToV1.ts
+function hasParams(params) {
+  for (const _ in params) return true;
+  return false;
 }
-
-//#endregion
-//#region src/isCmcdRequestKey.ts
-const CMCD_REQUEST_KEY_SET = new Set(CMCD_REQUEST_KEYS);
 /**
-* Check if a key is a valid CMCD request key.
+* Unwrap an inner list or SfItem value to a scalar.
 *
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
-*/
-function isCmcdRequestKey(key) {
-  return CMCD_REQUEST_KEY_SET.has(key) || isCmcdCustomKey(key);
-}
-
-//#endregion
-//#region src/CMCD_RESPONSE_KEYS.ts
-/**
-* CMCD v2 - Response-only and timing keys.
-*
-* @public
-*/
-const CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
-
-//#endregion
-//#region src/isCmcdResponseReceivedKey.ts
-const CMCD_RESPONSE_KEY_SET = new Set(CMCD_RESPONSE_KEYS);
-/**
-* Check if a key is a valid CMCD response key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdResponseReceivedKey.test.ts#example}
-*/
-function isCmcdResponseReceivedKey(key) {
-  return CMCD_RESPONSE_KEY_SET.has(key);
-}
-
-//#endregion
-//#region src/isCmcdEventKey.ts
-const CMCD_EVENT_KEY_SET = new Set(CMCD_EVENT_KEYS);
-/**
-* Check if a key is a valid CMCD event key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdEventKey.test.ts#example}
-*/
-function isCmcdEventKey(key) {
-  return isCmcdRequestKey(key) || isCmcdResponseReceivedKey(key) || CMCD_EVENT_KEY_SET.has(key);
-}
-
-//#endregion
-//#region src/CMCD_INNER_LIST_KEYS.ts
-/**
-* Keys that are inner lists in V2 but plain scalars in V1.
-*
-* Used by both encoding (down-conversion) and decoding (up-conversion).
-*
-* @internal
-*/
-const CMCD_INNER_LIST_KEYS = new Set(["ab", "bl", "br", "bsa", "bsd", "bsda", "lab", "lb", "mtp", "pb", "tab", "tb", "tbl", "tpb"]);
-
-//#endregion
-//#region src/CMCD_V1_KEYS.ts
-/**
-* Defines the keys for CMCD (Common Media Client Data) version 1.
-*
-* @public
-*/
-const CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
-
-//#endregion
-//#region src/isCmcdV1Key.ts
-const CMCD_V1_KEY_SET$1 = new Set(CMCD_V1_KEYS);
-/**
-* Filter function for CMCD v1 keys.
-*
-* @param key - The CMCD key to filter.
-*
-* @returns `true` if the key should be included, `false` otherwise.
-*
-* @public
-*
-* @example
-* {@includeCode ../test/isCmcdV1Key.test.ts#example}
-*/
-function isCmcdV1Key(key) {
-  return CMCD_V1_KEY_SET$1.has(key) || isCmcdCustomKey(key);
-}
-
-//#endregion
-//#region src/isTokenField.ts
-const TOKEN_FIELDS = new Set(["ot", "sf", "st", "e", "sta"]);
-/**
-* Checks if the given key is a token field.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a token field.
-*
-* @internal
-*/
-function isTokenField(key) {
-  return TOKEN_FIELDS.has(key);
-}
-
-//#endregion
-//#region src/isValid.ts
-/**
-* Checks if the given value is valid
-*
-* @param value - The value to check.
-*
-* @returns `true` if the key is a value is valid.
-*
-* @internal
-*/
-function isValid(value) {
-  if (typeof value === "number") return Number.isFinite(value);
-  return value != null && value !== "" && value !== false;
-}
-
-//#endregion
-//#region src/prepareCmcdData.ts
-const filterMap = {
-  [CMCD_EVENT_MODE]: isCmcdEventKey,
-  [CMCD_REQUEST_MODE]: isCmcdRequestKey
-};
-/**
-* Unwrap an inner list or SfItem value to a plain scalar.
+* The scalar is the value of the item with the object type flag of `ot`
+* (CTA-5004-B section 4.1, item 14). Without that item, it is the value
+* of the first item without parameters. Otherwise it is `undefined`.
 */
 function unwrapValue(value, ot) {
-  if (Array.isArray(value)) {
-    let item;
-    if (ot) item = value.find(item$1 => item$1.params?.ot === ot);
-    if (!item) item = value[0];
-    return unwrapValue(item);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) value = value.value;
+  if (!Array.isArray(value)) return value;
+  let fallback;
+  for (const item of value) {
+    if (!(item instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem)) {
+      if (fallback === void 0) fallback = item;
+      continue;
+    }
+    if (ot && item.params?.[ot] === true) return item.value;
+    if (fallback === void 0 && !hasParams(item.params)) fallback = item.value;
   }
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return value.value;
-  return value;
+  return fallback;
 }
 /**
-* Down-convert V2 CMCD data to V1 format.
+* Down-convert version 2 CMCD data to version 1.
 *
-* - Extracts `nrr` from `nor` SfItem `r` parameter.
-* - Unwraps inner-list values to plain scalars.
+* - Extracts `nrr` from the `nor` SfItem's `r` parameter.
+* - Unwraps inner-list values to scalars for the object type `ot`.
+*
+* @internal
 */
-function downConvertToV1(obj) {
+function downConvertToV1(obj, ot) {
   const result = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value == null) {
@@ -15017,14 +15135,287 @@ function downConvertToV1(obj) {
       continue;
     }
     if (key === "nor") {
-      const first = (Array.isArray(value) ? value : [value])[0];
+      const list = value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && Array.isArray(value.value) ? value.value : value;
+      const first = Array.isArray(list) ? list[0] : list;
       if (first instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
         result["nor"] = first.value;
         if (first.params?.r) result["nrr"] = first.params.r;
       } else result["nor"] = first;
-    } else if (CMCD_INNER_LIST_KEYS.has(key)) result[key] = unwrapValue(value, obj["ot"]);else result[key] = value;
+    } else if (CMCD_INNER_LIST_KEYS.has(key)) result[key] = unwrapValue(value, ot);else result[key] = value;
   }
   return result;
+}
+
+//#endregion
+//#region src/isCmcdCustomKey.ts
+const CUSTOM_KEY_REGEX = /^[a-z][a-z0-9.-]*$/;
+/**
+* Check if a key is a valid custom key: a lowercase first letter, then
+* characters from `a-z 0-9 . -`. The key needs a hyphen, not at the start
+* or end. This check applies the CTA-5004-B custom-key rules, restricted
+* to names that RFC 8941 key serialization accepts.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdCustomKey.test.ts#example}
+*/
+function isCmcdCustomKey(key) {
+  const separator = key.indexOf("-", 1);
+  return separator > 0 && separator < key.length - 1 && CUSTOM_KEY_REGEX.test(key);
+}
+
+//#endregion
+//#region src/getKeySpec.ts
+const CUSTOM_KEY_SPEC = {
+  type: "custom",
+  omitDefault: false,
+  max: 64,
+  v1Max: Infinity
+};
+/**
+* Returns the row of a key in the key table.
+*
+* @param key - The key to look up.
+*
+* @returns The row of a reserved key, the custom row for a valid custom key, or `undefined`.
+*
+* @internal
+*/
+function getKeySpec(key) {
+  if (Object.prototype.hasOwnProperty.call(CMCD_KEY_SPECS, key)) return CMCD_KEY_SPECS[key];
+  return isCmcdCustomKey(key) ? CUSTOM_KEY_SPEC : void 0;
+}
+
+//#endregion
+//#region src/isValid.ts
+/**
+* Checks if the given value is valid to send as a CMCD value.
+*
+* `undefined`, `null`, an empty string, `false`, an empty array, and a
+* number that is not finite are not valid. CTA-5004-B requires omitting
+* the key when its value is unknown.
+*
+* @param value - The value to check.
+*
+* @returns `true` if the value is valid.
+*
+* @internal
+*/
+function isValid(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.length > 0;
+  return value != null && value !== "" && value !== false;
+}
+
+//#endregion
+//#region src/formatNor.ts
+function toBase(baseUrl) {
+  if (!baseUrl) return;
+  try {
+    return new URL((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.getBaseUrl)(baseUrl)).href;
+  } catch {
+    return;
+  }
+}
+function formatPath(path, base, version) {
+  if (typeof path !== "string" || path === "") return;
+  const relative = base ? (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.urlToRelativePath)(path, base) : path;
+  return version === 1 ? encodeURIComponent(relative) : relative;
+}
+function formatEntry(entry, base, version) {
+  if (entry instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+    const path = formatPath(entry.value, base, version);
+    return path === void 0 ? void 0 : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(path, entry.params);
+  }
+  return formatPath(entry, base, version);
+}
+function formatEntries(entries, base, version) {
+  const list = [];
+  for (const entry of entries) {
+    const formatted = formatEntry(entry, base, version);
+    if (formatted !== void 0) list.push(formatted);
+  }
+  return list.length > 0 ? list : void 0;
+}
+/**
+* Formats a `nor` value. Each path becomes relative to `baseUrl` when `baseUrl` is a valid URL.
+* Version 1 encodes the path with `encodeURIComponent`. Version 2 wraps one path in a list.
+* The parameters of an entry and of an inner list stay on the value.
+*
+* @param value - A path, an `SfItem` of a path, or a list of them. An `SfItem` can also wrap the list.
+* @param options - The version and `baseUrl` of the report.
+*
+* @returns The formatted value, or `undefined` when no entry is a non-empty string.
+*
+* @internal
+*/
+function formatNor(value, options) {
+  const base = toBase(options.baseUrl);
+  const version = options.version;
+  if (Array.isArray(value)) return formatEntries(value, base, version);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && Array.isArray(value.value)) {
+    const list = formatEntries(value.value, base, version);
+    return list && new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(list, value.params);
+  }
+  const entry = formatEntry(value, base, version);
+  return version === 1 || entry === void 0 ? entry : [entry];
+}
+
+//#endregion
+//#region src/toTokenString.ts
+/**
+* Resolve the text of a token value.
+*
+* A token may be a plain string, a registry `Symbol`, an `SfToken`, or an
+* `SfItem` that wraps such a value.
+*
+* @param value - The value to resolve.
+*
+* @returns The token text, or `undefined` when the value is not a token.
+*
+* @internal
+*/
+function toTokenString(value) {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return toTokenString(value.value);
+  if (typeof value === "string") return value;
+  if (typeof value === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken) return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value);
+}
+
+//#endregion
+//#region src/normalizeValue.ts
+function toText(value, spec, version) {
+  const max = (version === 1 ? spec.v1Max : void 0) ?? spec.max ?? Infinity;
+  return typeof value === "string" && value !== "" && value.length <= max ? value : void 0;
+}
+function normalizeBare(value, spec, version) {
+  switch (spec.type) {
+    case "boolean":
+      return typeof value === "boolean" ? value : void 0;
+    case "integer":
+    case "ot-list":
+      return typeof value === "number" && Number.isFinite(value) ? Math.round(value / spec.round) * spec.round : void 0;
+    case "decimal":
+      return typeof value === "number" && Number.isFinite(value) ? value : void 0;
+    case "string":
+      return toText(value, spec, version);
+    case "string-list":
+      return typeof value === "string" && value !== "" ? value : void 0;
+    case "token":
+      {
+        const text = toTokenString(value);
+        const v1Map = version === 1 ? spec.v1Map : void 0;
+        const token = text !== void 0 && v1Map !== void 0 && Object.prototype.hasOwnProperty.call(v1Map, text) ? v1Map[text] : text;
+        return token ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(token) : void 0;
+      }
+    case "custom":
+      if (typeof value === "string") return toText(value, spec, version);
+      if (typeof value === "number") return Number.isFinite(value) ? value : void 0;
+      if (Array.isArray(value)) return value.length > 0 ? value : void 0;
+      return typeof value === "boolean" || typeof value === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken ? value : void 0;
+    default:
+      return;
+  }
+}
+function normalizeItem(value, spec, version) {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+    const bare = normalizeBare(value.value, spec, version);
+    return bare === void 0 ? void 0 : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(bare, value.params);
+  }
+  return normalizeBare(value, spec, version);
+}
+function normalizeList(value, spec, version) {
+  const wrapper = value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && Array.isArray(value.value) ? value : void 0;
+  const items = wrapper ? wrapper.value : Array.isArray(value) ? value : [value];
+  const list = [];
+  for (const item of items) {
+    const normalized = normalizeItem(item, spec, version);
+    if (normalized !== void 0) list.push(normalized);
+  }
+  if (list.length === 0) return;
+  return wrapper ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(list, wrapper.params) : list;
+}
+/**
+* Applies the value rule of a key type from the key table.
+*
+* An `SfItem` keeps its parameters, and the rule applies to the value inside it.
+* In version 2, a list key wraps one value in a list.
+* The rules do not check the limits of RFC 8941, such as the integer range.
+*
+* @param value - The value to prepare.
+* @param spec - The row of the key in the key table.
+* @param options - The version and `baseUrl` of the report.
+*
+* @returns The value to send, or `undefined` when the value fails the rule.
+*
+* @internal
+*/
+function normalizeValue(value, spec, options) {
+  if (spec.type === "nor") return formatNor(value, options);
+  if (spec.type === "string-list" || spec.type === "ot-list" && options.version !== 1) return normalizeList(value, spec, options.version);
+  return normalizeItem(value, spec, options.version);
+}
+
+//#endregion
+//#region src/toBareValue.ts
+/**
+* Returns the value inside an `SfItem`, or the value itself.
+*
+* `decodeCmcd` returns a member with parameters as an `SfItem`. For an
+* inner list with parameters, the value of the `SfItem` is the list.
+*
+* @param value - The value to read.
+* @returns The value without its parameters.
+*
+* @internal
+*/
+function toBareValue(value) {
+  return value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem ? value.value : value;
+}
+
+//#endregion
+//#region src/prepareCmcdData.ts
+function hasKey(spec, reportingMode, isV1) {
+  return (spec.mode === void 0 || spec.mode === reportingMode) && (spec.version === void 0 || spec.version === 1 === isV1);
+}
+function isRequired(spec, event) {
+  return spec.requiredOn === "always" || event !== void 0 && spec.requiredOn === event;
+}
+function hasObjectTypes(spec) {
+  return (spec.type === "integer" || spec.type === "ot-list") && spec.ot !== void 0;
+}
+function needsV1ObjectType(obj, filter) {
+  if (typeof filter !== "function" || filter("ot")) return true;
+  for (const key of CMCD_INNER_LIST_KEYS) if (Array.isArray(toBareValue(obj[key])) && filter(key)) return true;
+  return false;
+}
+function allowsObjectType(spec, objectType) {
+  if (objectType === void 0 || spec.type !== "integer" && spec.type !== "ot-list" || spec.ot === void 0) return true;
+  return spec.ot.includes(objectType);
+}
+function isDefaultValue(spec, value) {
+  return "omitDefault" in spec && toBareValue(value) === spec.omitDefault;
+}
+function insertKey(keys, specs, key) {
+  let index = 0;
+  while (index < keys.length && keys[index] < key) index++;
+  keys.splice(index, 0, key);
+  specs.splice(index, 0, CMCD_KEY_SPECS[key]);
+}
+function prepareValue(key, value, spec, options, formatterOptions) {
+  const formatter = options.formatters?.[key];
+  if (typeof formatter !== "function") return value == null ? void 0 : normalizeValue(value, spec, formatterOptions);
+  const formatted = isValid(value) ? formatter(value, formatterOptions) : value;
+  if (!isValid(formatted) && !(formatted === false && spec.type === "boolean")) return;
+  if (spec.type === "token") {
+    if (typeof formatted === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(formatted);
+    if (formatted instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof formatted.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(formatted.value), formatted.params);
+  }
+  return formatted;
 }
 /**
 * Convert a generic object to CMCD data.
@@ -15033,43 +15424,69 @@ function downConvertToV1(obj) {
 * @param options - Options for encoding.
 *
 * @public
+*
+* @example
+* {@includeCode ../test/prepareCmcdData.test.ts#example}
 */
 function prepareCmcdData(obj, options = {}) {
   const results = {};
   if (obj == null || typeof obj !== "object") return results;
-  const version = options.version || obj["v"] || CMCD_V2;
+  const version = options.version || toBareValue(obj["v"]) || CMCD_V2;
   const reportingMode = options.reportingMode || CMCD_REQUEST_MODE;
-  const data = version === 1 ? downConvertToV1(obj) : obj;
-  const keyFilter = version === 1 ? isCmcdV1Key : filterMap[reportingMode];
-  let keys = Object.keys(data).filter(keyFilter);
-  if (data["e"] && data["e"] !== CMCD_EVENT_RESPONSE_RECEIVED) keys = keys.filter(key => !isCmcdResponseReceivedKey(key));
-  const filter = options.filter;
-  if (typeof filter === "function") keys = keys.filter(filter);
-  const isEventMode = reportingMode === CMCD_EVENT_MODE;
-  if (isEventMode) {
-    const eventType = data["e"];
-    if (!keys.includes("e") && eventType != null) keys.push("e");
-    if (!keys.includes("ts")) keys.push("ts");
-    if (!keys.includes("cen") && data["cen"] != null && eventType === CMCD_EVENT_CUSTOM_EVENT) keys.push("cen");
-  }
-  if (keys.length === 0) return results;
-  if (version > 1 && !keys.includes("v")) keys.push("v");
+  const isV1 = version === 1;
+  const isEventReport = !isV1 && reportingMode === CMCD_EVENT_MODE;
   const formatterOptions = {
     version,
     reportingMode,
     baseUrl: options.baseUrl
   };
-  keys.sort();
-  for (const key of keys) {
-    let value = data[key];
-    const formatter = options.formatters?.[key] ?? CMCD_FORMATTER_MAP[key];
-    if (typeof formatter === "function") value = formatter(value, formatterOptions);
-    if (key === "v") if (version === 1) continue;else value = version;
-    if (key === "pr" && value === 1) continue;
-    if (isEventMode && key === "ts" && !Number.isFinite(value)) value = Date.now();
-    if (!isValid(value)) continue;
-    if (isTokenField(key) && typeof value === "string") value = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(value);
-    results[key] = value;
+  const filter = options.filter;
+  let objectTypeValue;
+  let objectType;
+  if (isV1 && needsV1ObjectType(obj, filter)) {
+    objectTypeValue = prepareValue("ot", obj["ot"], CMCD_KEY_SPECS["ot"], options, formatterOptions);
+    objectType = toTokenString(objectTypeValue);
+  }
+  const data = isV1 ? downConvertToV1(obj, objectType) : obj;
+  const eventValue = isEventReport ? prepareValue("e", data["e"], CMCD_KEY_SPECS["e"], options, formatterOptions) : void 0;
+  const event = toTokenString(eventValue);
+  const keys = [];
+  const specs = [];
+  let passed = false;
+  let needsObjectType = false;
+  for (const key of Object.keys(data).sort()) {
+    const spec = getKeySpec(key);
+    if (spec === void 0 || !hasKey(spec, reportingMode, isV1)) continue;
+    if (typeof filter !== "function" || filter(key)) passed = true;else if (!isRequired(spec, event)) continue;
+    if (spec.onlyOn !== void 0 && spec.onlyOn !== event) continue;
+    if (key === "ot" || hasObjectTypes(spec)) needsObjectType = true;
+    keys.push(key);
+    specs.push(spec);
+  }
+  if (!passed && !isEventReport) return results;
+  if (needsObjectType && !isV1) {
+    objectTypeValue = prepareValue("ot", data["ot"], CMCD_KEY_SPECS["ot"], options, formatterOptions);
+    objectType = toTokenString(objectTypeValue);
+  }
+  if (isEventReport && !keys.includes("ts")) insertKey(keys, specs, "ts");
+  if (!isV1 && !keys.includes("v")) insertKey(keys, specs, "v");
+  const values = new Array(keys.length);
+  for (let i = keys.length - 1; i >= 0; i--) {
+    const key = keys[i];
+    const spec = specs[i];
+    if (spec.type === "ot-list" && spec.supersededBy !== void 0) {
+      const exact = keys.indexOf(spec.supersededBy, i + 1);
+      if (exact !== -1 && values[exact] !== void 0) continue;
+    }
+    if (key === "v") values[i] = version;else if (key === "ot") values[i] = objectTypeValue;else if (key === "e") values[i] = eventValue;else if (isV1 || allowsObjectType(spec, objectType)) values[i] = prepareValue(key, data[key], spec, options, formatterOptions);
+    if (key === "ts") {
+      const timestamp = toBareValue(values[i]);
+      if (typeof timestamp !== "number" || !Number.isFinite(timestamp)) values[i] = Date.now();
+    }
+  }
+  for (let i = 0; i < keys.length; i++) {
+    const value = values[i];
+    if (value !== void 0 && (!isDefaultValue(specs[i], value) || isRequired(specs[i], event))) results[keys[i]] = value;
   }
   return results;
 }
@@ -15126,9 +15543,9 @@ const CMCD_HEADER_FIELDS = [CMCD_OBJECT, CMCD_REQUEST, CMCD_SESSION, CMCD_STATUS
 /**
 * The map of CMCD keys to their appropriate header shard.
 *
-* Note: Event-only keys (e, ts, cen, h) and response-received keys
-* (rc, ttfb, ttlb, url, etc.) are intentionally absent. They are
-* transmitted via the event-mode POST body, not HTTP headers.
+* Event-only keys (e, ts, cen, h) and response-received keys (rc, ttfb,
+* ttlb, url, and others) are intentionally absent. They are transmitted
+* in the event-mode POST body, not HTTP headers.
 *
 * @public
 */
@@ -15183,9 +15600,9 @@ function createHeaderMap(headerMap) {
   }, {});
 }
 /**
-* Group a CMCD data object into header shards
+* Group a CMCD object into header shards
 *
-* @param cmcd - The CMCD data object to convert.
+* @param cmcd - The CMCD object to convert.
 * @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
 *
 * @returns The CMCD header shards.
@@ -15233,10 +15650,10 @@ function toPreparedCmcdHeaders(data, customHeaderMap) {
 //#endregion
 //#region src/toCmcdHeaders.ts
 /**
-* Convert a CMCD data object to request headers
+* Convert a CMCD object to request headers
 *
-* @param cmcd - The CMCD data object to convert.
-* @param options - Options for encoding the CMCD object.
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding.
 *
 * @returns The CMCD header shards.
 *
@@ -15255,13 +15672,13 @@ function toCmcdHeaders(cmcd, options = {}) {
 //#endregion
 //#region src/appendCmcdHeaders.ts
 /**
-* Append CMCD query args to a header object.
+* Append CMCD header shards to a header object.
 *
 * @param headers - The headers to append to.
 * @param cmcd - The CMCD object to append.
-* @param options - Encode options.
+* @param options - Options for encoding.
 *
-* @returns The headers with the CMCD header shards appended.
+* @returns The headers with CMCD header shards appended.
 *
 * @public
 *
@@ -15273,15 +15690,6 @@ function toCmcdHeaders(cmcd, options = {}) {
 function appendCmcdHeaders(headers, cmcd, options) {
   return Object.assign(headers, toCmcdHeaders(cmcd, options));
 }
-
-//#endregion
-//#region src/CMCD_PARAM.ts
-/**
-* CMCD parameter name.
-*
-* @public
-*/
-const CMCD_PARAM = "CMCD";
 
 //#endregion
 //#region src/encodePreparedCmcd.ts
@@ -15322,56 +15730,101 @@ function encodeCmcd(cmcd, options = {}) {
 }
 
 //#endregion
-//#region src/toCmcdUrl.ts
+//#region src/CMCD_PARAM.ts
 /**
-* Convert a CMCD data object to a URL encoded string.
-*
-* @param cmcd - The CMCD object to convert.
-* @param options - Options for encoding the CMCD object.
-*
-* @returns The URL encoded CMCD data.
-*
-* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+* CMCD parameter name.
 *
 * @public
 */
-function toCmcdUrl(cmcd, options = {}) {
-  if (!cmcd) return "";
-  const params = encodeCmcd(cmcd, options);
-  return encodeURIComponent(params);
+const CMCD_PARAM = "CMCD";
+
+//#endregion
+//#region src/percentEncode.ts
+const SUB_DELIMS_REGEX = /[!'()*]/g;
+const SURROGATE_REGEX = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g;
+function encodeSubDelim(char) {
+  return `%${char.charCodeAt(0).toString(16).toUpperCase()}`;
+}
+function replaceUnpaired(match) {
+  return match.length === 2 ? match : "�";
+}
+/**
+* Percent-encode a string for the `CMCD` query parameter.
+*
+* Only the unreserved characters of RFC 3986 stay unencoded: letters, digits,
+* `-`, `.`, `_`, and `~`. The query examples of CTA-5004-B use this encoding.
+* An unpaired surrogate becomes U+FFFD.
+*
+* @param value - The string to encode.
+* @returns The encoded string.
+*
+* @internal
+*/
+function percentEncode(value) {
+  let encoded;
+  try {
+    encoded = encodeURIComponent(value);
+  } catch {
+    encoded = encodeURIComponent(value.replace(SURROGATE_REGEX, replaceUnpaired));
+  }
+  return encoded.replace(SUB_DELIMS_REGEX, encodeSubDelim);
 }
 
 //#endregion
-//#region src/toCmcdQuery.ts
+//#region src/replaceCmcdParam.ts
+function isCmcdParam(param) {
+  return param === CMCD_PARAM || param.startsWith(`${CMCD_PARAM}=`);
+}
 /**
-* Convert a CMCD data object to a query arg.
+* Replace the `CMCD` query parameter of a URL.
 *
-* @param cmcd - The CMCD object to convert.
-* @param options - Options for encoding the CMCD object.
+* The first `CMCD` parameter takes the new value in place. The function
+* removes the other `CMCD` parameters. If the URL has no `CMCD` parameter,
+* the new parameter goes at the end of the query. An empty `value` only
+* removes the parameters. The function does not change the rest of the URL.
+* The URL can be relative.
 *
-* @returns The CMCD query arg.
+* @param url - The URL.
+* @param value - The encoded CMCD data, before percent-encoding.
+* @returns The URL with at most one `CMCD` parameter.
 *
-* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
-*
-* @public
-*
-* @example
-* {@includeCode ../test/toCmcdQuery.test.ts#example}
+* @internal
 */
-function toCmcdQuery(cmcd, options = {}) {
-  if (!cmcd) return "";
-  return `${CMCD_PARAM}=${toCmcdUrl(cmcd, options)}`;
+function replaceCmcdParam(url, value) {
+  const hashIndex = url.indexOf("#");
+  const end = hashIndex === -1 ? url.length : hashIndex;
+  const queryIndex = url.indexOf("?");
+  const start = queryIndex === -1 || queryIndex > end ? end : queryIndex;
+  const params = [];
+  let param = value ? `${CMCD_PARAM}=${percentEncode(value)}` : "";
+  let found = false;
+  for (const item of start < end ? url.slice(start + 1, end).split("&") : []) if (!isCmcdParam(item)) params.push(item);else {
+    found = true;
+    if (param) {
+      params.push(param);
+      param = "";
+    }
+  }
+  if (param) {
+    if (params[params.length - 1] === "") params.pop();
+    params.push(param);
+  } else if (!found) return url;
+  const query = params.join("&");
+  return `${url.slice(0, start)}${query ? `?${query}` : ""}${url.slice(end)}`;
 }
 
 //#endregion
 //#region src/appendCmcdQuery.ts
-const REGEX = /CMCD=[^&#]+/;
 /**
 * Append CMCD query args to a URL.
 *
+* If the URL has a `CMCD` parameter, the new value replaces it in place. The
+* other parameters and the fragment stay as they are. If the data has no keys
+* to send, the function returns the URL unchanged.
+*
 * @param url - The URL to append to.
 * @param cmcd - The CMCD object to append.
-* @param options - Options for encoding the CMCD object.
+* @param options - Options for encoding.
 *
 * @returns The URL with the CMCD query args appended.
 *
@@ -15383,20 +15836,116 @@ const REGEX = /CMCD=[^&#]+/;
 * @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
 */
 function appendCmcdQuery(url, cmcd, options) {
-  const query = toCmcdQuery(cmcd, options);
-  if (!query) return url;
-  if (REGEX.test(url)) return url.replace(REGEX, query);
-  return `${url}${url.includes("?") ? "&" : "?"}${query}`;
+  const value = cmcd ? encodeCmcd(cmcd, options) : "";
+  return value ? replaceCmcdParam(url, value) : url;
 }
 
 //#endregion
 //#region src/CMCD_DEFAULT_TIME_INTERVAL.ts
 /**
-* The default time interval in seconds when using using event mode
+* The default time interval in seconds when using event mode
 *
 * @public
 */
 const CMCD_DEFAULT_TIME_INTERVAL = 30;
+
+//#endregion
+//#region src/CMCD_EVENT_KEYS.ts
+/**
+* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+const CMCD_EVENT_KEYS = ["cen", "e", "h", "ts"];
+
+//#endregion
+//#region src/CMCD_FORMATTER_MAP.ts
+const formatNumbers = (value, format) => {
+  if (Array.isArray(value)) {
+    const list = [];
+    for (const item of value) {
+      const formatted = formatNumbers(item, format);
+      if (Number.isFinite(formatted instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem ? formatted.value : formatted)) list.push(formatted);
+    }
+    return list;
+  }
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+    const formatted = formatNumbers(value.value, format);
+    return isValid(formatted) ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(formatted, value.params) : NaN;
+  }
+  return typeof value === "number" ? format(value) : NaN;
+};
+const toRounded = value => formatNumbers(value, Math.round);
+const toNumber = value => formatNumbers(value, Number);
+const roundToHundred = value => Math.round(value / 100) * 100;
+const toHundred = value => formatNumbers(value, roundToHundred);
+/**
+* Formatters for CMCD values.
+*
+* The encoder applies the same rounding through its key table, and `nor` is the `nor` rule of the encoder.
+* Use an entry to build a custom formatter for `CmcdEncodeOptions.formatters`.
+* The formatter of a numeric key drops a value or a list element that is not a finite number.
+*
+* @public
+*/
+const CMCD_FORMATTER_MAP = {
+  br: toRounded,
+  d: toRounded,
+  bl: toHundred,
+  dl: toHundred,
+  mtp: toHundred,
+  nor: (value, options) => formatNor(value, options) ?? "",
+  rtp: toHundred,
+  tb: toRounded,
+  tbl: toHundred,
+  ab: toRounded,
+  bsa: toRounded,
+  bsd: toRounded,
+  bsda: toRounded,
+  dfa: toRounded,
+  lab: toRounded,
+  lb: toRounded,
+  ltc: toRounded,
+  msd: toRounded,
+  pb: toRounded,
+  pr: toNumber,
+  pt: toRounded,
+  rc: toRounded,
+  sn: toRounded,
+  tab: toRounded,
+  tpb: toRounded,
+  ts: toRounded,
+  ttfb: toRounded,
+  ttfbb: toRounded,
+  ttlb: toRounded
+};
+
+//#endregion
+//#region src/CMCD_REQUEST_KEYS.ts
+/**
+* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+const CMCD_REQUEST_KEYS = ["ab", "bg", "bl", "br", "bs", "bsa", "bsd", "bsda", "cdn", "cid", "cs", "d", "dfa", "dl", "ec", "lab", "lb", "ltc", "msd", "mtp", "nor", "nr", "ot", "pb", "pr", "pt", "rtp", "sf", "sid", "sn", "st", "sta", "su", "tab", "tb", "tbl", "tpb", "v"];
+
+//#endregion
+//#region src/CMCD_RESPONSE_KEYS.ts
+/**
+* Response-only and timing keys for version 2.
+*
+* @public
+*/
+const CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
+
+//#endregion
+//#region src/CMCD_V1_KEYS.ts
+/**
+* Defines the keys for CMCD (Common Media Client Data) version 1.
+*
+* @public
+*/
+const CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
 
 //#endregion
 //#region src/CMCD_KEYS.ts
@@ -15405,7 +15954,7 @@ const CMCD_DEFAULT_TIME_INTERVAL = 30;
 *
 * @public
 */
-const CMCD_KEYS = [...CMCD_V1_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS, ...CMCD_EVENT_KEYS].filter((key, index, arr) => arr.indexOf(key) === index);
+const CMCD_KEYS = /* @__PURE__ */[...CMCD_V1_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS, ...CMCD_EVENT_KEYS].filter((key, index, arr) => arr.indexOf(key) === index);
 
 //#endregion
 //#region src/CMCD_MIME_TYPE.ts
@@ -15417,6 +15966,34 @@ const CMCD_KEYS = [...CMCD_V1_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS,
 const CMCD_MIME_TYPE = "application/cmcd";
 
 //#endregion
+//#region src/CMCD_REQUEST_PROVENANCE.ts
+/**
+* The `customData` property where `CmcdReporter.createRequestReport()`
+* writes session provenance on every request it returns.
+*
+* The value is a frozen `CmcdRequestProvenance` record. `sid` names the
+* session that issued the request. `cid` is the content id at the time the
+* request was issued. `data` is the request's per-call data as an encoded
+* CMCD string. `CmcdReporter.recordResponseReceived()` reads the record to
+* attribute a late response to its session and to rebuild the request-time
+* report keys.
+* Spread and `Object.assign` copy the record into ordinary request clones.
+* `JSON.stringify` and structured clone drop symbol-keyed properties. Before
+* either operation, read the value and restore it afterward. JSON preserves
+* the record's fields. Attribution uses the `sid` value rather than object
+* identity, so a parsed plain-object copy attributes correctly. For a record
+* naming a `sid` the reporter does not retain, the reporter drops the
+* response rather than reattributing it.
+*
+* The symbol registry provides the symbol, so duplicated copies of this
+* library in one bundle interoperate. The registry key is stable across
+* versions.
+*
+* @public
+*/
+const CMCD_REQUEST_PROVENANCE = /* @__PURE__ */Symbol.for("@svta/cml-cmcd/request-provenance");
+
+//#endregion
 //#region src/CMCD_V1.ts
 /**
 * CMCD Version 1
@@ -15424,6 +16001,146 @@ const CMCD_MIME_TYPE = "application/cmcd";
 * @public
 */
 const CMCD_V1 = 1;
+
+//#endregion
+//#region src/CmcdEventType.ts
+/**
+* CMCD event type 'bc' (bitrate change).
+*
+* @public
+*/
+const CMCD_EVENT_BITRATE_CHANGE = "bc";
+/**
+* CMCD event type 'ps' (play state change).
+*
+* @public
+*/
+const CMCD_EVENT_PLAY_STATE = "ps";
+/**
+* CMCD event type 'pr' (playback rate change).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYBACK_RATE = "pr";
+/**
+* CMCD event type 'e' (error).
+*
+* @public
+*/
+const CMCD_EVENT_ERROR = "e";
+/**
+* CMCD event type 't' (time interval).
+*
+* @public
+*/
+const CMCD_EVENT_TIME_INTERVAL = "t";
+/**
+* CMCD event type 'c' (content ID).
+*
+* @public
+*/
+const CMCD_EVENT_CONTENT_ID = "c";
+/**
+* CMCD event type 'b' (backgrounded mode).
+*
+* @public
+*/
+const CMCD_EVENT_BACKGROUNDED_MODE = "b";
+/**
+* CMCD event type 'm' (mute).
+*
+* @public
+*/
+const CMCD_EVENT_MUTE = "m";
+/**
+* CMCD event type 'um' (unmute).
+*
+* @public
+*/
+const CMCD_EVENT_UNMUTE = "um";
+/**
+* CMCD event type 'pe' (player expand).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYER_EXPAND = "pe";
+/**
+* CMCD event type 'pc' (player collapse).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYER_COLLAPSE = "pc";
+/**
+* CMCD event type 'rr' (response received).
+*
+* @public
+*/
+const CMCD_EVENT_RESPONSE_RECEIVED = "rr";
+/**
+* CMCD event type 'as' (ad start).
+*
+* @public
+*/
+const CMCD_EVENT_AD_START = "as";
+/**
+* CMCD event type 'ae' (ad end).
+*
+* @public
+*/
+const CMCD_EVENT_AD_END = "ae";
+/**
+* CMCD event type 'abs' (ad break start).
+*
+* @public
+*/
+const CMCD_EVENT_AD_BREAK_START = "abs";
+/**
+* CMCD event type 'abe' (ad break end).
+*
+* @public
+*/
+const CMCD_EVENT_AD_BREAK_END = "abe";
+/**
+* CMCD event type 'sk' (skip).
+*
+* @public
+*/
+const CMCD_EVENT_SKIP = "sk";
+/**
+* CMCD event type 'ce' (custom event).
+*
+* @public
+*/
+const CMCD_EVENT_CUSTOM_EVENT = "ce";
+/**
+* CMCD event types for the 'e' key (event mode).
+*
+* @enum
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event | CTA-5004-B Event}
+*
+* @public
+*/
+const CmcdEventType = {
+  BITRATE_CHANGE: CMCD_EVENT_BITRATE_CHANGE,
+  PLAY_STATE: CMCD_EVENT_PLAY_STATE,
+  PLAYBACK_RATE: CMCD_EVENT_PLAYBACK_RATE,
+  ERROR: CMCD_EVENT_ERROR,
+  TIME_INTERVAL: CMCD_EVENT_TIME_INTERVAL,
+  CONTENT_ID: CMCD_EVENT_CONTENT_ID,
+  BACKGROUNDED_MODE: CMCD_EVENT_BACKGROUNDED_MODE,
+  MUTE: CMCD_EVENT_MUTE,
+  UNMUTE: CMCD_EVENT_UNMUTE,
+  PLAYER_EXPAND: CMCD_EVENT_PLAYER_EXPAND,
+  PLAYER_COLLAPSE: CMCD_EVENT_PLAYER_COLLAPSE,
+  RESPONSE_RECEIVED: CMCD_EVENT_RESPONSE_RECEIVED,
+  AD_START: CMCD_EVENT_AD_START,
+  AD_END: CMCD_EVENT_AD_END,
+  AD_BREAK_START: CMCD_EVENT_AD_BREAK_START,
+  AD_BREAK_END: CMCD_EVENT_AD_BREAK_END,
+  SKIP: CMCD_EVENT_SKIP,
+  CUSTOM_EVENT: CMCD_EVENT_CUSTOM_EVENT
+};
 
 //#endregion
 //#region src/CmcdObjectType.ts
@@ -15451,7 +16168,7 @@ const CmcdObjectType = {
 //#endregion
 //#region src/CmcdPlayerState.ts
 /**
-* CMCD v2 player states for the 'sta' key.
+* CMCD version 2 player states for the 'sta' key.
 *
 *
 * @enum
@@ -15472,6 +16189,450 @@ const CmcdPlayerState = {
   QUIT: "q",
   PRELOADING: "d"
 };
+
+//#endregion
+//#region src/CmcdRecordedReportMode.ts
+/**
+* CMCD query reporting mode: CMCD data transmitted as a `CMCD=` URL
+* query parameter.
+*
+* @public
+*/
+const CMCD_RECORDED_REPORT_MODE_QUERY = "query";
+/**
+* CMCD header reporting mode: CMCD data transmitted as `CMCD-*` HTTP
+* headers.
+*
+* @public
+*/
+const CMCD_RECORDED_REPORT_MODE_HEADER = "header";
+/**
+* CMCD event reporting mode: CMCD data transmitted as a POST body to an
+* event-target URL.
+*
+* @public
+*/
+const CMCD_RECORDED_REPORT_MODE_EVENT = "event";
+/**
+* Reporting mode in which `CmcdReportRecorder` observed a captured
+* report.
+*
+* @enum
+*
+* @public
+*/
+const CmcdRecordedReportMode = {
+  QUERY: CMCD_RECORDED_REPORT_MODE_QUERY,
+  HEADER: CMCD_RECORDED_REPORT_MODE_HEADER,
+  EVENT: CMCD_RECORDED_REPORT_MODE_EVENT
+};
+
+//#endregion
+//#region src/CmcdRecordedRequestType.ts
+/**
+* Manifest or playlist request classification.
+*
+* @public
+*/
+const CMCD_RECORDED_REQUEST_TYPE_MANIFEST = "manifest";
+/**
+* Media segment request classification.
+*
+* @public
+*/
+const CMCD_RECORDED_REQUEST_TYPE_SEGMENT = "segment";
+/**
+* CMCD event-mode report request classification (POST to a URL in
+* `eventTargetUrls`).
+*
+* @public
+*/
+const CMCD_RECORDED_REQUEST_TYPE_EVENT = "event";
+/**
+* Default classification for requests the recorder did not recognize
+* as manifest, segment, or event.
+*
+* @public
+*/
+const CMCD_RECORDED_REQUEST_TYPE_UNKNOWN = "unknown";
+/**
+* Classification of a captured request, used by `CmcdReportRecorder`
+* for filtering.
+*
+* @enum
+*
+* @public
+*/
+const CmcdRecordedRequestType = {
+  MANIFEST: CMCD_RECORDED_REQUEST_TYPE_MANIFEST,
+  SEGMENT: CMCD_RECORDED_REQUEST_TYPE_SEGMENT,
+  EVENT: CMCD_RECORDED_REQUEST_TYPE_EVENT,
+  UNKNOWN: CMCD_RECORDED_REQUEST_TYPE_UNKNOWN
+};
+
+//#endregion
+//#region src/createFetchTransport.ts
+async function toHttpRequest(request) {
+  const headers = {};
+  request.headers.forEach((value, name) => {
+    headers[name.toLowerCase()] = value;
+  });
+  let body;
+  if (request.body) try {
+    body = await request.text();
+  } catch {
+    body = void 0;
+  }
+  return {
+    url: request.url,
+    method: request.method,
+    headers,
+    body
+  };
+}
+/**
+* Create a transport adapter for `CmcdReportRecorder` that patches
+* `globalThis.fetch` to capture requests with CMCD data. The patched
+* `fetch` normalizes each request to `HttpRequest` (lowercase headers,
+* body read as a UTF-8 string).
+*
+* The patched `fetch` reads each body once with `Request.text()` for
+* inspection. This read is safe for the body types that CMCD reports use
+* in practice: `string`, `Blob`, `ArrayBuffer`, `FormData`, and
+* `URLSearchParams`. The underlying `fetch` can read those bodies again.
+* Do not pass a `ReadableStream` as `init.body`. The patched `fetch`
+* consumes the stream, and the underlying `fetch` receives an
+* already-disturbed stream.
+*
+* @public
+*/
+function createFetchTransport() {
+  return {
+    attach(deliver) {
+      const origFetch = globalThis.fetch;
+      globalThis.fetch = async (input, init) => {
+        const synthetic = deliver(await toHttpRequest(input instanceof Request ? input.clone() : new Request(input, init)));
+        if (synthetic) return synthetic;
+        return origFetch.call(globalThis, input, init);
+      };
+      return () => {
+        globalThis.fetch = origFetch;
+      };
+    }
+  };
+}
+
+//#endregion
+//#region src/createXhrTransport.ts
+async function completeXhrWith(xhr, response) {
+  const text = await response.clone().text().catch(() => "");
+  const ProgressEventCtor = typeof ProgressEvent !== "undefined" ? ProgressEvent : Event;
+  queueMicrotask(() => {
+    try {
+      Object.defineProperty(xhr, "status", {
+        value: response.status,
+        configurable: true
+      });
+      Object.defineProperty(xhr, "statusText", {
+        value: response.statusText,
+        configurable: true
+      });
+      Object.defineProperty(xhr, "readyState", {
+        value: 4,
+        configurable: true
+      });
+      Object.defineProperty(xhr, "responseURL", {
+        value: xhr._cmcdUrl ?? "",
+        configurable: true
+      });
+      Object.defineProperty(xhr, "response", {
+        value: text,
+        configurable: true
+      });
+      Object.defineProperty(xhr, "responseText", {
+        value: text,
+        configurable: true
+      });
+      if (typeof xhr.onload === "function") xhr.onload.call(xhr, new ProgressEventCtor("load"));
+      if (typeof xhr.onloadend === "function") xhr.onloadend.call(xhr, new ProgressEventCtor("loadend"));
+    } catch {
+      const target = xhr;
+      target["status"] = response.status;
+      target["statusText"] = response.statusText;
+      target["readyState"] = 4;
+      target["responseURL"] = xhr._cmcdUrl ?? "";
+      target["response"] = text;
+      target["responseText"] = text;
+      if (typeof xhr.onload === "function") xhr.onload.call(xhr, new ProgressEventCtor("load"));
+      if (typeof xhr.onloadend === "function") xhr.onloadend.call(xhr, new ProgressEventCtor("loadend"));
+    }
+  });
+}
+/**
+* Create a transport adapter for `CmcdReportRecorder` that patches
+* `XMLHttpRequest.prototype` to capture requests with CMCD data.
+*
+* @public
+*/
+function createXhrTransport() {
+  return {
+    attach(deliver) {
+      const Xhr = globalThis.XMLHttpRequest;
+      if (!Xhr) return () => {};
+      const origOpen = Xhr.prototype.open;
+      const origSetRequestHeader = Xhr.prototype.setRequestHeader;
+      const origSend = Xhr.prototype.send;
+      Xhr.prototype.open = function (method, url) {
+        this._cmcdMethod = method;
+        this._cmcdUrl = typeof url === "string" ? url : url.toString();
+        this._cmcdHeaders = {};
+        return origOpen.apply(this, arguments);
+      };
+      Xhr.prototype.setRequestHeader = function (name, value) {
+        if (this._cmcdHeaders) this._cmcdHeaders[name.toLowerCase()] = value;
+        return origSetRequestHeader.apply(this, [name, value]);
+      };
+      Xhr.prototype.send = function (body) {
+        const synthetic = deliver({
+          url: this._cmcdUrl ?? "",
+          method: (this._cmcdMethod ?? "GET").toUpperCase(),
+          headers: this._cmcdHeaders ?? {},
+          body: (typeof Document !== "undefined" && body instanceof Document ? void 0 : body) ?? void 0
+        });
+        if (synthetic) {
+          completeXhrWith(this, synthetic);
+          return;
+        }
+        return origSend.apply(this, [body]);
+      };
+      return () => {
+        Xhr.prototype.open = origOpen;
+        Xhr.prototype.setRequestHeader = origSetRequestHeader;
+        Xhr.prototype.send = origSend;
+      };
+    }
+  };
+}
+
+//#endregion
+//#region src/CmcdReportRecorder.ts
+const MANIFEST_EXTENSIONS = /\.(m3u8|mpd)(\?|$|\/)/i;
+const SEGMENT_EXTENSIONS = /\.(m4s|m4v|m4a|mp4|ts|aac)(\?|$|\/)/i;
+function classifyUrl(url, isEventTarget) {
+  if (isEventTarget) return CmcdRecordedRequestType.EVENT;
+  if (MANIFEST_EXTENSIONS.test(url)) return CmcdRecordedRequestType.MANIFEST;
+  if (SEGMENT_EXTENSIONS.test(url)) return CmcdRecordedRequestType.SEGMENT;
+  return CmcdRecordedRequestType.UNKNOWN;
+}
+function hasCmcdHeader(headers) {
+  if (!headers) return false;
+  for (const name in headers) if (name.toLowerCase().startsWith("cmcd-")) return true;
+  return false;
+}
+function detectReportingMode(url, headers, isEventTarget) {
+  if (isEventTarget) return "event";
+  if (hasCmcdHeader(headers)) return "header";
+  return url.includes(`${CMCD_PARAM}=`) ? "query" : null;
+}
+/**
+* Test helper that records CMCD reports from the XHR and fetch
+* transports for assertions in e2e tests. The recorder normalizes each
+* captured request to {@link @svta/cml-utils!HttpRequest | HttpRequest},
+* so tests are identical regardless of which transport the player uses.
+*
+* @example
+* {@includeCode ../test/CmcdReportRecorder.test.ts#example}
+*
+* @public
+*/
+var CmcdReportRecorder = class {
+  constructor() {
+    this.reports = [];
+    this.detachers = [];
+    this.attached = false;
+    this.eventTargetUrls = [];
+    this.waiters = /* @__PURE__ */new Map();
+    this.waitTimeout = 15e3;
+    this.deliver = request => {
+      const url = request.url;
+      const isEventTarget = (request.method ?? "GET").toUpperCase() === "POST" && this.eventTargetUrls.some(t => url.startsWith(t));
+      const reportingMode = detectReportingMode(url, request.headers, isEventTarget);
+      if (reportingMode === null) return;
+      const captured = {
+        request,
+        type: classifyUrl(url, isEventTarget),
+        reportingMode,
+        timestamp: Date.now()
+      };
+      this.reports.push(captured);
+      if (this.onReport) try {
+        this.onReport(captured);
+      } catch (err) {
+        console.error("CmcdReportRecorder onReport listener threw:", err);
+      }
+      this.notifyWaiters();
+      return isEventTarget ? new Response(null, {
+        status: 204
+      }) : void 0;
+    };
+  }
+  getMatching(type) {
+    return type === void 0 ? [...this.reports] : this.reports.filter(r => r.type === type);
+  }
+  notifyWaiters() {
+    for (const [timer, waiter] of this.waiters) {
+      const matching = this.getMatching(waiter.type);
+      if (matching.length >= waiter.count) {
+        clearTimeout(timer);
+        this.waiters.delete(timer);
+        waiter.resolve(matching);
+      }
+    }
+  }
+  waitFor(type, options) {
+    const count = options.count ?? 1;
+    const timeout = options.timeout ?? this.waitTimeout;
+    const matching = this.getMatching(type);
+    if (matching.length >= count) return Promise.resolve(matching);
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.waiters.delete(timer);
+        const current = this.getMatching(type);
+        reject(/* @__PURE__ */new Error(`Timeout waiting for ${count} ${type ?? "any"} CMCD report(s). Got ${current.length}. Total recorded: ${this.reports.length}.`));
+      }, timeout);
+      this.waiters.set(timer, {
+        type,
+        count,
+        resolve,
+        reject
+      });
+    });
+  }
+  /**
+  * Install transport patches and start recording CMCD reports.
+  * If the recorder is already attached, this call does nothing. The
+  * recorder keeps the previous options and silently ignores the new
+  * `options` argument. To re-attach with different options, call
+  * `detach()` first.
+  *
+  * @public
+  */
+  attach(options = {}) {
+    if (this.attached) return;
+    this.attached = true;
+    this.eventTargetUrls = options.eventTargetUrls ?? [];
+    this.onReport = options.onReport;
+    this.waitTimeout = options.waitTimeout ?? 15e3;
+    const transports = options.transports ?? [createXhrTransport(), createFetchTransport()];
+    for (const transport of transports) this.detachers.push(transport.attach(this.deliver));
+  }
+  /**
+  * Remove transport patches and stop recording. Rejects any pending
+  * wait promises with `Error('Recorder detached while waiting')`.
+  *
+  * @public
+  */
+  detach() {
+    if (!this.attached) return;
+    for (const detacher of this.detachers) detacher();
+    this.detachers = [];
+    this.attached = false;
+    this.eventTargetUrls = [];
+    this.onReport = void 0;
+    for (const [timer, waiter] of this.waiters) {
+      clearTimeout(timer);
+      waiter.reject(/* @__PURE__ */new Error("Recorder detached while waiting"));
+    }
+    this.waiters.clear();
+  }
+  /**
+  * Discard all recorded reports. Does not affect the attached state.
+  *
+  * @public
+  */
+  clear() {
+    this.reports = [];
+  }
+  /**
+  * Return a copy of all recorded reports.
+  *
+  * @public
+  */
+  getReports() {
+    return [...this.reports];
+  }
+  /**
+  * Wait until at least `count` reports of any type are recorded.
+  * Resolves with all matching reports. Rejects with a diagnostic error
+  * on timeout. `count` defaults to 1. `timeout` defaults to the
+  * recorder's `waitTimeout` option (default 15000 ms).
+  *
+  * @public
+  */
+  waitForReports(options = {}) {
+    return this.waitFor(void 0, options);
+  }
+  /**
+  * Wait until at least `count` manifest reports are recorded.
+  * Resolves with all matching reports. Rejects with a diagnostic error
+  * on timeout. `count` defaults to 1. `timeout` defaults to the
+  * recorder's `waitTimeout` option (default 15000 ms).
+  *
+  * @public
+  */
+  waitForManifest(options = {}) {
+    return this.waitFor(CmcdRecordedRequestType.MANIFEST, options);
+  }
+  /**
+  * Wait until at least `count` segment reports are recorded.
+  * Resolves with all matching reports. Rejects with a diagnostic error
+  * on timeout. `count` defaults to 1. `timeout` defaults to the
+  * recorder's `waitTimeout` option (default 15000 ms).
+  *
+  * @public
+  */
+  waitForSegments(options = {}) {
+    return this.waitFor(CmcdRecordedRequestType.SEGMENT, options);
+  }
+  /**
+  * Wait until at least `count` event-mode reports are recorded.
+  * Resolves with all matching reports. Rejects with a diagnostic error
+  * on timeout. `count` defaults to 1. `timeout` defaults to the
+  * recorder's `waitTimeout` option (default 15000 ms).
+  *
+  * @public
+  */
+  waitForEvents(options = {}) {
+    return this.waitFor(CmcdRecordedRequestType.EVENT, options);
+  }
+};
+
+//#endregion
+//#region src/CMCD_STATE_EVENT_FIELDS.ts
+/**
+* Maps each state-change event type to the persistent field whose value
+* the event signals.
+*
+* The key table (`CMCD_KEY_SPECS`) marks the field as always sent on its
+* event, so the key filter of `prepareCmcdData` does not remove it.
+* `CmcdReporter` deduplicates events against the field value. It drops an
+* event whose field has no value and restores the field if a transform
+* removes it.
+*
+* Sending the field with each state-change event is a library choice.
+* The exception is the exit from backgrounded mode, which CTA-5004-B
+* defines as a `b` event without `bg`. CTA-5004-B requires the field only
+* on the `ps` event, which MUST carry `sta`. CTA-5004-B states no such rule
+* for `pr`, `c`, or `bc`. `validateCmcdStructure` follows CTA-5004-B and
+* does not read this map.
+*
+* Iteration order matters: `CmcdReporter.update()` records state-change
+* events in map order when several tracked fields change in one call.
+* Do not reorder entries without auditing reporter behavior.
+*
+* @internal
+*/
+const CMCD_STATE_EVENT_FIELDS = /* @__PURE__ */new Map([[CMCD_EVENT_PLAY_STATE, "sta"], [CMCD_EVENT_PLAYBACK_RATE, "pr"], [CMCD_EVENT_CONTENT_ID, "cid"], [CMCD_EVENT_BACKGROUNDED_MODE, "bg"], [CMCD_EVENT_BITRATE_CHANGE, "br"]]);
 
 //#endregion
 //#region src/CmcdTransmissionMode.ts
@@ -15509,6 +16670,50 @@ const CmcdTransmissionMode = {
 };
 
 //#endregion
+//#region src/upConvertToV2.ts
+/**
+* Up-convert version 1 CMCD data to version 2.
+*
+* - Wraps scalar values in arrays for inner-list keys.
+* - Wraps `nor` string in an array.
+*
+* The function returns version 2 data (has `v: 2`) unchanged. An inner list
+* with parameters, which `decodeCmcd` returns as an `SfItem` that wraps the
+* list, also stays unchanged.
+*
+* @internal
+*/
+function upConvertToV2(obj) {
+  if (toBareValue(obj["v"]) === CMCD_V2) return obj;
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value == null) {
+      result[key] = value;
+      continue;
+    }
+    if (CMCD_INNER_LIST_KEYS.has(key) && !Array.isArray(toBareValue(value))) result[key] = [value];else if (key === "nor" && typeof value === "string") result[key] = [value];else result[key] = value;
+  }
+  return result;
+}
+
+//#endregion
+//#region src/decodeCmcd.ts
+function reduceValue(value, useSymbol) {
+  if (Array.isArray(value)) return value.map(item => reduceValue(item, useSymbol));
+  if (typeof value === "symbol") return useSymbol === void 0 ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value) : value;
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return value.params ? new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(reduceValue(value.value, useSymbol), value.params) : reduceValue(value.value, useSymbol);
+  return value;
+}
+function decodeCmcd(cmcd, options) {
+  if (!cmcd) return {};
+  const sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.decodeSfDict)(cmcd, options);
+  const result = {};
+  for (const [key, item] of Object.entries(sfDict)) result[key] = reduceValue(item, options?.useSymbol);
+  if (options?.convertToLatest) return upConvertToV2(result);
+  return result;
+}
+
+//#endregion
 //#region src/CmcdReporter.ts
 function createEncodingOptions(reportingMode, config, baseUrl) {
   const enabledKeySet = new Set(config.enabledKeys ?? []);
@@ -15516,8 +16721,152 @@ function createEncodingOptions(reportingMode, config, baseUrl) {
     version: config.version || CMCD_V2,
     reportingMode,
     filter: key => enabledKeySet.has(key),
-    baseUrl
+    baseUrl,
+    customHeaderMap: config.customHeaderMap
   };
+}
+/**
+* Deep equality for CmcdObjectTypeList (used for `br` deduplication).
+*
+* Arrays with the same elements in different positions count as different.
+* Players that construct `br` consistently get correct deduplication.
+* Reordered arrays produce extra events, which is the safer failure.
+*/
+function cmcdObjectTypeListEqual(a, b) {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    const ai = a[i];
+    const bi = b[i];
+    if (ai === bi) continue;
+    if ((typeof ai === "number" ? ai : ai.value) !== (typeof bi === "number" ? bi : bi.value)) return false;
+    const ap = typeof ai === "number" ? void 0 : ai.params;
+    const bp = typeof bi === "number" ? void 0 : bi.params;
+    const ak = ap && Object.keys(ap)[0];
+    const bk = bp && Object.keys(bp)[0];
+    if (ak !== bk) return false;
+    if (ak !== void 0 && bk !== void 0 && ap && bp && ap[ak] !== bp[bk]) return false;
+  }
+  return true;
+}
+/**
+* Equality for `br` deduplication. A `br` value can be an `SfItem` that
+* wraps the list, as `decodeCmcd` returns for an inner list with
+* parameters. Two values are equal when their lists are equal. The
+* parameters of the list are not compared.
+*/
+function brEqual(a, b) {
+  const listA = toBareValue(a);
+  const listB = toBareValue(b);
+  if (!Array.isArray(listA) || !Array.isArray(listB)) return Object.is(a, b);
+  return cmcdObjectTypeListEqual(listA, listB);
+}
+const equal = Object.is;
+const identity = v => v;
+/**
+* Maps each tracked state field to its event type and equality function.
+* Order matters: `update()` fires events in this order for multi-field updates.
+*/
+const STATE_FIELDS = /* @__PURE__ */Array.from(CMCD_STATE_EVENT_FIELDS, ([event, field]) => {
+  if (field === "br") return {
+    event,
+    field,
+    equal: brEqual,
+    snapshot: v => Array.isArray(v) ? v.slice() : copyItemValue(v)
+  };
+  return {
+    event,
+    field,
+    equal,
+    snapshot: identity
+  };
+});
+const STATE_FIELDS_BY_EVENT = /* @__PURE__ */new Map(/* @__PURE__ */STATE_FIELDS.map(e => [e.event, e]));
+function buildRequiredEventKeys() {
+  return new Map([...CMCD_STATE_EVENT_FIELDS, [CMCD_EVENT_CUSTOM_EVENT, "cen"], [CMCD_EVENT_ERROR, "ec"], [CMCD_EVENT_RESPONSE_RECEIVED, "url"]]);
+}
+/**
+* Maps each event type to the key that a report of that type must keep,
+* beyond `e` and `ts`. Built from the state-change table plus the three
+* event types whose required key is event data, not player state.
+*/
+const CMCD_REQUIRED_EVENT_KEYS = /* @__PURE__ */buildRequiredEventKeys();
+/**
+* Copies a value with the `SfItem` structure, including its `params` record
+* and the list of an `SfItem` that wraps a list.
+*
+* The copy keeps the prototype because `prepareCmcdData`, the formatter map,
+* validation, and the structured-field encoder all branch on
+* `instanceof SfItem`. A plain spread (and `structuredClone`) would return a
+* prototype-less object and silently change the encoded output.
+*/
+function copyItemValue(value) {
+  if (value === null || typeof value !== "object") return value;
+  const copy = Object.assign(Object.create(Object.getPrototypeOf(value)), value);
+  if (copy.params !== null && typeof copy.params === "object") copy.params = {
+    ...copy.params
+  };
+  if (Array.isArray(copy.value)) copy.value = copy.value.map(copyItemValue);
+  return copy;
+}
+/**
+* Copies the nested values of a report in place. A transform cannot mutate
+* the reporter's data store, or another target's report for the same event,
+* through an array or an `SfItem` it received.
+*
+* The copy is complete for the CMCD value space. `CmcdValue` and
+* `CmcdCustomValue` admit only primitives, `SfItem<primitive>`, and arrays of
+* those. `decodeCmcd` also returns an `SfItem` that wraps a list, and the
+* copy includes that list. `SfItem.params` is a flat record. The reporter calls this function
+* where a transform is configured, at session end on the ended session's
+* store, and on the request's stored player-facing view. The session-end
+* copy detaches the frozen snapshot from caller-held references.
+*/
+function copyReportValues(data) {
+  const record = data;
+  for (const key in record) {
+    const value = record[key];
+    if (Array.isArray(value)) {
+      const copy = new Array(value.length);
+      for (let i = 0; i < value.length; i++) copy[i] = copyItemValue(value[i]);
+      record[key] = copy;
+    } else if (value !== null && typeof value === "object") record[key] = copyItemValue(value);
+  }
+  return data;
+}
+/**
+* Decodes the per-call data snapshot of a provenance record into new,
+* encodable report data. Tokens decode as `SfToken` and items with params
+* as `SfItem` (`useSymbol: false`), so every value re-encodes with its
+* original type. Only `recordResponseReceived()` calls this function.
+* Returns an empty object when the record is absent, has no snapshot, or
+* the snapshot does not parse (a value this reporter did not write). The
+* response then reports its derived keys over the session's data alone.
+*/
+function decodeSnapshot(provenance) {
+  const encoded = provenance !== null && typeof provenance === "object" ? provenance.data : void 0;
+  if (typeof encoded !== "string" || !encoded) return {};
+  try {
+    return decodeCmcd(encoded, {
+      useSymbol: false
+    });
+  } catch {
+    return {};
+  }
+}
+/**
+* Creates a session's frozen base provenance record: the issuing `sid`, and
+* the `cid` that is current at creation time. `update()` creates a new record
+* on every `cid` change. Requests issued before a mid-session content change
+* keep their original `cid`, while later requests get the new one.
+*/
+function mintProvenance(sid, cid) {
+  return Object.freeze(typeof cid === "string" && cid ? {
+    sid,
+    cid
+  } : {
+    sid
+  });
 }
 function defaultRequester(request) {
   const {
@@ -15534,11 +16883,14 @@ function createCmcdReporterConfig(config) {
     transmissionMode = CMCD_QUERY,
     ...rest
   } = config;
+  const retention = config.sessionRetention;
+  const sessionRetention = typeof retention === "number" ? Math.floor(retention) : NaN;
   return {
     ...rest,
     version,
     transmissionMode,
     sid,
+    sessionRetention: sessionRetention >= 0 ? sessionRetention : 2,
     eventTargets: eventTargets.reduce((acc, target) => {
       if (target?.url && target.events?.length) acc.push({
         version: target.version || CMCD_V2,
@@ -15546,7 +16898,8 @@ function createCmcdReporterConfig(config) {
         url: target.url,
         events: target.events.slice(),
         interval: target.interval ?? CMCD_DEFAULT_TIME_INTERVAL,
-        batchSize: target.batchSize || 1
+        batchSize: target.batchSize || 1,
+        transform: target.transform
       });
       return acc;
     }, [])
@@ -15554,6 +16907,14 @@ function createCmcdReporterConfig(config) {
 }
 /**
 * The CMCD reporter.
+*
+* `C` describes the player's own `customData`, which the reporter passes to
+* each configured `transform`. TypeScript infers `C` from the configuration,
+* so an annotation on one `transform` types the request in every other
+* `transform`. The default leaves `customData` values `unknown`.
+*
+* @typeParam C - The type of the player's `customData`. Defaults to
+*                `Record<string, unknown>`.
 *
 * @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#reporting-modes-when-we-send-data | CTA-5004-B Reporting Modes}
 *
@@ -15564,129 +16925,363 @@ var CmcdReporter = class {
   * Creates a new CMCD reporter.
   *
   * @param config - The configuration for the CMCD reporter.
-  * @param requester - The function to use to send the request.
+  * @param requester - The function that sends the request.
   *                    The default is a simple wrapper around the
   *                    native `fetch` API.
   */
   constructor(config, requester = defaultRequester) {
     this.timeOrigin = performance.timeOrigin || performance.timing?.fetchStart || Date.now() - performance.now();
-    this.data = {};
-    this.msd = NaN;
-    this.eventTargets = /* @__PURE__ */new Map();
-    this.requestTarget = {
-      sn: 0,
-      msdSent: false
-    };
+    this.sessions = /* @__PURE__ */new Map();
+    this.intervals = /* @__PURE__ */new Map();
+    this.started = false;
     this.config = createCmcdReporterConfig(config);
-    this.data = {
+    this.session = this.createSession(this.config.sid, {
       cid: this.config.cid,
-      sid: this.config.sid,
       v: this.config.version
-    };
+    });
+    this.sessions.set(this.session.sid, this.session);
     this.requester = requester;
-    for (const target of this.config.eventTargets) this.eventTargets.set(target, {
-      intervalId: void 0,
+  }
+  /**
+  * Creates the state for a new session: initial counters, flags, queues, and
+  * deduplication baseline for every configured target.
+  */
+  createSession(sid, data) {
+    const eventTargets = /* @__PURE__ */new Map();
+    for (const target of this.config.eventTargets) eventTargets.set(target, {
       sn: 0,
       msdSent: false,
-      queue: []
+      queue: [],
+      disposed: false
     });
+    return {
+      sid,
+      provenance: mintProvenance(sid, data.cid),
+      data,
+      msd: NaN,
+      lastEmitted: toBareValue(data.bg) === true ? {} : {
+        bg: false
+      },
+      eventTargets,
+      requestTarget: {
+        sn: 0,
+        msdSent: false
+      }
+    };
   }
   /**
-  * Starts the CMCD reporter. Called by the player when the reporter is enabled.
+  * Starts the CMCD reporter. The player calls this method when it enables the
+  * reporter.
   *
-  * Note: This fires an initial time-interval event immediately (synchronously)
-  * before the first interval elapses. Ensure CMCD data (sid, cid, etc.) is
-  * populated before calling start().
+  * This method fires an initial time-interval event immediately (synchronously),
+  * before the first interval elapses. Populate the CMCD data (sid, cid, and
+  * others) before calling start().
   */
   start() {
-    this.eventTargets.forEach((target, config) => {
-      this.disarmInterval(target);
-      if (config.interval === 0 || !config.events.includes(CmcdEventType.TIME_INTERVAL)) return;
-      const timeIntervalEvent = () => {
-        this.recordTargetEvent(target, config, CMCD_EVENT_TIME_INTERVAL);
+    this.started = true;
+    let failure;
+    const session = this.session;
+    session.eventTargets.forEach((target, config) => {
+      this.disarmInterval(config);
+      if (target.disposed || !this.armInterval(config)) return;
+      try {
+        this.recordTargetEvent(session, target, config, CMCD_EVENT_TIME_INTERVAL);
         this.processEventTargets();
-      };
-      target.intervalId = setInterval(timeIntervalEvent, config.interval * 1e3);
-      timeIntervalEvent();
+      } catch (error) {
+        failure ??= {
+          error
+        };
+      }
     });
+    if (failure) throw failure.error;
   }
   /**
-  * Stops the CMCD reporter. Called by the player when the reporter is disabled.
+  * Starts the time-interval timer for an event target when its config
+  * requires one. Returns whether a timer started. The callback reports into
+  * whichever session is current when the timer fires.
+  */
+  armInterval(config) {
+    if (config.interval === 0 || !config.events.includes(CMCD_EVENT_TIME_INTERVAL)) return false;
+    this.intervals.set(config, setInterval(() => {
+      const session = this.session;
+      const target = session.eventTargets.get(config);
+      if (target) {
+        this.recordTargetEvent(session, target, config, CMCD_EVENT_TIME_INTERVAL);
+        this.processEventTargets();
+      }
+    }, config.interval * 1e3));
+    return true;
+  }
+  /**
+  * Stops the CMCD reporter. The player calls this method when it disables the
+  * reporter.
   *
   * @param flush - Whether to flush the event targets.
   */
   stop(flush = false) {
+    this.started = false;
     if (flush) this.flush();
-    this.eventTargets.forEach(target => {
-      this.disarmInterval(target);
-    });
+    for (const config of this.config.eventTargets) this.disarmInterval(config);
   }
   /**
-  * Forces the sending of all event reports, regardless of the batch size or interval.
-  * Useful for sending outstanding reports when the player is destroyed or a playback
+  * Sends all outstanding event reports, regardless of the batch size or
+  * interval. Use this method when the player is destroyed or a playback
   * session ends.
   */
   flush() {
     this.processEventTargets(true);
   }
   /**
-  * Updates the CMCD data. Called by the player when the data changes.
+  * Updates the CMCD data.
+  *
+  * The player calls this method when data changes. The tracked state fields
+  * are `sta`, `pr`, `cid`, `bg`, and `br`. If a new value for one of them
+  * differs from the last reported value for that field, the reporter fires
+  * the matching state-change event. The comparison uses the last reported
+  * value, not the previous persisted value. The first state-change event in
+  * a new session therefore always fires, even when the persisted value did
+  * not change across the `sid` boundary.
+  *
+  * The `bg` field is an exception. A session that does not start with
+  * `bg: true` begins with `false` as its last reported `bg` value.
+  * `bg: false` therefore fires `BACKGROUNDED_MODE` only if the session
+  * started with `bg: true` or reported `bg: true`. CTA-5004-B defines a
+  * `b` event without `bg` as the exit from backgrounded mode, so the exit
+  * report does not carry `bg`. A target transform can add `bg: false` to
+  * the exit report. The encoder writes that value as `?0`.
+  *
+  * Multi-field updates fire the events in this order: `sta`, `pr`, `cid`,
+  * `bg`, `br`. The order of keys in the input object does not affect the
+  * firing order.
+  *
+  * A state-change event can include context fields, for example `bl`, `mtp`,
+  * `pt`, `ltc`. Those fields must be in the data store before the state field
+  * changes. Either pass them with the state field in the same `update()`
+  * call, or persist them with earlier `update()` calls. An auto-fired event
+  * reports the current content of the data store. `TIME_INTERVAL` events also
+  * read the data store, and the caller cannot add per-call data to them. The
+  * player must therefore update the fields it wants in periodic reports with
+  * this method.
+  *
+  * A `sid` change resets the deduplication baseline.
+  *
+  * `sid` and `msd` are session-owned. The reporter tracks them itself and
+  * writes them into every outgoing report, so this method is the only way
+  * to change them. A per-call value on {@link CmcdReporter.recordEvent},
+  * {@link CmcdReporter.createRequestReport}, or
+  * {@link CmcdReporter.recordResponseReceived} has no effect.
+  * `msd` must be a finite number of milliseconds between `0` and
+  * `999_999_999_999_999` (the RFC 8941 integer maximum). The reporter
+  * rounds `msd` to the nearest integer and ignores invalid values.
   *
   * @param data - The data to update.
   */
   update(data) {
-    if (data.sid && data.sid !== this.data.sid) this.resetSession();
-    if (data.msd && !isNaN(data.msd)) this.msd = data.msd;
-    this.data = {
-      ...this.data,
+    if (data.sid && data.sid !== this.session.sid) this.startSession(data.sid);
+    const session = this.session;
+    const {
+      msd
+    } = data;
+    if (typeof msd === "number" && Number.isFinite(msd) && msd >= 0) {
+      const rounded = Math.round(msd);
+      if (rounded <= 999999999999999) session.msd = rounded;
+    }
+    session.data = {
+      ...session.data,
       ...data,
+      sid: void 0,
       msd: void 0
     };
+    if (session.data.cid !== session.provenance.cid) session.provenance = mintProvenance(session.sid, session.data.cid);
+    for (const entry of STATE_FIELDS) if (entry.field in data && !entry.equal(session.data[entry.field], session.lastEmitted[entry.field])) this.recordEvent(entry.event);
   }
   /**
-  * Records an event. Called by the player when an event occurs.
+  * Starts a new session. The reporter retains the current session for late
+  * responses and creates a new current session. It then sends the ended
+  * sessions' queued reports and removes the oldest sessions beyond the
+  * configured retention.
+  *
+  * The ended session's snapshot is frozen: the reporter detaches its value
+  * graph, so nested values from earlier `update()` calls cannot mutate the
+  * snapshot. The new session starts from a shallow copy of that graph, which
+  * preserves the data store. All fields, including `cid`, `br`, and custom
+  * keys, survive a `sid` change as before. CTA-5004-B expects a `sid` to be
+  * unique per playback session, so a reused `sid` replaces the retained
+  * session with that `sid`. The replaced session's remaining state is lost,
+  * as if removed, and the reporter attributes its late responses to the
+  * replacement.
+  */
+  startSession(sid) {
+    this.session.data = copyReportValues({
+      ...this.session.data
+    });
+    this.session = this.createSession(sid, {
+      ...this.session.data
+    });
+    this.sessions.delete(sid);
+    this.sessions.set(sid, this.session);
+    this.processEventTargets();
+    for (const key of this.sessions.keys()) {
+      if (this.sessions.size <= this.config.sessionRetention + 1) break;
+      this.sessions.delete(key);
+    }
+    if (this.started) {
+      for (const config of this.config.eventTargets) if (!this.intervals.has(config)) this.armInterval(config);
+    }
+  }
+  /**
+  * Records an event. The player calls this method when an event occurs.
+  *
+  * For state-change events (`PLAY_STATE`, `PLAYBACK_RATE`, `CONTENT_ID`,
+  * `BACKGROUNDED_MODE`, `BITRATE_CHANGE`), this method:
+  * 1. Writes the state field from `data` (if present) into the reporter's
+  *    data store, as `update()` would.
+  * 2. Discards the event if the state field has no value after that write
+  *    (never set, or cleared with `update({ field: undefined })`).
+  * 3. Suppresses the event if the field's current value equals the
+  *    last reported value (no state transition). {@link CmcdReporter.update}
+  *    describes the `bg` value that a new session starts with.
+  *
+  * The reporter always records all other event types.
+  *
+  * For state-change events, prefer {@link CmcdReporter.update}, also for
+  * context fields in a combined call like
+  * `update({ sta: 'p', bl: [3000], mtp: [8500] })`. After `update()`
+  * auto-fires a state-change event, deduplication suppresses a
+  * `recordEvent()` call for the same event, and that call's `data` is
+  * silently lost.
+  *
+  * Call `recordEvent()` directly for events whose data comes with the event
+  * call. Examples: `CUSTOM_EVENT` with `cen`, `ERROR` with `ec`, ad lifecycle
+  * events, `MUTE`/`UNMUTE`, `PLAYER_EXPAND`/`PLAYER_COLLAPSE`, `SKIP`. For
+  * `RESPONSE_RECEIVED`, prefer {@link CmcdReporter.recordResponseReceived},
+  * which derives the per-response fields automatically.
   *
   * @param type - The type of event to record.
-  * @param data - Additional data to record with the event. This data
-  *               only applies to this event report. Persistent data should
-  *               be updated using `update()`.
+  * @param data - Additional data to record with the event. This data applies
+  *               only to this event report. The exception is the state field
+  *               of a state-change event, which the reporter also writes into
+  *               its data store. The reporter ignores session-owned keys
+  *               (`sid`, `msd`) supplied here and writes its own values.
   */
   recordEvent(type, data = {}) {
-    this.eventTargets.forEach((target, config) => {
-      this.recordTargetEvent(target, config, type, data);
-    });
-    this.processEventTargets();
+    this.emitEvent(this.session, type, data);
   }
   /**
-  * Records an event for a target. Called by the reporter when an event occurs.
+  * Records an event for every configured target of a session. State-change
+  * deduplication runs once, before the per-target loop.
+  *
+  * @param session - The session the event belongs to. Everything the event
+  *                  touches (data store, deduplication baseline, counters,
+  *                  queues) is that session's. Only `recordResponseReceived()`
+  *                  ever passes an ended session.
+  * @param type - The type of event to record.
+  * @param data - Additional data to record with the event.
+  * @param request - The media request that triggered the event, when
+  *                  one exists. Only `recordResponseReceived()` sets this
+  *                  parameter, which the reporter passes to each target's
+  *                  `transform`.
+  */
+  emitEvent(session, type, data, request) {
+    const entry = STATE_FIELDS_BY_EVENT.get(type);
+    if (entry) {
+      const field = entry.field;
+      const incoming = data[field];
+      if (incoming !== void 0) Object.assign(session.data, {
+        [field]: incoming
+      });
+      const current = session.data[field];
+      if (current === void 0) return;
+      if (entry.equal(current, session.lastEmitted[field])) return;
+      Object.assign(session.lastEmitted, {
+        [field]: entry.snapshot(current)
+      });
+    }
+    let failure;
+    session.eventTargets.forEach((target, config) => {
+      try {
+        this.recordTargetEvent(session, target, config, type, data, request);
+      } catch (error) {
+        failure ??= {
+          error
+        };
+      }
+    });
+    this.processEventTargets();
+    if (failure) throw failure.error;
+  }
+  /**
+  * Records an event for a target. The reporter calls this method when an
+  * event occurs.
   *
   * @param target - The target to record the event for.
   * @param config - The configuration for the target.
   * @param type - The type of event to record.
   * @param data - Additional data to record with the event. This data
-  *               only applies to this event report. Persistent data should
-  *               be updated using `update()`.
+  *               only applies to this event report. Use `update()` for
+  *               persistent data.
+  * @param request - The media request that triggered the event, when
+  *                  one exists. The target's `transform` receives it.
   */
-  recordTargetEvent(target, config, type, data = {}) {
-    if (!config.events.includes(type)) return;
+  recordTargetEvent(session, target, config, type, data = {}, request) {
+    if (target.disposed || !config.events.includes(type)) return;
     const item = {
-      ...this.data,
+      ...session.data,
       ...data,
+      sid: session.sid,
       e: type,
-      ts: data.ts ?? Date.now(),
-      sn: target.sn++
+      ts: data.ts ?? Date.now()
     };
-    if (!isNaN(this.msd) && !target.msdSent) {
-      item.msd = this.msd;
-      target.msdSent = true;
+    if (type === CMCD_EVENT_BACKGROUNDED_MODE && toBareValue(item.bg) === false) delete item.bg;
+    const {
+      transform
+    } = config;
+    if (!transform) {
+      this.queueTargetEvent(session, target, config, item, type);
+      return;
     }
-    target.queue.push(item);
+    copyReportValues(item);
+    const requiredKey = CMCD_REQUIRED_EVENT_KEYS.get(type);
+    const requiredValue = requiredKey ? item[requiredKey] : void 0;
+    const ts = item.ts;
+    const report = transform(item, request);
+    if (report == null) return;
+    if (!isValid(report.ts)) report.ts = ts;
+    if (requiredKey && isValid(requiredValue) && !isValid(report[requiredKey])) Object.assign(report, {
+      [requiredKey]: requiredValue
+    });
+    this.queueTargetEvent(session, target, config, report, type);
   }
   /**
-  * Records a response-received event. Called by the player when a media
-  * request response has been fully received.
+  * Writes the reporter-owned fields into a finished event report, encodes
+  * the report, and pushes the encoded line to the target's queue.
   *
-  * This method automatically derives the `rr` event keys from the
+  * This method runs after any transform. A transform cannot bypass the
+  * target's `events` filter through `e`, break `sn` continuity, or replace
+  * the session identity in `sid` and `msd`. Encoding here makes a report
+  * that cannot serialize throw inside the recording call, instead of failing
+  * the batch send and re-queueing forever.
+  *
+  * @param target - The target to queue the report for.
+  * @param config - The configuration for the target.
+  * @param report - The finished report data.
+  * @param type - The type of event being reported.
+  */
+  queueTargetEvent(session, target, config, report, type) {
+    report.e = type;
+    report.sn = target.sn++;
+    report.sid = session.sid;
+    if (!isNaN(session.msd) && !target.msdSent && config.enabledKeys?.includes("msd")) {
+      report.msd = session.msd;
+      target.msdSent = true;
+    } else delete report.msd;
+    target.queue.push(encodeCmcd(report, createEncodingOptions(CMCD_EVENT_MODE, config)));
+  }
+  /**
+  * Records a response-received event. The player calls this method when a
+  * media request response has fully arrived.
+  *
+  * This method derives these `rr` event keys automatically:
   *
   * - `url` - the original requested URL (before any redirects)
   * - `rc` - the HTTP response status code
@@ -15694,12 +17289,47 @@ var CmcdReporter = class {
   * - `ttfb` - time to first byte (from `resourceTiming.responseStart`)
   * - `ttlb` - time to last byte (from `resourceTiming.duration`)
   *
-  * Additional keys like `ttfbb`, `cmsdd`, `cmsds`, and `smrt` can be
-  * supplied via the `data` parameter if the player has access to them.
+  * If the player has additional keys like `ttfbb`, `cmsdd`, `cmsds`, and
+  * `smrt`, pass them in the `data` parameter.
+  *
+  * The request's `customData` is generic, so a player can pass a request with
+  * its own keys (for example `{ requestType: 'segment' }`) without a cast. The
+  * reporter reads only the provenance record that
+  * {@link CmcdReporter.createRequestReport} writes there. Every other key
+  * stays unchanged and visible to an event target's `transform` through its
+  * `request` argument.
+  *
+  * A reporter with a concrete `C` requires the request to satisfy that type.
+  * TypeScript therefore rejects a call whose request the configured
+  * transforms could not read. See {@link CmcdReporterCustomData}.
+  *
+  * The provenance record that {@link CmcdReporter.createRequestReport}
+  * stored on the request's `customData` (under
+  * {@link CMCD_REQUEST_PROVENANCE}) selects the session by `sid`. A record
+  * that names no retained session drops the response (see
+  * `CmcdReporterConfig.sessionRetention`). A request without a record reports
+  * under the current session, as in version 2.4.0. The request-time data then
+  * comes from `customData.cmcd`. A per-call `data.sid` cannot substitute. The
+  * reporter accepts any record whose `sid` names a retained session. The
+  * record may come from another reporter with the same session attributes,
+  * or be hand-built. If the request has a record, a response that completes
+  * after a `sid` change reports under its own retained session, with that
+  * session's data snapshot and sequence numbers.
+  *
+  * With a record, request-time report keys come from the record's encoded
+  * per-call `data` snapshot, which the reporter decodes for each response.
+  * The record's `cid` replaces the session's current `cid` in the report. A
+  * response that completes after a mid-session content change therefore
+  * reports its request-time values.
+  *
+  * @typeParam RD - The `customData` of this request. Defaults to the
+  *                reporter's own `C`.
   *
   * @param response - The HTTP response received.
   * @param data - Additional CMCD data to include with the event.
-  *               Values provided here override any auto-derived values.
+  *               Values provided here override the derived values.
+  *               The reporter ignores session-owned keys (`sid`, `msd`)
+  *               supplied here.
   */
   recordResponseReceived(response, data = {}) {
     const {
@@ -15707,10 +17337,17 @@ var CmcdReporter = class {
     } = response;
     const url = data.url ?? request?.url;
     if (!url) return;
-    const urlObj = new URL(url);
-    urlObj.searchParams.delete(CMCD_PARAM);
+    const provenance = request.customData?.[CMCD_REQUEST_PROVENANCE];
+    const session = provenance === void 0 ? this.session : this.resolveSession(provenance);
+    if (!session) return;
+    const cmcd = provenance === void 0 ? {
+      ...request.customData?.cmcd
+    } : decodeSnapshot(provenance);
+    const {
+      cid
+    } = provenance ?? {};
     const derived = {
-      url: urlObj.toString(),
+      url: replaceCmcdParam(url),
       rc: response.status
     };
     const timing = response.resourceTiming;
@@ -15721,16 +17358,34 @@ var CmcdReporter = class {
       }
       if (timing.duration != null) derived.ttlb = Math.round(timing.duration);
     }
-    const cmcd = request.customData?.cmcd ?? {};
-    this.recordEvent(CMCD_EVENT_RESPONSE_RECEIVED, {
+    this.emitEvent(session, CMCD_EVENT_RESPONSE_RECEIVED, {
+      ...(typeof cid === "string" && cid ? {
+        cid
+      } : void 0),
       ...cmcd,
       ...derived,
       ...data
-    });
+    }, request);
   }
   /**
-  * Applies the CMCD request report data to the request. Called by the player
-  * before sending the request.
+  * Resolves the session that a provenance record names. The record's `sid`
+  * must name one of this reporter's retained sessions, or the reporter
+  * discards the response. A record that names a removed or unknown `sid`
+  * resolves nothing. Any other attribution would be wrong. The reporter reads
+  * the `sid` as a plain property. A record
+  * copied through JSON therefore resolves the same session, and a hand-built
+  * record that names a retained session is accepted.
+  */
+  resolveSession(provenance) {
+    if (provenance === null || typeof provenance !== "object") return;
+    const {
+      sid
+    } = provenance;
+    return typeof sid === "string" ? this.sessions.get(sid) : void 0;
+  }
+  /**
+  * Applies the CMCD request report data to the request. The player calls this
+  * method before sending the request.
   *
   * @param req - The request to apply the CMCD request report to.
   * @returns The request with the CMCD request report applied.
@@ -15741,21 +17396,56 @@ var CmcdReporter = class {
     return this.createRequestReport(req) ?? req;
   }
   /**
-  * Checks if the request reporting is enabled.
+  * Checks whether request reporting is enabled.
   *
-  * @returns `true` if the request reporting is enabled, `false` otherwise.
+  * @returns `true` if request reporting is enabled, `false` otherwise.
   */
   isRequestReportingEnabled() {
     return !!this.config.enabledKeys?.length;
   }
   /**
-  * Creates a new request with the CMCD request report data applied. Called by the player
-  * before sending the request.
+  * The provenance record to write on a returned request. It is the session's
+  * frozen base record, extended with the caller's per-call data encoded as a
+  * CMCD string when there is any. Requests without per-call data share the
+  * base record, so the reporter writes only one property. The snapshot never
+  * contains reporter-written fields. A value that cannot encode contributes
+  * no snapshot and does not fail the request. The response still attributes
+  * and reports derived keys over session data, matching the tolerance of
+  * `decodeSnapshot()` when reading.
+  */
+  createRequestProvenance(data, baseUrl) {
+    const base = this.session.provenance;
+    if (!data) return base;
+    try {
+      const encoded = encodeCmcd(data, {
+        version: this.config.version,
+        reportingMode: CMCD_REQUEST_MODE,
+        baseUrl
+      });
+      return encoded ? Object.freeze({
+        ...base,
+        data: encoded
+      }) : base;
+    } catch {
+      return base;
+    }
+  }
+  /**
+  * Creates a new request with the CMCD request report data applied. The
+  * player calls this method before sending the request.
+  *
+  * A reporter with a concrete `C` requires the request's `customData` to
+  * satisfy that type. TypeScript therefore rejects a call whose request the
+  * configured transform could not read. See
+  * {@link CmcdReporterCustomData}.
+  *
+  * @typeParam R - The type of the request. Its `customData` must satisfy
+  *                the reporter's `C`.
   *
   * @param request - The request to apply the CMCD request report to.
   * @param data - The data to apply to the request. This data only
-  *               applies to this request report. Persistent data
-  *               should be updated using `update()`.
+  *               applies to this request report. Use `update()` for
+  *               persistent data.
   * @returns The request with the CMCD request report applied.
   */
   createRequestReport(request, data) {
@@ -15771,29 +17461,37 @@ var CmcdReporter = class {
       },
       customData: {
         ...customData,
-        cmcd: {}
+        cmcd: {},
+        [CMCD_REQUEST_PROVENANCE]: this.createRequestProvenance(data, request.url)
       }
     };
     if (!this.config.enabledKeys?.length || !report.url) return report;
-    const url = new URL(report.url);
-    const cmcdData = {
-      ...this.data,
+    const session = this.session;
+    const merged = {
+      ...session.data,
       ...data,
-      sn: this.requestTarget.sn++
+      sid: session.sid
     };
-    const options = createEncodingOptions(CMCD_REQUEST_MODE, this.config, report.url);
-    if (!isNaN(this.msd) && !this.requestTarget.msdSent) {
-      cmcdData.msd = this.msd;
-      this.requestTarget.msdSent = true;
+    const {
+      transform
+    } = this.config;
+    let cmcdData = merged;
+    if (transform) {
+      copyReportValues(merged);
+      cmcdData = transform(merged, request);
+      if (cmcdData == null) return report;
     }
-    const cmcd = report.customData.cmcd = prepareCmcdData(cmcdData, options);
+    cmcdData.sn = session.requestTarget.sn++;
+    cmcdData.sid = session.sid;
+    const sendMsd = !isNaN(session.msd) && !session.requestTarget.msdSent;
+    if (sendMsd) cmcdData.msd = session.msd;else delete cmcdData.msd;
+    const options = createEncodingOptions(CMCD_REQUEST_MODE, this.config, report.url);
+    const cmcd = report.customData.cmcd = copyReportValues(prepareCmcdData(cmcdData, options));
+    if (sendMsd && cmcd.msd !== void 0) session.requestTarget.msdSent = true;
+    const encoded = encodePreparedCmcd(cmcd);
     switch (this.config.transmissionMode) {
       case CMCD_QUERY:
-        const param = encodePreparedCmcd(cmcd);
-        if (param) {
-          url.searchParams.set(CMCD_PARAM, param);
-          report.url = url.toString();
-        }
+        if (encoded) report.url = replaceCmcdParam(report.url, encoded);
         break;
       case CMCD_HEADERS:
         Object.assign(report.headers, toPreparedCmcdHeaders(cmcd, options.customHeaderMap));
@@ -15802,35 +17500,39 @@ var CmcdReporter = class {
     return report;
   }
   /**
-  * Processes the event targets. Called by the reporter when an event occurs.
+  * Processes the event targets. The reporter calls this method when an event
+  * occurs.
   *
   * @param flush - Whether to flush the event targets.
   */
   processEventTargets(flush = false) {
     let reprocess = false;
-    this.eventTargets.forEach((target, config) => {
-      const {
-        queue
-      } = target;
-      if (!queue.length) return;
-      if (queue.length < config.batchSize && !flush) return;
-      const deleteCount = flush ? queue.length : config.batchSize;
-      const events = queue.splice(0, deleteCount);
-      this.sendEventReport(config, events).catch(() => {
-        target.queue.unshift(...events);
+    this.sessions.forEach(session => {
+      const drain = flush || session !== this.session;
+      session.eventTargets.forEach((target, config) => {
+        const {
+          queue
+        } = target;
+        if (target.disposed || !queue.length) return;
+        if (queue.length < config.batchSize && !drain) return;
+        const deleteCount = drain ? queue.length : config.batchSize;
+        const events = queue.splice(0, deleteCount);
+        this.sendEventReport(session, config, events).catch(() => {
+          target.queue.unshift(...events);
+        });
+        reprocess ||= queue.length > 0;
       });
-      reprocess ||= queue.length > 0;
     });
     if (reprocess) this.processEventTargets();
   }
   /**
-  * Sends an event report. Called by the reporter when a batch is ready to be sent.
+  * Sends an event report. The reporter calls this method when a batch is
+  * ready.
   *
   * @param config - The target config to send the event report to.
-  * @param data - The data to send in the event report.
+  * @param data - The encoded report lines to send in the event report.
   */
-  async sendEventReport(config, data) {
-    const options = createEncodingOptions(CMCD_EVENT_MODE, config);
+  async sendEventReport(session, config, data) {
     const {
       status
     } = await this.requester({
@@ -15839,34 +17541,34 @@ var CmcdReporter = class {
       headers: {
         "Content-Type": CMCD_MIME_TYPE
       },
-      body: data.map(item => encodeCmcd(item, options)).join("\n") + "\n"
+      body: data.join("\n")
     });
-    if (status === 410) this.disposeEventTarget(config);else if (status === 429 || status > 499 && status < 600) throw new Error(`Event report failed with status ${status}`);
+    if (status === 410) this.disposeEventTarget(session, config);else if (status === 429 || status > 499 && status < 600) throw new Error(`Event report failed with status ${status}`);
   }
   /**
-  * Cancels the time-interval timer for an event target and clears the stored id.
-  * Safe to call when no timer is armed (clearInterval(undefined) is a no-op).
+  * Cancels the time-interval timer for an event target config and clears the
+  * stored id. Safe to call when no timer is active (clearInterval(undefined)
+  * does nothing).
   */
-  disarmInterval(target) {
-    clearInterval(target.intervalId);
-    target.intervalId = void 0;
+  disarmInterval(config) {
+    clearInterval(this.intervals.get(config));
+    this.intervals.delete(config);
   }
   /**
-  * Permanently removes an event target: cancels its timer and removes it from the
-  * eventTargets map. Used when the collector signals the target is gone (HTTP 410).
+  * Silences an event target URL for the remainder of its session after the
+  * collector signals that the target is gone (HTTP 410). The method clears
+  * the queues and blocks further enqueues for every config in the session
+  * that reports to the URL (the CTA-5004-B suppression scope). For the
+  * current session, the method also cancels those configs' timers. A session
+  * started after the disposal gets new target state and is unaffected.
   */
-  disposeEventTarget(config) {
-    const target = this.eventTargets.get(config);
-    if (!target) return;
-    this.disarmInterval(target);
-    this.eventTargets.delete(config);
-  }
-  /**
-  * Resets the session related data. Called when the session ID changes.
-  */
-  resetSession() {
-    this.eventTargets.forEach(target => target.sn = 0);
-    this.requestTarget.sn = 0;
+  disposeEventTarget(session, config) {
+    session.eventTargets.forEach((target, sibling) => {
+      if (sibling.url !== config.url || target.disposed) return;
+      target.disposed = true;
+      target.queue.length = 0;
+      if (session === this.session) this.disarmInterval(sibling);
+    });
   }
 };
 
@@ -15930,49 +17632,6 @@ const CmcdValidationSeverity = {
 };
 
 //#endregion
-//#region src/upConvertToV2.ts
-/**
-* Up-convert V1 CMCD data to V2 format.
-*
-* - Wraps plain scalar values in arrays for inner-list keys.
-* - Wraps `nor` string in an array.
-*
-* If the data is already V2 (has `v: 2`), it is returned unchanged.
-*
-* @internal
-*/
-function upConvertToV2(obj) {
-  if (obj["v"] === CMCD_V2) return obj;
-  const result = {};
-  for (const [key, value] of Object.entries(obj)) {
-    if (value == null) {
-      result[key] = value;
-      continue;
-    }
-    if (CMCD_INNER_LIST_KEYS.has(key) && !Array.isArray(value)) result[key] = [value];else if (key === "nor" && typeof value === "string") result[key] = [value];else result[key] = value;
-  }
-  return result;
-}
-
-//#endregion
-//#region src/decodeCmcd.ts
-function reduceValue(value) {
-  if (Array.isArray(value)) return value.map(reduceValue);
-  if (typeof value === "symbol") return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value);
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && !value.params) return reduceValue(value.value);
-  if (typeof value === "string") return value;
-  return value;
-}
-function decodeCmcd(cmcd, options) {
-  if (!cmcd) return {};
-  const sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.decodeSfDict)(cmcd);
-  const result = {};
-  for (const [key, item] of Object.entries(sfDict)) result[key] = reduceValue(item.value);
-  if (options?.convertToLatest) return upConvertToV2(result);
-  return result;
-}
-
-//#endregion
 //#region src/ensureHeaders.ts
 /**
 * Converts a record of header fields to a `Headers` instance if necessary.
@@ -16009,7 +17668,64 @@ function fromCmcdQuery(query, options) {
 //#endregion
 //#region src/fromCmcdUrl.ts
 function fromCmcdUrl(url, options) {
-  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "")), options);
+  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "").replace(/\+/g, " ")), options);
+}
+
+//#endregion
+//#region src/isCmcdRequestKey.ts
+const CMCD_REQUEST_KEY_SET = /* @__PURE__ */new Set(CMCD_REQUEST_KEYS);
+/**
+* Check if a key is a valid CMCD request key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
+*/
+function isCmcdRequestKey(key) {
+  return CMCD_REQUEST_KEY_SET.has(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/isCmcdResponseReceivedKey.ts
+const CMCD_RESPONSE_KEY_SET = /* @__PURE__ */new Set(CMCD_RESPONSE_KEYS);
+/**
+* Check if a key is a valid CMCD response key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD response key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdResponseReceivedKey.test.ts#example}
+*/
+function isCmcdResponseReceivedKey(key) {
+  return CMCD_RESPONSE_KEY_SET.has(key);
+}
+
+//#endregion
+//#region src/isCmcdEventKey.ts
+const CMCD_EVENT_KEY_SET = /* @__PURE__ */new Set(CMCD_EVENT_KEYS);
+/**
+* Check if a key is a valid CMCD event key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdEventKey.test.ts#example}
+*/
+function isCmcdEventKey(key) {
+  return isCmcdRequestKey(key) || isCmcdResponseReceivedKey(key) || CMCD_EVENT_KEY_SET.has(key);
 }
 
 //#endregion
@@ -16031,6 +17747,25 @@ function isCmcdV1Data(data) {
 }
 
 //#endregion
+//#region src/isCmcdV1Key.ts
+const CMCD_V1_KEY_SET$1 = /* @__PURE__ */new Set(CMCD_V1_KEYS);
+/**
+* Filter for CMCD version 1 keys.
+*
+* @param key - The CMCD key to filter.
+*
+* @returns `true` if the key should be included, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdV1Key.test.ts#example}
+*/
+function isCmcdV1Key(key) {
+  return CMCD_V1_KEY_SET$1.has(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
 //#region src/isCmcdV2Data.ts
 /**
 * Check if a CMCD data object is version 2.
@@ -16049,12 +17784,56 @@ function isCmcdV2Data(data) {
 }
 
 //#endregion
+//#region src/toCmcdUrl.ts
+/**
+* Convert a CMCD object to a URL encoded string.
+*
+* Only letters, digits, `-`, `.`, `_`, and `~` stay unencoded, as in the
+* query examples of CTA-5004-B.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding.
+*
+* @returns The URL encoded CMCD data.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+*
+* @public
+*/
+function toCmcdUrl(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return percentEncode(encodeCmcd(cmcd, options));
+}
+
+//#endregion
+//#region src/toCmcdQuery.ts
+/**
+* Convert a CMCD object to a query arg.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding.
+*
+* @returns The CMCD query arg.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+*
+* @public
+*
+* @example
+* {@includeCode ../test/toCmcdQuery.test.ts#example}
+*/
+function toCmcdQuery(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return `${CMCD_PARAM}=${toCmcdUrl(cmcd, options)}`;
+}
+
+//#endregion
 //#region src/toCmcdValue.ts
 /**
 * Convert a value to a CMCD value.
 *
 * @param value - The value to convert to a CMCD value.
-* @param params - The parameters to convert to a CMCD value.
+* @param params - The parameters of the CMCD value.
 * @returns The CMCD value.
 *
 * @public
@@ -16081,21 +17860,21 @@ function mergeValidationResults(...results) {
 //#endregion
 //#region src/resolveVersion.ts
 /**
-* Resolves the CMCD version from explicit options, the payload's `v` key, or the default (v1).
+* Resolves the CMCD version from options, the payload's `v` key, or the default (version 1).
 *
 * @internal
 */
 function resolveVersion(data, options) {
   if (options?.version === 1 || options?.version === 2) return options.version;
-  const payloadVersion = data["v"];
+  const payloadVersion = toBareValue(data["v"]);
   if (payloadVersion === 1 || payloadVersion === 2) return payloadVersion;
   return CMCD_V1;
 }
 
 //#endregion
 //#region src/validateCmcdKeys.ts
-const CMCD_V1_KEY_SET = new Set(CMCD_V1_KEYS);
-const CMCD_KEY_SET = new Set(CMCD_KEYS);
+const CMCD_V1_KEY_SET = /* @__PURE__ */new Set(CMCD_V1_KEYS);
+const CMCD_KEY_SET = /* @__PURE__ */new Set(CMCD_KEYS);
 /**
 * Validates that all keys in a CMCD payload are recognized spec keys or valid custom keys.
 *
@@ -16127,6 +17906,39 @@ function validateCmcdKeys(data, options) {
     issues
   };
 }
+
+//#endregion
+//#region src/CMCD_AGGREGATE_BITRATE_KEYS.ts
+/**
+* Maps each aggregate bitrate key to the exact bitrate key that supersedes it.
+*
+* Per CTA-5004-B, `ab` MUST NOT be sent when the encoded bitrate `br` is
+* known. `lab` and `tab` follow the same rule for the lowest bitrate `lb`
+* and the top bitrate `tb`.
+*
+* @internal
+*/
+const CMCD_AGGREGATE_BITRATE_KEYS = {
+  ab: "br",
+  lab: "lb",
+  tab: "tb"
+};
+
+//#endregion
+//#region src/CMCD_KEY_OBJECT_TYPES.ts
+/**
+* Maps a key to the object types (`ot`) for which CTA-5004-B allows the key.
+*
+* A key that is absent from this map is allowed for every object type.
+* `d` (Object duration) and `tpb` (Top playable bitrate) MUST NOT be sent for
+* other object types.
+*
+* @internal
+*/
+const CMCD_KEY_OBJECT_TYPES = {
+  d: ["a", "v", "av", "tt", "c", "o"],
+  tpb: ["a", "v", "av", "c"]
+};
 
 //#endregion
 //#region src/validateCmcdStructure.ts
@@ -16172,7 +17984,8 @@ function validateCmcdStructure(data, options) {
     });
   }
   if ("e" in data) {
-    if (data["e"] === CMCD_EVENT_CUSTOM_EVENT) {
+    const eventType = toTokenString(data["e"]);
+    if (eventType === CMCD_EVENT_CUSTOM_EVENT) {
       if (!("cen" in data)) issues.push({
         key: "cen",
         message: "Custom event (e=\"ce\") requires the \"cen\" key to be present.",
@@ -16183,7 +17996,7 @@ function validateCmcdStructure(data, options) {
       message: "The \"cen\" key must only be present when e=\"ce\".",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
-    if (data["e"] === CMCD_EVENT_RESPONSE_RECEIVED) {
+    if (eventType === CMCD_EVENT_RESPONSE_RECEIVED) {
       if (!("url" in data)) issues.push({
         key: "url",
         message: "Response received event (e=\"rr\") requires the \"url\" key to be present.",
@@ -16194,20 +18007,38 @@ function validateCmcdStructure(data, options) {
       message: `Response key "${key}" must only be present when e="rr".`,
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
-    if (data["e"] === CMCD_EVENT_PLAY_STATE && !("sta" in data)) issues.push({
+    if (eventType === CMCD_EVENT_PLAY_STATE && !("sta" in data)) issues.push({
       key: "sta",
-      message: "Play state event (e=\"ps\") requires the \"sta\" key to be present.",
+      message: "Play state change event (e=\"ps\") requires the \"sta\" key to be present.",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
-    if (data["e"] === CMCD_EVENT_ERROR && !("ec" in data)) issues.push({
+    if (eventType === CMCD_EVENT_ERROR && !("ec" in data)) issues.push({
       key: "ec",
       message: "Error event (e=\"e\") requires the \"ec\" key to be present.",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     });
   }
-  if ("v" in data && data["v"] !== 1 && data["v"] !== 2) issues.push({
+  const ot = version > 1 ? toTokenString(data["ot"]) : void 0;
+  if (ot !== void 0) for (const key in CMCD_KEY_OBJECT_TYPES) {
+    const objectTypes = CMCD_KEY_OBJECT_TYPES[key];
+    if (key in data && !objectTypes.includes(ot)) issues.push({
+      key,
+      message: `Key "${key}" must not be present when "ot" is "${ot}". Expected "ot" to be one of: ${objectTypes.join(", ")}.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  if (version > 1) for (const key in CMCD_AGGREGATE_BITRATE_KEYS) {
+    const exactKey = CMCD_AGGREGATE_BITRATE_KEYS[key];
+    if (key in data && exactKey in data) issues.push({
+      key,
+      message: `Key "${key}" must not be present when "${exactKey}" is present.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  const v = toBareValue(data["v"]);
+  if ("v" in data && v !== 1 && v !== 2) issues.push({
     key: "v",
-    message: `Unsupported CMCD version "${String(data["v"])}". Expected 1 or 2.`,
+    message: `Unsupported CMCD version "${String(v)}". Expected 1 or 2.`,
     severity: CMCD_VALIDATION_SEVERITY_ERROR
   });else if (version > 1 && !("v" in data)) issues.push({
     key: "v",
@@ -16227,7 +18058,7 @@ function validateCmcdStructure(data, options) {
 //#endregion
 //#region src/CMCD_KEY_TYPES.ts
 /**
-* CMCD key value type: inner list of numbers with token identifiers.
+* CMCD key value type: inner list of integers with token identifiers.
 *
 * @internal
 */
@@ -16269,8 +18100,8 @@ const CMCD_KEY_TYPE_STRING = "string";
 */
 const CMCD_KEY_TYPE_TOKEN = "token";
 /**
-* Maps each CMCD spec key to its expected value type for v2.
-* Keys that differ between v1 and v2 are handled by CMCD_V1_KEY_TYPE_OVERRIDES.
+* Maps each CMCD key to its value type for version 2.
+* CMCD_V1_KEY_TYPE_OVERRIDES handles the keys that differ between version 1 and version 2.
 *
 * @internal
 */
@@ -16328,15 +18159,15 @@ const CMCD_KEY_TYPES = {
   sta: CMCD_KEY_TYPE_TOKEN
 };
 /**
-* Maps keys to their v1-specific types when they differ from v2.
+* Version 1 types of the keys that differ from version 2.
 *
 * @internal
 */
 const CMCD_V1_KEY_TYPE_OVERRIDES = {
   bl: CMCD_KEY_TYPE_INTEGER,
-  br: CMCD_KEY_TYPE_NUMBER,
+  br: CMCD_KEY_TYPE_INTEGER,
   mtp: CMCD_KEY_TYPE_INTEGER,
-  tb: CMCD_KEY_TYPE_NUMBER,
+  tb: CMCD_KEY_TYPE_INTEGER,
   nor: CMCD_KEY_TYPE_STRING
 };
 
@@ -16369,7 +18200,7 @@ const CMCD_CUSTOM_KEY_VALUE_MAX_LENGTH = 64;
 * @internal
 */
 const CMCD_TOKEN_VALUES = {
-  e: ["bc", "ps", "e", "t", "c", "b", "m", "um", "pe", "pc", "rr", "as", "ae", "abs", "abe", "sk", "ce"],
+  e: ["bc", "ps", "pr", "e", "t", "c", "b", "m", "um", "pe", "pc", "rr", "as", "ae", "abs", "abe", "sk", "ce"],
   ot: ["m", "a", "v", "av", "i", "c", "tt", "k", "o"],
   sf: ["d", "h", "s", "o"],
   st: ["v", "l", "ll"],
@@ -16378,12 +18209,31 @@ const CMCD_TOKEN_VALUES = {
 
 //#endregion
 //#region src/validateCmcdValues.ts
-const HUNDRED_ROUNDING_KEYS = new Set(["bl", "dl", "mtp", "rtp", "tbl"]);
-const INTEGER_ROUNDING_KEYS = new Set(["br", "d", "tb"]);
+const HUNDRED_ROUNDING_UNITS = {
+  bl: "ms",
+  dl: "ms",
+  mtp: "kbps",
+  rtp: "kbps",
+  tbl: "ms"
+};
 function isFiniteNumber(value) {
   return typeof value === "number" && Number.isFinite(value);
 }
-function validateListValue(key, value, issues) {
+function isInteger(value) {
+  return Number.isInteger(value);
+}
+function validateRounding(key, value, version, issues, index) {
+  const unit = HUNDRED_ROUNDING_UNITS[key];
+  if (!unit || value % 100 === 0) return;
+  const should = key === "tbl" || key === "bl" && version !== CMCD_V1;
+  const target = index === void 0 ? `Key "${key}"` : `Key "${key}" array element [${index}]`;
+  issues.push({
+    key,
+    message: `${target} ${should ? "should" : "must"} be rounded to the nearest 100 ${unit}. Received ${value}.`,
+    severity: should ? CMCD_VALIDATION_SEVERITY_WARNING : CMCD_VALIDATION_SEVERITY_ERROR
+  });
+}
+function validateListValue(key, value, version, issues) {
   if (!Array.isArray(value)) {
     issues.push({
       key,
@@ -16393,18 +18243,12 @@ function validateListValue(key, value, issues) {
     return;
   }
   for (let i = 0; i < value.length; i++) {
-    const element = value[i];
-    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
-      if (!isFiniteNumber(element.value)) issues.push({
-        key,
-        message: `Key "${key}" array element [${i}] must be a finite number.`,
-        severity: CMCD_VALIDATION_SEVERITY_ERROR
-      });
-    } else if (!isFiniteNumber(element)) issues.push({
+    const element = toBareValue(value[i]);
+    if (!isInteger(element)) issues.push({
       key,
-      message: `Key "${key}" array element [${i}] must be a finite number.`,
+      message: `Key "${key}" array element [${i}] must be a finite integer.`,
       severity: CMCD_VALIDATION_SEVERITY_ERROR
-    });
+    });else validateRounding(key, element, version, issues, i);
   }
 }
 function validateStringArrayValue(key, value, issues) {
@@ -16416,20 +18260,11 @@ function validateStringArrayValue(key, value, issues) {
     });
     return;
   }
-  for (let i = 0; i < value.length; i++) {
-    const element = value[i];
-    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
-      if (typeof element.value !== "string") issues.push({
-        key,
-        message: `Key "${key}" array element [${i}] must be a string.`,
-        severity: CMCD_VALIDATION_SEVERITY_ERROR
-      });
-    } else if (typeof element !== "string") issues.push({
-      key,
-      message: `Key "${key}" array element [${i}] must be a string.`,
-      severity: CMCD_VALIDATION_SEVERITY_ERROR
-    });
-  }
+  for (let i = 0; i < value.length; i++) if (typeof toBareValue(value[i]) !== "string") issues.push({
+    key,
+    message: `Key "${key}" array element [${i}] must be a string.`,
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });
 }
 /**
 * Validates that all values in a CMCD payload conform to the expected types and constraints.
@@ -16448,7 +18283,8 @@ function validateStringArrayValue(key, value, issues) {
 function validateCmcdValues(data, options) {
   const version = resolveVersion(data, options);
   const issues = [];
-  for (const [key, value] of Object.entries(data)) {
+  for (const [key, entry] of Object.entries(data)) {
+    const value = toBareValue(entry);
     if (isCmcdCustomKey(key)) {
       if (typeof value !== "string") issues.push({
         key,
@@ -16474,29 +18310,17 @@ function validateCmcdValues(data, options) {
     if (version === CMCD_V1 && key in CMCD_V1_KEY_TYPE_OVERRIDES) expectedType = CMCD_V1_KEY_TYPE_OVERRIDES[key];
     switch (expectedType) {
       case CMCD_KEY_TYPE_INTEGER:
-        if (!isFiniteNumber(value) || !Number.isInteger(value)) issues.push({
+        if (!isInteger(value)) issues.push({
           key,
           message: `Key "${key}" must be a finite integer.`,
           severity: CMCD_VALIDATION_SEVERITY_ERROR
-        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
-          key,
-          message: `Key "${key}" should be rounded to the nearest 100.`,
-          severity: CMCD_VALIDATION_SEVERITY_WARNING
-        });
+        });else validateRounding(key, value, version, issues);
         break;
       case CMCD_KEY_TYPE_NUMBER:
         if (!isFiniteNumber(value)) issues.push({
           key,
           message: `Key "${key}" must be a finite number.`,
           severity: CMCD_VALIDATION_SEVERITY_ERROR
-        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
-          key,
-          message: `Key "${key}" should be rounded to the nearest 100.`,
-          severity: CMCD_VALIDATION_SEVERITY_WARNING
-        });else if (INTEGER_ROUNDING_KEYS.has(key) && !Number.isInteger(value)) issues.push({
-          key,
-          message: `Key "${key}" should be rounded to an integer.`,
-          severity: CMCD_VALIDATION_SEVERITY_WARNING
         });
         break;
       case CMCD_KEY_TYPE_BOOLEAN:
@@ -16520,15 +18344,16 @@ function validateCmcdValues(data, options) {
       case CMCD_KEY_TYPE_TOKEN:
         {
           const validValues = CMCD_TOKEN_VALUES[key];
-          if (validValues && !validValues.includes(value)) issues.push({
+          const token = toTokenString(value);
+          if (validValues && (token === void 0 || !validValues.includes(token))) issues.push({
             key,
-            message: `Key "${key}" has invalid token value "${String(value)}". Expected one of: ${validValues.join(", ")}.`,
+            message: `Key "${key}" has invalid token value "${token ?? String(value)}". Expected one of: ${validValues.join(", ")}.`,
             severity: CMCD_VALIDATION_SEVERITY_ERROR
           });
           break;
         }
       case CMCD_KEY_TYPE_NUMBER_LIST:
-        validateListValue(key, value, issues);
+        validateListValue(key, value, version, issues);
         break;
       case CMCD_KEY_TYPE_STRING_LIST:
         validateStringArrayValue(key, value, issues);
@@ -16568,8 +18393,8 @@ function validateCmcd(data, options) {
 *
 * This function decodes the string internally and validates it with
 * `reportingMode` set to `'event'`. The input may contain multiple
-* newline-separated events (e.g. an `application/cmcd` POST body), in which
-* case each line is validated independently and the results are merged.
+* newline-separated events, for example an `application/cmcd` POST body.
+* The function validates each line independently and merges the results.
 *
 * @param cmcd - The raw CMCD-encoded string to validate. May contain
 *   multiple newline-separated event lines.
@@ -16597,6 +18422,11 @@ function validateCmcdEvents(cmcd, options) {
     }],
     data: []
   };
+  const bodyIssues = [];
+  if (cmcd.endsWith("\n")) bodyIssues.push({
+    message: "Event report body must not end with a line feed.",
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });
   const decodedLines = [];
   const lineResults = [];
   for (let i = 0; i < lines.length; i++) try {
@@ -16614,7 +18444,10 @@ function validateCmcdEvents(cmcd, options) {
     });
   }
   return {
-    ...mergeValidationResults(...lineResults),
+    ...mergeValidationResults({
+      valid: true,
+      issues: bodyIssues
+    }, ...lineResults),
     data: decodedLines
   };
 }
@@ -16627,8 +18460,8 @@ function validateCmcdEvents(cmcd, options) {
 * Accepts an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
 *
 * This function validates that the request uses the POST method and has
-* the correct `Content-Type` header (`application/cmcd`) in addition to
-* validating the body content via {@link validateCmcdEvents}.
+* the correct `Content-Type` header (`application/cmcd`). It also
+* validates the body content with {@link validateCmcdEvents}.
 *
 * @param request - An `HttpRequest` to validate.
 * @param options - Validation options (excluding `reportingMode`).
@@ -16693,15 +18526,15 @@ function validateCmcdEventReport(request, options) {
 /**
 * Validates CMCD HTTP headers by checking shard placement and payload validity.
 *
-* This function accepts raw CMCD header strings, decodes each shard
-* internally, verifies that each key is placed in its correct header shard,
-* then merges all shards and runs full payload validation (keys, values, and
-* structure) on the merged data.
+* This function accepts raw CMCD header strings and decodes each shard
+* internally. It verifies that each key is in its correct header shard.
+* The function then merges all shards and runs payload validation (keys,
+* values, and structure) on the merged data.
 *
 * @example
 * {@includeCode ../test/validateCmcdHeaders.test.ts#example}
 *
-* @param headers - A `Headers` instance or a record of CMCD header fields to their raw encoded string values.
+* @param headers - A `Headers` instance or a record of CMCD header fields to raw encoded strings.
 * @param options - Validation options (excluding `reportingMode`).
 * @returns The validation result including decoded data.
 *
@@ -16761,10 +18594,12 @@ function validateCmcdHeaders(headers, options) {
 * {@link https://developer.mozilla.org/en-US/docs/Web/API/Request | Request}
 * object or an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
 *
-* The function checks for CMCD data in the HTTP headers first. If CMCD
-* headers are found, validation includes shard-placement checks via
-* {@link validateCmcdHeaders}. Otherwise, the CMCD query parameter is
-* extracted from the URL and validated.
+* The function checks the HTTP headers for CMCD data first. If the
+* request has CMCD headers, {@link validateCmcdHeaders} validates them,
+* including shard placement. Otherwise, the function validates the CMCD
+* query parameter of the URL. A request with CMCD data in both the
+* headers and the `CMCD` query parameter is an error. The function still
+* validates the headers and returns their data.
 *
 * @param request - A `Request` or `HttpRequest` to validate.
 * @param options - Validation options (excluding `reportingMode`).
@@ -16779,12 +18614,25 @@ function validateCmcdHeaders(headers, options) {
 */
 function validateCmcdRequest(request, options) {
   const headers = extractHeaderRecord(request.headers);
-  if (headers) return validateCmcdHeaders(headers, options);
-  const param = new URL(request.url).searchParams.get(CMCD_PARAM);
+  const param = getCmcdQueryParam(request.url);
+  if (headers) {
+    const result = validateCmcdHeaders(headers, options);
+    if (!param) return result;
+    return {
+      ...mergeValidationResults({
+        valid: false,
+        issues: [{
+          message: "CMCD data found in both request headers and the \"CMCD\" query parameter. A request must use only one transmission mode.",
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        }]
+      }, result),
+      data: result.data
+    };
+  }
   if (!param) return {
     valid: false,
     issues: [{
-      message: "No CMCD data found in request headers or query parameters.",
+      message: hasCmcdInFragment(request.url) ? "No CMCD data found in request headers or query parameters. The URL fragment contains a \"CMCD\" parameter. A server never receives the fragment." : "No CMCD data found in request headers or query parameters.",
       severity: CMCD_VALIDATION_SEVERITY_ERROR
     }],
     data: {}
@@ -16809,6 +18657,18 @@ function validateCmcdRequest(request, options) {
     }),
     data
   };
+}
+const CMCD_IN_FRAGMENT = /(?:^|[?&])CMCD=/;
+function getCmcdQueryParam(url) {
+  const hash = url.indexOf("#");
+  const path = hash < 0 ? url : url.slice(0, hash);
+  const start = path.indexOf("?");
+  if (start < 0) return null;
+  return new URLSearchParams(path.slice(start + 1)).get(CMCD_PARAM);
+}
+function hasCmcdInFragment(url) {
+  const hash = url.indexOf("#");
+  return hash >= 0 && CMCD_IN_FRAGMENT.test(url.slice(hash + 1));
 }
 function extractHeaderRecord(headers) {
   if (!headers) return;
@@ -16848,7 +18708,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   decodeCmsdDynamic: function() { return /* binding */ decodeCmsdDynamic; },
 /* harmony export */   decodeCmsdStatic: function() { return /* binding */ decodeCmsdStatic; },
 /* harmony export */   encodeCmsdDynamic: function() { return /* binding */ encodeCmsdDynamic; },
-/* harmony export */   encodeCmsdStatic: function() { return /* binding */ encodeCmsdStatic; }
+/* harmony export */   encodeCmsdStatic: function() { return /* binding */ encodeCmsdStatic; },
+/* harmony export */   isCmsdCustomKey: function() { return /* binding */ isCmsdCustomKey; }
 /* harmony export */ });
 /* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
 /* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
@@ -17017,6 +18878,29 @@ function encodeCmsdStatic(cmsd, options) {
   return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.encodeSfDict)(processCmsd(cmsd, options), {
     whitespace: false
   });
+}
+
+//#endregion
+//#region src/isCmsdCustomKey.ts
+const CUSTOM_KEY_REGEX = /^[a-z][a-z0-9.-]*$/;
+/**
+* Check if a key is a valid custom key: a lowercase first letter, then
+* characters from `a-z 0-9 . -`, with a hyphen that is neither the first
+* nor the last character. These are the CMSD custom-key rules restricted
+* to names that survive RFC 8941 key serialization.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmsdCustomKey.test.ts#example}
+*/
+function isCmsdCustomKey(key) {
+  const separator = key.indexOf("-", 1);
+  return separator > 0 && separator < key.length - 1 && CUSTOM_KEY_REGEX.test(key);
 }
 
 //#endregion
@@ -17867,10 +19751,6 @@ const DECIMAL = "Decimal";
 const INTEGER = "Integer";
 
 //#endregion
-//#region src/utils/INTEGER_DECIMAL.ts
-const INTEGER_DECIMAL = `${INTEGER} or ${DECIMAL}`;
-
-//#endregion
 //#region src/utils/isInvalidInt.ts
 function isInvalidInt(value) {
   return value < -999999999999999 || 999999999999999 < value;
@@ -17878,6 +19758,9 @@ function isInvalidInt(value) {
 
 //#endregion
 //#region src/parse/parseIntegerOrDecimal.ts
+function integerOrDecimalError(src) {
+  return parseError(src, `${INTEGER} or ${DECIMAL}`);
+}
 /**
 * @internal
 */
@@ -17886,31 +19769,29 @@ function parseIntegerOrDecimal(src) {
   let sign = 1;
   let num = "";
   let value;
-  const i = 0;
-  const error = parseError(orig, INTEGER_DECIMAL);
-  if (src[i] === "-") {
+  if (src[0] === "-") {
     sign = -1;
     src = src.substring(1);
   }
-  if (src.length <= 0) throw error;
+  if (src.length <= 0) throw integerOrDecimalError(orig);
   const re_integer = /^(\d+)?/g;
   const result_integer = re_integer.exec(src);
-  if (result_integer[0].length === 0) throw error;
+  if (result_integer[0].length === 0) throw integerOrDecimalError(orig);
   num += result_integer[1];
   src = src.substring(re_integer.lastIndex);
   if (src[0] === ".") {
-    if (num.length > 12) throw error;
+    if (num.length > 12) throw integerOrDecimalError(orig);
     const re_decimal = /^(\.\d+)?/g;
     const result_decimal = re_decimal.exec(src);
     src = src.substring(re_decimal.lastIndex);
-    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw error;
+    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw integerOrDecimalError(orig);
     num += result_decimal[1];
-    if (num.length > 16) throw error;
+    if (num.length > 16) throw integerOrDecimalError(orig);
     value = parseFloat(num) * sign;
   } else {
-    if (num.length > 15) throw error;
+    if (num.length > 15) throw integerOrDecimalError(orig);
     value = parseInt(num) * sign;
-    if (isInvalidInt(value)) throw parseError(num, INTEGER_DECIMAL);
+    if (isInvalidInt(value)) throw integerOrDecimalError(num);
   }
   return parsedValue(value, src);
 }
@@ -18281,19 +20162,23 @@ function serializeDate(value) {
 */
 function serializeDecimal(value) {
   const roundedValue = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.roundToEven)(value, 3);
-  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) throw serializeError(value, DECIMAL);
+  if (Math.abs(roundedValue) >= 0xe8d4a51000) throw serializeError(value, DECIMAL);
   const stringValue = roundedValue.toString();
   return stringValue.includes(".") ? stringValue : `${stringValue}.0`;
 }
 
 //#endregion
 //#region src/serialize/serializeString.ts
+const ESCAPE_OR_CONTROL_REGEX = /[\x00-\x1f\x7f"\\]/;
+const BACKSLASH_REGEX = /\\/g;
+const DQUOTE_REGEX = /"/g;
 /**
 * @internal
 */
 function serializeString(value) {
+  if (ESCAPE_OR_CONTROL_REGEX.test(value) === false) return `"${value}"`;
   if (STRING_REGEX.test(value)) throw serializeError(value, STRING);
-  return `"${value.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`)}"`;
+  return `"${value.replace(BACKSLASH_REGEX, "\\\\").replace(DQUOTE_REGEX, "\\\"")}"`;
 }
 
 //#endregion
@@ -18313,12 +20198,13 @@ function symbolToStr(symbol) {
 
 //#endregion
 //#region src/serialize/serializeToken.ts
+const TOKEN_REGEX = /^[a-zA-Z*][!#$%&'*+\-.^_`|~\w:/]*$/;
 /**
 * @internal
 */
 function serializeToken(token) {
   const value = symbolToStr(token);
-  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) throw serializeError(value, TOKEN);
+  if (TOKEN_REGEX.test(value) === false) throw serializeError(value, TOKEN);
   return value;
 }
 
@@ -18354,7 +20240,13 @@ function serializeBareItem(value) {
 * @internal
 */
 function serializeKey(value) {
-  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) throw serializeError(value, KEY);
+  if (typeof value !== "string" || value.length === 0) throw serializeError(value, KEY);
+  let code = value.charCodeAt(0);
+  if ((code < 97 || code > 122) && code !== 42) throw serializeError(value, KEY);
+  for (let i = 1; i < value.length; i++) {
+    code = value.charCodeAt(i);
+    if ((code < 97 || code > 122) && (code < 48 || code > 57) && code !== 95 && code !== 45 && code !== 46 && code !== 42) throw serializeError(value, KEY);
+  }
   return value;
 }
 
@@ -18365,10 +20257,13 @@ function serializeKey(value) {
 */
 function serializeParams(params) {
   if (params == null) return "";
-  return Object.entries(params).map(([key, value]) => {
-    if (value === true) return `;${serializeKey(key)}`;
-    return `;${serializeKey(key)}=${serializeBareItem(value)}`;
-  }).join("");
+  let output = "";
+  for (const key of Object.keys(params)) {
+    const value = params[key];
+    output += `;${serializeKey(key)}`;
+    if (value !== true) output += `=${serializeBareItem(value)}`;
+  }
+  return output;
 }
 
 //#endregion
@@ -18382,11 +20277,41 @@ function serializeItem(value) {
 
 //#endregion
 //#region src/serialize/serializeInnerList.ts
+function serializeInnerList(value, params) {
+  let list;
+  if (Array.isArray(value)) list = value;else {
+    list = value.value;
+    params = value.params;
+  }
+  let output = "(";
+  for (let i = 0; i < list.length; i++) {
+    if (i > 0) output += " ";
+    output += serializeItem(list[i]);
+  }
+  return `${output})${serializeParams(params)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeDictMember.ts
 /**
+* Serialize one dictionary member: the key, then the parameters alone for a `true` value, otherwise `=` and the member.
+*
 * @internal
 */
-function serializeInnerList(value) {
-  return `(${value.value.map(serializeItem).join(" ")})${serializeParams(value.params)}`;
+function serializeDictMember(key, member) {
+  const output = serializeKey(key);
+  if (member instanceof SfItem) {
+    const {
+      value,
+      params
+    } = member;
+    if (value === true) return `${output}${serializeParams(params)}`;
+    if (Array.isArray(value)) return `${output}=${serializeInnerList(value, params)}`;
+    return `${output}=${serializeBareItem(value)}${serializeParams(params)}`;
+  }
+  if (member === true) return output;
+  if (Array.isArray(member)) return `${output}=${serializeInnerList(member)}`;
+  return `${output}=${serializeBareItem(member)}`;
 }
 
 //#endregion
@@ -18394,27 +20319,17 @@ function serializeInnerList(value) {
 /**
 * @internal
 */
-function serializeDict(dict, options = {
-  whitespace: true
-}) {
+function serializeDict(dict, options) {
   if (typeof dict !== "object" || dict == null) throw serializeError(dict, DICT);
-  const entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
-  const optionalWhiteSpace = options?.whitespace ? " " : "";
-  return Array.from(entries).map(([key, item]) => {
-    if (item instanceof SfItem === false) item = new SfItem(item);
-    let output = serializeKey(key);
-    if (item.value === true) output += serializeParams(item.params);else {
-      output += "=";
-      if (Array.isArray(item.value)) output += serializeInnerList(item);else output += serializeItem(item);
-    }
-    return output;
-  }).join(`,${optionalWhiteSpace}`);
+  const parts = [];
+  if (dict instanceof Map) dict.forEach((member, key) => parts.push(serializeDictMember(key, member)));else for (const key of Object.keys(dict)) parts.push(serializeDictMember(key, dict[key]));
+  return parts.join(options?.whitespace === false ? "," : ", ");
 }
 
 //#endregion
 //#region src/encodeSfDict.ts
 /**
-* Encode an object into a structured field dictionary
+* Encode a structured field dictionary to a string
 *
 * @param value - The structured field dictionary to encode
 * @param options - Encoding options
@@ -18430,8 +20345,28 @@ function encodeSfDict(value, options) {
 //#endregion
 //#region src/encodeSfItem.ts
 function encodeSfItem(value, params) {
-  if (!(value instanceof SfItem)) value = new SfItem(value, params);
-  return serializeItem(value);
+  if (value instanceof SfItem) return serializeItem(value);
+  return `${serializeBareItem(value)}${serializeParams(params)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeMember.ts
+/**
+* Serialize a list member: an inner list when the value is an array, an item otherwise.
+*
+* @internal
+*/
+function serializeMember(member) {
+  if (member instanceof SfItem) {
+    const {
+      value,
+      params
+    } = member;
+    if (Array.isArray(value)) return serializeInnerList(value, params);
+    return `${serializeBareItem(value)}${serializeParams(params)}`;
+  }
+  if (Array.isArray(member)) return serializeInnerList(member);
+  return serializeBareItem(member);
 }
 
 //#endregion
@@ -18439,23 +20374,21 @@ function encodeSfItem(value, params) {
 /**
 * @internal
 */
-function serializeList(list, options = {
-  whitespace: true
-}) {
+function serializeList(list, options) {
   if (Array.isArray(list) === false) throw serializeError(list, LIST);
-  const optionalWhiteSpace = options?.whitespace ? " " : "";
-  return list.map(item => {
-    if (item instanceof SfItem === false) item = new SfItem(item);
-    const i = item;
-    if (Array.isArray(i.value)) return serializeInnerList(i);
-    return serializeItem(i);
-  }).join(`,${optionalWhiteSpace}`);
+  const separator = options?.whitespace === false ? "," : ", ";
+  let output = "";
+  for (let i = 0; i < list.length; i++) {
+    if (i > 0) output += separator;
+    output += serializeMember(list[i]);
+  }
+  return output;
 }
 
 //#endregion
 //#region src/encodeSfList.ts
 /**
-* Encode a list into a structured field dictionary
+* Encode a structured field list to a string
 *
 * @param value - The structured field list to encode
 * @param options - Encoding options
@@ -18572,6 +20505,7 @@ const base64decode = decodeBase64;
 
 //#endregion
 //#region src/encodeBase64.ts
+const CHUNK_SIZE = 32768;
 /**
 * Encodes binary data to base64
 *
@@ -18579,9 +20513,17 @@ const base64decode = decodeBase64;
 * @returns The base64 encoded string
 *
 * @public
+*
+* @example
+* {@includeCode ../test/encodeBase64.test.ts#example}
 */
 function encodeBase64(binary) {
-  return btoa(String.fromCharCode(...binary));
+  let text = "";
+  for (let i = 0; i < binary.length; i += CHUNK_SIZE) {
+    const chunk = binary.subarray(i, i + CHUNK_SIZE);
+    text += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(text);
 }
 
 //#endregion
@@ -18622,12 +20564,11 @@ function convertUint8ToUint16(input) {
 //#endregion
 //#region src/isArrayBufferLike.ts
 /**
-* Checks if the given value is `ArrayBufferLike` (i.e. an `ArrayBuffer`
-* or a `SharedArrayBuffer`).
+* Checks if the given value is `ArrayBufferLike`: an `ArrayBuffer` or a
+* `SharedArrayBuffer`.
 *
-* This function safely handles environments where
-* `SharedArrayBuffer` is not defined, such as non-cross-origin
-* isolated browser contexts.
+* The function also works where `SharedArrayBuffer` is not defined, such as
+* browser contexts without cross-origin isolation.
 *
 * @param value - The value to check.
 * @returns `true` if the value is an `ArrayBuffer` or `SharedArrayBuffer`.
@@ -18680,8 +20621,8 @@ const UTF_8 = "utf-8";
 //#endregion
 //#region src/decodeText.ts
 /**
-* Converts an ArrayBuffer or ArrayBufferView to a string. Similar to `TextDecoder.decode`
-* but with a fallback for environments that don't support `TextDecoder`.
+* Converts an ArrayBuffer or ArrayBufferView to a string. The function works like
+* `TextDecoder.decode` and also supports environments without `TextDecoder`.
 *
 * @param data - The data to decode.
 * @param options - The options for the decoding.
@@ -18768,8 +20709,8 @@ function decodeText(data, options = {}) {
 //#endregion
 //#region src/encodeText.ts
 /**
-* Converts a string to a Uint8Array. Similar to `TextEncoder.encode`
-* but with a fallback for environments that don't support `TextEncoder`.
+* Converts a string to a Uint8Array. The function works like
+* `TextEncoder.encode` and also supports environments without `TextEncoder`.
 *
 * @param data - The string to encode.
 * @returns The Uint8Array representation of the string.
@@ -18800,10 +20741,10 @@ const Encoding = {
 //#endregion
 //#region src/getBandwidthBps.ts
 /**
-* Converts a ResourceTiming sample to bandwidth in bits per second (bps).
+* Converts a ResourceTiming sample to bandwidth in bits per second.
 *
 * @param sample - A ResourceTiming sample
-* @returns
+* @returns The bandwidth in bits per second.
 *
 * @public
 */
@@ -18815,7 +20756,7 @@ function getBandwidthBps(sample) {
 //#endregion
 //#region src/getBaseUrl.ts
 /**
-* Get the base URL from a full URL or a URL object.
+* Gets the base URL from a full URL or a URL object.
 *
 * @param fullUrl - The full URL or URL object.
 * @returns The base URL.
@@ -18871,8 +20812,8 @@ const RequestResponseType = {
 //#endregion
 //#region src/roundToEven.ts
 /**
-* This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
-* This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
+* Rounds a value with the procedure from step 2 of the "Serializing a Decimal" specification.
+* The style is known as "even rounding", "banker's rounding", or "commercial rounding".
 *
 * @param value - The value to round
 * @param precision - The number of decimal places to round to
@@ -18958,7 +20899,7 @@ function unescapeHtml(text) {
 /**
 * Constructs a relative path from a URL.
 *
-* If `url` is already a relative path, or its origin differs from `base`, it is returned unchanged.
+* If `url` is already relative, or its origin differs from `base`, the function returns `url` unchanged.
 *
 * @param url - The destination URL
 * @param base - The base URL
@@ -18980,44 +20921,40 @@ function urlToRelativePath(url, base) {
   if (to.origin !== from.origin) return url;
   const toPath = to.pathname.split("/").slice(1);
   const fromPath = from.pathname.split("/").slice(1, -1);
-  const length = Math.min(toPath.length, fromPath.length);
-  for (let i = 0; i < length; i++) {
-    if (toPath[i] !== fromPath[i]) break;
-    toPath.shift();
-    fromPath.shift();
-  }
-  while (fromPath.length) {
-    fromPath.shift();
-    toPath.unshift("..");
-  }
-  return toPath.join("/") + to.search + to.hash;
+  let common = 0;
+  while (common < toPath.length - 1 && common < fromPath.length && toPath[common] === fromPath[common]) common++;
+  const ups = fromPath.length - common;
+  let relativePath = "../".repeat(ups) + toPath.slice(common).join("/");
+  if (ups === 0 && (relativePath === "" || relativePath.startsWith("/") || toPath[common].includes(":"))) relativePath = "./" + relativePath;
+  return relativePath + to.search + to.hash;
 }
 
 //#endregion
 //#region src/uuid.ts
 /**
-* Generate a random v4 UUID
+* Generates a random v4 UUID
 *
 * @returns A random v4 UUID
 *
 * @public
+*
+* @example
+* {@includeCode ../test/uuid.test.ts#example}
 */
 function uuid() {
   try {
     return crypto.randomUUID();
   } catch (error) {
     try {
+      const bytes = crypto.getRandomValues(new Uint8Array(16));
+      bytes[6] = bytes[6] & 15 | 64;
+      bytes[8] = bytes[8] & 63 | 128;
+      return arrayBufferToUuid(bytes.buffer);
+    } catch (error$1) {
       const url = URL.createObjectURL(new Blob());
       const uuid$1 = url.toString();
       URL.revokeObjectURL(url);
       return uuid$1.slice(uuid$1.lastIndexOf("/") + 1);
-    } catch (error$1) {
-      let dt = (/* @__PURE__ */new Date()).getTime();
-      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
-        const r = (dt + Math.random() * 16) % 16 | 0;
-        dt = Math.floor(dt / 16);
-        return (c == "x" ? r : r & 3 | 8).toString(16);
-      });
     }
   }
 }
@@ -19079,7 +21016,7 @@ function getElementsByName(node, name, found = []) {
 }
 
 //#endregion
-//#region src/parseXml.ts
+//#region src/scan.ts
 const OPEN_BRACKET_CC = 60;
 const CLOSE_BRACKET_CC = 62;
 const MINUS_CC = 45;
@@ -19090,13 +21027,260 @@ const SINGLE_QUOTE_CC = 39;
 const DOUBLE_QUOTE_CC = 34;
 const OPEN_CORNER_BRACKET_CC = 91;
 const CLOSE_CORNER_BRACKET_CC = 93;
-const NAME_SPACER_SET = new Set([13, 10, 9, 62, 47, 61, 32]);
+const AMPERSAND_CC = 38;
+const EQUALS_CC = 61;
+const COLON_CC = 58;
+const SPACE_CC = 32;
+const TAB_CC = 9;
+const CR_CC = 13;
+const LF_CC = 10;
+const UPPER_A_CC = 65;
+const UPPER_Z_CC = 90;
+const LOWER_A_CC = 97;
+const LOWER_Z_CC = 122;
 /**
-* Parse XML into a JS object with no validation and some failure tolerance
+* Creates an error that reports the line and column of `pos`
+*/
+function syntaxError(input, pos, message) {
+  const parsedText = input.substring(0, pos).split("\n");
+  return /* @__PURE__ */new Error(message + "\nLine: " + (parsedText.length - 1) + "\nColumn: " + (parsedText[parsedText.length - 1].length + 1) + "\nChar: " + (pos < input.length ? input[pos] : "end of input"));
+}
+/**
+* Scans `input` from `start` to its end and reports every construct to `builder`. `stack` holds the open
+* elements with the document at index 0 and the innermost element on top, and `names` holds their tag
+* names. Elements still open when the input ends are appended to their parents.
+*
+* @param input - The whole XML document
+* @param start - The index to start scanning at
+* @param keepWhitespace - Whether whitespace-only text is reported and text is left untrimmed
+* @param builder - The builder callbacks
+* @param stack - The open-element stack, containing the document
+* @param names - The tag names of the open elements, containing `''` for the document
+*/
+function scan(input, start, keepWhitespace, builder, stack, names) {
+  const createElement = builder.createElement;
+  const appendChild = builder.appendChild;
+  const appendText = builder.appendText;
+  const appendCdata = builder.appendCdata;
+  const appendComment = builder.appendComment;
+  const appendDoctype = builder.appendDoctype;
+  const length = input.length;
+  let current = stack[stack.length - 1];
+  let currentName = names[names.length - 1];
+  let pos = start;
+  while (pos < length) {
+    let cc = input.charCodeAt(pos);
+    if (cc !== OPEN_BRACKET_CC) {
+      const textStart = pos;
+      let hasAmpersand = false;
+      let blank = true;
+      do {
+        if (cc !== SPACE_CC && cc !== LF_CC && cc !== CR_CC && cc !== TAB_CC) {
+          blank = false;
+          if (cc === AMPERSAND_CC) hasAmpersand = true;
+        }
+        cc = ++pos < length ? input.charCodeAt(pos) : 0;
+      } while (pos < length && cc !== OPEN_BRACKET_CC);
+      if (appendText !== void 0 && (keepWhitespace || !blank)) {
+        let text = input.slice(textStart, pos);
+        if (hasAmpersand) text = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(text);
+        if (!keepWhitespace) text = text.trim();
+        if (text.length > 0) appendText(current, text);
+      }
+      continue;
+    }
+    const next = pos + 1 < length ? input.charCodeAt(pos + 1) : 0;
+    if (next === SLASH_CC) {
+      const closeStart = pos + 2;
+      const nameEnd = closeStart + currentName.length;
+      const afterName = nameEnd < length ? input.charCodeAt(nameEnd) : 0;
+      const closesTag = input.startsWith(currentName, closeStart) && (nameEnd >= length || currentName !== "" && (afterName === CLOSE_BRACKET_CC || afterName === SPACE_CC || afterName === TAB_CC || afterName === CR_CC || afterName === LF_CC));
+      const end = input.indexOf(">", closeStart);
+      pos = end === -1 ? length : end;
+      if (!closesTag) throw syntaxError(input, pos, "Unexpected close tag");
+      if (pos < length) pos++;
+      if (stack.length > 1) {
+        const child = current;
+        stack.pop();
+        names.pop();
+        current = stack[stack.length - 1];
+        currentName = names[names.length - 1];
+        if (appendChild !== void 0) appendChild(current, child);
+      }
+      continue;
+    }
+    if (next === QUESTION_CC) {
+      const end = input.indexOf(">", pos + 2);
+      pos = end === -1 ? length : end + 1;
+      continue;
+    }
+    if (next === EXCLAMATION_CC) {
+      const third = pos + 2 < length ? input.charCodeAt(pos + 2) : 0;
+      if (third === MINUS_CC) {
+        const end = input.indexOf("-->", pos + 2);
+        const stop = end === -1 ? length : end + 3;
+        if (appendComment !== void 0) appendComment(current, input.slice(pos, stop));
+        pos = stop;
+        continue;
+      }
+      if (third === OPEN_CORNER_BRACKET_CC && pos + 8 < length && input.charCodeAt(pos + 8) === OPEN_CORNER_BRACKET_CC && input.startsWith("CDATA", pos + 3)) {
+        const end = input.indexOf("]]>", pos + 9);
+        if (appendCdata !== void 0) appendCdata(current, end === -1 ? input.slice(pos + 9) : input.slice(pos + 9, end));
+        pos = end === -1 ? length : end + 3;
+        continue;
+      }
+      const doctypeStart = pos + 1;
+      let bracketed = false;
+      pos += 2;
+      while (pos < length) {
+        cc = input.charCodeAt(pos);
+        if (cc === CLOSE_BRACKET_CC && !bracketed) break;
+        if (cc === OPEN_CORNER_BRACKET_CC) bracketed = true;else if (bracketed && cc === CLOSE_CORNER_BRACKET_CC) bracketed = false;
+        pos++;
+      }
+      if (appendDoctype !== void 0) appendDoctype(current, input.slice(doctypeStart, pos));
+      pos++;
+      continue;
+    }
+    const nameStart = ++pos;
+    let colon = -1;
+    cc = pos < length ? input.charCodeAt(pos) : 0;
+    while (pos < length && cc !== SPACE_CC && cc !== CLOSE_BRACKET_CC && cc !== SLASH_CC && cc !== EQUALS_CC && cc !== LF_CC && cc !== CR_CC && cc !== TAB_CC) {
+      if (cc === COLON_CC && colon === -1) colon = pos;
+      cc = ++pos < length ? input.charCodeAt(pos) : 0;
+    }
+    const name = input.slice(nameStart, pos);
+    const attributes = {};
+    while (pos < length && cc !== CLOSE_BRACKET_CC) {
+      if (cc >= UPPER_A_CC && cc <= UPPER_Z_CC || cc >= LOWER_A_CC && cc <= LOWER_Z_CC) {
+        const attributeStart = pos;
+        cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        while (pos < length && cc !== SPACE_CC && cc !== CLOSE_BRACKET_CC && cc !== SLASH_CC && cc !== EQUALS_CC && cc !== LF_CC && cc !== CR_CC && cc !== TAB_CC) cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        const attributeName = input.slice(attributeStart, pos);
+        if (cc !== EQUALS_CC) {
+          while (cc === SPACE_CC || cc === TAB_CC || cc === CR_CC || cc === LF_CC) cc = ++pos < length ? input.charCodeAt(pos) : 0;
+          if (cc !== EQUALS_CC) throw syntaxError(input, pos, "Malformed attribute \"" + attributeName + "\": expected \"=\" after name");
+        }
+        cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        if (cc !== SINGLE_QUOTE_CC && cc !== DOUBLE_QUOTE_CC) {
+          while (cc === SPACE_CC || cc === TAB_CC || cc === CR_CC || cc === LF_CC) cc = ++pos < length ? input.charCodeAt(pos) : 0;
+          if (cc !== SINGLE_QUOTE_CC && cc !== DOUBLE_QUOTE_CC) throw syntaxError(input, pos, "Malformed attribute \"" + attributeName + "\": expected quoted value after \"=\"");
+        }
+        const quote = cc;
+        const valueStart = ++pos;
+        let hasAmpersand = false;
+        cc = pos < length ? input.charCodeAt(pos) : 0;
+        while (pos < length && cc !== quote) {
+          if (cc === AMPERSAND_CC) hasAmpersand = true;
+          cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        }
+        if (pos >= length) throw new Error("Missing closing quote");
+        const value = input.slice(valueStart, pos);
+        attributes[attributeName] = hasAmpersand ? (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(value) : value;
+        cc = ++pos < length ? input.charCodeAt(pos) : 0;
+        continue;
+      }
+      cc = ++pos < length ? input.charCodeAt(pos) : 0;
+    }
+    const selfClosing = input.charCodeAt(pos - 1) === SLASH_CC;
+    pos++;
+    const element = createElement(current, name, attributes, colon === -1 ? name : name.slice(colon - nameStart + 1), colon === -1 ? null : name.slice(0, colon - nameStart));
+    if (selfClosing) {
+      if (appendChild !== void 0) appendChild(current, element);
+    } else {
+      stack.push(element);
+      names.push(name);
+      current = element;
+      currentName = name;
+    }
+  }
+  while (stack.length > 1) {
+    const child = current;
+    stack.pop();
+    names.pop();
+    current = stack[stack.length - 1];
+    if (appendChild !== void 0) appendChild(current, child);
+  }
+}
+
+//#endregion
+//#region src/parseXml.ts
+const HASH_CC = 35;
+/**
+* The parent element of a node whose parent is `parent`: null when the parent is the document
+*/
+function parentElementOf(parent) {
+  return parent.nodeName.charCodeAt(0) === HASH_CC ? null : parent;
+}
+/**
+* Creates a builder that produces the `XmlNode` tree
+*/
+function createTreeBuilder(keepComments, includeParentElement) {
+  const createLeaf = includeParentElement ? (parent, nodeName, nodeValue) => ({
+    nodeName,
+    nodeValue,
+    attributes: {},
+    childNodes: [],
+    parentElement: parentElementOf(parent)
+  }) : (_parent, nodeName, nodeValue) => ({
+    nodeName,
+    nodeValue,
+    attributes: {},
+    childNodes: []
+  });
+  const appendLeaf = (parent, nodeName, nodeValue) => {
+    parent.childNodes.push(createLeaf(parent, nodeName, nodeValue));
+  };
+  return {
+    createDocument: includeParentElement ? () => ({
+      nodeName: "#document",
+      nodeValue: null,
+      childNodes: [],
+      attributes: {},
+      parentElement: null
+    }) : () => ({
+      nodeName: "#document",
+      nodeValue: null,
+      childNodes: [],
+      attributes: {}
+    }),
+    createElement: includeParentElement ? (parent, nodeName, attributes, localName, prefix) => ({
+      nodeName,
+      nodeValue: null,
+      attributes,
+      childNodes: [],
+      prefix,
+      localName,
+      parentElement: parentElementOf(parent)
+    }) : (_parent, nodeName, attributes, localName, prefix) => ({
+      nodeName,
+      nodeValue: null,
+      attributes,
+      childNodes: [],
+      prefix,
+      localName
+    }),
+    appendChild: (parent, child) => {
+      parent.childNodes.push(child);
+    },
+    appendText: (parent, text) => appendLeaf(parent, "#text", text),
+    appendCdata: (parent, text) => appendLeaf(parent, "#cdata", text),
+    appendComment: keepComments ? (parent, text) => appendLeaf(parent, "#comment", text) : void 0,
+    appendDoctype: (parent, text) => appendLeaf(parent, "#doctype", text)
+  };
+}
+const TREE_BUILDERS = [/* @__PURE__ */createTreeBuilder(false, false), /* @__PURE__ */createTreeBuilder(true, false), /* @__PURE__ */createTreeBuilder(false, true), /* @__PURE__ */createTreeBuilder(true, true)];
+/**
+* Parse XML into a JS object
+*
+* The parser does not validate against a DTD or schema, and it does not check every
+* well-formedness constraint; the errors it does report are listed below under Throws.
+* Input cut off between tags yields the nodes parsed so far.
 *
 * @param input - The input XML string
 * @param options - Optional parsing options
 * @returns The parsed XML
+* @throws If an attribute is not `name="value"` or `name='value'`, if a quoted value is not closed, if a close tag does not match its open tag, or if a close tag appears with no element open
 *
 * @public
 *
@@ -19104,179 +21288,9 @@ const NAME_SPACER_SET = new Set([13, 10, 9, 62, 47, 61, 32]);
 * {@includeCode ../test/parseXml.test.ts#example}
 */
 function parseXml(input, options = {}) {
-  let pos = options.pos || 0;
-  const length = input.length;
-  const keepComments = !!options.keepComments;
-  const keepWhitespace = !!options.keepWhitespace;
-  const includeParentElement = !!options.includeParentElement;
-  /**
-  * Creates a text node
-  */
-  function createTextNode(value, nodeName = "#text") {
-    return {
-      nodeName,
-      nodeValue: value,
-      attributes: {},
-      childNodes: []
-    };
-  }
-  /**
-  * Parses a list of entries
-  */
-  function parseChildren(tagName = "") {
-    const children = [];
-    while (pos < length) if (input.charCodeAt(pos) === OPEN_BRACKET_CC) {
-      const next = input.charCodeAt(pos + 1);
-      if (next === SLASH_CC) {
-        const closeStart = pos + 2;
-        pos = input.indexOf(">", pos);
-        if (!input.startsWith(tagName, closeStart)) {
-          const parsedText = input.substring(0, pos).split("\n");
-          throw new Error("Unexpected close tag\nLine: " + (parsedText.length - 1) + "\nColumn: " + (parsedText[parsedText.length - 1].length + 1) + "\nChar: " + input[pos]);
-        }
-        if (pos + 1) pos += 1;
-        return children;
-      } else if (next === QUESTION_CC) {
-        pos = input.indexOf(">", pos);
-        pos++;
-        continue;
-      } else if (next === EXCLAMATION_CC) {
-        const third = input.charCodeAt(pos + 2);
-        if (third === MINUS_CC) {
-          const startCommentPos = pos;
-          while (pos !== -1 && !(input.charCodeAt(pos) === CLOSE_BRACKET_CC && input.charCodeAt(pos - 1) === MINUS_CC && input.charCodeAt(pos - 2) === MINUS_CC)) pos = input.indexOf(">", pos + 1);
-          if (pos === -1) pos = length;
-          if (keepComments) children.push(createTextNode(input.substring(startCommentPos, pos + 1), "#comment"));
-        } else if (third === OPEN_CORNER_BRACKET_CC && input.charCodeAt(pos + 8) === OPEN_CORNER_BRACKET_CC && input.startsWith("CDATA", pos + 3)) {
-          const cdataEndIndex = input.indexOf("]]>", pos);
-          if (cdataEndIndex === -1) {
-            children.push(createTextNode(input.substr(pos + 9), "#cdata"));
-            pos = length;
-          } else {
-            children.push(createTextNode(input.substring(pos + 9, cdataEndIndex), "#cdata"));
-            pos = cdataEndIndex + 3;
-          }
-          continue;
-        } else {
-          const startDoctype = pos + 1;
-          pos += 2;
-          let encapsuled = false;
-          while (pos < length && (input.charCodeAt(pos) !== CLOSE_BRACKET_CC || encapsuled)) {
-            const cc = input.charCodeAt(pos);
-            if (cc === OPEN_CORNER_BRACKET_CC) encapsuled = true;else if (encapsuled && cc === CLOSE_CORNER_BRACKET_CC) encapsuled = false;
-            pos++;
-          }
-          children.push(createTextNode(input.substring(startDoctype, pos), "#doctype"));
-        }
-        pos++;
-        continue;
-      }
-      const node = parseNode();
-      children.push(node);
-    } else {
-      const text = parseText();
-      if (keepWhitespace) {
-        if (text.length > 0) children.push(createTextNode(text));
-      } else {
-        const trimmed = text.trim();
-        if (trimmed.length > 0) children.push(createTextNode(trimmed));
-      }
-      pos++;
-    }
-    return children;
-  }
-  /**
-  * Returns the text outside of texts until the first '&lt;'
-  */
-  function parseText() {
-    const start = pos;
-    pos = input.indexOf("<", pos) - 1;
-    if (pos === -2) pos = length;
-    return (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(input.slice(start, pos + 1));
-  }
-  /**
-  * Returns text until the first nonAlphabetic letter
-  */
-  function parseName() {
-    const start = pos;
-    while (pos < length && !NAME_SPACER_SET.has(input.charCodeAt(pos))) pos++;
-    return input.slice(start, pos);
-  }
-  /**
-  * Parses the attributes of a node
-  */
-  function parseAttributes() {
-    const attributes = {};
-    while (pos < length && input.charCodeAt(pos) !== CLOSE_BRACKET_CC) {
-      const c = input.charCodeAt(pos);
-      if (c > 64 && c < 91 || c > 96 && c < 123) {
-        const name = parseName();
-        let value = "";
-        let code = input.charCodeAt(pos);
-        while (code !== SINGLE_QUOTE_CC && code !== DOUBLE_QUOTE_CC) {
-          pos++;
-          code = input.charCodeAt(pos);
-        }
-        if (code === SINGLE_QUOTE_CC || code === DOUBLE_QUOTE_CC) {
-          value = parseString();
-          if (pos === -1) throw new Error("Missing closing quote");
-        } else pos--;
-        attributes[name] = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(value);
-      }
-      pos++;
-    }
-    return attributes;
-  }
-  /**
-  * Parses a node
-  */
-  function parseNode() {
-    pos++;
-    const nodeName = parseName();
-    let localName = nodeName;
-    let prefix = null;
-    const nsIndex = nodeName.indexOf(":");
-    if (nsIndex !== -1) {
-      prefix = nodeName.slice(0, nsIndex);
-      localName = nodeName.slice(nsIndex + 1);
-    }
-    const attributes = parseAttributes();
-    let childNodes = [];
-    const prev = input.charCodeAt(pos - 1);
-    pos++;
-    if (prev !== SLASH_CC) childNodes = parseChildren(nodeName);
-    return {
-      nodeName,
-      nodeValue: null,
-      attributes,
-      childNodes,
-      prefix,
-      localName
-    };
-  }
-  /**
-  * Parses a string, that starts with a char and with the same usually ' or "
-  */
-  function parseString() {
-    const startChar = input[pos];
-    const startpos = pos + 1;
-    pos = input.indexOf(startChar, startpos);
-    return input.slice(startpos, pos);
-  }
-  /**
-  * Recursively sets parentElement on all nodes in the tree
-  */
-  function setParentElements(node, parent) {
-    node.parentElement = parent?.nodeName.startsWith("#") ? null : parent;
-    for (const child of node.childNodes) setParentElements(child, node);
-  }
-  const document = {
-    nodeName: "#document",
-    nodeValue: null,
-    childNodes: parseChildren(""),
-    attributes: {}
-  };
-  if (includeParentElement) setParentElements(document, null);
+  const builder = TREE_BUILDERS[(options.keepComments ? 1 : 0) | (options.includeParentElement ? 2 : 0)];
+  const document = builder.createDocument();
+  scan(input, options.pos || 0, !!options.keepWhitespace, builder, [document], [""]);
   return document;
 }
 
@@ -19313,234 +21327,6 @@ function serializeXml(xml) {
 
 //#endregion
 
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47-match/index.js":
-/*!********************************************!*\
-  !*** ./node_modules/bcp-47-match/index.js ***!
-  \********************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   basicFilter: function() { return /* binding */ basicFilter; },
-/* harmony export */   extendedFilter: function() { return /* binding */ extendedFilter; },
-/* harmony export */   lookup: function() { return /* binding */ lookup; }
-/* harmony export */ });
-/**
- * See <https://tools.ietf.org/html/rfc4647#section-3.1>
- * for more info on the algorithms.
- */
-
-/**
- * @typedef {string} Tag
- *   BCP-47 tag.
- * @typedef {Array<Tag>} Tags
- *   List of BCP-47 tags.
- * @typedef {string} Range
- *   RFC 4647 range.
- * @typedef {Array<Range>} Ranges
- *   List of RFC 4647 range.
- *
- * @callback Check
- *   An internal check.
- * @param {Tag} tag
- *   BCP-47 tag.
- * @param {Range} range
- *   RFC 4647 range.
- * @returns {boolean}
- *   Whether the range matches the tag.
- *
- * @typedef {FilterOrLookup<true>} Filter
- *   Filter: yields all tags that match a range.
- * @typedef {FilterOrLookup<false>} Lookup
- *   Lookup: yields the best tag that matches a range.
- */
-
-/**
- * @template {boolean} IsFilter
- *   Whether to filter or perform a lookup.
- * @callback FilterOrLookup
- *   A check.
- * @param {Tag|Tags} tags
- *   One or more BCP-47 tags.
- * @param {Range|Ranges|undefined} [ranges='*']
- *   One or more RFC 4647 ranges.
- * @returns {IsFilter extends true ? Tags : Tag|undefined}
- *   Result.
- */
-
-/**
- * Factory to perform a filter or a lookup.
- *
- * This factory creates a function that accepts a list of tags and a list of
- * ranges, and contains logic to exit early for lookups.
- * `check` just has to deal with one tag and one range.
- * This match function iterates over ranges, and for each range,
- * iterates over tags.
- * That way, earlier ranges matching any tag have precedence over later ranges.
- *
- * @template {boolean} IsFilter
- * @param {Check} check
- *   A check.
- * @param {IsFilter} filter
- *   Whether to filter or perform a lookup.
- * @returns {FilterOrLookup<IsFilter>}
- *   Filter or lookup.
- */
-function factory(check, filter) {
-  /**
-   * @param {Tag|Tags} tags
-   *   One or more BCP-47 tags.
-   * @param {Range|Ranges|undefined} [ranges='*']
-   *   One or more RFC 4647 ranges.
-   * @returns {IsFilter extends true ? Tags : Tag|undefined}
-   *   Result.
-   */
-  return function (tags, ranges) {
-    let left = cast(tags, 'tag');
-    const right = cast(ranges === null || ranges === undefined ? '*' : ranges, 'range');
-    /** @type {Tags} */
-    const matches = [];
-    let rightIndex = -1;
-    while (++rightIndex < right.length) {
-      const range = right[rightIndex].toLowerCase();
-
-      // Ignore wildcards in lookup mode.
-      if (!filter && range === '*') continue;
-      let leftIndex = -1;
-      /** @type {Tags} */
-      const next = [];
-      while (++leftIndex < left.length) {
-        if (check(left[leftIndex].toLowerCase(), range)) {
-          // Exit if this is a lookup and we have a match.
-          if (!filter) {
-            return /** @type {IsFilter extends true ? Tags : Tag|undefined} */left[leftIndex];
-          }
-          matches.push(left[leftIndex]);
-        } else {
-          next.push(left[leftIndex]);
-        }
-      }
-      left = next;
-    }
-
-    // If this is a filter, return the list.  If it’s a lookup, we didn’t find
-    // a match, so return `undefined`.
-    return /** @type {IsFilter extends true ? Tags : Tag|undefined} */filter ? matches : undefined;
-  };
-}
-
-/**
- * Basic Filtering (Section 3.3.1) matches a language priority list consisting
- * of basic language ranges (Section 2.1) to sets of language tags.
- *
- * @param {Tag|Tags} tags
- *   One or more BCP-47 tags.
- * @param {Range|Ranges|undefined} [ranges='*']
- *   One or more RFC 4647 ranges.
- * @returns {Tags}
- *   List of BCP-47 tags.
- */
-const basicFilter = factory(function (tag, range) {
-  return range === '*' || tag === range || tag.includes(range + '-');
-}, true);
-
-/**
- * Extended Filtering (Section 3.3.2) matches a language priority list
- * consisting of extended language ranges (Section 2.2) to sets of language
- * tags.
- *
- * @param {Tag|Tags} tags
- *   One or more BCP-47 tags.
- * @param {Range|Ranges|undefined} [ranges='*']
- *   One or more RFC 4647 ranges.
- * @returns {Tags}
- *   List of BCP-47 tags.
- */
-const extendedFilter = factory(function (tag, range) {
-  // 3.3.2.1
-  const left = tag.split('-');
-  const right = range.split('-');
-  let leftIndex = 0;
-  let rightIndex = 0;
-
-  // 3.3.2.2
-  if (right[rightIndex] !== '*' && left[leftIndex] !== right[rightIndex]) {
-    return false;
-  }
-  leftIndex++;
-  rightIndex++;
-
-  // 3.3.2.3
-  while (rightIndex < right.length) {
-    // 3.3.2.3.A
-    if (right[rightIndex] === '*') {
-      rightIndex++;
-      continue;
-    }
-
-    // 3.3.2.3.B
-    if (!left[leftIndex]) return false;
-
-    // 3.3.2.3.C
-    if (left[leftIndex] === right[rightIndex]) {
-      leftIndex++;
-      rightIndex++;
-      continue;
-    }
-
-    // 3.3.2.3.D
-    if (left[leftIndex].length === 1) return false;
-
-    // 3.3.2.3.E
-    leftIndex++;
-  }
-
-  // 3.3.2.4
-  return true;
-}, true);
-
-/**
- * Lookup (Section 3.4) matches a language priority list consisting of basic
- * language ranges to sets of language tags to find the one exact language tag
- * that best matches the range.
- *
- * @param {Tag|Tags} tags
- *   One or more BCP-47 tags.
- * @param {Range|Ranges|undefined} [ranges='*']
- *   One or more RFC 4647 ranges.
- * @returns {Tag|undefined}
- *   BCP-47 tag.
- */
-const lookup = factory(function (tag, range) {
-  let right = range;
-
-  /* eslint-disable-next-line no-constant-condition */
-  while (true) {
-    if (right === '*' || tag === right) return true;
-    let index = right.lastIndexOf('-');
-    if (index < 0) return false;
-    if (right.charAt(index - 2) === '-') index -= 2;
-    right = right.slice(0, index);
-  }
-}, false);
-
-/**
- * Validate tags or ranges, and cast them to arrays.
- *
- * @param {string|Array<string>} values
- * @param {string} name
- * @returns {Array<string>}
- */
-function cast(values, name) {
-  const value = values && typeof values === 'string' ? [values] : values;
-  if (!value || typeof value !== 'object' || !('length' in value)) {
-    throw new Error('Invalid ' + name + ' `' + value + '`, expected non-empty string');
-  }
-  return value;
-}
 
 /***/ }),
 
@@ -20343,15 +22129,16 @@ __webpack_require__.r(__webpack_exports__);
  *                maximumAllowedDrift: 100,
  *                enableBackgroundSyncAfterSegmentDownloadError: true,
  *                defaultTimingSource: {
- *                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
- *                    value: 'http://time.akamai.com/?iso&ms'
+ *                    scheme: 'urn:mpeg:dash:utc:http-iso:2014',
+ *                    value: 'https://time.akamai.com/?iso&ms'
  *                },
  *                artificialTimeOffsetToApply: 0
  *            },
  *            scheduling: {
  *                defaultTimeout: 500,
  *                lowLatencyTimeout: 0,
- *                scheduleWhilePaused: true
+ *                scheduleWhilePaused: true,
+ *                segmentListRetryDelay: 10000
  *            },
  *            text: {
  *                defaultEnabled: true,
@@ -20519,11 +22306,13 @@ __webpack_require__.r(__webpack_exports__);
  *                cid: null,
  *                rtp: null,
  *                rtpSafetyFactor: 5,
+ *                maxBufferedErrorCodes: 10,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
- *                includeInRequests: ['segment', 'mpd'],
+ *                includeInRequests: ['segment', 'mpd', 'license'],
  *                version: 1,
- *                eventTargets: []
+ *                eventTargets: [],
+ *                customKeys: []
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -20580,6 +22369,10 @@ __webpack_require__.r(__webpack_exports__);
  * Changing this value will lower or increase live stream latency.
  *
  * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
+ *
+ * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the maximum effective segment duration across all audio, video and fragmented text adaptation sets is used instead.
+ * The effective segment duration is the partial segment duration (segment duration / k) for adaptation sets using partial segments, and the full segment duration otherwise.
+ * Consequently, the partial segment duration is only applied if all these adaptation sets use partial segments.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
  * @property {number} [liveDelay=NaN]
@@ -20801,7 +22594,7 @@ __webpack_require__.r(__webpack_exports__);
  * @property {boolean} [enableBackgroundSyncAfterSegmentDownloadError=true]
  * Enables or disables the background sync after the player ran into a segment download error.
  *
- * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
+ * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-iso:2014',value: 'https://time.akamai.com/?iso&ms'}]
  * The default timing source to be used. The timing sources in the MPD take precedence over this one.
  *
  * @property {number} [artificialTimeOffsetToApply=0]
@@ -20817,6 +22610,9 @@ __webpack_require__.r(__webpack_exports__);
  * Default timeout between two consecutive low-latency segment scheduling attempts
  * @property {boolean} [scheduleWhilePaused=true]
  * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
+ * @property {number} [segmentListRetryDelay=10000]
+ * SegmentBase: Time in milliseconds after which the segment list (sidx) of a Representation is requested again once loading it failed.
+ * In the meantime the Representation is excluded from ABR decisions. The delay doubles with every failure in a row, up to eight times this value.
  */
 
 /**
@@ -21147,6 +22943,11 @@ __webpack_require__.r(__webpack_exports__);
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
+ * @property {number} [maxBufferedErrorCodes=10]
+ * The maximum number of error codes (ec) buffered per CMCD v2 report destination until its next report.
+ * When the limit is reached, the oldest code is dropped. This bounds the buffer of a destination that does not report again.
+ *
+ * If not specified this value defaults to 10.
  * @property {number} [mode="query"]
  * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
  *
@@ -21156,13 +22957,24 @@ __webpack_require__.r(__webpack_exports__);
  * @property {Array.<string>} [includeInRequests]
  * Specifies which HTTP GET requests shall carry parameters.
  *
- * If not specified this value defaults to ['segment', 'mpd].
+ * Possible values are 'segment', 'mpd', 'xlink', 'steering', 'other' and 'license'.
+ *
+ * If not specified this value defaults to ['segment', 'mpd', 'license'].
  * @property {number} [version=1]
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
  * @property {Array.<CmcdEventTarget>} [eventTargets]
  * List of CMCD reporting targets.
+ * @property {Array.<CmcdCustomKey>} [customKeys=[]]
+ * Custom CMCD keys to include in reports as persistent session data, e.g. [{ key: 'org.svta-p-n', value: 'dash.js' }].
+ *
+ * Per the CMCD specification, custom keys must carry a hyphenated prefix (reverse-DNS syntax recommended)
+ * to avoid namespace collisions, e.g. 'com.example-mykey'. Keys without a valid prefix are ignored.
+ * See the SVTA CMCD custom keys registry for registered keys.
+ *
+ * Note: event/response targets filter keys by their own enabledKeys; add custom keys there to include
+ * them in target reports.
  */
 
 /**
@@ -21177,10 +22989,19 @@ __webpack_require__.r(__webpack_exports__);
  * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {Array.<string>} [includeInRequests]
- * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {Array.<string>} [responseReceivedTypes]
+ * Types of requests whose responses trigger a response received (rr) report (e.g., 'mpd', 'segment').
+ * If not specified, rr is reported for every request type.
  * @property {number} [batchSize]
  * The batch size for the CMCD reporting.
+ */
+
+/**
+ * @typedef {Object} CmcdCustomKey
+ * @property {string} key
+ * The custom key name. Must carry a hyphenated prefix, e.g. 'com.example-mykey'.
+ * @property {string|number|boolean} value
+ * The value reported for the custom key.
  */
 
 /**
@@ -21514,7 +23335,7 @@ function Settings() {
         maximumAllowedDrift: 100,
         enableBackgroundSyncAfterSegmentDownloadError: true,
         defaultTimingSource: {
-          scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+          scheme: 'urn:mpeg:dash:utc:http-iso:2014',
           value: 'https://time.akamai.com/?iso&ms'
         },
         artificialTimeOffsetToApply: 0
@@ -21522,7 +23343,8 @@ function Settings() {
       scheduling: {
         defaultTimeout: 500,
         lowLatencyTimeout: 0,
-        scheduleWhilePaused: true
+        scheduleWhilePaused: true,
+        segmentListRetryDelay: 10000
       },
       text: {
         defaultEnabled: true,
@@ -21718,11 +23540,13 @@ function Settings() {
         cid: null,
         rtp: null,
         rtpSafetyFactor: 5,
+        maxBufferedErrorCodes: 10,
         mode: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_MODE_QUERY,
         enabledKeys: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_KEYS,
-        includeInRequests: ['segment', 'mpd'],
+        includeInRequests: ['segment', 'mpd', 'license'],
         version: 1,
-        eventTargets: []
+        eventTargets: [],
+        customKeys: []
       },
       cmsd: {
         enabled: false,
@@ -22189,7 +24013,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   getVersionString: function() { return /* binding */ getVersionString; }
 /* harmony export */ });
-const VERSION = '5.2.1';
+const VERSION = '5.3.0';
 function getVersionString() {
   return VERSION;
 }
@@ -22694,6 +24518,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _svta_cml_id3__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @svta/cml-id3 */ "./node_modules/@svta/cml-id3/dist/index.js");
 /* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../core/Debug.js */ "./src/core/Debug.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -22739,16 +24564,18 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 /**
  * @module DashAdapter
  * @description The DashAdapter module can be accessed using the MediaPlayer API getDashAdapter()
  */
 
 function DashAdapter() {
-  let instance, dashManifestModel, patchManifestModel, settings, voPeriods, constants, cea608parser;
+  let instance, logger, dashManifestModel, patchManifestModel, settings, voPeriods, constants, cea608parser;
   const context = this.context;
   const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
   function setup() {
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance().getLogger(instance);
     dashManifestModel = (0,_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
     patchManifestModel = (0,_models_PatchManifestModel_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
     settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
@@ -23105,6 +24932,46 @@ function DashAdapter() {
     const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
     voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation, mediaInfo);
     return voReps;
+  }
+
+  /**
+   * Returns the fragment duration to be used for the live delay calculation for the period given by streamInfo.
+   * For SSR/L3D content using partial segments (k > 1) the request unit at the live edge is the partial segment,
+   * so the effective duration is segmentDuration / k. Without partial segments streamInfo.manifestInfo.maxFragmentDuration is used.
+   * @param {object} streamInfo
+   * @returns {number} fragment duration in seconds, or NaN
+   * @memberOf module:DashAdapter
+   * @instance
+   */
+  function getFragmentDurationForLiveDelayCalculation(streamInfo) {
+    const manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
+    const fallbackFragmentDuration = manifestInfo && Number.isFinite(manifestInfo.maxFragmentDuration) ? manifestInfo.maxFragmentDuration : NaN;
+    try {
+      let hasPartialSegments = false;
+      let maxEffectiveSegmentDuration = NaN;
+      const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
+      dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod).forEach(voAdaptation => {
+        if (voAdaptation.type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].VIDEO && voAdaptation.type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].AUDIO && voAdaptation.type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].TEXT) {
+          return;
+        }
+        dashManifestModel.getRepresentationsForAdaptation(voAdaptation).forEach(voRepresentation => {
+          if (voRepresentation && !isNaN(voRepresentation.segmentDuration) && voRepresentation.segmentDuration > 0) {
+            if (voRepresentation.usesPartialSegments()) {
+              hasPartialSegments = true;
+            }
+            const effectiveSegmentDuration = voRepresentation.getEffectiveSegmentDuration();
+            maxEffectiveSegmentDuration = isNaN(maxEffectiveSegmentDuration) ? effectiveSegmentDuration : Math.max(maxEffectiveSegmentDuration, effectiveSegmentDuration);
+          }
+        });
+      });
+      if (hasPartialSegments) {
+        return maxEffectiveSegmentDuration;
+      }
+      return fallbackFragmentDuration;
+    } catch (e) {
+      logger.warn('Could not derive effective segment duration for live delay calculation, falling back to maxFragmentDuration: ' + e);
+      return fallbackFragmentDuration;
+    }
   }
 
   /**
@@ -23915,6 +25782,7 @@ function DashAdapter() {
     getEssentialProperties,
     getEvent,
     getEventsFor,
+    getFragmentDurationForLiveDelayCalculation,
     getFramerate,
     getIndexForRepresentation,
     getIsDVB,
@@ -24090,6 +25958,11 @@ function DashHandler(config) {
   }
   function isLastSegmentRequested(representation, bufferingTime) {
     if (!representation || !lastSegment) {
+      return false;
+    }
+
+    // SegmentBase and BaseURL: without a segment list (not loaded yet or failed) the last segment can not have been requested
+    if (!representation.hasSegments() && !representation.segments) {
       return false;
     }
 
@@ -25728,6 +27601,7 @@ __webpack_require__.r(__webpack_exports__);
   ORDER: 'order',
   ORIGINAL_MPD_ID: 'mpdId',
   ORIGINAL_PUBLISH_TIME: 'originalPublishTime',
+  OUTPUT_PROTECTION: 'OutputProtection',
   PATCH_LOCATION: 'PatchLocation',
   PERIOD: 'Period',
   PRESELECTION: 'Preselection',
@@ -26374,8 +28248,10 @@ ContentSteeringController.__dashjs_factory_name = 'ContentSteeringController';
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/SegmentsUtils.js */ "./src/dash/utils/SegmentsUtils.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/SegmentsUtils.js */ "./src/dash/utils/SegmentsUtils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -26410,8 +28286,14 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+// The retry delay doubles with every failed segment list load in a row, up to this factor of segmentListRetryDelay
+const MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR = 8;
 function RepresentationController(config) {
   config = config || {};
+  const context = this.context;
   const eventBus = config.eventBus;
   const events = config.events;
   const abrController = config.abrController;
@@ -26421,11 +28303,13 @@ function RepresentationController(config) {
   const type = config.type;
   const streamInfo = config.streamInfo;
   const segmentsController = config.segmentsController;
+  const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance();
   let isDynamic = config.isDynamic;
-  let instance, voAvailableRepresentations, currentVoRepresentation;
+  let instance, voAvailableRepresentations, currentVoRepresentation, hasSegmentData, logger, segmentListFailures, segmentListLoads;
   function setup() {
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance().getLogger(instance);
     resetInitialSettings();
-    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_4__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
   }
   function getStreamId() {
     return streamInfo.id;
@@ -26473,9 +28357,12 @@ function RepresentationController(config) {
   function resetInitialSettings() {
     currentVoRepresentation = null;
     voAvailableRepresentations = [];
+    hasSegmentData = false;
+    segmentListFailures = new WeakMap();
+    segmentListLoads = new WeakMap();
   }
   function reset() {
-    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_4__["default"].MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     resetInitialSettings();
   }
   function updateData(availableRepresentations, isFragmented, selectedRepresentationId) {
@@ -26483,15 +28370,27 @@ function RepresentationController(config) {
       voAvailableRepresentations = availableRepresentations;
       const selectedRepresentation = getRepresentationById(selectedRepresentationId);
       _setCurrentVoRepresentation(selectedRepresentation);
-      if (type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].ENHANCEMENT && type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && (type !== _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || !isFragmented)) {
+
+      // Non-fragmented text (e.g. a single WebVTT file) has no segment data to load
+      hasSegmentData = type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO || type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].ENHANCEMENT || type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO || type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && isFragmented;
+      if (!hasSegmentData) {
         _endDataUpdate();
         resolve();
         return;
       }
+
+      // The dependent Representation is scheduled on as well (e.g. the base layer of an enhancement Representation)
+      const dependentRepresentationId = selectedRepresentation?.dependentRepresentation?.id;
       const promises = [];
       for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
         const currentRep = voAvailableRepresentations[i];
-        promises.push(_updateRepresentation(currentRep));
+        const isSelected = currentRep.id === selectedRepresentationId || currentRep.id === dependentRepresentationId;
+        const update = _updateRepresentation(currentRep, isSelected);
+        // Share the segment list load with loadSegmentList()
+        if (isSelected && !currentRep.hasSegments()) {
+          _trackSegmentListLoad(currentRep, update);
+        }
+        promises.push(update);
       }
       Promise.all(promises).then(() => {
         _onAllRepresentationsUpdated();
@@ -26511,7 +28410,7 @@ function RepresentationController(config) {
     }
     _endDataUpdate();
   }
-  function _updateRepresentation(currentRep) {
+  function _updateRepresentation(currentRep, isSelected) {
     return new Promise((resolve, reject) => {
       const hasInitialization = currentRep.hasInitialization();
       const hasSegments = currentRep.hasSegments();
@@ -26520,7 +28419,9 @@ function RepresentationController(config) {
       // otherwise, it means that a request has to be made to get initialization and/or segments information
       const promises = [];
       promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
-      promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
+      // For SegmentBase streams the segment list is only fetched for the Representation we
+      // are about to play. The others are loaded by the ScheduleController via loadSegmentList() once scheduled on.
+      promises.push(isSelected ? segmentsController.updateSegmentData(currentRep, hasSegments) : Promise.resolve());
       Promise.all(promises).then(data => {
         if (data[0] && !data[0].error) {
           currentRep = _onInitDataUpdated(currentRep, data[0]);
@@ -26556,7 +28457,7 @@ function RepresentationController(config) {
     let i, len, s, seg;
     for (i = 0, len = fragments ? fragments.length : 0; i < len; i++) {
       s = fragments[i];
-      seg = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_3__.getTimeBasedSegment)({
+      seg = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_5__.getTimeBasedSegment)({
         durationInTimescale: s.duration,
         fTimescale: s.timescale,
         index: count,
@@ -26585,7 +28486,7 @@ function RepresentationController(config) {
     if (currentRepresentation) {
       dashMetrics.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
     }
-    eventBus.trigger(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].REPRESENTATION_SWITCH, {
+    eventBus.trigger(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_4__["default"].REPRESENTATION_SWITCH, {
       mediaType: type,
       streamId: streamInfo.id,
       currentRepresentation
@@ -26639,12 +28540,65 @@ function RepresentationController(config) {
    * @param newRep
    */
   function prepareQualityChange(newRep) {
-    const voRepresentations = voAvailableRepresentations.filter(rep => {
-      return rep.id === newRep.id;
-    });
-    if (voRepresentations.length > 0) {
-      _setCurrentVoRepresentation(voRepresentations[0]);
+    const rep = getRepresentationById(newRep.id);
+    if (rep) {
+      _setCurrentVoRepresentation(rep);
+      // Start loading the segment list right away, so it overlaps with the init segment request
+      loadSegmentList(rep);
+      loadSegmentList(rep.dependentRepresentation);
     }
+  }
+
+  /**
+   * Loads the segment list of a SegmentBase Representation that was skipped in updateData().
+   * Concurrent calls for the same Representation share one request.
+   * @param newRep
+   * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded or the load failed recently
+   */
+  function loadSegmentList(newRep) {
+    if (!isSegmentListMissing(newRep)) {
+      return null;
+    }
+    const rep = getRepresentationById(newRep.id);
+    // A failed load is excluded from ABR and only retried after its retry delay, callers must not wait for it in the meantime
+    const failure = segmentListFailures.get(rep);
+    if (failure && Date.now() - failure.failedAt < failure.retryDelay) {
+      return null;
+    }
+    if (!segmentListLoads.has(rep)) {
+      _trackSegmentListLoad(rep, _updateRepresentation(rep, true));
+    }
+    return segmentListLoads.get(rep);
+  }
+  function _trackSegmentListLoad(rep, update) {
+    const load = update.catch(e => {
+      logger.warn(`Updating representation ${rep.id} for ${type} failed`, e);
+    }).then(() => {
+      // Ignore loads that outlived a reset() or an updateData() with new Representations
+      if (!rep.segments && voAvailableRepresentations.includes(rep)) {
+        const failureCount = (segmentListFailures.get(rep)?.failureCount || 0) + 1;
+        const retryDelay = settings.get().streaming.scheduling.segmentListRetryDelay * Math.min(2 ** (failureCount - 1), MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR);
+        segmentListFailures.set(rep, {
+          failureCount,
+          failedAt: Date.now(),
+          retryDelay
+        });
+        segmentListLoads.delete(rep);
+        abrController.excludeRepresentation(rep, retryDelay);
+      }
+      return rep;
+    });
+    segmentListLoads.set(rep, load);
+  }
+
+  /**
+   * SegmentBase: true while the segment list of the Representation is not loaded yet, or could not be loaded
+   * @param newRep
+   * @return {boolean}
+   */
+  function isSegmentListMissing(newRep) {
+    const rep = newRep ? getRepresentationById(newRep.id) : null;
+    return hasSegmentData && !!rep && !rep.hasSegments() && !rep.segments;
   }
   function _setCurrentVoRepresentation(value) {
     if (!currentVoRepresentation || currentVoRepresentation.id !== value.id) {
@@ -26667,6 +28621,8 @@ function RepresentationController(config) {
     getRepresentationById,
     getStreamId,
     getType,
+    isSegmentListMissing,
+    loadSegmentList,
     prepareQualityChange,
     reset,
     setIsDynamic,
@@ -26875,7 +28831,8 @@ function SegmentsController(config) {
     });
   }
   function updateSegmentData(voRepresentation, hasSegments) {
-    if (hasSegments) {
+    // The segment list is fetched once per Representation instance; callers may ask again (lazy SegmentBase loading).
+    if (hasSegments || voRepresentation.segments) {
       return Promise.resolve();
     }
     return segmentBaseController.getSegmentList({
@@ -27575,58 +29532,31 @@ function DashManifestModel() {
     return lang;
   }
   function getViewpointForAdaptation(adaptation) {
-    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT].length) {
-      return [];
-    }
-    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT].map(viewpoint => {
-      const vp = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      vp.init(viewpoint);
-      return vp;
-    });
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT, adaptation);
   }
   function getRolesForAdaptation(adaptation) {
     if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE].length) {
       return [];
     }
     return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE].map(role => {
-      // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
-      if (role.schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].DASH_ROLE_SCHEME_ID && role.value === 'Main') {
-        role.value = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAIN;
-      }
       const r = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
       r.init(role);
+
+      // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+      if (role.schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].DASH_ROLE_SCHEME_ID && role.value === 'Main') {
+        r.value = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAIN;
+      }
       return r;
     });
   }
   function getAccessibilityForAdaptation(adaptation) {
-    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY].length) {
-      return [];
-    }
-    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY].map(accessibility => {
-      const a = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      a.init(accessibility);
-      return a;
-    });
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY, adaptation);
   }
   function getAudioChannelConfigurationForAdaptation(adaptation) {
-    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].length) {
-      return [];
-    }
-    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
-      const acc = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      acc.init(audioChanCfg);
-      return acc;
-    });
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION, adaptation);
   }
   function getAudioChannelConfigurationForRepresentation(representation) {
-    if (!representation || !representation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION) || !representation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].length) {
-      return [];
-    }
-    return representation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
-      const acc = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      acc.init(audioChanCfg);
-      return acc;
-    });
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION, representation);
   }
   function getRepresentationSortFunction() {
     return (a, b) => a.bandwidth - b.bandwidth;
@@ -27890,16 +29820,14 @@ function DashManifestModel() {
       return 1;
     }
   }
-
-  // propertyType is one of { DashConstants.ESSENTIAL_PROPERTY, DashConstants.SUPPLEMENTAL_PROPERTY }
-  function _getProperties(propertyType, element) {
-    if (!element || !element.hasOwnProperty(propertyType) || !element[propertyType].length) {
+  function _getDescriptorTypes(propertyName, element) {
+    if (!element || !element.hasOwnProperty(propertyName) || !element[propertyName].length) {
       return [];
     }
-    return element[propertyType].map(property => {
-      const s = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
-      s.init(property);
-      return s;
+    return element[propertyName].map(data => {
+      const descriptor = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
+      descriptor.init(data);
+      return descriptor;
     });
   }
   function _getPropertiesCommonToAllRepresentations(propertyType, repr) {
@@ -27911,7 +29839,7 @@ function DashManifestModel() {
       return [];
     }
     if (repr.length === 1) {
-      return propertiesOfFirstRepresentation;
+      return propertiesOfFirstRepresentation.slice();
     }
 
     // now, only return properties present on all Representations
@@ -27948,13 +29876,13 @@ function DashManifestModel() {
     });
   }
   function getEssentialProperties(element) {
-    return _getProperties(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ESSENTIAL_PROPERTY, element);
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ESSENTIAL_PROPERTY, element);
   }
   function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
     return _getCombinedPropertiesForAdaptationSet(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ESSENTIAL_PROPERTY, adaptation);
   }
   function getSupplementalProperties(element) {
-    return _getProperties(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUPPLEMENTAL_PROPERTY, element);
+    return _getDescriptorTypes(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUPPLEMENTAL_PROPERTY, element);
   }
   function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
     return _getCombinedPropertiesForAdaptationSet(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUPPLEMENTAL_PROPERTY, adaptation);
@@ -28182,7 +30110,7 @@ function DashManifestModel() {
     }
   }
   function calcSegmentDuration(segmentTimeline) {
-    if (!segmentTimeline || !segmentTimeline.S) {
+    if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
       return NaN;
     }
     let s0 = segmentTimeline.S[0];
@@ -28190,11 +30118,12 @@ function DashManifestModel() {
     return s0.hasOwnProperty('d') ? s0.d : s1.t - s0.t;
   }
   function _getKValue(segmentTimeline) {
-    if (!segmentTimeline || !segmentTimeline.S) {
+    if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
       return 1;
     }
-    const s0 = segmentTimeline.S[0];
-    return s0.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].K) ? s0.k : 1;
+    // @k may vary between S elements; consumers of Representation.k (low latency mode, live delay) care about the live edge, which is the last S element
+    const s = segmentTimeline.S[segmentTimeline.S.length - 1];
+    return s.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].K) ? s.k : 1;
   }
   function _calcMseTimeOffset(representation) {
     // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
@@ -29062,7 +30991,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 // List of node that shall be represented as arrays
-const arrayNodes = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].BASE_URL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_COMPONENT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LABEL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LOCATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].METRICS, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PATCH_LOCATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRESELECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCER_REFERENCE_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REMOVE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPLACE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPORTING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].S, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_SEQUENCE_PROPERTIES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_URL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_DESCRIPTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].UTC_TIMING];
+const arrayNodes = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].BASE_URL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_COMPONENT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_STEERING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LABEL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LOCATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].METRICS, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PATCH_LOCATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRESELECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCER_REFERENCE_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REMOVE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPLACE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPORTING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].S, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_SEQUENCE_PROPERTIES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_URL, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_DESCRIPTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].UTC_TIMING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT];
 function DashParser(config) {
   config = config || {};
   const context = this.context;
@@ -29445,6 +31374,7 @@ class BaseMatcher {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseMatcher_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseMatcher.js */ "./src/dash/parser/matchers/BaseMatcher.js");
+/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -29476,16 +31406,25 @@ __webpack_require__.r(__webpack_exports__);
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @classdesc matches and converts xs:datetime to Date
+ * @classdesc matches and converts known timestamp attributes to Date
  */
+
 
 const SECONDS_IN_MIN = 60;
 const MINUTES_IN_HOUR = 60;
 const MILLISECONDS_IN_SECONDS = 1000;
 const datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+-])([0-9]{2})(?::?)([0-9]{2}))?/;
+
+// Only known timestamp attributes are converted; other strings may also start with a date.
+const dateTimeAttributes = {
+  [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].MPD]: [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_START_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AVAILABILITY_END_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PUBLISH_TIME],
+  Patch: [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PUBLISH_TIME, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ORIGINAL_PUBLISH_TIME],
+  LeapSecondInformation: ['nextLeapChangeTime'],
+  [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRODUCER_REFERENCE_TIME]: [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].WALL_CLOCK_TIME]
+};
 class DateTimeMatcher extends _BaseMatcher_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor() {
-    super((tagName, attrName, value) => datetimeRegex.test(value), str => {
+    super((tagName, attrName, value) => dateTimeAttributes.hasOwnProperty(tagName) && dateTimeAttributes[tagName].includes(attrName) && datetimeRegex.test(value), str => {
       const match = datetimeRegex.exec(str);
       let utcDate;
 
@@ -29712,9 +31651,12 @@ __webpack_require__.r(__webpack_exports__);
 
 const numericRegex = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/;
 const StringAttributeList = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ID];
+
+// DescriptorType@value is xs:string; converting numeric-looking values would alter them (e.g. "01" -> 1)
+const StringValueTagList = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ACCESSIBILITY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ASSET_IDENTIFIER, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CLIENT_DATA_REPORTING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].FRAME_PACKING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].OUTPUT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].RATING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPORTING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ROLE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SERVICE_DESCRIPTION_SCOPE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].UTC_TIMING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VIEWPOINT];
 class NumericMatcher extends _BaseMatcher_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor() {
-    super((tagName, attrName, value) => numericRegex.test(value) && StringAttributeList.indexOf(attrName) === -1, str => parseFloat(str));
+    super((tagName, attrName, value) => numericRegex.test(value) && StringAttributeList.indexOf(attrName) === -1 && !(attrName === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VALUE && StringValueTagList.indexOf(tagName) !== -1), str => parseFloat(str));
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (NumericMatcher);
@@ -31147,6 +33089,16 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
     const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate || representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
     const timeline = base.SegmentTimeline;
+
+    // A dynamic manifest can be read while the SegmentTimeline is absent or
+    // carries no S elements yet. Report that nothing is available instead of
+    // throwing; the next manifest refresh recovers.
+    if (!timeline || !timeline.S) {
+      return {
+        numberOfSegments: 0,
+        mediaTimeOfLastSignaledSegment: NaN
+      };
+    }
     let mediaTime = 0;
     let mediaTimeInSeconds = 0;
     let availableSegments = 0;
@@ -31190,6 +33142,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
     const segmentBase = _getSegmentBase(representation);
     const segmentTimeline = segmentBase.SegmentTimeline;
     const segmentURL = segmentBase.SegmentURL;
+
+    // Nothing to iterate while the timeline is absent or has no S elements
+    // yet; leave the caller with no segment rather than throwing.
+    if (!segmentTimeline || !segmentTimeline.S) {
+      return;
+    }
     let mediaTime = 0;
     let sElementCounterIncludingRepeats = -1;
     let parsedSElements, currentSElement, sElementCounter, j, repeat, fTimescale;
@@ -32736,6 +34694,12 @@ class Representation {
     this.timescale = 1;
     this.width = NaN;
   }
+  usesPartialSegments() {
+    return this.k > 1;
+  }
+  getEffectiveSegmentDuration() {
+    return this.usesPartialSegments() ? this.segmentDuration / this.k : this.segmentDuration;
+  }
   hasInitialization() {
     return this.initialization !== null || this.range !== null;
   }
@@ -34194,57 +36158,19 @@ ManifestUpdater.__dashjs_factory_name = 'ManifestUpdater';
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _controllers_AbrController_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./controllers/AbrController.js */ "./src/streaming/controllers/AbrController.js");
-/* harmony import */ var _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../externals/base64.js */ "./externals/base64.js");
-/* harmony import */ var _controllers_BaseURLController_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./controllers/BaseURLController.js */ "./src/streaming/controllers/BaseURLController.js");
-/* harmony import */ var _utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils/BoxParser.js */ "./src/streaming/utils/BoxParser.js");
-/* harmony import */ var _utils_Capabilities_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils/Capabilities.js */ "./src/streaming/utils/Capabilities.js");
-/* harmony import */ var _utils_CapabilitiesFilter_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./utils/CapabilitiesFilter.js */ "./src/streaming/utils/CapabilitiesFilter.js");
-/* harmony import */ var _controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./controllers/CmcdController.js */ "./src/streaming/controllers/CmcdController.js");
-/* harmony import */ var _controllers_CatchupController_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./controllers/CatchupController.js */ "./src/streaming/controllers/CatchupController.js");
-/* harmony import */ var _controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./controllers/ClientDataReportingController.js */ "./src/streaming/controllers/ClientDataReportingController.js");
-/* harmony import */ var _models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./models/CmsdModel.js */ "./src/streaming/models/CmsdModel.js");
-/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./constants/Constants.js */ "./src/streaming/constants/Constants.js");
-/* harmony import */ var _dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../dash/controllers/ContentSteeringController.js */ "./src/dash/controllers/ContentSteeringController.js");
-/* harmony import */ var _models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./models/CustomParametersModel.js */ "./src/streaming/models/CustomParametersModel.js");
-/* harmony import */ var _utils_DOMStorage_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./utils/DOMStorage.js */ "./src/streaming/utils/DOMStorage.js");
-/* harmony import */ var _utils_InitCache_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./utils/InitCache.js */ "./src/streaming/utils/InitCache.js");
-/* harmony import */ var _dash_DashAdapter_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../dash/DashAdapter.js */ "./src/dash/DashAdapter.js");
-/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
-/* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
-/* harmony import */ var _dash_DashMetrics_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../dash/DashMetrics.js */ "./src/dash/DashMetrics.js");
-/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var _utils_ErrorHandler_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./utils/ErrorHandler.js */ "./src/streaming/utils/ErrorHandler.js");
-/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./../core/errors/Errors.js */ "./src/core/errors/Errors.js");
-/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./../core/EventBus.js */ "./src/core/EventBus.js");
-/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./../core/events/Events.js */ "./src/core/events/Events.js");
-/* harmony import */ var _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./vo/ExternalSubtitle.js */ "./src/streaming/vo/ExternalSubtitle.js");
-/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _controllers_GapController_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./controllers/GapController.js */ "./src/streaming/controllers/GapController.js");
-/* harmony import */ var codem_isoboxer__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! codem-isoboxer */ "./node_modules/codem-isoboxer/dist/iso_boxer.js");
-/* harmony import */ var _ManifestLoader_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./ManifestLoader.js */ "./src/streaming/ManifestLoader.js");
-/* harmony import */ var _models_ManifestModel_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./models/ManifestModel.js */ "./src/streaming/models/ManifestModel.js");
-/* harmony import */ var _ManifestUpdater_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ./ManifestUpdater.js */ "./src/streaming/ManifestUpdater.js");
-/* harmony import */ var _controllers_MediaController_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ./controllers/MediaController.js */ "./src/streaming/controllers/MediaController.js");
-/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ./MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _models_MediaPlayerModel_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ./models/MediaPlayerModel.js */ "./src/streaming/models/MediaPlayerModel.js");
-/* harmony import */ var _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ./constants/MetricsConstants.js */ "./src/streaming/constants/MetricsConstants.js");
-/* harmony import */ var _controllers_PlaybackController_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ./controllers/PlaybackController.js */ "./src/streaming/controllers/PlaybackController.js");
-/* harmony import */ var _net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ./net/SchemeLoaderFactory.js */ "./src/streaming/net/SchemeLoaderFactory.js");
-/* harmony import */ var _dash_controllers_SegmentBaseController_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../dash/controllers/SegmentBaseController.js */ "./src/dash/controllers/SegmentBaseController.js");
-/* harmony import */ var _dash_controllers_ServiceDescriptionController_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../dash/controllers/ServiceDescriptionController.js */ "./src/dash/controllers/ServiceDescriptionController.js");
-/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../core/Settings.js */ "./src/core/Settings.js");
-/* harmony import */ var _controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./controllers/StreamController.js */ "./src/streaming/controllers/StreamController.js");
-/* harmony import */ var _text_TextController_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./text/TextController.js */ "./src/streaming/text/TextController.js");
-/* harmony import */ var _controllers_ThroughputController_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ./controllers/ThroughputController.js */ "./src/streaming/controllers/ThroughputController.js");
-/* harmony import */ var _dash_utils_TimelineConverter_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../dash/utils/TimelineConverter.js */ "./src/dash/utils/TimelineConverter.js");
-/* harmony import */ var _models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ./models/URIFragmentModel.js */ "./src/streaming/models/URIFragmentModel.js");
-/* harmony import */ var _streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ../streaming/utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
-/* harmony import */ var _models_VideoModel_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./models/VideoModel.js */ "./src/streaming/models/VideoModel.js");
-/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
-/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ./utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
-/* harmony import */ var _core_Version_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ../core/Version.js */ "./src/core/Version.js");
-/* harmony import */ var _svta_cml_608__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! @svta/cml-608 */ "./node_modules/@svta/cml-608/dist/index.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../core/errors/Errors.js */ "./src/core/errors/Errors.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _mediaplayer_CoreApi_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./mediaplayer/CoreApi.js */ "./src/streaming/mediaplayer/CoreApi.js");
+/* harmony import */ var _mediaplayer_CustomParametersApi_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./mediaplayer/CustomParametersApi.js */ "./src/streaming/mediaplayer/CustomParametersApi.js");
+/* harmony import */ var _mediaplayer_LifecycleApi_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./mediaplayer/LifecycleApi.js */ "./src/streaming/mediaplayer/LifecycleApi.js");
+/* harmony import */ var _mediaplayer_ManifestApi_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./mediaplayer/ManifestApi.js */ "./src/streaming/mediaplayer/ManifestApi.js");
+/* harmony import */ var _mediaplayer_MediaPlayerWiring_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./mediaplayer/MediaPlayerWiring.js */ "./src/streaming/mediaplayer/MediaPlayerWiring.js");
+/* harmony import */ var _mediaplayer_PlaybackApi_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./mediaplayer/PlaybackApi.js */ "./src/streaming/mediaplayer/PlaybackApi.js");
+/* harmony import */ var _mediaplayer_TextApi_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./mediaplayer/TextApi.js */ "./src/streaming/mediaplayer/TextApi.js");
+/* harmony import */ var _mediaplayer_TrackApi_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./mediaplayer/TrackApi.js */ "./src/streaming/mediaplayer/TrackApi.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -34289,44 +36215,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * The media types
  * @typedef {('video' | 'audio' | 'text' | 'image')} MediaType
@@ -34339,66 +36227,52 @@ __webpack_require__.r(__webpack_exports__);
  * events to build a robust DASH media player.
  */
 function MediaPlayer() {
-  /**
-   * @constant {string} STREAMING_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
-   * @inner
-   */
-  const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
-  /**
-   * @constant {string} PLAYBACK_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
-   * @inner
-   */
-  const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
-  /**
-   * @constant {string} ELEMENT_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a reference of an HTML5 video element
-   * @inner
-   */
-  const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
-  /**
-   * @constant {string} SOURCE_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a valid source stream.
-   * @inner
-   */
-  const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
-  /**
-   * @constant {string} MEDIA_PLAYER_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized.
-   * @inner
-   */
-  const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
-  /**
-   * @constant {string} ARRAY_NOT_SUPPORTED_ERROR error string thrown when settings object was called using an array.
-   * @inner
-   */
-  const ARRAY_NOT_SUPPORTED_ERROR = 'Array type not supported for settings!';
+  // Public API groups split out of this file. Each is a FactoryMaker class factory (so player.extend() works on them)
+  // and gets the shared `state` object plus a back-reference to the composed player instance.
+  const API_FACTORIES = [_mediaplayer_CoreApi_js__WEBPACK_IMPORTED_MODULE_5__["default"], _mediaplayer_LifecycleApi_js__WEBPACK_IMPORTED_MODULE_7__["default"], _mediaplayer_PlaybackApi_js__WEBPACK_IMPORTED_MODULE_10__["default"], _mediaplayer_TrackApi_js__WEBPACK_IMPORTED_MODULE_12__["default"], _mediaplayer_TextApi_js__WEBPACK_IMPORTED_MODULE_11__["default"], _mediaplayer_ManifestApi_js__WEBPACK_IMPORTED_MODULE_8__["default"], _mediaplayer_CustomParametersApi_js__WEBPACK_IMPORTED_MODULE_6__["default"]];
   const context = this.context;
-  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_22__["default"])(context).getInstance();
-  let settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_39__["default"])(context).getInstance();
-  const debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_19__["default"])(context).getInstance({
-    settings: settings
-  });
-  let instance, logger, source, protectionData, mediaPlayerInitialized, streamingInitialized, playbackInitialized, autoPlay, providedStartTime, abrController, throughputController, schemeLoaderFactory, timelineConverter, mediaController, protectionController, metricsReportingController, mssHandler, offlineController, adapter, mediaPlayerModel, customParametersModel, errHandler, baseURLController, capabilities, capabilitiesFilter, streamController, textController, gapController, playbackController, serviceDescriptionController, contentSteeringController, catchupController, dashMetrics, manifestModel, cmcdController, cmsdModel, videoModel, uriFragmentModel, domStorage, segmentBaseController, clientDataReportingController, retrieveManifestRequest;
+  let instance;
 
-  /*
-  ---------------------------------------------------------------------------
-       INIT FUNCTIONS
-   ---------------------------------------------------------------------------
-  */
+  // Shared with the API sub-modules (see _composeApis). Single source of truth for player state.
+  const state = {
+    abrController: null,
+    adapter: null,
+    autoPlay: true,
+    baseURLController: null,
+    contentSteeringController: null,
+    customParametersModel: null,
+    dashMetrics: null,
+    logger: null,
+    manifestModel: null,
+    mediaController: null,
+    mediaPlayerInitialized: false,
+    offlineController: null,
+    playbackController: null,
+    playbackInitialized: false,
+    protectionController: null,
+    protectionData: null,
+    providedStartTime: NaN,
+    retrieveManifestRequest: null,
+    settings: (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance(),
+    source: null,
+    streamController: null,
+    streamingInitialized: false,
+    textController: null,
+    throughputController: null,
+    uriFragmentModel: null,
+    videoModel: null
+  };
+  const debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance({
+    settings: state.settings
+  });
+  const wiring = (0,_mediaplayer_MediaPlayerWiring_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
+  wiring.setConfig({
+    state,
+    debug
+  });
   function setup() {
-    logger = debug.getLogger(instance);
-    mediaPlayerInitialized = false;
-    playbackInitialized = false;
-    streamingInitialized = false;
-    autoPlay = true;
-    providedStartTime = NaN;
-    protectionController = null;
-    offlineController = null;
-    protectionData = null;
-    adapter = null;
-    segmentBaseController = null;
-    _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].extend(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"]);
-    mediaPlayerModel = (0,_models_MediaPlayerModel_js__WEBPACK_IMPORTED_MODULE_33__["default"])(context).getInstance();
-    customParametersModel = (0,_models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
-    videoModel = (0,_models_VideoModel_js__WEBPACK_IMPORTED_MODULE_46__["default"])(context).getInstance();
-    uriFragmentModel = (0,_models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_44__["default"])(context).getInstance();
+    state.logger = debug.getLogger(instance);
+    wiring.setup();
   }
 
   /**
@@ -34409,2069 +36283,7 @@ function MediaPlayer() {
    * @instance
    */
   function setConfig(config) {
-    if (!config) {
-      return;
-    }
-    if (config.capabilities) {
-      capabilities = config.capabilities;
-    }
-    if (config.capabilitiesFilter) {
-      capabilitiesFilter = config.capabilitiesFilter;
-    }
-    if (config.streamController) {
-      streamController = config.streamController;
-    }
-    if (config.textController) {
-      textController = config.textController;
-    }
-    if (config.gapController) {
-      gapController = config.gapController;
-    }
-    if (config.throughputController) {
-      throughputController = config.throughputController;
-    }
-    if (config.playbackController) {
-      playbackController = config.playbackController;
-    }
-    if (config.serviceDescriptionController) {
-      serviceDescriptionController = config.serviceDescriptionController;
-    }
-    if (config.contentSteeringController) {
-      contentSteeringController = config.contentSteeringController;
-    }
-    if (config.clientDataReportingController) {
-      clientDataReportingController = config.clientDataReportingController;
-    }
-    if (config.catchupController) {
-      catchupController = config.catchupController;
-    }
-    if (config.mediaPlayerModel) {
-      mediaPlayerModel = config.mediaPlayerModel;
-    }
-    if (config.customParametersModel) {
-      customParametersModel = config.customParametersModel;
-    }
-    if (config.abrController) {
-      abrController = config.abrController;
-    }
-    if (config.schemeLoaderFactory) {
-      schemeLoaderFactory = config.schemeLoaderFactory;
-    }
-    if (config.mediaController) {
-      mediaController = config.mediaController;
-    }
-    if (config.settings) {
-      settings = config.settings;
-    }
-    if (config.dashMetrics) {
-      dashMetrics = config.dashMetrics;
-    }
-  }
-
-  /**
-   * Upon creating the MediaPlayer you must call initialize before you call anything else.
-   * There is one exception to this rule. It is crucial to call {@link module:MediaPlayer#extend extend()}
-   * with all your extensions prior to calling initialize.
-   *
-   * ALL arguments are optional and there are individual methods to set each argument later on.
-   * The args in this method are just for convenience and should only be used for a simple player setup.
-   *
-   * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
-   * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
-   * @param {boolean=} autoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
-   * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
-   * For live content
-   * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
-   * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
-   * @see {@link module:MediaPlayer#attachSource attachSource()}
-   * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function initialize(view, source, autoPlay, startTime = NaN) {
-    if (!capabilities) {
-      capabilities = (0,_utils_Capabilities_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
-      capabilities.setConfig({
-        settings,
-        protectionController
-      });
-    }
-    if (!errHandler) {
-      errHandler = (0,_utils_ErrorHandler_js__WEBPACK_IMPORTED_MODULE_20__["default"])(context).getInstance();
-    }
-    if (!capabilities.supportsMediaSource()) {
-      errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_17__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].CAPABILITY_MEDIASOURCE_ERROR_CODE, _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
-      return;
-    }
-    if (!mediaPlayerInitialized) {
-      mediaPlayerInitialized = true;
-
-      // init some controllers and models
-      timelineConverter = (0,_dash_utils_TimelineConverter_js__WEBPACK_IMPORTED_MODULE_43__["default"])(context).getInstance();
-      if (!throughputController) {
-        throughputController = (0,_controllers_ThroughputController_js__WEBPACK_IMPORTED_MODULE_42__["default"])(context).getInstance();
-      }
-      if (!abrController) {
-        abrController = (0,_controllers_AbrController_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
-      }
-      if (!schemeLoaderFactory) {
-        schemeLoaderFactory = (0,_net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_36__["default"])(context).getInstance();
-      }
-      if (!playbackController) {
-        playbackController = (0,_controllers_PlaybackController_js__WEBPACK_IMPORTED_MODULE_35__["default"])(context).getInstance();
-      }
-      if (!mediaController) {
-        mediaController = (0,_controllers_MediaController_js__WEBPACK_IMPORTED_MODULE_31__["default"])(context).getInstance();
-      }
-      if (!streamController) {
-        streamController = (0,_controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_40__["default"])(context).getInstance();
-      }
-      if (!gapController) {
-        gapController = (0,_controllers_GapController_js__WEBPACK_IMPORTED_MODULE_26__["default"])(context).getInstance();
-      }
-      if (!catchupController) {
-        catchupController = (0,_controllers_CatchupController_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
-      }
-      if (!serviceDescriptionController) {
-        serviceDescriptionController = (0,_dash_controllers_ServiceDescriptionController_js__WEBPACK_IMPORTED_MODULE_38__["default"])(context).getInstance();
-      }
-      if (!contentSteeringController) {
-        contentSteeringController = (0,_dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
-      }
-      if (!capabilitiesFilter) {
-        capabilitiesFilter = (0,_utils_CapabilitiesFilter_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
-      }
-      adapter = (0,_dash_DashAdapter_js__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance();
-      manifestModel = (0,_models_ManifestModel_js__WEBPACK_IMPORTED_MODULE_29__["default"])(context).getInstance();
-      cmcdController = (0,_controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
-      cmsdModel = (0,_models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
-      clientDataReportingController = (0,_controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
-      dashMetrics = (0,_dash_DashMetrics_js__WEBPACK_IMPORTED_MODULE_18__["default"])(context).getInstance({
-        settings: settings
-      });
-      domStorage = (0,_utils_DOMStorage_js__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance({
-        settings: settings
-      });
-      adapter.setConfig({
-        constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        cea608parser: new _svta_cml_608__WEBPACK_IMPORTED_MODULE_50__.Cta608Parser(),
-        errHandler: errHandler,
-        BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"]
-      });
-      if (!baseURLController) {
-        baseURLController = (0,_controllers_BaseURLController_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create();
-      }
-      baseURLController.setConfig({
-        adapter,
-        contentSteeringController
-      });
-      serviceDescriptionController.setConfig({
-        adapter
-      });
-      if (!segmentBaseController) {
-        segmentBaseController = (0,_dash_controllers_SegmentBaseController_js__WEBPACK_IMPORTED_MODULE_37__["default"])(context).getInstance({
-          dashMetrics: dashMetrics,
-          mediaPlayerModel: mediaPlayerModel,
-          errHandler: errHandler,
-          baseURLController: baseURLController,
-          events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
-          eventBus: eventBus,
-          debug: debug,
-          boxParser: (0,_utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance(),
-          errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"]
-        });
-      }
-
-      // configure controllers
-      mediaController.setConfig({
-        domStorage,
-        settings,
-        mediaPlayerModel,
-        customParametersModel,
-        videoModel
-      });
-      mediaPlayerModel.setConfig({
-        playbackController,
-        serviceDescriptionController
-      });
-      contentSteeringController.setConfig({
-        adapter,
-        errHandler,
-        dashMetrics,
-        mediaPlayerModel,
-        manifestModel,
-        serviceDescriptionController,
-        throughputController,
-        eventBus
-      });
-      restoreDefaultUTCTimingSources();
-      setAutoPlay(autoPlay !== undefined ? autoPlay : true);
-
-      // Detect and initialize offline module to support offline contents playback
-      _detectOffline();
-    }
-    if (view) {
-      attachView(view);
-    }
-    if (source) {
-      attachSource(source, startTime);
-    }
-    logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
-  }
-
-  /**
-   * Sets the MPD source and the video element to null. You can also reset the MediaPlayer by
-   * calling attachSource with a new source file.
-   *
-   * This call does not destroy the MediaPlayer. To destroy the MediaPlayer and free all of its
-   * memory, call destroy().
-   *
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function reset() {
-    attachSource(null);
-    attachView(null);
-    protectionData = null;
-    if (protectionController) {
-      protectionController.reset();
-      protectionController = null;
-    }
-    if (metricsReportingController) {
-      metricsReportingController.reset();
-      metricsReportingController = null;
-    }
-    if (customParametersModel) {
-      customParametersModel.reset();
-    }
-    settings.reset();
-    if (offlineController) {
-      offlineController.reset();
-      offlineController = null;
-    }
-    if (retrieveManifestRequest) {
-      retrieveManifestRequest.resetLoader();
-      retrieveManifestRequest = null;
-    }
-  }
-
-  /**
-   * Completely destroys the media player and frees all memory.
-   *
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function destroy() {
-    reset();
-    if (videoModel) {
-      videoModel.destroy();
-      videoModel = null;
-    }
-    if (adapter) {
-      adapter.destroy();
-    }
-    _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__["default"].deleteSingletonInstances(context);
-  }
-
-  /**
-   * The ready state of the MediaPlayer based on both the video element and MPD source being defined.
-   *
-   * @returns {boolean} The current ready state of the MediaPlayer
-   * @see {@link module:MediaPlayer#attachView attachView()}
-   * @see {@link module:MediaPlayer#attachSource attachSource()}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function isReady() {
-    return !!source && !!videoModel.getElement();
-  }
-
-  /**
-   * Use the on method to listen for public events found in MediaPlayer.events. {@link MediaPlayerEvents}
-   *
-   * @param {string} type - {@link MediaPlayerEvents}
-   * @param {Function} listener - callback method when the event fires.
-   * @param {Object} scope - context of the listener so it can be removed properly.
-   * @param {Object} options - object to define various options such as priority and mode
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function on(type, listener, scope, options) {
-    eventBus.on(type, listener, scope, options);
-  }
-
-  /**
-   * Use the off method to remove listeners for public events found in MediaPlayer.events. {@link MediaPlayerEvents}
-   *
-   * @param {string} type - {@link MediaPlayerEvents}
-   * @param {Function} listener - callback method when the event fires.
-   * @param {Object} scope - context of the listener so it can be removed properly.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function off(type, listener, scope) {
-    eventBus.off(type, listener, scope);
-  }
-
-  /**
-   * Use this method to trigger an event via the eventBus {@link MediaPlayerEvents}
-   *
-   * @param {string} type - {@link MediaPlayerEvents}
-   * @param {object} payload - Payload of the event
-   * @param {Object} filters - Define a "streamId" and/or a "mediaType" for which this event is valid, e.g. {streamId, mediaType}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function trigger(type, payload, filters) {
-    eventBus.trigger(type, payload, filters);
-  }
-
-  /**
-   * Current version of Dash.js
-   * @returns {string} the current dash.js version string.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getVersion() {
-    return (0,_core_Version_js__WEBPACK_IMPORTED_MODULE_49__.getVersionString)();
-  }
-
-  /**
-   * Use this method to access the dash.js logging class.
-   *
-   * @returns {Debug}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getDebug() {
-    return debug;
-  }
-
-  /**
-   * Returns the InitCache instance for debugging/testing purposes.
-   * @returns {object} InitCache instance
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getInitCache() {
-    return (0,_utils_InitCache_js__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       PLAYBACK FUNCTIONS
-   ---------------------------------------------------------------------------
-  */
-
-  /**
-   * Causes the player to begin streaming the media as set by the {@link module:MediaPlayer#attachSource attachSource()}
-   * method in preparation for playing. It specifically does not require a view to be attached with {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
-   * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
-   *
-   * @see {@link module:MediaPlayer#attachSource attachSource()}
-   * @see {@link module:MediaPlayer#attachView attachView()}
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
-   * @instance
-   */
-  function preload() {
-    if (videoModel.getElement() || streamingInitialized) {
-      return;
-    }
-    if (source) {
-      _initializePlayback(providedStartTime);
-    } else {
-      throw SOURCE_NOT_ATTACHED_ERROR;
-    }
-  }
-
-  /**
-   * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
-   * This method will call play on the native Video Element.
-   *
-   * @see {@link module:MediaPlayer#attachSource attachSource()}
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function play() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    if (!autoPlay || isPaused() && playbackInitialized) {
-      playbackController.play(true);
-    }
-  }
-
-  /**
-   * This method will call pause on the native Video Element.
-   *
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function pause() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    playbackController.pause();
-  }
-
-  /**
-   * Returns a Boolean that indicates whether the Video Element is paused.
-   * @return {boolean}
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function isPaused() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    return playbackController.isPaused();
-  }
-
-  /**
-   * Sets the currentTime property of the attached video element.  If it is a live stream with a
-   * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
-   *
-   * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
-   * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this function should be relative to DVRWindow.start.
-   * @see {@link module:MediaPlayer#getDvrSeekOffset getDvrSeekOffset()}
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function seek(value) {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(value, 'number');
-    if (isNaN(value)) {
-      throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].BAD_ARGUMENT_ERROR;
-    }
-    if (value < 0) {
-      value = 0;
-    }
-    let s = playbackController.getIsDynamic() ? getDvrSeekOffset(value) : value;
-
-    // For VoD limit the seek to the duration of the content
-    const videoElement = getVideoElement();
-    if (!playbackController.getIsDynamic() && videoElement.duration) {
-      s = Math.min(videoElement.duration, s);
-    }
-    playbackController.seek(s, false, false, true);
-  }
-
-  /**
-   * Sets the currentTime property of the attached video element. Compared to the seek() function this function does not add the DVR window offset. Instead, it takes a presentation time relative to the availability start time.
-   * For VoD this function behaves similar to the seek() function.
-    * @param {number} value - A presentation time in seconds
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function seekToPresentationTime(seektime) {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(seektime, 'number');
-    if (isNaN(seektime)) {
-      throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].BAD_ARGUMENT_ERROR;
-    }
-    if (seektime < 0) {
-      seektime = 0;
-    }
-
-    // For VoD limit the seek to the duration of the content
-    const videoElement = getVideoElement();
-    if (!playbackController.getIsDynamic() && videoElement.duration) {
-      seektime = Math.min(videoElement.duration, seektime);
-    }
-
-    // For live, take live delay into account
-    if (playbackController.getIsDynamic()) {
-      const type = streamController && streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO;
-      let metric = dashMetrics.getCurrentDVRInfo(type);
-      if (!metric) {
-        return;
-      }
-      seektime = _adjustSeekTimeBasedOnLiveDelay(seektime, metric);
-      if (seektime < metric.range.start) {
-        seektime = metric.range.start;
-      }
-    }
-    playbackController.seek(seektime, false, false, true);
-  }
-
-  /**
-   * Seeks back to the original live edge (live edge as calculated at playback start). Only applies to live streams, for VoD streams this call will be ignored.
-   */
-  function seekToOriginalLive() {
-    if (!playbackInitialized || !isDynamic()) {
-      return;
-    }
-    playbackController.seekToOriginalLive();
-  }
-
-  /**
-   * Returns a Boolean that indicates whether the media is in the process of seeking to a new position.
-   * @return {boolean}
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function isSeeking() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    return playbackController.isSeeking();
-  }
-
-  /**
-   * Returns a Boolean that indicates whether the media is in the process of dynamic.
-   * @return {boolean}
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function isDynamic() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    return playbackController.getIsDynamic();
-  }
-
-  /**
-   * Returns a boolean that indicates whether the player is operating in low latency mode.
-   * @return {boolean}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getLowLatencyModeEnabled() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    return playbackController.getLowLatencyModeEnabled();
-  }
-
-  /**
-   * Use this method to set the native Video Element's playback rate.
-   * @param {number} value
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function setPlaybackRate(value) {
-    getVideoElement().playbackRate = value;
-  }
-
-  /**
-   * Returns the current playback rate.
-   * @returns {number}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getPlaybackRate() {
-    return getVideoElement().playbackRate;
-  }
-
-  /**
-   * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
-   * @param {boolean} value
-   * @memberof module:MediaPlayer
-   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
-   * @instance
-   */
-  function setMute(value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(value, 'boolean');
-    getVideoElement().muted = value;
-  }
-
-  /**
-   * A Boolean that determines whether audio is muted.
-   * @returns {boolean}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function isMuted() {
-    return getVideoElement().muted;
-  }
-
-  /**
-   * A double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest).
-   * @param {number} value
-   * @memberof module:MediaPlayer
-   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type, or is NaN or not between 0 and 1.
-   * @instance
-   */
-  function setVolume(value) {
-    if (typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 1.0) {
-      throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].BAD_ARGUMENT_ERROR;
-    }
-    getVideoElement().volume = value;
-  }
-
-  /**
-   * Returns the current audio volume, from 0.0 (silent) to 1.0 (loudest).
-   * @returns {number}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getVolume() {
-    return getVideoElement().volume;
-  }
-
-  /**
-   * The length of the buffer for a given media type, in seconds. Valid media
-   * types are "video", "audio" and "text". If no type is passed
-   * in, then the minimum of video, audio and text buffer length is
-   * returned. NaN is returned if an invalid type is requested, the
-   * presentation does not contain that type, or if no arguments are passed
-   * and the presentation does not include any adaption sets of valid media
-   * type.
-   *
-   * @param {MediaType} type - 'video', 'audio' or 'text'
-   * @returns {number} The length of the buffer for the given media type, in
-   *  seconds, or NaN
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getBufferLength(type) {
-    const types = [_constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].TEXT];
-    if (!type) {
-      const buffer = types.map(t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(t) : Number.MAX_VALUE).reduce((p, c) => Math.min(p, c));
-      return buffer === Number.MAX_VALUE ? NaN : buffer;
-    } else {
-      if (types.indexOf(type) !== -1) {
-        const buffer = getDashMetrics().getCurrentBufferLevel(type);
-        return buffer ? buffer : NaN;
-      } else {
-        logger.warn('getBufferLength requested for invalid type');
-        return NaN;
-      }
-    }
-  }
-
-  /**
-   * This method should only be used with a live stream that has a valid timeShiftBufferLength (DVR Window).
-   * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the {@link module:MediaPlayer#seek seek()} method
-   * which will calculate this value for you and set the video element's currentTime property all in one simple call.
-   *
-   * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
-   * @returns {number} A value that is relative the available range within the timeShiftBufferLength (DVR Window).
-   * @see {@link module:MediaPlayer#seek seek()}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getDvrSeekOffset(value) {
-    const type = streamController && streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO;
-    let metric = dashMetrics.getCurrentDVRInfo(type);
-    if (!metric) {
-      return 0;
-    }
-    let val = metric.range.start + value;
-    return _adjustSeekTimeBasedOnLiveDelay(val, metric);
-  }
-  function _adjustSeekTimeBasedOnLiveDelay(seektime, metric) {
-    let liveDelay = playbackController.getOriginalLiveDelay();
-    if (seektime > metric.range.end - liveDelay) {
-      seektime = metric.range.end - liveDelay;
-    }
-    return seektime;
-  }
-
-  /**
-   * Returns the target live delay
-   * @returns {number} The target live delay
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getTargetLiveDelay() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    return playbackController.getOriginalLiveDelay();
-  }
-
-  /**
-   * Current playhead time in seconds.
-   *
-   * If called with no arguments then the returned value is the current time of the video element.
-   * However, if a period ID is supplied then time is relative to the start of that period, or is null if there is no such period id in the manifest.
-   *
-   * @param {string} periodId - The ID of a period that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first period or the AST.
-   * @returns {number} The current playhead time of the media, or null.
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function time(periodId = '') {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    let t = getVideoElement().currentTime;
-    if (periodId !== '') {
-      t = streamController.getTimeRelativeToStreamId(t, periodId);
-    }
-    return t;
-  }
-
-  /**
-   * Returns the current playhead time relative to the start of the DVR window.
-   * For VoD this method returns the same value as time()
-   * @returns {number} The current playhead time of the media relative to the start of the DVR window
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function timeInDvrWindow() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    if (!playbackController.getIsDynamic()) {
-      return time();
-    }
-    let t = getVideoElement().currentTime;
-    const type = streamController && streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO;
-    let metric = dashMetrics.getCurrentDVRInfo(type);
-    t = metric === null || t === 0 ? 0 : Math.max(0, t - metric.range.start);
-    return t;
-  }
-
-  /**
-   * Returns information about the current DVR window including the start time, the end time, the window size.
-   * @returns {{startAsUtc: (*|number), size: number, endAsUtc: (*|number), start, end}|{}}
-   */
-  function getDvrWindow() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    const type = streamController && streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO;
-    let metric = dashMetrics.getCurrentDVRInfo(type);
-    if (!metric) {
-      return {};
-    }
-    let offset = 0;
-    const isDynamic = playbackController.getIsDynamic();
-    if (isDynamic) {
-      offset = metric.manifestInfo.availableFrom.getTime() / 1000;
-    }
-    return {
-      start: metric.range.start,
-      end: metric.range.end,
-      startAsUtc: isDynamic ? offset + metric.range.start : NaN,
-      endAsUtc: isDynamic ? offset + metric.range.end : NaN,
-      size: metric.range.end - metric.range.start
-    };
-  }
-
-  /**
-   * Total duration of the media in seconds.
-   *
-   * @returns {number} The total duration of the media. For a dynamic stream this will return DVRWindow.end - DVRWindow.start
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function duration() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    let d = getVideoElement().duration;
-    if (playbackController.getIsDynamic()) {
-      const type = streamController && streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO;
-      let metric = dashMetrics.getCurrentDVRInfo(type);
-      d = metric ? metric.range.end - metric.range.start : 0;
-    }
-    return d;
-  }
-
-  /**
-   * Use this method to get the current playhead time as an absolute value in seconds since midnight UTC, Jan 1 1970.
-   * Note - this property only has meaning for live streams and is NaN for VoD content. If called before play() has begun, it will return a value of NaN.
-   *
-   * @returns {number} The current playhead time as UTC timestamp.
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function timeAsUTC() {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    if (!playbackController.getIsDynamic() || time() < 0) {
-      return NaN;
-    }
-    const type = streamController && streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO;
-    let metric = dashMetrics.getCurrentDVRInfo(type);
-    let availabilityStartTime, utcValue;
-    if (!metric) {
-      return 0;
-    }
-    availabilityStartTime = metric.manifestInfo.availableFrom.getTime() / 1000;
-    utcValue = availabilityStartTime + time();
-    return utcValue;
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       MEDIA PLAYER CONFIGURATION
-   ---------------------------------------------------------------------------
-  */
-  /**
-   * <p>Set to false to prevent stream from auto-playing when the view is attached.</p>
-   *
-   * @param {boolean} value
-   * @default true
-   * @memberof module:MediaPlayer
-   * @see {@link module:MediaPlayer#attachView attachView()}
-   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
-   * @instance
-   *
-   */
-  function setAutoPlay(value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(value, 'boolean');
-    autoPlay = value;
-  }
-
-  /**
-   * @returns {boolean} The current autoPlay state.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getAutoPlay() {
-    return autoPlay;
-  }
-
-  /**
-   * @memberof module:MediaPlayer
-   * @instance
-   * @returns {number|NaN} Current live stream latency in seconds. It is the difference between now time and time position at the playback head.
-   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
-   */
-  function getCurrentLiveLatency() {
-    if (!mediaPlayerInitialized) {
-      throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-    }
-    if (!playbackInitialized) {
-      return NaN;
-    }
-    return playbackController.getCurrentLiveLatency();
-  }
-
-  /**
-   * Add a custom ABR Rule
-   * Rule will be apply on next stream if a stream is being played
-   *
-   * @param {string} type - rule type (one of ['qualitySwitchRules','abandonFragmentRules'])
-   * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added, then existing rule will be updated
-   * @param {object} rule - the rule object instance
-   * @memberof module:MediaPlayer
-   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
-   * @instance
-   */
-  function addABRCustomRule(type, rulename, rule) {
-    customParametersModel.addAbrCustomRule(type, rulename, rule);
-  }
-
-  /**
-   * Remove a custom ABR Rule
-   *
-   * @param {string} rulename - name of the rule to be removed
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function removeABRCustomRule(rulename) {
-    customParametersModel.removeAbrCustomRule(rulename);
-  }
-
-  /**
-   * Remove all ABR custom rules
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function removeAllABRCustomRule() {
-    customParametersModel.removeAllAbrCustomRule();
-  }
-
-  /**
-   * Returns all ABR custom rules
-   * @return {Array}
-   */
-  function getABRCustomRules() {
-    return customParametersModel.getAbrCustomRules();
-  }
-
-  /**
-   * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.
-   * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
-   * <p>If you have exposed the Date header, use the method {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}.
-   * This will allow the date header on the manifest to be used instead of a time server</p>
-   * @param {string} schemeIdUri - <ul>
-   * <li>urn:mpeg:dash:utc:http-head:2014</li>
-   * <li>urn:mpeg:dash:utc:http-xsdate:2014</li>
-   * <li>urn:mpeg:dash:utc:http-iso:2014</li>
-   * <li>urn:mpeg:dash:utc:direct:2014</li>
-   * </ul>
-   * <p>Some specs referencing early ISO23009-1 drafts incorrectly use
-   * 2012 in the URI, rather than 2014. support these for now.</p>
-   * <ul>
-   * <li>urn:mpeg:dash:utc:http-head:2012</li>
-   * <li>urn:mpeg:dash:utc:http-xsdate:2012</li>
-   * <li>urn:mpeg:dash:utc:http-iso:2012</li>
-   * <li>urn:mpeg:dash:utc:direct:2012</li>
-   * </ul>
-   * @param {string} value - Path to a time source.
-   * @default
-   * <ul>
-   *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-   *     <li>value:http://time.akamai.com/?iso&ms/li>
-   * </ul>
-   * @memberof module:MediaPlayer
-   * @see {@link module:MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
-   * @instance
-   */
-  function addUTCTimingSource(schemeIdUri, value) {
-    customParametersModel.addUTCTimingSource(schemeIdUri, value);
-  }
-
-  /**
-   * <p>Allows you to remove a UTC time source. Both schemeIdUri and value need to match the Dash.vo.UTCTiming properties in order for the
-   * entry to be removed from the array</p>
-   * @param {string} schemeIdUri - see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
-   * @param {string} value - see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
-   * @memberof module:MediaPlayer
-   * @see {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}
-   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, schemeIdUri and value are not string type.
-   * @instance
-   */
-  function removeUTCTimingSource(schemeIdUri, value) {
-    customParametersModel.removeUTCTimingSource(schemeIdUri, value);
-  }
-
-  /**
-   * <p>Allows you to clear the stored array of time sources.</p>
-   * <p>Example use: If you have exposed the Date header, calling this method
-   * will allow the date header on the manifest to be used instead of the time server.</p>
-   * <p>Example use: Calling this method, assuming there is not an exposed date header on the manifest,  will default back
-   * to using a binary search to discover the live edge</p>
-   *
-   * @memberof module:MediaPlayer
-   * @see {@link module:MediaPlayer#restoreDefaultUTCTimingSources restoreDefaultUTCTimingSources()}
-   * @instance
-   */
-  function clearDefaultUTCTimingSources() {
-    customParametersModel.clearDefaultUTCTimingSources();
-  }
-
-  /**
-   * <p>Allows you to restore the default time sources after calling {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}</p>
-   *
-   * @default
-   * <ul>
-   *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-   *     <li>value:http://time.akamai.com/?iso&ms</li>
-   * </ul>
-   *
-   * @memberof module:MediaPlayer
-   * @see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
-   * @instance
-   */
-  function restoreDefaultUTCTimingSources() {
-    customParametersModel.restoreDefaultUTCTimingSources();
-  }
-
-  /**
-   * Returns the average latency computed in the ThroughputController in milliseconds
-   *
-   * @param {MediaType} type
-   * @param {string} calculationMode
-   * @param {number} sampleSize
-   * @return {number} value
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getAverageLatency(type = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO, calculationMode = null, sampleSize = NaN) {
-    return throughputController ? throughputController.getAverageLatency(type, calculationMode, sampleSize) : 0;
-  }
-
-  /**
-   * Returns the average throughput computed in the ThroughputController in kbit/s
-   *
-   * @param {MediaType} type
-   * @param {string} calculationMode
-   * @param {number} sampleSize
-   * @return {number} value
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getAverageThroughput(type = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO, calculationMode = null, sampleSize = NaN) {
-    return throughputController ? throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
-  }
-
-  /**
-   * Returns the safe average throughput computed in the ThroughputController in kbit/s. The safe average throughput is the average throughput multiplied by bandwidthSafetyFactor
-   *
-   * @param {MediaType} type
-   * @param {string} calculationMode
-   * @param {number} sampleSize
-   * @return {number} value
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getSafeAverageThroughput(type = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO, calculationMode = null, sampleSize = NaN) {
-    return throughputController ? throughputController.getSafeAverageThroughput(type, calculationMode, sampleSize) : 0;
-  }
-
-  /**
-   *  Returns the raw throughput data without calculating the average. This can be used to calculate the current throughput yourself.
-   *
-   * @param {MediaType} type
-   * @return {Array} value
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getRawThroughputData(type = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO) {
-    return throughputController ? throughputController.getRawThroughputData(type) : [];
-  }
-
-  /**
-   * Sets whether withCredentials on XHR requests for a particular request
-   * type is true or false
-   *
-   * @default false
-   * @param {string} type - one of HTTPRequest.*_TYPE
-   * @param {boolean} value
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function setXHRWithCredentialsForType(type, value) {
-    customParametersModel.setXHRWithCredentialsForType(type, value);
-  }
-
-  /**
-   * Gets whether withCredentials on XHR requests for a particular request
-   * type is true or false
-   *
-   * @param {string} type - one of HTTPRequest.*_TYPE
-   * @return {boolean}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getXHRWithCredentialsForType(type) {
-    return customParametersModel.getXHRWithCredentialsForType(type);
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       OFFLINE
-   ---------------------------------------------------------------------------
-  */
-
-  /**
-   * Detects if Offline is included and returns an instance of OfflineController.js
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getOfflineController() {
-    return _detectOffline();
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       METRICS
-   ---------------------------------------------------------------------------
-  */
-  /**
-   * Returns the DashMetrics.js Module. You use this Module to get access to all the public metrics
-   * stored in dash.js
-   *
-   * @see {@link module:DashMetrics}
-   * @returns {Object}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getDashMetrics() {
-    return dashMetrics;
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       TEXT MANAGEMENT
-   ---------------------------------------------------------------------------
-  */
-
-  /**
-   * Enable/disable text
-   * When enabling text, dash will choose the previous selected text track
-   *
-   * @param {boolean} enable - true to enable text, false otherwise (same as setTextTrack(-1))
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function enableText(enable) {
-    const activeStreamInfo = streamController.getActiveStreamInfo();
-    if (!activeStreamInfo || !textController) {
-      return false;
-    }
-    return textController.enableText(activeStreamInfo.id, enable);
-  }
-
-  /**
-   * Enable/disable text
-   * When enabling dash will keep downloading and process fragmented text tracks even if all tracks are in mode "hidden"
-   *
-   * @param {boolean} enable - true to enable text streaming even if all text tracks are hidden.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function enableForcedTextStreaming(enable) {
-    const activeStreamInfo = streamController.getActiveStreamInfo();
-    if (!activeStreamInfo || !textController) {
-      return false;
-    }
-    return textController.enableForcedTextStreaming(enable);
-  }
-
-  /**
-   * Return if text is enabled
-   *
-   * @return {boolean} return true if text is enabled, false otherwise
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function isTextEnabled() {
-    const activeStreamInfo = streamController.getActiveStreamInfo();
-    if (!activeStreamInfo || !textController) {
-      return false;
-    }
-    return textController.isTextEnabled(activeStreamInfo);
-  }
-
-  /**
-   * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
-   * set the track mode on the video object to switch a track when using this method.
-   * @param {number} idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
-   * @see {@link MediaPlayerEvents#event:TEXT_TRACK_ADDED dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
-   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function setTextTrack(idx) {
-    if (!playbackInitialized) {
-      throw PLAYBACK_NOT_INITIALIZED_ERROR;
-    }
-    const activeStreamInfo = streamController.getActiveStreamInfo();
-    if (!activeStreamInfo || !textController) {
-      return;
-    }
-    textController.setTextTrack(activeStreamInfo.id, idx);
-  }
-  function getCurrentTextTrackIndex() {
-    let idx = NaN;
-    const activeStreamInfo = streamController.getActiveStreamInfo();
-    if (!activeStreamInfo || !textController) {
-      return;
-    }
-    idx = textController.getCurrentTrackIdx(activeStreamInfo.id);
-    return idx;
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       VIDEO ELEMENT MANAGEMENT
-   ---------------------------------------------------------------------------
-  */
-
-  /**
-   * Returns instance of Video Element that was attached by calling attachView()
-   * @returns {Object}
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
-   * @instance
-   */
-  function getVideoElement() {
-    if (!videoModel.getElement()) {
-      throw ELEMENT_NOT_ATTACHED_ERROR;
-    }
-    return videoModel.getElement();
-  }
-
-  /**
-   * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
-   *
-   * @param {Object} element - An HTMLMediaElement that has already been defined in the DOM (or equivalent stub).
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
-   * @instance
-   */
-  function attachView(element) {
-    if (!mediaPlayerInitialized) {
-      throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-    }
-    videoModel.setElement(element);
-    if (element) {
-      _detectProtection();
-      _detectMetricsReporting();
-      _detectMss();
-      if (streamController) {
-        streamController.switchToVideoElement(providedStartTime);
-      }
-    }
-    if (playbackInitialized) {
-      //Reset if we have been playing before, so this is a new element.
-      _resetPlaybackControllers();
-      _resetPlaybackSessionSpecificSettings();
-    }
-    _initializePlayback(providedStartTime);
-  }
-
-  /**
-   * Returns instance of Div that was attached by calling attachTTMLRenderingDiv()
-   * @returns {Object}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getTTMLRenderingDiv() {
-    return videoModel ? videoModel.getTTMLRenderingDiv() : null;
-  }
-
-  /**
-   * Use this method to attach an HTML5 div for dash.js to render rich TTML subtitles.
-   *
-   * @param {HTMLDivElement} div - An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
-   * @instance
-   */
-  function attachTTMLRenderingDiv(div) {
-    if (!videoModel.getElement()) {
-      throw ELEMENT_NOT_ATTACHED_ERROR;
-    }
-    videoModel.setTTMLRenderingDiv(div);
-  }
-  function attachVttRenderingDiv(div) {
-    if (!videoModel.getElement()) {
-      throw ELEMENT_NOT_ATTACHED_ERROR;
-    }
-    videoModel.setVttRenderingDiv(div);
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       QUALITY AND TRACK MANAGEMENT
-   ---------------------------------------------------------------------------
-  */
-
-  /**
-   * Gets the current download quality for media type video, audio or images. For video and audio types the ABR
-   * rules update this value before every new download unless autoSwitchBitrate is set to false. For 'image'
-   * type, thumbnails, there is no ABR algorithm and quality is set manually.
-   *
-   * @param {MediaType} type - 'video', 'audio' or 'image' (thumbnails)
-   * @returns {Representation | null} the quality index, 0 corresponding to the lowest bitrate
-   * @memberof module:MediaPlayer
-   * @see {@link module:MediaPlayer#getCurrentRepresentationForType getCurrentRepresentationForType()}
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function getCurrentRepresentationForType(type) {
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    if (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].IMAGE && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO) {
-      return null;
-    }
-    const activeStream = getActiveStream();
-    if (!activeStream) {
-      return null;
-    }
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].IMAGE) {
-      const thumbnailController = activeStream.getThumbnailController();
-      return !thumbnailController ? -1 : thumbnailController.getCurrentTrack();
-    }
-    return activeStream.getCurrentRepresentationForType(type);
-  }
-
-  /**
-   * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.
-   * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
-   *
-   * @param {MediaType} type - 'video', 'audio' or 'image'
-   * @param {number} id , The ID of the Representation
-   * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function setRepresentationForTypeById(type, id, forceReplace = false) {
-    if (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].IMAGE && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO) {
-      return;
-    }
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    const activeStream = getActiveStream();
-    if (!activeStream) {
-      return;
-    }
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].IMAGE) {
-      const thumbnailController = activeStream.getThumbnailController();
-      if (thumbnailController) {
-        thumbnailController.setTrackById(id);
-      }
-    } else {
-      const representation = activeStream.getRepresentationForTypeById(type, id);
-      if (representation) {
-        abrController.manuallySetPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, {
-          forceReplace
-        });
-      }
-    }
-  }
-
-  /**
-   * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.
-   * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
-   * Note that you need to specify a relative index based on the position of the target entry in the return value of getRepresentationsByType().
-   * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If you want to select a specific representation then use setRepresentationForTypeById() instead.
-   *
-   * @param {MediaType} type - 'video', 'audio' or 'image'
-   * @param {number} index - the quality index, 0 corresponding to the lowest possible index
-   * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function setRepresentationForTypeByIndex(type, index, forceReplace = false) {
-    if (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].IMAGE && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].VIDEO && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].AUDIO) {
-      return;
-    }
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    const activeStream = getActiveStream();
-    if (!activeStream) {
-      return;
-    }
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].IMAGE) {
-      const thumbnailController = activeStream.getThumbnailController();
-      if (thumbnailController) {
-        thumbnailController.setTrackByIndex(index);
-      }
-    } else {
-      const representation = activeStream.getRepresentationForTypeByIndex(type, index);
-      if (representation) {
-        abrController.manuallySetPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, {
-          forceReplace
-        });
-      }
-    }
-  }
-
-  /**
-   * This method returns the list of all available representations for a given media type. The returned list is filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).
-   * If you want to get the unfiltered list of representations then use getRepresentationsByTypeUnfiltered() instead.
-   * @param {MediaType} type
-   * @param {string} streamId
-   * @returns {Array}
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function getRepresentationsByType(type, streamId = null) {
-    return _getRepresentations(type, streamId, true);
-  }
-
-  /**
-   * This method returns the list of all available representations for a given media type. The returned list is unfiltered and settings like max/min bitrate and limitBitrateByPortal are not taken into account.
-   * If you want to get the filtered list of representations then use getRepresentationsByType() instead.
-   * @param {MediaType} type
-   * @param {string} streamId
-   * @returns {Array}
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function getRepresentationsByTypeUnfiltered(type, streamId = null) {
-    return _getRepresentations(type, streamId, false);
-  }
-  function _getRepresentations(type, streamId, filterBySettings = true) {
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    let stream = streamId ? streamController.getStreamById(streamId) : getActiveStream();
-    return stream ? stream.getRepresentationsByType(type, filterBySettings) : [];
-  }
-
-  /**
-   * This method returns the list of all available streams from a given manifest
-   * @param {Object} manifest
-   * @returns {Array} list of {@link StreamInfo}
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function getStreamsFromManifest(manifest) {
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    return adapter.getStreamsInfo(manifest);
-  }
-
-  /**
-   * This method returns the list of all available tracks for a given media type
-   * @param {MediaType} type
-   * @returns {Array} list of {@link MediaInfo}
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function getTracksFor(type) {
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    let streamInfo = streamController.getActiveStreamInfo();
-    if (!streamInfo) {
-      return [];
-    }
-    const tracks = mediaController.getTracksFor(type, streamInfo.id);
-    return tracks.filter(track => {
-      return protectionController ? protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true;
-    });
-  }
-
-  /**
-   * This method returns the list of all available tracks for a given media type and streamInfo from a given manifest
-   * @param {MediaType} type
-   * @param {Object} manifest
-   * @param {Object} streamInfo
-   * @returns {Array}  list of {@link MediaInfo}
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function getTracksForTypeFromManifest(type, manifest, streamInfo) {
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    streamInfo = streamInfo || adapter.getStreamsInfo(manifest, 1)[0];
-    return streamInfo ? adapter.getAllMediaInfoForType(streamInfo, type, manifest) : [];
-  }
-
-  /**
-   * @param {MediaType} type
-   * @returns {Object|null} {@link MediaInfo}
-   *
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function getCurrentTrackFor(type) {
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    let streamInfo = streamController.getActiveStreamInfo();
-    if (streamInfo) {
-      return mediaController.getCurrentTrackFor(type, streamInfo.id);
-    }
-    return null;
-  }
-
-  /**
-   * This method allows to set media settings that will be used to pick the initial track. The settings object supports the following properties:
-   * <ul>
-   * <li><code>lang</code>: a string primitive, a string object, or a RegExp object to match</li>
-   * <li><code>index</code>: the index of the track</li>
-   * <li><code>viewpoint</code>: object <code>{schemeIdUri, value}</code> or value-primitive</li>
-   * <li><code>audioChannelConfiguration</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')</li>
-   * <li><code>accessibility</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
-   * <li><code>role</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
-   * <li><code>codec</code>: full codec string as exposed in MediaInfo.codec, e.g. <code>'audio/mp4;codecs="ec-3"'</code>, compared with strict equality</li>
-   * </ul>
-   *
-   * @example
-   * player.setInitialMediaSettingsFor('audio', {
-   *     lang: 'de',
-   *     role: 'main',
-   *     codec: 'audio/mp4;codecs="ec-3"'
-   * });
-   * @param {MediaType} type
-   * @param {Object} value
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
-   * @instance
-   */
-  function setInitialMediaSettingsFor(type, value) {
-    if (!mediaPlayerInitialized) {
-      throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-    }
-    let sanitizedValue = _sanitizeSettings(value);
-    mediaController.setInitialSettings(type, sanitizedValue);
-  }
-
-  /**
-   * This method returns the media settings that are used to pick the initial track.
-   *
-   * @example
-   * // Returned object has the following format:
-   * {
-   *     lang: langValue,
-   *     index: indexValue,
-   *     viewpoint: viewpointValue,
-   *     audioChannelConfiguration: audioChannelConfigurationValue,
-   *     accessibility: accessibilityValue,
-   *     role: roleValue,
-   *     codec: codecValue
-   * }
-   * @param {MediaType} type
-   * @returns {Object}
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
-   * @instance
-   */
-  function getInitialMediaSettingsFor(type) {
-    if (!mediaPlayerInitialized) {
-      throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-    }
-    return mediaController.getInitialSettings(type);
-  }
-
-  /**
-   * @param {MediaInfo} track - instance of {@link MediaInfo}
-   * @param {boolean} [noSettingsSave] - specify if settings from the track must not be saved for incoming track selection
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @instance
-   */
-  function setCurrentTrack(track, noSettingsSave = false) {
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    const canUseTrack = protectionController ? protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true;
-    if (!canUseTrack) {
-      logger.error(`Can not switch to track with index ${track.index} because key is not usable`);
-      return;
-    }
-    mediaController.setTrack(track, {
-      noSettingsSave
-    });
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       Custom filter and callback functions
-   ---------------------------------------------------------------------------
-  */
-  /**
-   * Registers a custom capabilities filter. This enables application to filter representations to use.
-   * The provided callback function shall return either a boolean or a promise resolving to a boolean based on whether or not to use the representation.
-   * The filters are applied in the order they are registered.
-   * @param {function} filter - the custom capabilities filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function registerCustomCapabilitiesFilter(filter) {
-    customParametersModel.registerCustomCapabilitiesFilter(filter);
-  }
-
-  /**
-   * Unregisters a custom capabilities filter.
-   * @param {function} filter - the custom capabilities filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function unregisterCustomCapabilitiesFilter(filter) {
-    customParametersModel.unregisterCustomCapabilitiesFilter(filter);
-  }
-
-  /**
-   * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
-   * @param {function} customFunc - the custom function that returns the initial track
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function setCustomInitialTrackSelectionFunction(customFunc) {
-    customParametersModel.setCustomInitialTrackSelectionFunction(customFunc);
-  }
-
-  /**
-   * Resets the custom initial track selection
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function resetCustomInitialTrackSelectionFunction() {
-    customParametersModel.resetCustomInitialTrackSelectionFunction(null);
-  }
-
-  /**
-   * Adds an external subtitle file. The provided externalSubtitle must be an instance of the ExternalSubtitle class.
-   * @param {ExternalSubtitle} externalSubtitle
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function addExternalSubtitle(externalSubtitle) {
-    if (!(externalSubtitle instanceof _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_24__["default"])) {
-      logger.error('Invalid external subtitle object. Must be an instance of dashjs.ExternalSubtitle');
-    }
-    customParametersModel.addExternalSubtitle(externalSubtitle);
-  }
-
-  /**
-   * Removes an external subtitle file by its ID.
-   * @param {string} id
-   */
-  function removeExternalSubtitleById(id) {
-    customParametersModel.removeExternalSubtitleById(id);
-  }
-
-  /**
-   * Removes an external subtitle file by its url.
-   * @param {string} url
-   */
-  function removeExternalSubtitleByUrl(url) {
-    customParametersModel.removeExternalSubtitleByUrl(url);
-  }
-
-  /**
-   * Returns all external subtitles
-   */
-  function getExternalSubtitles() {
-    customParametersModel.getExternalSubtitles();
-  }
-
-  /**
-   * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
-   * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
-   * The interceptors are applied in the order they are added.
-   * @param {function} interceptor - the request interceptor callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function addRequestInterceptor(interceptor) {
-    customParametersModel.addRequestInterceptor(interceptor);
-  }
-
-  /**
-   * Removes a request interceptor.
-   * @param {function} interceptor - the request interceptor callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function removeRequestInterceptor(interceptor) {
-    customParametersModel.removeRequestInterceptor(interceptor);
-  }
-
-  /**
-   * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
-   * The provided callback function shall return a promise with updated response that shall be resolved once the process of the response is completed.
-   * The interceptors are applied in the order they are added.
-   * @param {function} interceptor - the response interceptor
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function addResponseInterceptor(interceptor) {
-    customParametersModel.addResponseInterceptor(interceptor);
-  }
-
-  /**
-   * Removes a response interceptor.
-   * @param {function} interceptor - the request interceptor
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function removeResponseInterceptor(interceptor) {
-    customParametersModel.removeResponseInterceptor(interceptor);
-  }
-
-  /**
-   * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
-   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
-   * The filters are applied in the order they are registered.
-   * @param {function} filter - the license request filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function registerCertificateRequestFilter(filter) {
-    customParametersModel.registerCertificateRequestFilter(filter);
-  }
-
-  /**
-   * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
-   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
-   * The filters are applied in the order they are registered.
-   * @param {function} filter - the license response filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function registerCertificateResponseFilter(filter) {
-    customParametersModel.registerCertificateResponseFilter(filter);
-  }
-
-  /**
-   * Unregisters a certificate request filter.
-   * @param {function} filter - the license request filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function unregisterCertificateRequestFilter(filter) {
-    customParametersModel.unregisterCertificateRequestFilter(filter);
-  }
-
-  /**
-   * Unregisters a certificate response filter.
-   * @param {function} filter - the license response filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function unregisterCertificateResponseFilter(filter) {
-    customParametersModel.unregisterCertificateResponseFilter(filter);
-  }
-
-  /**
-   * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
-   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
-   * The filters are applied in the order they are registered.
-   * @param {function} filter - the license request filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function registerLicenseRequestFilter(filter) {
-    customParametersModel.registerLicenseRequestFilter(filter);
-  }
-
-  /**
-   * Registers a license response filter. This enables application to manipulate/overwrite the response data
-   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
-   * The filters are applied in the order they are registered.
-   * @param {function} filter - the license response filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function registerLicenseResponseFilter(filter) {
-    customParametersModel.registerLicenseResponseFilter(filter);
-  }
-
-  /**
-   * Unregisters a license request filter.
-   * @param {function} filter - the license request filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function unregisterLicenseRequestFilter(filter) {
-    customParametersModel.unregisterLicenseRequestFilter(filter);
-  }
-
-  /**
-   * Unregisters a license response filter.
-   * @param {function} filter - the license response filter callback
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function unregisterLicenseResponseFilter(filter) {
-    customParametersModel.unregisterLicenseResponseFilter(filter);
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       PROTECTION MANAGEMENT
-   ---------------------------------------------------------------------------
-  */
-
-  /**
-   * Detects if Protection is included and returns an instance of ProtectionController.js
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getProtectionController() {
-    return _detectProtection();
-  }
-
-  /**
-   * Will override dash.js protection controller.
-   * @param {ProtectionController} value - valid protection controller instance.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function attachProtectionController(value) {
-    protectionController = value;
-  }
-
-  /**
-   * Sets Protection Data required to setup the Protection Module (DRM). Protection Data must
-   * be set before initializing MediaPlayer or, once initialized, before PROTECTION_CREATED event is fired.
-   * @see {@link module:MediaPlayer#initialize initialize()}
-   * @see {@link ProtectionEvents#event:PROTECTION_CREATED dashjs.Protection.events.PROTECTION_CREATED}
-   * @param {ProtectionDataSet} value - object containing
-   * property names corresponding to key system name strings and associated
-   * values being instances of.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function setProtectionData(value) {
-    protectionData = value;
-
-    // Propagate changes in case StreamController is already created
-    if (streamController) {
-      streamController.setProtectionData(protectionData);
-    }
-  }
-  function getProtectionData() {
-    return streamController ? streamController.getProtectionData() : null;
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       THUMBNAILS MANAGEMENT
-   ---------------------------------------------------------------------------
-  */
-
-  /**
-   * Provide the thumbnail at time position. This can be asynchronous, so you must provide a callback ro retrieve thumbnails informations
-   * @param {number} time - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
-   * @param {function} callback - A Callback function provided when retrieving thumbnail the given time position. Thumbnail object is null in case there are is not a thumbnails representation or
-   * if it doesn't contain a thumbnail for the given time position.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function provideThumbnail(time, callback) {
-    if (typeof callback !== 'function') {
-      return;
-    }
-    if (time < 0) {
-      callback(null);
-      return;
-    }
-    const s = playbackController.getIsDynamic() ? getDvrSeekOffset(time) : time;
-    const stream = streamController.getStreamForTime(s);
-    if (stream === null) {
-      callback(null);
-      return;
-    }
-    const thumbnailController = stream.getThumbnailController();
-    if (!thumbnailController) {
-      callback(null);
-      return;
-    }
-    return thumbnailController.provide(s, callback);
-  }
-
-  /*
-  ---------------------------------------------------------------------------
-       TOOLS AND OTHERS FUNCTIONS
-   ---------------------------------------------------------------------------
-  */
-  /**
-   * Allows application to retrieve a manifest.  Manifest loading is asynchronous and requires the app-provided callback function
-   *
-   * @param {string} url - url the manifest url
-   * @param {function} callback - A Callback function provided when retrieving manifests
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function retrieveManifest(url, callback) {
-    if (retrieveManifestRequest) {
-      retrieveManifestRequest.resetLoader();
-    }
-    const manifestLoader = _createManifestLoader();
-    const resetLoader = () => {
-      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].INTERNAL_MANIFEST_LOADED, handler, this);
-      manifestLoader.reset();
-      retrieveManifestRequest = null;
-    };
-    retrieveManifestRequest = {
-      manifestLoader,
-      resetLoader
-    };
-    const handler = e => {
-      if (typeof callback == 'function') {
-        if (!e.error) {
-          callback(e.manifest);
-        } else {
-          callback(null, e.error);
-        }
-      }
-      resetLoader();
-    };
-    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].INTERNAL_MANIFEST_LOADED, handler, this);
-    uriFragmentModel.initialize(url);
-    manifestLoader.load(url);
-  }
-
-  /**
-   * Returns the source string or manifest that was attached by calling attachSource()
-   * @returns {string | manifest}
-   * @memberof module:MediaPlayer
-   * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
-   * @instance
-   */
-  function getSource() {
-    if (!source) {
-      throw SOURCE_NOT_ATTACHED_ERROR;
-    }
-    return source;
-  }
-
-  /**
-   * Sets the source to a new manifest URL or object without reloading
-   * Useful for updating CDN tokens
-   * @param {string | object} urlOrManifest
-   */
-  function updateSource(urlOrManifest) {
-    source = urlOrManifest;
-    streamController.load(source);
-  }
-
-  /**
-   * Use this method to set a source URL to a valid MPD manifest file OR
-   * a previously downloaded and parsed manifest object.  Optionally, can
-   * also provide protection information
-   *
-   * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
-   * parsed manifest object.
-   * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
-   * For live content
-   * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
-   * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
-   *
-   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
-   *
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function attachSource(urlOrManifest, startTime = NaN) {
-    if (!mediaPlayerInitialized) {
-      throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-    }
-    if (typeof urlOrManifest === 'string') {
-      uriFragmentModel.initialize(urlOrManifest);
-    }
-    if (startTime == null) {
-      startTime = NaN;
-    }
-    if (!isNaN(startTime)) {
-      startTime = Math.max(0, startTime);
-    }
-    providedStartTime = startTime;
-    source = urlOrManifest;
-    if (streamingInitialized || playbackInitialized) {
-      _resetPlaybackControllers();
-      _resetPlaybackSessionSpecificSettings();
-    }
-    if (isReady()) {
-      _initializePlayback(providedStartTime);
-    }
-  }
-
-  /**
-   *  Reload the manifest that the player is currently using.
-   *
-   *  @memberof module:MediaPlayer
-   *  @param {function} callback - A Callback function provided when retrieving manifests
-   *  @instance
-   */
-  function refreshManifest(callback) {
-    if (!mediaPlayerInitialized) {
-      throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-    }
-    if (!isReady()) {
-      return callback(null, SOURCE_NOT_ATTACHED_ERROR);
-    }
-    let self = this;
-    if (typeof callback === 'function') {
-      const handler = function (e) {
-        eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
-        if (e.error) {
-          callback(null, e.error);
-          return;
-        }
-        callback(e.manifest);
-      };
-      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
-    }
-    streamController.refreshManifest();
-  }
-
-  /**
-   * Get the current settings object being used on the player.
-   * @returns {PlayerSettings} The settings object being used.
-   *
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getSettings() {
-    return settings.get();
-  }
-
-  /**
-   * @summary Update the current settings object being used on the player. Anything left unspecified is not modified.
-   * @param {PlayerSettings} settingsObj - An object corresponding to the settings definition.
-   * @description This function does not update the entire object, only properties in the passed in object are updated.
-   *
-   * This means that updateSettings({a: x}) and updateSettings({b: y}) are functionally equivalent to
-   * updateSettings({a: x, b: y}). If the default values are required again, @see{@link resetSettings}.
-   * @example
-   * player.updateSettings({
-   *      streaming: {
-   *          lowLatencyEnabled: false,
-   *          abr: {
-   *              maxBitrate: { audio: 100, video: 1000 }
-   *          }
-   *      }
-   *  });
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function updateSettings(settingsObj) {
-    settings.update(settingsObj);
-  }
-
-  /**
-   * Resets the settings object back to the default.
-   *
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function resetSettings() {
-    settings.reset();
-  }
-
-  /**
-   * A utility methods which converts UTC timestamp value into a valid time and date string.
-   *
-   * @param {number} time - UTC timestamp to be converted into date and time.
-   * @param {string} locales - a region identifier (i.e. en_US).
-   * @param {boolean} hour12 - 12 vs 24 hour. Set to true for 12 hour time formatting.
-   * @param {boolean} withDate - default is false. Set to true to append current date to UTC time format.
-   * @returns {string} A formatted time and date string.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function formatUTC(time, locales, hour12, withDate = false) {
-    const dt = new Date(time * 1000);
-    const d = dt.toLocaleDateString(locales);
-    const t = dt.toLocaleTimeString(locales, {
-      hour12: hour12
-    });
-    return withDate ? t + ' ' + d : t;
-  }
-
-  /**
-   * A utility method which converts seconds into TimeCode (i.e. 300 --> 05:00).
-   *
-   * @param {number} value - A number in seconds to be converted into a formatted time code.
-   * @returns {string} A formatted time code string.
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function convertToTimeCode(value) {
-    value = Math.max(value, 0);
-    let h = Math.floor(value / 3600);
-    let m = Math.floor(value % 3600 / 60);
-    let s = Math.floor(value % 3600 % 60);
-    return (h === 0 ? '' : h < 10 ? '0' + h.toString() + ':' : h.toString() + ':') + (m < 10 ? '0' + m.toString() : m.toString()) + ':' + (s < 10 ? '0' + s.toString() : s.toString());
+    wiring.setConfig(config);
   }
 
   /**
@@ -36500,605 +36312,47 @@ function MediaPlayer() {
    * @instance
    */
   function extend(parentNameString, childInstance, override) {
-    _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__["default"].extend(parentNameString, childInstance, override, context);
-  }
-
-  /**
-   * This method returns the active stream
-   *
-   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getActiveStream() {
-    if (!streamingInitialized) {
-      throw STREAMING_NOT_INITIALIZED_ERROR;
-    }
-    let streamInfo = streamController.getActiveStreamInfo();
-    return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
-  }
-
-  /**
-   * Returns the DashAdapter.js Module.
-   *
-   * @see {@link module:DashAdapter}
-   * @returns {Object}
-   * @memberof module:MediaPlayer
-   * @instance
-   */
-  function getDashAdapter() {
-    return adapter;
-  }
-
-  /**
-   * Triggers a request to the content steering server to update the steering information.
-   * @return {Promise<any>}
-   */
-  function triggerSteeringRequest() {
-    if (contentSteeringController) {
-      return contentSteeringController.loadSteeringData();
-    }
-  }
-
-  /**
-   * Returns the current response data of the content steering server
-   * @return {object}
-   */
-  function getCurrentSteeringResponseData() {
-    if (contentSteeringController) {
-      return contentSteeringController.getCurrentSteeringResponseData();
-    }
-  }
-
-  /**
-   * Returns the current manifest
-   * @returns {object}
-   */
-  function getManifest() {
-    return manifestModel.getValue();
-  }
-
-  /**
-   * Returns all BaseURLs that are available including synthesized elements (e.g by content steering)
-   * @returns {BaseURL[]}
-   */
-  function getAvailableBaseUrls() {
-    const manifest = manifestModel.getValue();
-    if (!manifest) {
-      return [];
-    }
-    return baseURLController.getBaseUrls(manifest);
-  }
-
-  /**
-   * Returns the available location elements including synthesized elements (e.g by content steering)
-   * @returns {MpdLocation[]}
-   */
-  function getAvailableLocations() {
-    const manifest = manifestModel.getValue();
-    if (!manifest) {
-      return [];
-    }
-    const manifestLocations = adapter.getLocation(manifest);
-    const synthesizedElements = contentSteeringController.getSynthesizedLocationElements(manifestLocations);
-    return manifestLocations.concat(synthesizedElements);
-  }
-
-  //***********************************
-  // PRIVATE METHODS
-  //***********************************
-
-  function _resetPlaybackControllers() {
-    playbackInitialized = false;
-    streamingInitialized = false;
-    adapter.reset();
-    streamController.reset();
-    gapController.reset();
-    catchupController.reset();
-    playbackController.reset();
-    serviceDescriptionController.reset();
-    contentSteeringController.reset();
-    abrController.reset();
-    throughputController.reset();
-    mediaController.reset();
-    segmentBaseController.reset();
-    if (protectionController) {
-      if (settings.get().streaming.protection.keepProtectionMediaKeys) {
-        protectionController.stop();
-      } else {
-        protectionController.reset();
-        protectionController = null;
-        _detectProtection();
-      }
-    }
-    textController.reset();
-    cmcdController.reset();
-    cmsdModel.reset();
-  }
-  function _resetPlaybackSessionSpecificSettings() {
-    customParametersModel.resetPlaybackSessionSpecificSettings();
-  }
-  function _createPlaybackControllers() {
-    // creates or get objects instances
-    const manifestLoader = _createManifestLoader();
-    if (!streamController) {
-      streamController = (0,_controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_40__["default"])(context).getInstance();
-    }
-    if (!textController) {
-      textController = (0,_text_TextController_js__WEBPACK_IMPORTED_MODULE_41__["default"])(context).create({
-        adapter,
-        baseURLController,
-        errHandler,
-        manifestModel,
-        mediaController,
-        settings,
-        videoModel
-      });
-    }
-    capabilitiesFilter.setConfig({
-      adapter,
-      capabilities,
-      customParametersModel,
-      errHandler,
-      manifestModel,
-      protectionController,
-      settings
-    });
-    streamController.setConfig({
-      abrController,
-      adapter,
-      baseURLController,
-      capabilities,
-      capabilitiesFilter,
-      contentSteeringController,
-      customParametersModel,
-      dashMetrics,
-      errHandler,
-      manifestLoader,
-      manifestModel,
-      mediaController,
-      mediaPlayerModel,
-      playbackController,
-      protectionController,
-      segmentBaseController,
-      serviceDescriptionController,
-      settings,
-      textController,
-      throughputController,
-      timelineConverter,
-      uriFragmentModel,
-      videoModel
-    });
-    gapController.setConfig({
-      adapter,
-      playbackController,
-      settings,
-      streamController,
-      timelineConverter,
-      videoModel
-    });
-    playbackController.setConfig({
-      adapter,
-      dashMetrics,
-      serviceDescriptionController,
-      settings,
-      streamController,
-      timelineConverter,
-      videoModel
-    });
-    catchupController.setConfig({
-      mediaPlayerModel,
-      playbackController,
-      settings,
-      streamController,
-      videoModel
-    });
-    throughputController.setConfig({
-      settings,
-      playbackController
-    });
-    abrController.setConfig({
-      adapter,
-      capabilities,
-      cmsdModel,
-      customParametersModel,
-      dashMetrics,
-      domStorage,
-      mediaPlayerModel,
-      settings,
-      streamController,
-      throughputController,
-      videoModel
-    });
-    cmcdController.setConfig({
-      abrController,
-      dashMetrics,
-      errHandler,
-      mediaPlayerModel,
-      playbackController,
-      serviceDescriptionController,
-      throughputController
-    });
-    clientDataReportingController.setConfig({
-      serviceDescriptionController
-    });
-    cmsdModel.setConfig({});
-
-    // initializes controller
-    mediaController.initialize();
-    throughputController.initialize();
-    abrController.initialize();
-    streamController.initialize(autoPlay, protectionData);
-    textController.initialize();
-    gapController.initialize();
-    catchupController.initialize();
-    cmcdController.initialize(autoPlay);
-    cmsdModel.initialize();
-    contentSteeringController.initialize();
-    segmentBaseController.initialize();
-  }
-  function _createManifestLoader() {
-    return (0,_ManifestLoader_js__WEBPACK_IMPORTED_MODULE_28__["default"])(context).create({
-      debug: debug,
-      errHandler: errHandler,
-      dashMetrics: dashMetrics,
-      mediaPlayerModel: mediaPlayerModel,
-      mssHandler: mssHandler,
-      settings: settings
-    });
-  }
-  function _detectProtection() {
-    if (protectionController) {
-      return protectionController;
-    }
-    if (typeof dashjs === 'undefined') {
-      return null;
-    }
-    // do not require Protection as dependencies as this is optional and intended to be loaded separately
-    let detectedProtection = dashjs.Protection;
-    if (typeof detectedProtection === 'function') {
-      //TODO need a better way to register/detect plugin components
-      let protection = detectedProtection(context).create();
-      _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].extend(detectedProtection.events);
-      _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"].extend(detectedProtection.events, {
-        publicOnly: true
-      });
-      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].extend(detectedProtection.errors);
-      protectionController = protection.createProtectionSystem({
-        debug,
-        errHandler,
-        videoModel,
-        customParametersModel,
-        capabilities,
-        eventBus,
-        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
-        BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"],
-        constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        cmcdController,
-        settings
-      });
-      if (!capabilities) {
-        capabilities = (0,_utils_Capabilities_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
-      }
-      capabilities.setProtectionController(protectionController);
-      return protectionController;
-    }
-    return null;
-  }
-  function _detectMetricsReporting() {
-    if (metricsReportingController || typeof dashjs === 'undefined') {
-      return;
-    }
-    // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
-    let detectedMetricsReporting = dashjs.MetricsReporting;
-    if (typeof detectedMetricsReporting === 'function') {
-      //TODO need a better way to register/detect plugin components
-      let metricsReporting = detectedMetricsReporting(context).create();
-      metricsReportingController = metricsReporting.createMetricsReporting({
-        debug: debug,
-        eventBus: eventBus,
-        mediaElement: getVideoElement(),
-        adapter: adapter,
-        dashMetrics: dashMetrics,
-        mediaPlayerModel: mediaPlayerModel,
-        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
-        constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        metricsConstants: _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_34__["default"]
-      });
-    }
-  }
-  function _detectMss() {
-    if (mssHandler || typeof dashjs === 'undefined') {
-      return;
-    }
-
-    // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
-    let detectedMssHandler = dashjs.MssHandler;
-    if (typeof detectedMssHandler === 'function') {
-      //TODO need a better way to register/detect plugin components
-      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].extend(detectedMssHandler.errors);
-      mssHandler = detectedMssHandler(context).create({
-        eventBus: eventBus,
-        mediaPlayerModel: mediaPlayerModel,
-        dashMetrics: dashMetrics,
-        manifestModel: manifestModel,
-        playbackController: playbackController,
-        streamController: streamController,
-        protectionController: protectionController,
-        baseURLController: baseURLController,
-        errHandler: errHandler,
-        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
-        constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        debug: debug,
-        initSegmentType: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_47__.HTTPRequest.INIT_SEGMENT_TYPE,
-        BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"],
-        ISOBoxer: codem_isoboxer__WEBPACK_IMPORTED_MODULE_27__,
-        settings: settings
-      });
-    }
-  }
-  function _detectOffline() {
-    if (!mediaPlayerInitialized) {
-      throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-    }
-    if (offlineController) {
-      return offlineController;
-    }
-    if (typeof dashjs === 'undefined') {
-      return null;
-    }
-
-    // do not require Offline as dependencies as this is optional and intended to be loaded separately
-    let detectedOfflineController = dashjs.OfflineController;
-    if (typeof detectedOfflineController === 'function') {
-      //TODO need a better way to register/detect plugin components
-      _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].extend(detectedOfflineController.events);
-      _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"].extend(detectedOfflineController.events, {
-        publicOnly: true
-      });
-      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].extend(detectedOfflineController.errors);
-      const manifestLoader = _createManifestLoader();
-      const manifestUpdater = (0,_ManifestUpdater_js__WEBPACK_IMPORTED_MODULE_30__["default"])(context).create();
-      manifestUpdater.setConfig({
-        manifestModel,
-        adapter,
-        manifestLoader,
-        errHandler,
-        contentSteeringController
-      });
-      offlineController = detectedOfflineController(context).create({
-        debug: debug,
-        manifestUpdater: manifestUpdater,
-        baseURLController: baseURLController,
-        manifestLoader: manifestLoader,
-        manifestModel: manifestModel,
-        mediaPlayerModel: mediaPlayerModel,
-        abrController: abrController,
-        playbackController: playbackController,
-        adapter: adapter,
-        errHandler: errHandler,
-        dashMetrics: dashMetrics,
-        timelineConverter: timelineConverter,
-        segmentBaseController: segmentBaseController,
-        schemeLoaderFactory: schemeLoaderFactory,
-        eventBus: eventBus,
-        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
-        errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"],
-        constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        settings: settings,
-        dashConstants: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_16__["default"],
-        urlUtils: (0,_streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_45__["default"])(context).getInstance()
-      });
-      return offlineController;
-    }
-    return null;
-  }
-  function _sanitizeSettings(value) {
-    const defaults = settings.get().streaming.defaultSchemeIdUri;
-    let output = {};
-    function __sanitizeDescriptorType(name, val, defaultSchemeIdUri) {
-      let out = {};
-      // For an empty string, let's unset the descriptor, i.e. return null
-      if (val) {
-        if (val instanceof Array) {
-          throw ARRAY_NOT_SUPPORTED_ERROR;
-        } else if (val instanceof Object) {
-          out.schemeIdUri = val.schemeIdUri ? val.schemeIdUri : '';
-          out.value = val.value ? val.value : '';
-        } else {
-          out.schemeIdUri = defaultSchemeIdUri;
-          out.value = val;
-          logger.warn('No schemeIdUri provided for ' + name + ', using default \"' + defaultSchemeIdUri + '\"');
-        }
-        return out;
-      }
-      return null;
-    }
-    if (value.id !== undefined) {
-      output.id = value.id;
-    }
-    if (value.lang !== undefined) {
-      output.lang = value.lang;
-    }
-    if (!isNaN(value.index)) {
-      output.index = value.index;
-    }
-    if (value.viewpoint !== undefined) {
-      output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
-    }
-    if (value.audioChannelConfiguration !== undefined) {
-      output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
-    }
-    if (value.role !== undefined && value.role !== null) {
-      output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
-
-      // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
-      if (output.role.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].DASH_ROLE_SCHEME_ID && output.role.value === 'Main') {
-        output.role.value = _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_16__["default"].MAIN;
-      }
-    }
-    if (value.accessibility !== undefined) {
-      output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
-    }
-    if (value.codec !== undefined) {
-      output.codec = value.codec;
-    }
-    return output;
+    _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].extend(parentNameString, childInstance, override, context);
+    _composeApis();
   }
 
   /**
    *
    * @private
    */
-  function _initializePlayback(startTime = NaN) {
-    if (offlineController) {
-      offlineController.resetRecords();
-    }
-    if (!streamingInitialized && source) {
-      streamingInitialized = true;
-      logger.info('Streaming Initialized');
-      _createPlaybackControllers();
-      if (typeof source === 'string') {
-        streamController.load(source, startTime);
-      } else {
-        streamController.loadWithManifest(source, startTime);
+  function _composeApis() {
+    API_FACTORIES.forEach(Factory => {
+      const api = Factory(context).create();
+      if (typeof api.setConfig === 'function') {
+        // a full replacement via extend(name, obj, false) may omit it
+        api.setConfig({
+          state,
+          mediaPlayer: instance,
+          wiring,
+          debug
+        });
       }
-    }
-    if (!playbackInitialized && isReady()) {
-      playbackInitialized = true;
-      eventBus.trigger(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"].PLAYBACK_INITIALIZED);
-      logger.info('Playback Initialized');
-    }
+      const {
+        setConfig,
+        getClassName,
+        ...methods
+      } = api; // strip factory plumbing
+      Object.assign(instance, methods);
+    });
   }
   instance = {
-    addABRCustomRule,
-    addExternalSubtitle,
-    addRequestInterceptor,
-    addResponseInterceptor,
-    addUTCTimingSource,
-    attachProtectionController,
-    attachSource,
-    attachTTMLRenderingDiv,
-    attachView,
-    attachVttRenderingDiv,
-    clearDefaultUTCTimingSources,
-    convertToTimeCode,
-    destroy,
-    duration,
-    enableForcedTextStreaming,
-    enableText,
     extend,
-    formatUTC,
-    getABRCustomRules,
-    getActiveStream,
-    getAutoPlay,
-    getAvailableBaseUrls,
-    getAvailableLocations,
-    getAverageLatency,
-    getAverageThroughput,
-    getBufferLength,
-    getCurrentLiveLatency,
-    getCurrentRepresentationForType,
-    getCurrentSteeringResponseData,
-    getCurrentTextTrackIndex,
-    getCurrentTrackFor,
-    getDashAdapter,
-    getDashMetrics,
-    getDebug,
-    getDvrSeekOffset,
-    getDvrWindow,
-    getExternalSubtitles,
-    getInitCache,
-    getInitialMediaSettingsFor,
-    getLowLatencyModeEnabled,
-    getManifest,
-    getOfflineController,
-    getPlaybackRate,
-    getProtectionController,
-    getProtectionData,
-    getRawThroughputData,
-    getRepresentationsByType,
-    getRepresentationsByTypeUnfiltered,
-    getSafeAverageThroughput,
-    getSettings,
-    getSource,
-    getStreamsFromManifest,
-    getTTMLRenderingDiv,
-    getTargetLiveDelay,
-    getTracksFor,
-    getTracksForTypeFromManifest,
-    getVersion,
-    getVideoElement,
-    getVolume,
-    getXHRWithCredentialsForType,
-    initialize,
-    isDynamic,
-    isMuted,
-    isPaused,
-    isReady,
-    isSeeking,
-    isTextEnabled,
-    off,
-    on,
-    pause,
-    play,
-    preload,
-    provideThumbnail,
-    refreshManifest,
-    registerCertificateRequestFilter,
-    registerCertificateResponseFilter,
-    registerCustomCapabilitiesFilter,
-    registerLicenseRequestFilter,
-    registerLicenseResponseFilter,
-    removeABRCustomRule,
-    removeAllABRCustomRule,
-    removeExternalSubtitleById,
-    removeExternalSubtitleByUrl,
-    removeRequestInterceptor,
-    removeResponseInterceptor,
-    removeUTCTimingSource,
-    reset,
-    resetCustomInitialTrackSelectionFunction,
-    resetSettings,
-    restoreDefaultUTCTimingSources,
-    retrieveManifest,
-    seek,
-    seekToOriginalLive,
-    seekToPresentationTime,
-    setAutoPlay,
-    setConfig,
-    setCurrentTrack,
-    setCustomInitialTrackSelectionFunction,
-    setInitialMediaSettingsFor,
-    setMute,
-    setPlaybackRate,
-    setProtectionData,
-    setRepresentationForTypeById,
-    setRepresentationForTypeByIndex,
-    setTextTrack,
-    setVolume,
-    setXHRWithCredentialsForType,
-    time,
-    timeAsUTC,
-    timeInDvrWindow,
-    trigger,
-    triggerSteeringRequest,
-    unregisterCertificateRequestFilter,
-    unregisterCertificateResponseFilter,
-    unregisterCustomCapabilitiesFilter,
-    unregisterLicenseRequestFilter,
-    unregisterLicenseResponseFilter,
-    updateSettings,
-    updateSource
+    setConfig
   };
+  _composeApis();
   setup();
   return instance;
 }
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
-const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__["default"].getClassFactory(MediaPlayer);
-factory.events = _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"];
-factory.errors = _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"];
-_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__["default"].updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
+const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(MediaPlayer);
+factory.events = _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"];
+factory.errors = _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_1__["default"];
+_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
@@ -38450,6 +37704,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _StreamProcessor_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./StreamProcessor.js */ "./src/streaming/StreamProcessor.js");
 /* harmony import */ var _thumbnail_ThumbnailController_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./thumbnail/ThumbnailController.js */ "./src/streaming/thumbnail/ThumbnailController.js");
 /* harmony import */ var _utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
+/* harmony import */ var _utils_BufferRangeUtils_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./utils/BufferRangeUtils.js */ "./src/streaming/utils/BufferRangeUtils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -38480,6 +37735,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 
@@ -38882,6 +38138,7 @@ function Stream(config) {
       dashMetrics: config.dashMetrics,
       errHandler,
       fragmentModel,
+      getBufferedEndForType: _getBufferedEndForType,
       manifestModel,
       mediaController,
       mediaPlayerModel,
@@ -39254,6 +38511,20 @@ function Stream(config) {
     }
     return _getProcessorByType(mediaInfo.type);
   }
+
+  /**
+   * Returns the end of the appended data of the given media type up to the position it has been requested to. Ranges after that position, e.g. left over from before a backward seek, are ignored.
+   * @param {string} type
+   * @return {number}
+   * @private
+   */
+  function _getBufferedEndForType(type) {
+    const processor = _getProcessorByType(type);
+    const buffer = processor ? processor.getBuffer() : null;
+    const ranges = buffer ? buffer.getAllBufferRanges() : null;
+    const bufferingTime = processor ? processor.getBufferingTime() : NaN;
+    return isNaN(bufferingTime) ? NaN : (0,_utils_BufferRangeUtils_js__WEBPACK_IMPORTED_MODULE_17__.getBufferedEndBefore)(ranges, bufferingTime);
+  }
   function _getProcessorByType(type) {
     if (!type) {
       return null;
@@ -39543,6 +38814,7 @@ function StreamProcessor(config) {
   let dashMetrics = config.dashMetrics;
   let errHandler = config.errHandler;
   let fragmentModel = config.fragmentModel;
+  let getBufferedEndForType = config.getBufferedEndForType;
   let manifestModel = config.manifestModel;
   let mediaController = config.mediaController;
   let mediaPlayerModel = config.mediaPlayerModel;
@@ -39554,7 +38826,7 @@ function StreamProcessor(config) {
   let textController = config.textController;
   let timelineConverter = config.timelineConverter;
   let type = config.type;
-  let bufferController, bufferingTime, containsVideoTrack, currentMediaInfo, dashHandler, enhancementStreamProcessor, instance, isDynamic, logger, mediaInfoArr, pendingSwitchToVoRepresentation, qualityChangeInProgress, representationController, scheduleController, segmentsController, shouldRepeatRequest, shouldUseExplicitTimeForRequest, trackSwitchInProgress;
+  let bufferController, bufferingTime, containsVideoTrack, currentMediaInfo, dashHandler, enhancementStreamProcessor, instance, isDynamic, logger, mediaInfoArr, pendingSwitchToVoRepresentation, qualityChangeInProgress, representationController, reportedSegmentListFailureId, scheduleController, segmentListLoad, segmentsController, shouldRepeatRequest, shouldScheduleAfterPruning, shouldUseExplicitTimeForRequest, trackSwitchInProgress;
   function setup() {
     logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_16__["default"])(context).getInstance().getLogger(instance);
     resetInitialSettings();
@@ -39632,6 +38904,8 @@ function StreamProcessor(config) {
       bufferController,
       dashMetrics,
       fragmentModel,
+      getBufferingTime,
+      getBufferedEndForType,
       mediaController,
       mediaPlayerModel,
       mimeType,
@@ -39663,6 +38937,9 @@ function StreamProcessor(config) {
     qualityChangeInProgress = false;
     enhancementStreamProcessor = null;
     trackSwitchInProgress = false;
+    segmentListLoad = null;
+    shouldScheduleAfterPruning = false;
+    reportedSegmentListFailureId = null;
     _resetPendingSwitchToRepresentation();
   }
   function reset(errored, keepBuffers) {
@@ -39859,6 +39136,11 @@ function StreamProcessor(config) {
       _noValidRequest();
       return;
     }
+
+    // Scheduling continues once the segment list is there, see _waitForSegmentList()
+    if (_waitForSegmentList()) {
+      return;
+    }
     let request = _getFragmentRequest();
     if (request) {
       shouldUseExplicitTimeForRequest = false;
@@ -39962,6 +39244,54 @@ function StreamProcessor(config) {
       }
     }
   }
+
+  /**
+   * SegmentBase: the segment list of a Representation is only loaded once we need its media segments.
+   * Scheduling restarts as soon as the segment list of the current Representation was loaded.
+   * @return {boolean} true if no media segment can be requested yet
+   * @private
+   */
+  function _waitForSegmentList() {
+    const representation = representationController.getCurrentRepresentation();
+    if (!representationController.isSegmentListMissing(representation)) {
+      return false;
+    }
+    const load = representationController.loadSegmentList(representation);
+    if (!load) {
+      // The segment list could not be loaded. Report once, then keep scheduling so ABR can still switch to another Representation.
+      if (reportedSegmentListFailureId !== representation.id) {
+        reportedSegmentListFailureId = representation.id;
+        errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_15__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_14__["default"].SEGMENT_BASE_LOADER_ERROR_CODE, _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_14__["default"].SEGMENT_BASE_LOADER_ERROR_MESSAGE));
+      }
+      _noValidRequest();
+      return true;
+    }
+    if (load !== segmentListLoad) {
+      segmentListLoad = load;
+      load.then(rep => {
+        // Superseded by a reset or a load for another Representation
+        if (segmentListLoad !== load) {
+          return;
+        }
+        segmentListLoad = null;
+        if (rep.segments && reportedSegmentListFailureId === rep.id) {
+          // Loaded on a retry, report the next failure again
+          reportedSegmentListFailureId = null;
+        }
+        // Quality and track switches restart scheduling themselves once they are done
+        if (qualityChangeInProgress || trackSwitchInProgress) {
+          return;
+        }
+        if (bufferController.getIsPruningInProgress()) {
+          // Restarted in _onBufferCleared() once pruning is done
+          shouldScheduleAfterPruning = true;
+          return;
+        }
+        scheduleController.startScheduleTimer(0);
+      });
+    }
+    return true;
+  }
   function checkAndHandleCompletedBuffering() {
     const representation = representationController.getCurrentRepresentation();
     const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
@@ -40048,8 +39378,11 @@ function StreamProcessor(config) {
       setExplicitBufferingTime(e.from);
     }
 
-    // (Re)start schedule once buffer has been pruned after a QuotaExceededError
-    if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
+    // (Re)start schedule once buffer has been pruned after a QuotaExceededError, or after pruning that interrupted waiting for a segment list
+    const restartAfterQuotaExceeded = e.quotaExceeded && e.hasEnoughSpaceToAppend;
+    const restartAfterPruning = shouldScheduleAfterPruning && !e.quotaExceeded;
+    if (restartAfterQuotaExceeded || restartAfterPruning) {
+      shouldScheduleAfterPruning = false;
       scheduleController.startScheduleTimer();
     }
   }
@@ -40314,7 +39647,13 @@ function StreamProcessor(config) {
   function _prepareForFastQualitySwitch(newRepresentation, oldRepresentation) {
     // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
     const time = playbackController.getTime();
-    let safeBufferLevel = 1.5 * (!isNaN(newRepresentation.fragmentDuration) ? newRepresentation.fragmentDuration : 1);
+    // The Representations handed in by ABR carry no fragmentDuration, the ones of the RepresentationController do.
+    // SegmentBase: the duration is unknown until the segment list was loaded, use the one of the old Representation instead.
+    const isValidDuration = duration => isFinite(duration) && duration > 0;
+    const newDuration = representationController.getRepresentationById(newRepresentation.id)?.fragmentDuration;
+    const oldDuration = oldRepresentation ? representationController.getRepresentationById(oldRepresentation.id)?.fragmentDuration : NaN;
+    const fragmentDuration = isValidDuration(newDuration) ? newDuration : isValidDuration(oldDuration) ? oldDuration : 1;
+    let safeBufferLevel = 1.5 * fragmentDuration;
     const request = fragmentModel.getRequests({
       state: _models_FragmentModel_js__WEBPACK_IMPORTED_MODULE_3__["default"].FRAGMENT_MODEL_EXECUTED,
       time: time + safeBufferLevel,
@@ -40904,6 +40243,9 @@ function StreamProcessor(config) {
   function finalisePlayList(time, reason) {
     dashMetrics.pushPlayListTraceMetrics(time, reason);
   }
+  function getBufferingTime() {
+    return bufferingTime;
+  }
   function getLastSegment() {
     return dashHandler.getLastSegment();
   }
@@ -40917,6 +40259,7 @@ function StreamProcessor(config) {
     getBuffer,
     getBufferController,
     getBufferLevel,
+    getBufferingTime,
     getFragmentModel,
     getLastSegment,
     getMediaInfo,
@@ -41726,6 +41069,19 @@ const CmcdPropertyMap = {
     }]
   },
   /**
+   * Maximum number of error codes (ec) buffered per report destination
+   * Priority: settings > default (10)
+   */
+  maxBufferedErrorCodes: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.maxBufferedErrorCodes',
+      priority: 1,
+      type: 'number',
+      default: 10
+    }]
+  },
+  /**
    * Global enabled CMCD keys
    * Priority: manifest > settings > default (all keys)
    *
@@ -41753,8 +41109,22 @@ const CmcdPropertyMap = {
     }]
   },
   /**
+   * Custom CMCD keys as a list of { key, value } entries
+   * (hyphenated key prefix required, e.g. 'org.svta-p-n').
+   * Settings only; not configurable via manifest.
+   */
+  customKeys: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.customKeys',
+      priority: 1,
+      type: 'array',
+      default: []
+    }]
+  },
+  /**
    * Request types to include CMCD data in
-   * Priority: manifest > settings > default (['segment', 'mpd'])
+   * Priority: manifest > settings > default (['segment', 'mpd', 'license'])
    */
   includeInRequests: {
     version: [1, 2],
@@ -41773,7 +41143,7 @@ const CmcdPropertyMap = {
       path: 'settings.streaming.cmcd.includeInRequests',
       priority: 2,
       type: 'array',
-      default: ['segment', 'mpd']
+      default: ['segment', 'mpd', 'license']
     }]
   },
   /**
@@ -41881,20 +41251,15 @@ const CmcdPropertyMap = {
     }]
   },
   /**
-   * V2: Target includeInRequests filter
-   * Note: This is target-specific, requires context
+   * V2: Target filter for response received (rr) reports
+   * Note: This is target-specific, requires context. No default: rr is reported for every request type.
    */
-  targetIncludeInRequests: {
+  targetResponseReceivedTypes: {
     version: [2],
     sources: [{
-      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeInRequests',
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].responseReceivedTypes',
       priority: 1,
       type: 'array'
-    }, {
-      path: 'settings.streaming.cmcd.includeInRequests',
-      priority: 2,
-      type: 'array',
-      default: ['segment', 'mpd']
     }]
   }
 };
@@ -42193,7 +41558,7 @@ __webpack_require__.r(__webpack_exports__);
    *  @memberof Constants#
    *  @static
    */
-  CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+  CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other', 'license'],
   /**
    *  @constant {integer} CMCD_DEFAULT_TIME_INTERVAL specifies the default value for time interval in seconds.
    *  @memberof Constants#
@@ -42473,7 +41838,7 @@ __webpack_require__.r(__webpack_exports__);
  * Protection Constants declaration
  * @ignore
  */
-/* harmony default export */ __webpack_exports__["default"] = ({
+const ProtectionConstants = {
   CLEARKEY_KEYSTEM_STRING: 'org.w3.clearkey',
   CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
   ENCRYPTION_SCHEME_CBCS: 'cbcs',
@@ -42501,6 +41866,7 @@ __webpack_require__.r(__webpack_exports__);
   },
   PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
   PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+  PLAYREADY_RECOMMENDATION_3000_KEYSTEM_STRING: 'com.microsoft.playready.recommendation.3000',
   PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
   ROBUSTNESS_STRINGS: {
     WIDEVINE: {
@@ -42514,7 +41880,18 @@ __webpack_require__.r(__webpack_exports__);
   W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
   WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
   WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed'
+};
+
+// System strings tried in order by requestMediaKeySystemAccess if the application does not define a
+// systemStringPriority. Key systems without an entry only use their own system string.
+// PlayReady: Edge accepts the plain string, Firefox uses '.recommendation'. Chrome on Windows only supports SL3000
+// via '.recommendation.3000'. It is opt-in via systemStringPriority, otherwise multi-DRM content would silently
+// switch from Widevine to PlayReady in Chrome.
+// Frozen as it is shared by all player instances
+ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY = Object.freeze({
+  [ProtectionConstants.PLAYREADY_KEYSTEM_STRING]: Object.freeze([ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING])
 });
+/* harmony default export */ __webpack_exports__["default"] = (ProtectionConstants);
 
 /***/ }),
 
@@ -42588,7 +41965,7 @@ function AbrController() {
   const context = this.context;
   const debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
   const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
-  let abandonmentStateDict, abandonmentTimeout, abrRulesCollection, adapter, capabilities, cmsdModel, currentRepresentationId, customParametersModel, dashMetrics, domStorage, droppedFramesHistory, instance, logger, mediaPlayerModel, queuedManualQualitySwitches, settings, streamController, streamProcessorDict, switchRequestHistory, throughputController, videoModel;
+  let abandonmentStateDict, abandonmentTimeout, abrRulesCollection, adapter, capabilities, cmsdModel, currentRepresentationId, customParametersModel, dashMetrics, domStorage, droppedFramesHistory, excludedRepresentationIds, instance, logger, mediaPlayerModel, queuedManualQualitySwitches, settings, streamController, streamProcessorDict, switchRequestHistory, throughputController, videoModel;
   function setup() {
     logger = debug.getLogger(instance);
     resetInitialSettings();
@@ -42655,6 +42032,7 @@ function AbrController() {
   }
   function resetInitialSettings() {
     abandonmentStateDict = {};
+    excludedRepresentationIds = {};
     streamProcessorDict = {};
     queuedManualQualitySwitches = new Map();
     if (droppedFramesHistory) {
@@ -42757,9 +42135,27 @@ function AbrController() {
   function getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos = true) {
     let voRepresentations = _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
 
+    // Drop excluded Representations first, so the settings filters fall back to the remaining ones
+    voRepresentations = _filterExcluded(voRepresentations);
+
     // Filter the list of options based on the provided settings
     voRepresentations = _filterByAllowedSettings(voRepresentations);
     return voRepresentations;
+  }
+  function _isExcluded(rep) {
+    // An unresolved dependentRepresentation is a placeholder without mediaInfo
+    const excludedUntil = excludedRepresentationIds[rep.mediaInfo?.streamInfo?.id]?.[rep.mediaInfo?.type]?.get(rep.id);
+    return excludedUntil !== undefined && Date.now() < excludedUntil;
+  }
+  function _filterExcluded(voRepresentations) {
+    // A Representation is not playable either if the one it depends on (e.g. its base layer) is excluded
+    const filteredRepresentations = voRepresentations.filter(rep => !_isExcluded(rep) && !(rep.dependentRepresentation && _isExcluded(rep.dependentRepresentation)));
+
+    // Like the settings filters, never return an empty list
+    if (filteredRepresentations.length === 0) {
+      return voRepresentations;
+    }
+    return filteredRepresentations;
   }
   function _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos) {
     let voRepresentations = [];
@@ -43148,6 +42544,41 @@ function AbrController() {
   }
 
   /**
+   * Excludes a Representation from quality decisions, e.g. because its segment list could not be loaded,
+   * and switches to the best remaining Representation at or below its bitrate.
+   * @param {object} representation
+   * @param {number} [duration] in milliseconds, excluded for good if not set
+   */
+  function excludeRepresentation(representation, duration = Infinity) {
+    const mediaInfo = representation.mediaInfo;
+    const streamId = mediaInfo.streamInfo.id;
+    // Content often reuses Representation ids across media types, keep them apart
+    excludedRepresentationIds[streamId] = excludedRepresentationIds[streamId] || {};
+    excludedRepresentationIds[streamId][mediaInfo.type] = excludedRepresentationIds[streamId][mediaInfo.type] || new Map();
+    excludedRepresentationIds[streamId][mediaInfo.type].set(representation.id, Date.now() + duration);
+
+    // Rules like BOLA cache the list of possible Representations, make them rebuild it without the excluded one.
+    // ponytail: BOLA only picks the Representation up again once the exclusion expired and its list is rebuilt for another reason
+    handleNewMediaInfo(mediaInfo);
+
+    // A late failure must not override a newer selection, only switch away if we are still on (or depend on) the excluded one
+    const currentRepresentation = streamProcessorDict[streamId]?.[mediaInfo.type]?.getRepresentationController()?.getCurrentCompositeRepresentation();
+    if (!currentRepresentation || currentRepresentation.id !== representation.id && currentRepresentation.dependentRepresentation?.id !== representation.id) {
+      logger.warn(`Excluded representation ${representation.id} for ${mediaInfo.type}`);
+      return;
+    }
+    const fallbackRepresentation = getOptimalRepresentationForBitrate(mediaInfo, representation.bitrateInKbit);
+    if (!fallbackRepresentation || fallbackRepresentation.id === representation.id) {
+      logger.error(`Excluded representation ${representation.id} for ${mediaInfo.type}, no other representation left to switch to`);
+      return;
+    }
+    logger.warn(`Excluded representation ${representation.id} for ${mediaInfo.type}, switching to representation ${fallbackRepresentation.id}`);
+    setPlaybackQuality(mediaInfo.type, mediaInfo.streamInfo, fallbackRepresentation, {
+      message: `[AbrController]: Representation ${representation.id} is excluded`
+    });
+  }
+
+  /**
    * This function is called by the scheduleControllers to check if the quality should be changed.
    * Consider this the main entry point for the ABR decision logic
    * @param {string} type
@@ -43435,6 +42866,7 @@ function AbrController() {
     if (abandonmentStateDict[streamId]) {
       delete abandonmentStateDict[streamId];
     }
+    delete excludedRepresentationIds[streamId];
     abrRulesCollection.clearDataForStream(streamId);
   }
   function handleNewMediaInfo(newMediaInfo) {
@@ -43444,6 +42876,7 @@ function AbrController() {
     canPerformQualitySwitch,
     checkPlaybackQuality,
     clearDataForStream,
+    excludeRepresentation,
     getAbandonmentStateFor,
     getInitialBitrateFor,
     getOptimalRepresentationForBitrate,
@@ -43804,9 +43237,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var _utils_InitCache_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../utils/InitCache.js */ "./src/streaming/utils/InitCache.js");
-/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
-/* harmony import */ var _streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _utils_BufferRangeUtils_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../utils/BufferRangeUtils.js */ "./src/streaming/utils/BufferRangeUtils.js");
+/* harmony import */ var _utils_InitCache_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../utils/InitCache.js */ "./src/streaming/utils/InitCache.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -43849,7 +43283,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const BUFFER_END_THRESHOLD = 0.5;
+
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 const BUFFER_CONTROLLER_TYPE = 'BufferController';
@@ -43868,7 +43302,7 @@ function BufferController(config) {
   let instance, logger, isBufferingCompleted, bufferLevel, criticalBufferLevel, mediaSource, maxAppendedIndex, maximumIndex, sourceBufferSink, dischargeBuffer, isPrebuffering, dischargeFragments, bufferState, appendedBytesInfo, wallclockTicked, isPruningInProgress, isQuotaExceeded, initCache, pendingPruningRanges, replacingBuffer, seekTarget;
   function setup() {
     logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance().getLogger(instance);
-    initCache = (0,_utils_InitCache_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
+    initCache = (0,_utils_InitCache_js__WEBPACK_IMPORTED_MODULE_10__["default"])(context).getInstance();
     resetInitialSettings();
   }
 
@@ -43881,11 +43315,11 @@ function BufferController(config) {
     eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
     eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
     eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
-    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
-    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
-    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
-    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
-    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_STALLED, _onPlaybackStalled, instance);
+    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
+    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
+    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+    eventBus.on(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_STALLED, _onPlaybackStalled, instance);
   }
 
   /**
@@ -44132,7 +43566,7 @@ function BufferController(config) {
       _checkIfBufferingCompleted();
     }
     const ranges = sourceBufferSink.getAllBufferRanges();
-    if (appendedBytesInfo.segmentType === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_10__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+    if (appendedBytesInfo.segmentType === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_11__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
       _showBufferRanges(ranges);
       _onPlaybackProgression();
       _adjustSeekTarget();
@@ -44341,114 +43775,27 @@ function BufferController(config) {
     });
   }
   function getAllRangesWithSafetyFactor(seekTime) {
-    const clearRanges = [];
+    if (!sourceBufferSink) {
+      return [];
+    }
     const ranges = sourceBufferSink.getAllBufferRanges();
-
-    // no valid ranges
     if (!ranges || ranges.length === 0) {
-      return clearRanges;
+      return [];
     }
-
-    // if no target time is provided we clear everything
-    if (!seekTime && seekTime !== 0 || isNaN(seekTime)) {
-      clearRanges.push({
-        start: ranges.start(0),
-        end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD
-      });
-    }
-
-    // otherwise we need to calculate the correct pruning range
-    else {
-      const behindPruningRange = _getRangeBehindForPruning(seekTime, ranges);
-      const aheadPruningRange = _getRangeAheadForPruning(seekTime, ranges);
-      if (behindPruningRange) {
-        clearRanges.push(behindPruningRange);
-      }
-      if (aheadPruningRange) {
-        clearRanges.push(aheadPruningRange);
-      }
-    }
-    return clearRanges;
-  }
-  function _getRangeBehindForPruning(targetTime, ranges) {
-    const bufferToKeepBehind = settings.get().streaming.buffer.bufferToKeep;
-    const startOfBuffer = ranges.start(0);
-
-    // if we do a seek ahead of the current play position we do need to prune behind the new play position
-    const behindDiff = targetTime - startOfBuffer;
-    if (behindDiff > bufferToKeepBehind) {
-      let rangeEnd = Math.max(0, targetTime - bufferToKeepBehind);
-      // Ensure we keep full range of current fragment
-      const currentTimeRequest = fragmentModel.getRequests({
-        state: _models_FragmentModel_js__WEBPACK_IMPORTED_MODULE_2__["default"].FRAGMENT_MODEL_EXECUTED,
-        time: targetTime,
-        threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
-      })[0];
-      if (currentTimeRequest) {
-        rangeEnd = Math.min(currentTimeRequest.startTime, rangeEnd);
-      }
-      if (rangeEnd > 0) {
-        return {
-          start: startOfBuffer,
-          end: rangeEnd
-        };
-      }
-    }
-    return null;
-  }
-  function _getRangeAheadForPruning(targetTime, ranges) {
-    // if we do a seek behind the current play position we do need to prune ahead of the new play position
-    // we keep everything that is within bufferToKeepAhead but only if the buffer is continuous.
-    // Otherwise we have gaps once the seek is done which might trigger an unintentional gap jump
-    const endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
-    const continuousBufferTime = getContinuousBufferTimeForTargetTime(targetTime);
-
-    // This is the maximum range we keep ahead
-    const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
-    const bufferToKeepAhead = isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
-
-    // Define the start time from which we will prune. If there is no continuous range from the targettime we start immediately at the target time
-    // Otherwise we set the start point to the end of the continuous range taking the maximum buffer to keep ahead into account
-    let rangeStart = !isNaN(continuousBufferTime) ? Math.min(continuousBufferTime, targetTime + bufferToKeepAhead) : targetTime;
-
-    // Check if we are done buffering, no need to prune then
-    if (rangeStart >= ranges.end(ranges.length - 1)) {
-      return null;
-    }
-
-    // Ensure we keep full range of current fragment
+    const bufferSettings = settings.get().streaming.buffer;
+    const isLongFormContent = streamInfo.manifestInfo.duration >= bufferSettings.longFormContentDurationThreshold;
     const currentTimeRequest = fragmentModel.getRequests({
       state: _models_FragmentModel_js__WEBPACK_IMPORTED_MODULE_2__["default"].FRAGMENT_MODEL_EXECUTED,
-      time: targetTime,
+      time: seekTime,
       threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
     })[0];
-    if (currentTimeRequest) {
-      rangeStart = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeStart);
-    }
-
-    // Never remove the contiguous range of targetTime in order to avoid flushes & reenqueues when the user doesn't want it
-    const avoidCurrentTimeRangePruning = settings.get().streaming.buffer.avoidCurrentTimeRangePruning;
-    if (avoidCurrentTimeRangePruning) {
-      for (let i = 0; i < ranges.length; i++) {
-        if (ranges.start(i) <= targetTime && targetTime <= ranges.end(i) && ranges.start(i) <= rangeStart && rangeStart <= ranges.end(i)) {
-          let oldRangeStart = rangeStart;
-          if (i + 1 < ranges.length) {
-            rangeStart = ranges.start(i + 1);
-          } else {
-            rangeStart = ranges.end(i) + 1;
-          }
-          logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer + '] instead' + (rangeStart < endOfBuffer ? '' : ' (no actual pruning)'));
-          break;
-        }
-      }
-    }
-    if (rangeStart < ranges.end(ranges.length - 1)) {
-      return {
-        start: rangeStart,
-        end: endOfBuffer
-      };
-    }
-    return null;
+    return (0,_utils_BufferRangeUtils_js__WEBPACK_IMPORTED_MODULE_9__.getPruningRanges)(ranges, seekTime, {
+      bufferToKeepBehind: bufferSettings.bufferToKeep,
+      bufferToKeepAhead: isLongFormContent ? bufferSettings.bufferTimeAtTopQualityLongForm : bufferSettings.bufferTimeAtTopQuality,
+      currentTimeRequest,
+      avoidCurrentTimeRangePruning: bufferSettings.avoidCurrentTimeRangePruning,
+      logger
+    });
   }
   function _onPlaybackProgression() {
     if (!replacingBuffer && (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || textController.isTextEnabled())) {
@@ -44465,19 +43812,7 @@ function BufferController(config) {
   function hasBufferAtTime(time) {
     try {
       const ranges = sourceBufferSink.getAllBufferRanges();
-      if (!ranges || ranges.length === 0) {
-        return false;
-      }
-      let i = 0;
-      while (i < ranges.length) {
-        const start = ranges.start(i);
-        const end = ranges.end(i);
-        if (time >= start && time <= end) {
-          return true;
-        }
-        i += 1;
-      }
-      return false;
+      return (0,_utils_BufferRangeUtils_js__WEBPACK_IMPORTED_MODULE_9__.hasBufferAtTime)(ranges, time);
     } catch (e) {
       logger.error(e);
       return false;
@@ -44488,61 +43823,15 @@ function BufferController(config) {
       return null;
     }
     const ranges = sourceBufferSink.getAllBufferRanges();
-    let start = 0;
-    let end = 0;
-    let firstStart = null;
-    let lastEnd = null;
-    let gap = 0;
-    let len, i;
-    const toler = !isNaN(tolerance) ? tolerance : 0.15;
-    if (ranges !== null && ranges !== undefined) {
-      for (i = 0, len = ranges.length; i < len; i++) {
-        start = ranges.start(i);
-        end = ranges.end(i);
-        if (firstStart === null) {
-          gap = Math.abs(start - time);
-          if (time >= start && time < end) {
-            // start the range
-            firstStart = start;
-            lastEnd = end;
-          } else if (gap <= toler) {
-            // start the range even though the buffer does not contain time 0
-            firstStart = start;
-            lastEnd = end;
-          }
-        } else {
-          gap = start - lastEnd;
-          if (gap <= toler) {
-            // the discontinuity is smaller than the tolerance, combine the ranges
-            lastEnd = end;
-          } else {
-            break;
-          }
-        }
-      }
-      if (firstStart !== null) {
-        return {
-          start: firstStart,
-          end: lastEnd
-        };
-      }
-    }
-    return null;
+    return (0,_utils_BufferRangeUtils_js__WEBPACK_IMPORTED_MODULE_9__.getRangeAt)(ranges, time, tolerance);
   }
   function _getBufferLength(time, tolerance) {
-    let range, length;
-
     // Consider gap/discontinuity limit as tolerance
     if (settings.get().streaming.gaps.jumpGaps) {
       tolerance = settings.get().streaming.gaps.smallGapLimit;
     }
-    range = getRangeAt(time, tolerance);
-    if (range === null) {
-      length = 0;
-    } else {
-      length = range.end - time;
-    }
-    return length;
+    const range = getRangeAt(time, tolerance);
+    return range ? range.end - time : 0;
   }
   function _updateBufferLevel() {
     if (playbackController) {
@@ -44829,21 +44118,7 @@ function BufferController(config) {
    */
   function getContinuousBufferTimeForTargetTime(targetTime) {
     try {
-      let adjustedTime = targetTime;
-      const ranges = sourceBufferSink.getAllBufferRanges();
-      if (!ranges || ranges.length === 0) {
-        return NaN;
-      }
-      let i = 0;
-      while (adjustedTime === targetTime && i < ranges.length) {
-        const start = ranges.start(i);
-        const end = ranges.end(i);
-        if (adjustedTime >= start && adjustedTime <= end) {
-          adjustedTime = end;
-        }
-        i += 1;
-      }
-      return adjustedTime === targetTime ? NaN : adjustedTime;
+      return (0,_utils_BufferRangeUtils_js__WEBPACK_IMPORTED_MODULE_9__.getContinuousBufferTime)(sourceBufferSink.getAllBufferRanges(), targetTime);
     } catch (e) {
       return NaN;
     }
@@ -44896,11 +44171,11 @@ function BufferController(config) {
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, this);
-    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_PROGRESS, _onPlaybackProgression, this);
-    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
-    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
-    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYBACK_STALLED, _onPlaybackStalled, this);
+    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, this);
+    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_PROGRESS, _onPlaybackProgression, this);
+    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
+    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
+    eventBus.off(_streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].PLAYBACK_STALLED, _onPlaybackStalled, this);
     resetInitialSettings(errored, keepBuffers);
   }
   instance = {
@@ -45599,7 +44874,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 function CmcdController() {
-  let cmcdConfigAccessor, cmcdModel, cmcdReporter, dashMetrics, errHandler, instance, logger, mediaPlayerModel, reporterNeedsRebuild, urlLoader;
+  let cmcdConfigAccessor, cmcdModel, cmcdReporter, dashMetrics, errHandler, eventTargetErrorCodes, instance, logger, mediaPlayerModel, reporterConfigKey, reporterNeedsRebuild, requestErrorCodes, urlLoader;
   let context = this.context;
   let eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
   let debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
@@ -45661,6 +44936,8 @@ function CmcdController() {
   }
   function _resetInitialSettings() {
     reporterNeedsRebuild = false;
+    requestErrorCodes = [];
+    eventTargetErrorCodes = [];
   }
   function _initializeEventBus(autoPlay) {
     eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
@@ -45687,20 +44964,65 @@ function CmcdController() {
     });
   }
   function _onPlaybackStateChange(state) {
-    // Update CmcdReporter with the new player state
-    if (cmcdReporter) {
-      cmcdReporter.update({
-        sta: state
-      });
-    }
-    triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.PLAY_STATE);
+    // update({ sta }) before recordEvent() would send the ps report without the event-mode data
+    triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.PLAY_STATE, {
+      sta: state
+    });
   }
-  function _createCmcdReporter() {
+  function _createCmcdReporter(cmcdConfig = _getReporterConfig()) {
+    reporterConfigKey = JSON.stringify(cmcdConfig);
+    const {
+      customKeys,
+      ...reporterConfig
+    } = cmcdConfig;
+
+    // Error codes not yet reported to the previous event targets are dropped on a rebuild
+    eventTargetErrorCodes = [];
+    const eventTargets = cmcdConfig.eventTargets.map(({
+      responseReceivedTypes,
+      ...target
+    }) => {
+      const errorCodes = [];
+      eventTargetErrorCodes.push(errorCodes);
+      return {
+        ...target,
+        transform: (data, request) => {
+          // Only rr reports carry the request. Filter before attaching ec, so a dropped report keeps the buffered codes
+          if (request && responseReceivedTypes && !cmcdModel.isIncludedInRequestFilter(request.customData?.request?.type, responseReceivedTypes)) {
+            return null;
+          }
+          return _attachErrorCodes(errorCodes, data);
+        }
+      };
+    });
+    const reporter = new _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CmcdReporter({
+      ...reporterConfig,
+      // Every decorated request carries the buffered error codes, i.e. every request that passes the request filter
+      transform: data => _attachErrorCodes(requestErrorCodes, data),
+      eventTargets
+    }, _customRequester);
+
+    // Custom keys are persistent session data and included in all reports
+    if (Object.keys(customKeys).length > 0) {
+      reporter.update(customKeys);
+    }
+    return reporter;
+  }
+
+  /**
+   * Returns the reporter configuration as plain data, so two configurations can be compared.
+   * @return {object}
+   * @private
+   */
+  function _getReporterConfig() {
+    const customKeys = _getValidatedCustomKeys();
     const cmcdConfig = {
       version: cmcdConfigAccessor.getVersion(),
       transmissionMode: cmcdConfigAccessor.get('mode') === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_MODE_HEADERS ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_HEADERS : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_QUERY,
-      enabledKeys: cmcdConfigAccessor.get('keys'),
-      eventTargets: _buildReporterTargets()
+      // Configured custom keys are enabled implicitly, otherwise the reporter's key filter would drop them
+      enabledKeys: [...cmcdConfigAccessor.get('keys'), ...Object.keys(customKeys)],
+      eventTargets: _buildReporterTargets(),
+      customKeys
     };
 
     // Only pass sid/cid if they have actual values, so CmcdReporter
@@ -45713,7 +45035,29 @@ function CmcdController() {
     if (cid) {
       cmcdConfig.cid = cid;
     }
-    return new _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CmcdReporter(cmcdConfig, _customRequester);
+    return cmcdConfig;
+  }
+
+  /**
+   * Returns the configured custom CMCD keys as a data object, dropping entries whose key
+   * lacks the hyphenated prefix required by the CMCD specification (e.g. 'com.example-mykey').
+   * @returns {object}
+   * @private
+   */
+  function _getValidatedCustomKeys() {
+    const customKeys = cmcdConfigAccessor.get('customKeys') ?? [];
+    if (!Array.isArray(customKeys)) {
+      logger.warn('Ignoring CMCD customKeys setting: expected an array of { key, value } entries');
+      return {};
+    }
+    return customKeys.reduce((result, entry) => {
+      if (entry && typeof entry.key === 'string' && (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.isCmcdCustomKey)(entry.key) && entry.value !== undefined) {
+        result[entry.key] = entry.value;
+      } else {
+        logger.warn(`Ignoring CMCD custom key entry "${entry ? entry.key : entry}": entries require a value and a key with a hyphenated prefix, e.g. "com.example-mykey"`);
+      }
+      return result;
+    }, {});
   }
   function _buildReporterTargets() {
     const targets = cmcdConfigAccessor.getEventTargets();
@@ -45727,10 +45071,37 @@ function CmcdController() {
         events: accessor.get('targetEvents'),
         interval: accessor.get('targetInterval') ?? _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_DEFAULT_TIME_INTERVAL,
         batchSize: accessor.get('targetBatchSize') || 1,
-        enabledKeys: accessor.get('targetKeys')
+        enabledKeys: accessor.get('targetKeys'),
+        responseReceivedTypes: accessor.get('targetResponseReceivedTypes')
       });
       return result;
     }, []);
+  }
+
+  /**
+   * Per the CMCD v2 specification, error codes are buffered per report destination and reported
+   * as an inner list of strings with the next report to that destination, e.g. ec=("16" "27").
+   * Codes a destination does not report (e.g. ec not in its enabled keys) are dropped with that report.
+   * @param {string[]} errorCodes - The buffer of the report destination, emptied by this call
+   * @param {object} data - The report data
+   * @return {object}
+   * @private
+   */
+  function _attachErrorCodes(errorCodes, data) {
+    // Response reports copy the request report's ec, which belongs to the request destination
+    delete data.ec;
+    if (errorCodes.length > 0) {
+      data.ec = errorCodes.splice(0);
+    }
+    return data;
+  }
+
+  // Bounds the buffer of a destination that never reports again (e.g. HTTP 410 or no matching request type)
+  function _bufferErrorCode(errorCodes, code) {
+    errorCodes.push(code);
+    if (errorCodes.length > cmcdConfigAccessor.get('maxBufferedErrorCodes')) {
+      errorCodes.shift();
+    }
   }
   function _customRequester(request) {
     return new Promise(resolve => {
@@ -45765,14 +45136,20 @@ function CmcdController() {
     if (errorData.error?.data?.request?.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__.HTTPRequest.CMCD_EVENT) {
       return;
     }
-    // Update CmcdReporter with the error code
-    if (cmcdReporter) {
-      const errorCode = errorData.error?.code || errorData.error?.data?.code;
-      if (errorCode) {
-        cmcdReporter.update({
-          ec: errorCode
-        });
+    if (!cmcdReporter) {
+      return;
+    }
+
+    // A pending rebuild recreates the event target buffers, so run it before buffering
+    _rebuildReporterIfNeeded();
+    const errorCode = errorData.error?.code || errorData.error?.data?.code;
+    if (errorCode) {
+      const code = String(errorCode);
+      // Without request mode nothing would ever flush the request buffer
+      if (isCmcdEnabled()) {
+        _bufferErrorCode(requestErrorCodes, code);
       }
+      eventTargetErrorCodes.forEach(errorCodes => _bufferErrorCode(errorCodes, code));
     }
     triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.ERROR);
   }
@@ -45792,23 +45169,34 @@ function CmcdController() {
       return;
     }
 
-    // Reset flag only after confirming we will rebuild
+    // Reset flag only once the manifest params are available
     reporterNeedsRebuild = false;
+
+    // Most manifest refreshes do not change the CMCD config. Rebuilding would restart sn
+    // and drop the reporter state (e.g. msd sent once) and the buffered error codes.
+    const cmcdConfig = _getReporterConfig();
+    if (JSON.stringify(cmcdConfig) === reporterConfigKey) {
+      return;
+    }
     cmcdReporter.stop(true);
-    cmcdReporter = _createCmcdReporter();
+    cmcdReporter = _createCmcdReporter(cmcdConfig);
     cmcdReporter.start();
   }
 
   /**
    * The handler that is triggered for CMCD event mode events (e.g., play, pause, error). Note that response recevived (rr) events are handled by getCmcdResponseReceivedInterceptors.
    * @param event
+   * @param {object} [additionalData] - Keys to send with the event in addition to the event-mode data
    */
-  function triggerCmcdEventMode(event) {
+  function triggerCmcdEventMode(event, additionalData = {}) {
     if (!cmcdReporter) {
       return;
     }
     _rebuildReporterIfNeeded();
-    const cmcdData = cmcdModel.getEventModeData();
+    const cmcdData = {
+      ...cmcdModel.getEventModeData(),
+      ...additionalData
+    };
 
     // Route media start delay (MSD) through update() for the reporter's internal send-once tracking
     const msdData = cmcdModel.calculateMsd();
@@ -45827,12 +45215,14 @@ function CmcdController() {
    *
    * @param {object} request - The request object with at least { url, type }.
    *                           Will be mutated with CMCD-decorated url/headers.
+   * @return {boolean} True if the request was decorated
    */
   function applyCmcdToRequest(request) {
-    if (!cmcdReporter || !isCmcdEnabled()) {
-      return;
+    if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(request.type)) {
+      return false;
     }
     _rebuildReporterIfNeeded();
+    let applied = false;
     try {
       const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
 
@@ -45845,11 +45235,13 @@ function CmcdController() {
       request.url = decorated.url;
       request.headers = decorated.headers;
       request.cmcd = decorated.customData?.cmcd || {};
+      // Set before the event: a throwing listener must not drop the decoration and its buffered ec
+      applied = true;
       _triggerCmcdDataGeneratedEvent(request);
     } catch (e) {
       logger.warn(e);
-      return null;
     }
+    return applied;
   }
   function _triggerCmcdDataGeneratedEvent(request) {
     const effectiveMode = cmcdConfigAccessor.get('mode');
@@ -45874,7 +45266,7 @@ function CmcdController() {
   }
   function isCmcdEnabled(targetIndex = null) {
     if (targetIndex !== null) {
-      return _targetCanBeEnabled(targetIndex) && _checkTargetIncludeInRequests(targetIndex);
+      return _targetCanBeEnabled(targetIndex);
     } else {
       return _canBeEnabled() && _checkIncludeInRequests();
     }
@@ -45921,23 +45313,6 @@ function CmcdController() {
     }
     return enabled && url;
   }
-  function _checkTargetIncludeInRequests(targetIndex) {
-    const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
-    let enabledRequests = targetAccessor.get('targetIncludeInRequests');
-    if (!enabledRequests) {
-      return true;
-    }
-    const defaultAvailableRequests = _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_AVAILABLE_REQUESTS;
-    const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
-    if (invalidRequests.length === enabledRequests.length) {
-      logger.error(`None of the request types are supported.`);
-      return false;
-    }
-    invalidRequests.forEach(k => {
-      logger.warn(`request type ${k} is not supported.`);
-    });
-    return true;
-  }
   function _onPlaybackRateChanged(data) {
     const prData = cmcdModel.onPlaybackRateChanged(data);
     if (cmcdReporter && prData) {
@@ -45980,13 +45355,11 @@ function CmcdController() {
     return [_cmcdRequestModeInterceptor];
   }
   function _cmcdRequestModeInterceptor(commonMediaRequest) {
-    const requestType = commonMediaRequest.customData.request.type;
-    if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(requestType)) {
-      commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
+    const request = commonMediaRequest.customData.request;
+    if (!applyCmcdToRequest(request)) {
+      commonMediaRequest.cmcd = request.cmcd;
       return commonMediaRequest;
     }
-    let request = commonMediaRequest.customData.request;
-    applyCmcdToRequest(request);
     commonMediaRequest = {
       ...commonMediaRequest,
       url: request.url,
@@ -47560,7 +46933,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
 /* harmony import */ var _utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/BCP47Utils.js */ "./src/streaming/utils/BCP47Utils.js");
-/* harmony import */ var bcp_47_match__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! bcp-47-match */ "./node_modules/bcp-47-match/index.js");
 /* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
 /* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
 /* harmony import */ var _utils_AudioChannelConfiguration_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../utils/AudioChannelConfiguration.js */ "./src/streaming/utils/AudioChannelConfiguration.js");
@@ -47595,7 +46967,6 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 
 
 
@@ -47690,7 +47061,9 @@ function MediaController() {
     if (localSettings) {
       logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
       filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, localSettings);
-      filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, localSettings);
+      filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, {
+        lang: getAvailablePreferredLanguages(filteredTracks, localSettings)
+      });
       filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, localSettings);
       filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, localSettings);
       if (!(type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && !!lastSelectedTracks[type])) {
@@ -47820,6 +47193,9 @@ function MediaController() {
         settings.role = settings.roles[0];
         delete settings.roles;
       }
+      if (settings.viewpoint) {
+        settings.viewpoint = settings.viewpoint[0];
+      }
       if (settings.accessibility) {
         settings.accessibility = settings.accessibility[0];
       }
@@ -47946,9 +47322,56 @@ function MediaController() {
     logger.info('Filter-Function (' + filterFn.name + ') resulted in no tracks; setting ignored');
     return tracks;
   }
+  function getAvailablePreferredLanguages(tracks, settings) {
+    function _getAllLanguages(tracks) {
+      const languages = new Set();
+      tracks.forEach(track => {
+        if (track.lang) {
+          languages.add(track.lang);
+        }
+      });
+      return Array.from(languages);
+    }
+    function _getBestLanguageMatch(langs, pref_lang) {
+      if (!pref_lang || typeof pref_lang !== 'string') {
+        return [];
+      }
+      const pref = (0,_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__.normalizeBcp47)(pref_lang);
+      const pick = fn => langs.filter((lang, i) => fn(normalized[i]));
+
+      // 1. exact match
+      let arr = pick(t => t === pref);
+      // 2. track is more specific than the preference (de -> de-AT, zh -> zh-cmn)
+      arr = arr.length ? arr : pick(t => t.startsWith(pref + '-'));
+      if (arr.length) {
+        return arr;
+      }
+      // 3. track is less specific than the preference, longest prefix wins (en-AU -> en, zh-Hant-TW -> zh-Hant)
+      const longestPrefix = Math.max(-1, ...normalized.filter(t => pref.startsWith(t + '-')).map(t => t.length));
+      arr = pick(t => t.length === longestPrefix && pref.startsWith(t + '-'));
+      // 4. same primary language subtag (de-CH -> de-AT, de-DE)
+      // ponytail: extlang families (zh-cmn, zh-yue) count as one language here, compare up to the extlang if that matters
+      return arr.length ? arr : pick(t => t.split('-')[0] === pref.split('-')[0]);
+    }
+    const prefLang = settings.lang;
+    const availableLanguages = _getAllLanguages(tracks);
+    const normalized = availableLanguages.map(lang => (0,_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__.normalizeBcp47)(lang));
+    if (!prefLang || prefLang instanceof RegExp) {
+      return prefLang;
+    }
+    const preferredLanguages = Array.isArray(prefLang) ? prefLang : [prefLang];
+    return [...new Set(preferredLanguages.flatMap(preference => _getBestLanguageMatch(availableLanguages, preference)))];
+  }
   function matchSettingsLang(settings, track) {
     try {
-      return !settings.lang || settings.lang instanceof RegExp ? track.lang.match(settings.lang) : track.lang !== '' ? (0,bcp_47_match__WEBPACK_IMPORTED_MODULE_10__.extendedFilter)(track.lang, (0,_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__.normalizeBcp47)(settings.lang)).length > 0 : false;
+      if (!settings.lang) {
+        return true;
+      }
+      if (settings.lang instanceof RegExp) {
+        return !!track.lang.match(settings.lang);
+      }
+      const trackLang = (0,_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__.normalizeBcp47)(track.lang);
+      return !!trackLang && [].concat(settings.lang).some(l => (0,_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__.normalizeBcp47)(l) === trackLang);
     } catch (e) {
       return false;
     }
@@ -47999,25 +47422,7 @@ function MediaController() {
   }
   function matchSettings(settings, track, isTrackActive = false) {
     try {
-      let matchLang = false;
-
-      // If there is no language defined in the target settings we got a match
-      if (!settings.lang) {
-        matchLang = true;
-      }
-
-      // If the target language is provided as a RegExp apply match function
-      else if (settings.lang instanceof RegExp) {
-        matchLang = track.lang.match(settings.lang);
-      }
-
-      // If the track has a language and we can normalize the target language check if we got a match
-      else if (track.lang !== '') {
-        const normalizedSettingsLang = (0,_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__.normalizeBcp47)(settings.lang);
-        if (normalizedSettingsLang) {
-          matchLang = (0,bcp_47_match__WEBPACK_IMPORTED_MODULE_10__.extendedFilter)(track.lang, normalizedSettingsLang).length > 0;
-        }
-      }
+      const matchLang = matchSettingsLang(settings, track);
       const matchIndex = settings.index === undefined || settings.index === null || track.index === settings.index;
       const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
         return _compareDescriptorType(item, settings.viewpoint);
@@ -48433,6 +47838,8 @@ function MediaController() {
     addTrack,
     areTracksEqual,
     clearDataForStream,
+    filterTracksBySettings,
+    getAvailablePreferredLanguages,
     getCurrentTrackFor,
     getInitialSettings,
     getTracksFor,
@@ -48990,6 +48397,14 @@ function PlaybackController() {
   }
 
   /**
+   * Returns the buffered ranges of the video element, i.e. the intersection of the buffered ranges of all SourceBuffers
+   * @return {TimeRanges|null}
+   */
+  function getBufferedRanges() {
+    return streamInfo && videoModel ? videoModel.getBufferRange() : null;
+  }
+
+  /**
    * Returns ended attribute of the video element
    * @return {boolean|null}
    */
@@ -49520,6 +48935,7 @@ function PlaybackController() {
     computeAndSetLiveDelay,
     getAvailabilityStartTime,
     getBufferLevel,
+    getBufferedRanges,
     getCurrentLiveLatency,
     getEnded,
     getInitialCatchupModeActivated,
@@ -49572,6 +48988,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
 /* harmony import */ var _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../constants/MetricsConstants.js */ "./src/streaming/constants/MetricsConstants.js");
 /* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _utils_BufferRangeUtils_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../utils/BufferRangeUtils.js */ "./src/streaming/utils/BufferRangeUtils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -49610,6 +49027,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 function ScheduleController(config) {
   config = config || {};
   const abrController = config.abrController;
@@ -49618,6 +49036,8 @@ function ScheduleController(config) {
   const dashMetrics = config.dashMetrics;
   const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
   const fragmentModel = config.fragmentModel;
+  const getBufferingTime = config.getBufferingTime || (() => NaN);
+  const getBufferedEndForType = config.getBufferedEndForType || (() => NaN);
   const mediaPlayerModel = config.mediaPlayerModel;
   const playbackController = config.playbackController;
   const representationController = config.representationController;
@@ -49773,6 +49193,76 @@ function ScheduleController(config) {
   }
 
   /**
+   * Returns the buffered time between the current playback time and the end of the last requested segment.
+   * In contrast to the buffer level this includes media behind a gap in the buffer, e.g. caused by segments without samples.
+   * Otherwise, we would continue buffering until the end of the content as the buffer level never reaches the buffer target.
+   * Media behind a gap does not count as long as another track has data further ahead and the tracks do not overlap behind the gap yet.
+   * Otherwise, the GapController has no range to jump to, e.g. if the audio gap ends after the video gap. Buffering further creates the overlap.
+   * @return {number}
+   * @private
+   */
+  function _getBufferedTimeUntilBufferingTime() {
+    // Gaps are only relevant for audio and video, text tracks are sparse by nature
+    if (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO) {
+      return 0;
+    }
+    try {
+      const buffer = bufferController.getBuffer();
+      const ranges = buffer ? buffer.getAllBufferRanges() : null;
+      const bufferingTime = getBufferingTime();
+      if (isNaN(bufferingTime)) {
+        return 0;
+      }
+      // No playback time while preloading, fall back to the buffer level which uses the seek target in that case
+      const currentTime = playbackController.getTime();
+      if (currentTime === null || isNaN(currentTime)) {
+        return 0;
+      }
+      if (!_hasCommonRangeAhead(currentTime, bufferingTime) && _isOtherTrackAhead(bufferingTime)) {
+        return 0;
+      }
+      return (0,_utils_BufferRangeUtils_js__WEBPACK_IMPORTED_MODULE_8__.getBufferedTimeInInterval)(ranges, currentTime, bufferingTime);
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Returns true if the buffered ranges of the video element, i.e. the intersection of all SourceBuffers, contain a range that starts between currentTime and bufferingTime
+   * @param {number} currentTime
+   * @param {number} bufferingTime
+   * @return {boolean}
+   * @private
+   */
+  function _hasCommonRangeAhead(currentTime, bufferingTime) {
+    const commonRanges = playbackController.getBufferedRanges();
+    if (!commonRanges) {
+      return false;
+    }
+    for (let i = 0; i < commonRanges.length; i++) {
+      if (commonRanges.start(i) > currentTime && commonRanges.start(i) < bufferingTime) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if the other track (audio for video and vice versa) has appended data beyond bufferingTime
+   * @param {number} bufferingTime
+   * @return {boolean}
+   * @private
+   */
+  function _isOtherTrackAhead(bufferingTime) {
+    const otherType = type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO : type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO : null;
+    if (!otherType) {
+      return false;
+    }
+    const otherBufferedEnd = getBufferedEndForType(otherType);
+    return !isNaN(otherBufferedEnd) && otherBufferedEnd > bufferingTime;
+  }
+
+  /**
    * Check if the current buffer level is below our buffer target.
    * @return {boolean}
    * @private
@@ -49783,7 +49273,7 @@ function ScheduleController(config) {
       return true;
     }
     let segmentDurationToAddToBufferLevel = currentRepresentation && currentRepresentation.segmentDuration && !isNaN(currentRepresentation.segmentDuration) ? currentRepresentation.segmentDuration : 0;
-    const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+    const bufferLevel = Math.max(dashMetrics.getCurrentBufferLevel(type), _getBufferedTimeUntilBufferingTime());
     const bufferTarget = getBufferTarget();
 
     // If the buffer target is smaller than the segment duration we do not take it into account. For low latency playback do not delay the buffering.
@@ -49840,13 +49330,35 @@ function ScheduleController(config) {
   }
 
   /**
+   * Returns the time between the current playback time and the end of the appended video data.
+   * In contrast to the video buffer level this includes video behind a gap in the video buffer, e.g. caused by segments without samples.
+   * The buffered ranges of the video element are the intersection of all SourceBuffers. If audio stops at the video gap, the GapController can not jump it.
+   * The value is limited to the buffer target audio would use on its own. Otherwise, a large gap would make audio buffer the whole gap duration, which can exceed the SourceBuffer quota.
+   * Video gaps larger than that limit are not covered by audio and can not be jumped.
+   * @return {number}
+   * @private
+   */
+  function _getVideoBufferedTimeAhead() {
+    const videoBufferedEnd = getBufferedEndForType(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO);
+    if (isNaN(videoBufferedEnd)) {
+      return 0;
+    }
+    // No playback time while preloading, fall back to the video buffer level
+    const currentTime = playbackController.getTime();
+    if (currentTime === null || isNaN(currentTime)) {
+      return 0;
+    }
+    return Math.min(Math.max(videoBufferedEnd - currentTime, 0), _getGenericBufferTarget());
+  }
+
+  /**
    * Returns the buffer target for audio tracks in case we have a video track available as well
    * @return {number}
    * @private
    */
   function _getBufferTargetForAudio() {
     try {
-      const videoBufferLevel = dashMetrics.getCurrentBufferLevel(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO);
+      const videoBufferLevel = Math.max(dashMetrics.getCurrentBufferLevel(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO), _getVideoBufferedTimeAhead());
       const currentRepresentation = representationController.getCurrentRepresentation();
       // For multiperiod we need to consider that audio and video segments might have different durations.
       // This can lead to scenarios in which we completely buffered the video segments and the video buffer level for the current period is not changing anymore. However we might still need a small audio segment to finish buffering audio as well.
@@ -50391,9 +49903,9 @@ function StreamController() {
         serviceDescriptionController.applyServiceDescription(manifestInfo);
       }
 
-      // Compute and set the live delay
+      // Compute and set the live delay. The live edge is in the last period of the MPD.
       if (adapter.getIsDynamic()) {
-        const fragmentDuration = _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo);
+        const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(streamsInfo[streamsInfo.length - 1]);
         playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
       }
 
@@ -50893,11 +50405,10 @@ function StreamController() {
    */
   function _onLiveDelaySettingUpdated() {
     if (adapter.getIsDynamic() && playbackController.getOriginalLiveDelay() !== 0 && activeStream) {
-      const streamsInfo = adapter.getStreamsInfo();
-      if (streamsInfo.length > 0) {
-        const manifestInfo = streamsInfo[0].manifestInfo;
-        const fragmentDuration = _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo);
-        playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
+      const streamInfo = activeStream.getStreamInfo();
+      if (streamInfo) {
+        const fragmentDuration = adapter.getFragmentDurationForLiveDelayCalculation(streamInfo);
+        playbackController.computeAndSetLiveDelay(fragmentDuration, streamInfo.manifestInfo);
       }
     }
   }
@@ -51318,23 +50829,6 @@ function StreamController() {
       }
       return shouldKeepStream;
     });
-  }
-
-  /**
-   * In order to calculate the initial live delay we might require the duration of the segments.
-   * @param {object} manifestInfo
-   * @return {number}
-   * @private
-   */
-  function _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo) {
-    try {
-      if (manifestInfo && Number.isFinite(manifestInfo.maxFragmentDuration)) {
-        return manifestInfo.maxFragmentDuration;
-      }
-      return NaN;
-    } catch (e) {
-      return NaN;
-    }
   }
 
   /**
@@ -52505,16 +51999,19 @@ function TimeSyncController() {
     const SECONDS_IN_MIN = 60;
     const MINUTES_IN_HOUR = 60;
     const MILLISECONDS_IN_SECONDS = 1000;
-    let datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2})([0-9]{2}))?/;
+    let datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?::([0-9]*)(\.[0-9]*)?)?(?:([+\-])([0-9]{2}):?([0-9]{2}))?/;
     let utcDate, timezoneOffset;
     let match = datetimeRegex.exec(xsdatetimeStr);
+    if (!match) {
+      return NaN;
+    }
 
     // If the string does not contain a timezone offset different browsers can interpret it either
     // as UTC or as a local time so we have to parse the string manually to normalize the given date value for
     // all browsers
     utcDate = Date.UTC(parseInt(match[1], 10), parseInt(match[2], 10) - 1,
     // months start from zero
-    parseInt(match[3], 10), parseInt(match[4], 10), parseInt(match[5], 10), match[6] && (parseInt(match[6], 10) || 0), match[7] && parseFloat(match[7]) * MILLISECONDS_IN_SECONDS || 0);
+    parseInt(match[3], 10), parseInt(match[4], 10), parseInt(match[5], 10), match[6] && parseInt(match[6], 10) || 0, match[7] && parseFloat(match[7]) * MILLISECONDS_IN_SECONDS || 0);
     // If the date has timezone offset take it into account as well
     if (match[9] && match[10]) {
       timezoneOffset = parseInt(match[9], 10) * MINUTES_IN_HOUR + parseInt(match[10], 10);
@@ -52524,14 +52021,15 @@ function TimeSyncController() {
   }
 
   /**
-   * Try to use the built in parser, since xsdate is a constrained ISO8601 which is supported natively by Date.parse. if that fails, try a regex-based version used elsewhere in this application.
+   * Decode xs:dateTime manually first so a missing timezone is treated as UTC (matching DateTimeMatcher),
+   * since Date.parse treats it as local time. Fall back to Date.parse for other formats (e.g. RFC 1123).
    * @param {string} xsdatetimeStr
    * @return {number}
    */
   function _xsdatetimeDecoder(xsdatetimeStr) {
-    let parsedDate = Date.parse(xsdatetimeStr);
+    let parsedDate = _alternateXsdatetimeDecoder(xsdatetimeStr);
     if (isNaN(parsedDate)) {
-      parsedDate = _alternateXsdatetimeDecoder(xsdatetimeStr);
+      parsedDate = Date.parse(xsdatetimeStr);
     }
     return parsedDate;
   }
@@ -52542,7 +52040,8 @@ function TimeSyncController() {
    * @return {number}
    */
   function _iso8601Decoder(isoStr) {
-    return Date.parse(isoStr);
+    // xs:dateTime is a profile of ISO 8601 extended format, reuse its more robust parsing
+    return _xsdatetimeDecoder(isoStr);
   }
 
   /**
@@ -53051,6 +52550,3338 @@ function XlinkController(config) {
 }
 XlinkController.__dashjs_factory_name = 'XlinkController';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__["default"].getClassFactory(XlinkController));
+
+/***/ }),
+
+/***/ "./src/streaming/mediaplayer/CoreApi.js":
+/*!**********************************************!*\
+  !*** ./src/streaming/mediaplayer/CoreApi.js ***!
+  \**********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _utils_InitCache_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/InitCache.js */ "./src/streaming/utils/InitCache.js");
+/* harmony import */ var _utils_TimeUtils_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/TimeUtils.js */ "./src/streaming/utils/TimeUtils.js");
+/* harmony import */ var _core_Version_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/Version.js */ "./src/core/Version.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+function CoreApi() {
+  const context = this.context;
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
+  let instance, state, wiring, debug;
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.state) {
+      state = config.state;
+    }
+    if (config.wiring) {
+      wiring = config.wiring;
+    }
+    if (config.debug) {
+      debug = config.debug;
+    }
+  }
+
+  /**
+   * Use the on method to listen for public events found in MediaPlayer.events. {@link MediaPlayerEvents}
+   *
+   * @param {string} type - {@link MediaPlayerEvents}
+   * @param {Function} listener - callback method when the event fires.
+   * @param {Object} scope - context of the listener so it can be removed properly.
+   * @param {Object} options - object to define various options such as priority and mode
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function on(type, listener, scope, options) {
+    eventBus.on(type, listener, scope, options);
+  }
+
+  /**
+   * Use the off method to remove listeners for public events found in MediaPlayer.events. {@link MediaPlayerEvents}
+   *
+   * @param {string} type - {@link MediaPlayerEvents}
+   * @param {Function} listener - callback method when the event fires.
+   * @param {Object} scope - context of the listener so it can be removed properly.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function off(type, listener, scope) {
+    eventBus.off(type, listener, scope);
+  }
+
+  /**
+   * Use this method to trigger an event via the eventBus {@link MediaPlayerEvents}
+   *
+   * @param {string} type - {@link MediaPlayerEvents}
+   * @param {object} payload - Payload of the event
+   * @param {Object} filters - Define a "streamId" and/or a "mediaType" for which this event is valid, e.g. {streamId, mediaType}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function trigger(type, payload, filters) {
+    eventBus.trigger(type, payload, filters);
+  }
+
+  /**
+   * Current version of Dash.js
+   * @returns {string} the current dash.js version string.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getVersion() {
+    return (0,_core_Version_js__WEBPACK_IMPORTED_MODULE_4__.getVersionString)();
+  }
+
+  /**
+   * Use this method to access the dash.js logging class.
+   *
+   * @returns {Debug}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getDebug() {
+    return debug;
+  }
+
+  /**
+   * Returns the InitCache instance for debugging/testing purposes.
+   * @returns {object} InitCache instance
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getInitCache() {
+    return (0,_utils_InitCache_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
+  }
+
+  /**
+   * Detects if Offline is included and returns an instance of OfflineController.js
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getOfflineController() {
+    return wiring.detectOffline();
+  }
+
+  /**
+   * Returns the DashMetrics.js Module. You use this Module to get access to all the public metrics
+   * stored in dash.js
+   *
+   * @see {@link module:DashMetrics}
+   * @returns {Object}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getDashMetrics() {
+    return state.dashMetrics;
+  }
+
+  /**
+   * Get the current settings object being used on the player.
+   * @returns {PlayerSettings} The settings object being used.
+   *
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getSettings() {
+    return state.settings.get();
+  }
+
+  /**
+   * @summary Update the current settings object being used on the player. Anything left unspecified is not modified.
+   * @param {PlayerSettings} settingsObj - An object corresponding to the settings definition.
+   * @description This function does not update the entire object, only properties in the passed in object are updated.
+   *
+   * This means that updateSettings({a: x}) and updateSettings({b: y}) are functionally equivalent to
+   * updateSettings({a: x, b: y}). If the default values are required again, @see{@link resetSettings}.
+   * @example
+   * player.updateSettings({
+   *      streaming: {
+   *          lowLatencyEnabled: false,
+   *          abr: {
+   *              maxBitrate: { audio: 100, video: 1000 }
+   *          }
+   *      }
+   *  });
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function updateSettings(settingsObj) {
+    state.settings.update(settingsObj);
+  }
+
+  /**
+   * Resets the settings object back to the default.
+   *
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function resetSettings() {
+    state.settings.reset();
+  }
+
+  /**
+   * A utility methods which converts UTC timestamp value into a valid time and date string.
+   *
+   * @param {number} time - UTC timestamp to be converted into date and time.
+   * @param {string} locales - a region identifier (i.e. en_US).
+   * @param {boolean} hour12 - 12 vs 24 hour. Set to true for 12 hour time formatting.
+   * @param {boolean} withDate - default is false. Set to true to append current date to UTC time format.
+   * @returns {string} A formatted time and date string.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function formatUTC(time, locales, hour12, withDate = false) {
+    return (0,_utils_TimeUtils_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance().formatUTC(time, locales, hour12, withDate);
+  }
+
+  /**
+   * A utility method which converts seconds into TimeCode (i.e. 300 --> 05:00).
+   *
+   * @param {number} value - A number in seconds to be converted into a formatted time code.
+   * @returns {string} A formatted time code string.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function convertToTimeCode(value) {
+    return (0,_utils_TimeUtils_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance().convertToTimeCode(value);
+  }
+  instance = {
+    convertToTimeCode,
+    formatUTC,
+    getDashMetrics,
+    getDebug,
+    getInitCache,
+    getOfflineController,
+    getSettings,
+    getVersion,
+    off,
+    on,
+    resetSettings,
+    setConfig,
+    trigger,
+    updateSettings
+  };
+  return instance;
+}
+CoreApi.__dashjs_factory_name = 'CoreApi';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(CoreApi));
+
+/***/ }),
+
+/***/ "./src/streaming/mediaplayer/CustomParametersApi.js":
+/*!**********************************************************!*\
+  !*** ./src/streaming/mediaplayer/CustomParametersApi.js ***!
+  \**********************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/ExternalSubtitle.js */ "./src/streaming/vo/ExternalSubtitle.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+function CustomParametersApi() {
+  let instance, state;
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.state) {
+      state = config.state;
+    }
+  }
+
+  /**
+   * Add a custom ABR Rule
+   * Rule will be apply on next stream if a stream is being played
+   *
+   * @param {string} type - rule type (one of ['qualitySwitchRules','abandonFragmentRules'])
+   * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added, then existing rule will be updated
+   * @param {object} rule - the rule object instance
+   * @memberof module:MediaPlayer
+   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
+   * @instance
+   */
+  function addABRCustomRule(type, rulename, rule) {
+    state.customParametersModel.addAbrCustomRule(type, rulename, rule);
+  }
+
+  /**
+   * Remove a custom ABR Rule
+   *
+   * @param {string} rulename - name of the rule to be removed
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function removeABRCustomRule(rulename) {
+    state.customParametersModel.removeAbrCustomRule(rulename);
+  }
+
+  /**
+   * Remove all ABR custom rules
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function removeAllABRCustomRule() {
+    state.customParametersModel.removeAllAbrCustomRule();
+  }
+
+  /**
+   * Returns all ABR custom rules
+   * @return {Array}
+   */
+  function getABRCustomRules() {
+    return state.customParametersModel.getAbrCustomRules();
+  }
+
+  /**
+   * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.
+   * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
+   * <p>If you have exposed the Date header, use the method {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}.
+   * This will allow the date header on the manifest to be used instead of a time server</p>
+   * @param {string} schemeIdUri - <ul>
+   * <li>urn:mpeg:dash:utc:http-head:2014</li>
+   * <li>urn:mpeg:dash:utc:http-xsdate:2014</li>
+   * <li>urn:mpeg:dash:utc:http-iso:2014</li>
+   * <li>urn:mpeg:dash:utc:direct:2014</li>
+   * </ul>
+   * <p>Some specs referencing early ISO23009-1 drafts incorrectly use
+   * 2012 in the URI, rather than 2014. support these for now.</p>
+   * <ul>
+   * <li>urn:mpeg:dash:utc:http-head:2012</li>
+   * <li>urn:mpeg:dash:utc:http-xsdate:2012</li>
+   * <li>urn:mpeg:dash:utc:http-iso:2012</li>
+   * <li>urn:mpeg:dash:utc:direct:2012</li>
+   * </ul>
+   * @param {string} value - Path to a time source.
+   * @default
+   * <ul>
+   *     <li>schemeIdUri:urn:mpeg:dash:utc:http-iso:2014</li>
+   *     <li>value:https://time.akamai.com/?iso&ms</li>
+   * </ul>
+   * @memberof module:MediaPlayer
+   * @see {@link module:MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
+   * @instance
+   */
+  function addUTCTimingSource(schemeIdUri, value) {
+    state.customParametersModel.addUTCTimingSource(schemeIdUri, value);
+  }
+
+  /**
+   * <p>Allows you to remove a UTC time source. Both schemeIdUri and value need to match the Dash.vo.UTCTiming properties in order for the
+   * entry to be removed from the array</p>
+   * @param {string} schemeIdUri - see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
+   * @param {string} value - see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
+   * @memberof module:MediaPlayer
+   * @see {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}
+   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, schemeIdUri and value are not string type.
+   * @instance
+   */
+  function removeUTCTimingSource(schemeIdUri, value) {
+    state.customParametersModel.removeUTCTimingSource(schemeIdUri, value);
+  }
+
+  /**
+   * <p>Allows you to clear the stored array of time sources.</p>
+   * <p>Example use: If you have exposed the Date header, calling this method
+   * will allow the date header on the manifest to be used instead of the time server.</p>
+   * <p>Example use: Calling this method, assuming there is not an exposed date header on the manifest,  will default back
+   * to using a binary search to discover the live edge</p>
+   *
+   * @memberof module:MediaPlayer
+   * @see {@link module:MediaPlayer#restoreDefaultUTCTimingSources restoreDefaultUTCTimingSources()}
+   * @instance
+   */
+  function clearDefaultUTCTimingSources() {
+    state.customParametersModel.clearDefaultUTCTimingSources();
+  }
+
+  /**
+   * <p>Allows you to restore the default time sources after calling {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}</p>
+   *
+   * @default
+   * <ul>
+   *     <li>schemeIdUri:urn:mpeg:dash:utc:http-iso:2014</li>
+   *     <li>value:https://time.akamai.com/?iso&ms</li>
+   * </ul>
+   *
+   * @memberof module:MediaPlayer
+   * @see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
+   * @instance
+   */
+  function restoreDefaultUTCTimingSources() {
+    state.customParametersModel.restoreDefaultUTCTimingSources();
+  }
+
+  /**
+   * Sets whether withCredentials on XHR requests for a particular request
+   * type is true or false
+   *
+   * @default false
+   * @param {string} type - one of HTTPRequest.*_TYPE
+   * @param {boolean} value
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function setXHRWithCredentialsForType(type, value) {
+    state.customParametersModel.setXHRWithCredentialsForType(type, value);
+  }
+
+  /**
+   * Gets whether withCredentials on XHR requests for a particular request
+   * type is true or false
+   *
+   * @param {string} type - one of HTTPRequest.*_TYPE
+   * @return {boolean}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getXHRWithCredentialsForType(type) {
+    return state.customParametersModel.getXHRWithCredentialsForType(type);
+  }
+
+  /**
+   * Registers a custom capabilities filter. This enables application to filter representations to use.
+   * The provided callback function shall return either a boolean or a promise resolving to a boolean based on whether or not to use the representation.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the custom capabilities filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function registerCustomCapabilitiesFilter(filter) {
+    state.customParametersModel.registerCustomCapabilitiesFilter(filter);
+  }
+
+  /**
+   * Unregisters a custom capabilities filter.
+   * @param {function} filter - the custom capabilities filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function unregisterCustomCapabilitiesFilter(filter) {
+    state.customParametersModel.unregisterCustomCapabilitiesFilter(filter);
+  }
+
+  /**
+   * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
+   * @param {function} customFunc - the custom function that returns the initial track
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function setCustomInitialTrackSelectionFunction(customFunc) {
+    state.customParametersModel.setCustomInitialTrackSelectionFunction(customFunc);
+  }
+
+  /**
+   * Resets the custom initial track selection
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function resetCustomInitialTrackSelectionFunction() {
+    state.customParametersModel.resetCustomInitialTrackSelectionFunction(null);
+  }
+
+  /**
+   * Adds an external subtitle file. The provided externalSubtitle must be an instance of the ExternalSubtitle class.
+   * @param {ExternalSubtitle} externalSubtitle
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function addExternalSubtitle(externalSubtitle) {
+    if (!(externalSubtitle instanceof _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_0__["default"])) {
+      state.logger.error('Invalid external subtitle object. Must be an instance of dashjs.ExternalSubtitle');
+    }
+    state.customParametersModel.addExternalSubtitle(externalSubtitle);
+  }
+
+  /**
+   * Removes an external subtitle file by its ID.
+   * @param {string} id
+   */
+  function removeExternalSubtitleById(id) {
+    state.customParametersModel.removeExternalSubtitleById(id);
+  }
+
+  /**
+   * Removes an external subtitle file by its url.
+   * @param {string} url
+   */
+  function removeExternalSubtitleByUrl(url) {
+    state.customParametersModel.removeExternalSubtitleByUrl(url);
+  }
+
+  /**
+   * Returns all external subtitles
+   */
+  function getExternalSubtitles() {
+    return state.customParametersModel.getExternalSubtitles();
+  }
+
+  /**
+   * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
+   * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
+   * The interceptors are applied in the order they are added.
+   * @param {function} interceptor - the request interceptor callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function addRequestInterceptor(interceptor) {
+    state.customParametersModel.addRequestInterceptor(interceptor);
+  }
+
+  /**
+   * Removes a request interceptor.
+   * @param {function} interceptor - the request interceptor callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function removeRequestInterceptor(interceptor) {
+    state.customParametersModel.removeRequestInterceptor(interceptor);
+  }
+
+  /**
+   * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
+   * The provided callback function shall return a promise with updated response that shall be resolved once the process of the response is completed.
+   * The interceptors are applied in the order they are added.
+   * @param {function} interceptor - the response interceptor
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function addResponseInterceptor(interceptor) {
+    state.customParametersModel.addResponseInterceptor(interceptor);
+  }
+
+  /**
+   * Removes a response interceptor.
+   * @param {function} interceptor - the request interceptor
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function removeResponseInterceptor(interceptor) {
+    state.customParametersModel.removeResponseInterceptor(interceptor);
+  }
+
+  /**
+   * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license request filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function registerCertificateRequestFilter(filter) {
+    state.customParametersModel.registerCertificateRequestFilter(filter);
+  }
+
+  /**
+   * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license response filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function registerCertificateResponseFilter(filter) {
+    state.customParametersModel.registerCertificateResponseFilter(filter);
+  }
+
+  /**
+   * Unregisters a certificate request filter.
+   * @param {function} filter - the license request filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function unregisterCertificateRequestFilter(filter) {
+    state.customParametersModel.unregisterCertificateRequestFilter(filter);
+  }
+
+  /**
+   * Unregisters a certificate response filter.
+   * @param {function} filter - the license response filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function unregisterCertificateResponseFilter(filter) {
+    state.customParametersModel.unregisterCertificateResponseFilter(filter);
+  }
+
+  /**
+   * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license request filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function registerLicenseRequestFilter(filter) {
+    state.customParametersModel.registerLicenseRequestFilter(filter);
+  }
+
+  /**
+   * Registers a license response filter. This enables application to manipulate/overwrite the response data
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license response filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function registerLicenseResponseFilter(filter) {
+    state.customParametersModel.registerLicenseResponseFilter(filter);
+  }
+
+  /**
+   * Unregisters a license request filter.
+   * @param {function} filter - the license request filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function unregisterLicenseRequestFilter(filter) {
+    state.customParametersModel.unregisterLicenseRequestFilter(filter);
+  }
+
+  /**
+   * Unregisters a license response filter.
+   * @param {function} filter - the license response filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function unregisterLicenseResponseFilter(filter) {
+    state.customParametersModel.unregisterLicenseResponseFilter(filter);
+  }
+  instance = {
+    addABRCustomRule,
+    addExternalSubtitle,
+    addRequestInterceptor,
+    addResponseInterceptor,
+    addUTCTimingSource,
+    clearDefaultUTCTimingSources,
+    getABRCustomRules,
+    getExternalSubtitles,
+    getXHRWithCredentialsForType,
+    registerCertificateRequestFilter,
+    registerCertificateResponseFilter,
+    registerCustomCapabilitiesFilter,
+    registerLicenseRequestFilter,
+    registerLicenseResponseFilter,
+    removeABRCustomRule,
+    removeAllABRCustomRule,
+    removeExternalSubtitleById,
+    removeExternalSubtitleByUrl,
+    removeRequestInterceptor,
+    removeResponseInterceptor,
+    removeUTCTimingSource,
+    resetCustomInitialTrackSelectionFunction,
+    restoreDefaultUTCTimingSources,
+    setConfig,
+    setCustomInitialTrackSelectionFunction,
+    setXHRWithCredentialsForType,
+    unregisterCertificateRequestFilter,
+    unregisterCertificateResponseFilter,
+    unregisterCustomCapabilitiesFilter,
+    unregisterLicenseRequestFilter,
+    unregisterLicenseResponseFilter
+  };
+  return instance;
+}
+CustomParametersApi.__dashjs_factory_name = 'CustomParametersApi';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(CustomParametersApi));
+
+/***/ }),
+
+/***/ "./src/streaming/mediaplayer/LifecycleApi.js":
+/*!***************************************************!*\
+  !*** ./src/streaming/mediaplayer/LifecycleApi.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./MediaPlayerApiErrors.js */ "./src/streaming/mediaplayer/MediaPlayerApiErrors.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+function LifecycleApi() {
+  const context = this.context;
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
+  let instance, state, mediaPlayer, wiring;
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.state) {
+      state = config.state;
+    }
+    if (config.mediaPlayer) {
+      mediaPlayer = config.mediaPlayer;
+    }
+    if (config.wiring) {
+      wiring = config.wiring;
+    }
+  }
+
+  /**
+   * Upon creating the MediaPlayer you must call initialize before you call anything else.
+   * There is one exception to this rule. It is crucial to call {@link module:MediaPlayer#extend extend()}
+   * with all your extensions prior to calling initialize.
+   *
+   * ALL arguments are optional and there are individual methods to set each argument later on.
+   * The args in this method are just for convenience and should only be used for a simple player setup.
+   *
+   * @param {HTML5MediaElement=} view - Optional arg to set the video element. {@link module:MediaPlayer#attachView attachView()}
+   * @param {string=} source - Optional arg to set the media source. {@link module:MediaPlayer#attachSource attachSource()}
+   * @param {boolean=} autoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+   * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+   * For live content
+   * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+   * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
+   * @see {@link module:MediaPlayer#attachSource attachSource()}
+   * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function initialize(view, source, autoPlay, startTime = NaN) {
+    if (!wiring.supportsMediaSource()) {
+      return;
+    }
+    if (!state.mediaPlayerInitialized) {
+      state.mediaPlayerInitialized = true;
+      wiring.createCoreControllers();
+      state.customParametersModel.restoreDefaultUTCTimingSources();
+      mediaPlayer.setAutoPlay(autoPlay !== undefined ? autoPlay : true);
+
+      // Detect and initialize offline module to support offline contents playback
+      wiring.detectOffline();
+    }
+    if (view) {
+      attachView(view);
+    }
+    if (source) {
+      attachSource(source, startTime);
+    }
+    state.logger.info('[dash.js ' + mediaPlayer.getVersion() + '] ' + 'MediaPlayer has been initialized');
+  }
+
+  /**
+   * Sets the MPD source and the video element to null. You can also reset the MediaPlayer by
+   * calling attachSource with a new source file.
+   *
+   * This call does not destroy the MediaPlayer. To destroy the MediaPlayer and free all of its
+   * memory, call destroy().
+   *
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function reset() {
+    attachSource(null);
+    attachView(null);
+    state.protectionData = null;
+    if (state.protectionController) {
+      state.protectionController.reset();
+      state.protectionController = null;
+    }
+    if (state.customParametersModel) {
+      state.customParametersModel.reset();
+    }
+    state.settings.reset();
+    wiring.reset();
+    if (state.retrieveManifestRequest) {
+      state.retrieveManifestRequest.resetLoader();
+      state.retrieveManifestRequest = null;
+    }
+  }
+
+  /**
+   * Completely destroys the media player and frees all memory.
+   *
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function destroy() {
+    reset();
+    if (state.videoModel) {
+      state.videoModel.destroy();
+      state.videoModel = null;
+    }
+    if (state.adapter) {
+      state.adapter.destroy();
+    }
+    _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].deleteSingletonInstances(context);
+  }
+
+  /**
+   * The ready state of the MediaPlayer based on both the video element and MPD source being defined.
+   *
+   * @returns {boolean} The current ready state of the MediaPlayer
+   * @see {@link module:MediaPlayer#attachView attachView()}
+   * @see {@link module:MediaPlayer#attachSource attachSource()}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function isReady() {
+    return !!state.source && !!state.videoModel.getElement();
+  }
+
+  /**
+   * Causes the player to begin streaming the media as set by the {@link module:MediaPlayer#attachSource attachSource()}
+   * method in preparation for playing. It specifically does not require a view to be attached with {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
+   * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
+   *
+   * @see {@link module:MediaPlayer#attachSource attachSource()}
+   * @see {@link module:MediaPlayer#attachView attachView()}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
+   * @instance
+   */
+  function preload() {
+    if (state.videoModel.getElement() || state.streamingInitialized) {
+      return;
+    }
+    if (state.source) {
+      _initializePlayback(state.providedStartTime);
+    } else {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_4__.SOURCE_NOT_ATTACHED_ERROR;
+    }
+  }
+
+  /**
+   * Returns instance of Video Element that was attached by calling attachView()
+   * @returns {Object}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
+   * @instance
+   */
+  function getVideoElement() {
+    if (!state.videoModel.getElement()) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_4__.ELEMENT_NOT_ATTACHED_ERROR;
+    }
+    return state.videoModel.getElement();
+  }
+
+  /**
+   * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
+   *
+   * @param {Object} element - An HTMLMediaElement that has already been defined in the DOM (or equivalent stub).
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+   * @instance
+   */
+  function attachView(element) {
+    if (!state.mediaPlayerInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_4__.MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+    }
+    state.videoModel.setElement(element);
+    if (element) {
+      wiring.detectProtection();
+      wiring.detectMetricsReporting();
+      wiring.detectMss();
+      if (state.streamController) {
+        state.streamController.switchToVideoElement(state.providedStartTime);
+      }
+    }
+    if (state.playbackInitialized) {
+      //Reset if we have been playing before, so this is a new element.
+      wiring.resetPlaybackControllers();
+      state.customParametersModel.resetPlaybackSessionSpecificSettings();
+    }
+    _initializePlayback(state.providedStartTime);
+  }
+
+  /**
+   * Detects if Protection is included and returns an instance of ProtectionController.js
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getProtectionController() {
+    return wiring.detectProtection();
+  }
+
+  /**
+   * Will override dash.js protection controller.
+   * @param {ProtectionController} value - valid protection controller instance.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function attachProtectionController(value) {
+    state.protectionController = value;
+  }
+
+  /**
+   * Sets Protection Data required to setup the Protection Module (DRM). Protection Data must
+   * be set before initializing MediaPlayer or, once initialized, before PROTECTION_CREATED event is fired.
+   * @see {@link module:MediaPlayer#initialize initialize()}
+   * @see {@link ProtectionEvents#event:PROTECTION_CREATED dashjs.Protection.events.PROTECTION_CREATED}
+   * @param {ProtectionDataSet} value - object containing
+   * property names corresponding to key system name strings and associated
+   * values being instances of.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function setProtectionData(value) {
+    state.protectionData = value;
+
+    // Propagate changes in case StreamController is already created
+    if (state.streamController) {
+      state.streamController.setProtectionData(state.protectionData);
+    }
+  }
+  function getProtectionData() {
+    return state.streamController ? state.streamController.getProtectionData() : null;
+  }
+
+  /**
+   * Allows application to retrieve a manifest.  Manifest loading is asynchronous and requires the app-provided callback function
+   *
+   * @param {string} url - url the manifest url
+   * @param {function} callback - A Callback function provided when retrieving manifests
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function retrieveManifest(url, callback) {
+    if (state.retrieveManifestRequest) {
+      state.retrieveManifestRequest.resetLoader();
+    }
+    const manifestLoader = wiring.createManifestLoader();
+    const resetLoader = () => {
+      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_0__["default"].INTERNAL_MANIFEST_LOADED, handler, this);
+      manifestLoader.reset();
+      state.retrieveManifestRequest = null;
+    };
+    state.retrieveManifestRequest = {
+      manifestLoader,
+      resetLoader
+    };
+    const handler = e => {
+      if (typeof callback == 'function') {
+        if (!e.error) {
+          callback(e.manifest);
+        } else {
+          callback(null, e.error);
+        }
+      }
+      resetLoader();
+    };
+    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_0__["default"].INTERNAL_MANIFEST_LOADED, handler, this);
+    state.uriFragmentModel.initialize(url);
+    manifestLoader.load(url);
+  }
+
+  /**
+   * Use this method to set a source URL to a valid MPD manifest file OR
+   * a previously downloaded and parsed manifest object.  Optionally, can
+   * also provide protection information
+   *
+   * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
+   * parsed manifest object.
+   * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first period.
+   * For live content
+   * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of seconds may be optionally specified down to the millisecond level.
+   * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
+   *
+   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+   *
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function attachSource(urlOrManifest, startTime = NaN) {
+    if (!state.mediaPlayerInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_4__.MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+    }
+    if (typeof urlOrManifest === 'string') {
+      state.uriFragmentModel.initialize(urlOrManifest);
+    }
+    if (startTime == null) {
+      startTime = NaN;
+    }
+    if (!isNaN(startTime)) {
+      startTime = Math.max(0, startTime);
+    }
+    state.providedStartTime = startTime;
+    state.source = urlOrManifest;
+    if (state.streamingInitialized || state.playbackInitialized) {
+      wiring.resetPlaybackControllers();
+      state.customParametersModel.resetPlaybackSessionSpecificSettings();
+    }
+    if (isReady()) {
+      _initializePlayback(state.providedStartTime);
+    }
+  }
+  function _initializePlayback(startTime = NaN) {
+    if (state.offlineController) {
+      state.offlineController.resetRecords();
+    }
+    if (!state.streamingInitialized && state.source) {
+      state.streamingInitialized = true;
+      state.logger.info('Streaming Initialized');
+      wiring.createPlaybackControllers();
+      if (typeof state.source === 'string') {
+        state.streamController.load(state.source, startTime);
+      } else {
+        state.streamController.loadWithManifest(state.source, startTime);
+      }
+    }
+    if (!state.playbackInitialized && isReady()) {
+      state.playbackInitialized = true;
+      eventBus.trigger(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_INITIALIZED);
+      state.logger.info('Playback Initialized');
+    }
+  }
+  instance = {
+    attachProtectionController,
+    attachSource,
+    attachView,
+    destroy,
+    getProtectionController,
+    getProtectionData,
+    getVideoElement,
+    initialize,
+    isReady,
+    preload,
+    reset,
+    retrieveManifest,
+    setConfig,
+    setProtectionData
+  };
+  return instance;
+}
+LifecycleApi.__dashjs_factory_name = 'LifecycleApi';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(LifecycleApi));
+
+/***/ }),
+
+/***/ "./src/streaming/mediaplayer/ManifestApi.js":
+/*!**************************************************!*\
+  !*** ./src/streaming/mediaplayer/ManifestApi.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./MediaPlayerApiErrors.js */ "./src/streaming/mediaplayer/MediaPlayerApiErrors.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+function ManifestApi() {
+  const context = this.context;
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
+  let instance, state, mediaPlayer;
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.state) {
+      state = config.state;
+    }
+    if (config.mediaPlayer) {
+      mediaPlayer = config.mediaPlayer;
+    }
+  }
+
+  /**
+   * This method returns the list of all available streams from a given manifest
+   * @param {Object} manifest
+   * @returns {Array} list of {@link StreamInfo}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function getStreamsFromManifest(manifest) {
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    return state.adapter.getStreamsInfo(manifest);
+  }
+
+  /**
+   * This method returns the list of all available tracks for a given media type and streamInfo from a given manifest
+   * @param {MediaType} type
+   * @param {Object} manifest
+   * @param {Object} streamInfo
+   * @returns {Array}  list of {@link MediaInfo}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function getTracksForTypeFromManifest(type, manifest, streamInfo) {
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    streamInfo = streamInfo || state.adapter.getStreamsInfo(manifest, 1)[0];
+    return streamInfo ? state.adapter.getAllMediaInfoForType(streamInfo, type, manifest) : [];
+  }
+
+  /**
+   * Returns the source string or manifest that was attached by calling attachSource()
+   * @returns {string | manifest}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
+   * @instance
+   */
+  function getSource() {
+    if (!state.source) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.SOURCE_NOT_ATTACHED_ERROR;
+    }
+    return state.source;
+  }
+
+  /**
+   * Sets the source to a new manifest URL or object without reloading
+   * Useful for updating CDN tokens
+   * @param {string | object} urlOrManifest
+   */
+  function updateSource(urlOrManifest) {
+    state.source = urlOrManifest;
+    state.streamController.load(state.source);
+  }
+
+  /**
+   *  Reload the manifest that the player is currently using.
+   *
+   *  @memberof module:MediaPlayer
+   *  @param {function} callback - A Callback function provided when retrieving manifests
+   *  @instance
+   */
+  function refreshManifest(callback) {
+    if (!state.mediaPlayerInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+    }
+    if (!mediaPlayer.isReady()) {
+      return callback(null, _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.SOURCE_NOT_ATTACHED_ERROR);
+    }
+    let self = this;
+    if (typeof callback === 'function') {
+      const handler = function (e) {
+        eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_1__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+        if (e.error) {
+          callback(null, e.error);
+          return;
+        }
+        callback(e.manifest);
+      };
+      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_1__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+    }
+    state.streamController.refreshManifest();
+  }
+
+  /**
+   * This method returns the active stream
+   *
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getActiveStream() {
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    let streamInfo = state.streamController.getActiveStreamInfo();
+    return streamInfo ? state.streamController.getStreamById(streamInfo.id) : null;
+  }
+
+  /**
+   * Returns the DashAdapter.js Module.
+   *
+   * @see {@link module:DashAdapter}
+   * @returns {Object}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getDashAdapter() {
+    return state.adapter;
+  }
+
+  /**
+   * Triggers a request to the content steering server to update the steering information.
+   * @return {Promise<any>}
+   */
+  function triggerSteeringRequest() {
+    if (state.contentSteeringController) {
+      return state.contentSteeringController.loadSteeringData();
+    }
+  }
+
+  /**
+   * Returns the current response data of the content steering server
+   * @return {object}
+   */
+  function getCurrentSteeringResponseData() {
+    if (state.contentSteeringController) {
+      return state.contentSteeringController.getCurrentSteeringResponseData();
+    }
+  }
+
+  /**
+   * Returns the current manifest
+   * @returns {object}
+   */
+  function getManifest() {
+    return state.manifestModel.getValue();
+  }
+
+  /**
+   * Returns all BaseURLs that are available including synthesized elements (e.g by content steering)
+   * @returns {BaseURL[]}
+   */
+  function getAvailableBaseUrls() {
+    const manifest = state.manifestModel.getValue();
+    if (!manifest) {
+      return [];
+    }
+    return state.baseURLController.getBaseUrls(manifest);
+  }
+
+  /**
+   * Returns the available location elements including synthesized elements (e.g by content steering)
+   * @returns {MpdLocation[]}
+   */
+  function getAvailableLocations() {
+    const manifest = state.manifestModel.getValue();
+    if (!manifest) {
+      return [];
+    }
+    const manifestLocations = state.adapter.getLocation(manifest);
+    const synthesizedElements = state.contentSteeringController.getSynthesizedLocationElements(manifestLocations);
+    return manifestLocations.concat(synthesizedElements);
+  }
+  instance = {
+    getActiveStream,
+    getAvailableBaseUrls,
+    getAvailableLocations,
+    getCurrentSteeringResponseData,
+    getDashAdapter,
+    getManifest,
+    getSource,
+    getStreamsFromManifest,
+    getTracksForTypeFromManifest,
+    refreshManifest,
+    setConfig,
+    triggerSteeringRequest,
+    updateSource
+  };
+  return instance;
+}
+ManifestApi.__dashjs_factory_name = 'ManifestApi';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(ManifestApi));
+
+/***/ }),
+
+/***/ "./src/streaming/mediaplayer/MediaPlayerApiErrors.js":
+/*!***********************************************************!*\
+  !*** ./src/streaming/mediaplayer/MediaPlayerApiErrors.js ***!
+  \***********************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ARRAY_NOT_SUPPORTED_ERROR: function() { return /* binding */ ARRAY_NOT_SUPPORTED_ERROR; },
+/* harmony export */   ELEMENT_NOT_ATTACHED_ERROR: function() { return /* binding */ ELEMENT_NOT_ATTACHED_ERROR; },
+/* harmony export */   MEDIA_PLAYER_NOT_INITIALIZED_ERROR: function() { return /* binding */ MEDIA_PLAYER_NOT_INITIALIZED_ERROR; },
+/* harmony export */   PLAYBACK_NOT_INITIALIZED_ERROR: function() { return /* binding */ PLAYBACK_NOT_INITIALIZED_ERROR; },
+/* harmony export */   SOURCE_NOT_ATTACHED_ERROR: function() { return /* binding */ SOURCE_NOT_ATTACHED_ERROR; },
+/* harmony export */   STREAMING_NOT_INITIALIZED_ERROR: function() { return /* binding */ STREAMING_NOT_INITIALIZED_ERROR; }
+/* harmony export */ });
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * Error strings thrown by the MediaPlayer public API when a method is called too early.
+ * Shared by MediaPlayer and its API sub-modules. Must stay byte-identical (unit tests compare them).
+ */
+
+/**
+ * @constant {string} STREAMING_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+ * @memberof module:MediaPlayer
+ * @inner
+ */
+const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
+/**
+ * @constant {string} PLAYBACK_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+ * @memberof module:MediaPlayer
+ * @inner
+ */
+const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
+/**
+ * @constant {string} ELEMENT_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a reference of an HTML5 video element
+ * @memberof module:MediaPlayer
+ * @inner
+ */
+const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
+/**
+ * @constant {string} SOURCE_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a valid source stream.
+ * @memberof module:MediaPlayer
+ * @inner
+ */
+const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
+/**
+ * @constant {string} MEDIA_PLAYER_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized.
+ * @memberof module:MediaPlayer
+ * @inner
+ */
+const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+/**
+ * @constant {string} ARRAY_NOT_SUPPORTED_ERROR error string thrown when settings object was called using an array.
+ * @memberof module:MediaPlayer
+ * @inner
+ */
+const ARRAY_NOT_SUPPORTED_ERROR = 'Array type not supported for settings!';
+
+/***/ }),
+
+/***/ "./src/streaming/mediaplayer/MediaPlayerWiring.js":
+/*!********************************************************!*\
+  !*** ./src/streaming/mediaplayer/MediaPlayerWiring.js ***!
+  \********************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _controllers_AbrController_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../controllers/AbrController.js */ "./src/streaming/controllers/AbrController.js");
+/* harmony import */ var _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../externals/base64.js */ "./externals/base64.js");
+/* harmony import */ var _controllers_BaseURLController_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../controllers/BaseURLController.js */ "./src/streaming/controllers/BaseURLController.js");
+/* harmony import */ var _utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/BoxParser.js */ "./src/streaming/utils/BoxParser.js");
+/* harmony import */ var _utils_Capabilities_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/Capabilities.js */ "./src/streaming/utils/Capabilities.js");
+/* harmony import */ var _utils_CapabilitiesFilter_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/CapabilitiesFilter.js */ "./src/streaming/utils/CapabilitiesFilter.js");
+/* harmony import */ var _controllers_CatchupController_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../controllers/CatchupController.js */ "./src/streaming/controllers/CatchupController.js");
+/* harmony import */ var _controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../controllers/ClientDataReportingController.js */ "./src/streaming/controllers/ClientDataReportingController.js");
+/* harmony import */ var _controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../controllers/CmcdController.js */ "./src/streaming/controllers/CmcdController.js");
+/* harmony import */ var _models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../models/CmsdModel.js */ "./src/streaming/models/CmsdModel.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../dash/controllers/ContentSteeringController.js */ "./src/dash/controllers/ContentSteeringController.js");
+/* harmony import */ var _models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../models/CustomParametersModel.js */ "./src/streaming/models/CustomParametersModel.js");
+/* harmony import */ var _utils_DOMStorage_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../utils/DOMStorage.js */ "./src/streaming/utils/DOMStorage.js");
+/* harmony import */ var _dash_DashAdapter_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../dash/DashAdapter.js */ "./src/dash/DashAdapter.js");
+/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
+/* harmony import */ var _dash_DashMetrics_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../dash/DashMetrics.js */ "./src/dash/DashMetrics.js");
+/* harmony import */ var _utils_ErrorHandler_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../utils/ErrorHandler.js */ "./src/streaming/utils/ErrorHandler.js");
+/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../../core/errors/Errors.js */ "./src/core/errors/Errors.js");
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _controllers_GapController_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../controllers/GapController.js */ "./src/streaming/controllers/GapController.js");
+/* harmony import */ var codem_isoboxer__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! codem-isoboxer */ "./node_modules/codem-isoboxer/dist/iso_boxer.js");
+/* harmony import */ var _ManifestLoader_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../ManifestLoader.js */ "./src/streaming/ManifestLoader.js");
+/* harmony import */ var _models_ManifestModel_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ../models/ManifestModel.js */ "./src/streaming/models/ManifestModel.js");
+/* harmony import */ var _ManifestUpdater_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ../ManifestUpdater.js */ "./src/streaming/ManifestUpdater.js");
+/* harmony import */ var _controllers_MediaController_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ../controllers/MediaController.js */ "./src/streaming/controllers/MediaController.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _models_MediaPlayerModel_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../models/MediaPlayerModel.js */ "./src/streaming/models/MediaPlayerModel.js");
+/* harmony import */ var _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../constants/MetricsConstants.js */ "./src/streaming/constants/MetricsConstants.js");
+/* harmony import */ var _controllers_PlaybackController_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ../controllers/PlaybackController.js */ "./src/streaming/controllers/PlaybackController.js");
+/* harmony import */ var _net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ../net/SchemeLoaderFactory.js */ "./src/streaming/net/SchemeLoaderFactory.js");
+/* harmony import */ var _dash_controllers_SegmentBaseController_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ../../dash/controllers/SegmentBaseController.js */ "./src/dash/controllers/SegmentBaseController.js");
+/* harmony import */ var _dash_controllers_ServiceDescriptionController_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ../../dash/controllers/ServiceDescriptionController.js */ "./src/dash/controllers/ServiceDescriptionController.js");
+/* harmony import */ var _controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../controllers/StreamController.js */ "./src/streaming/controllers/StreamController.js");
+/* harmony import */ var _text_TextController_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../text/TextController.js */ "./src/streaming/text/TextController.js");
+/* harmony import */ var _controllers_ThroughputController_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../controllers/ThroughputController.js */ "./src/streaming/controllers/ThroughputController.js");
+/* harmony import */ var _dash_utils_TimelineConverter_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../../dash/utils/TimelineConverter.js */ "./src/dash/utils/TimelineConverter.js");
+/* harmony import */ var _utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
+/* harmony import */ var _models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ../models/URIFragmentModel.js */ "./src/streaming/models/URIFragmentModel.js");
+/* harmony import */ var _models_VideoModel_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ../models/VideoModel.js */ "./src/streaming/models/VideoModel.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _svta_cml_608__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! @svta/cml-608 */ "./node_modules/@svta/cml-608/dist/index.js");
+/* harmony import */ var _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ./MediaPlayerApiErrors.js */ "./src/streaming/mediaplayer/MediaPlayerApiErrors.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Builds and wires the controller graph behind MediaPlayer: creates the singletons, calls setConfig()/initialize()
+ * on them, and detects the optional plugin bundles (Protection, MetricsReporting, MssHandler, OfflineController).
+ * Shared controllers are written into the MediaPlayer `state` object; construction-only objects stay here.
+ * @ignore
+ */
+function MediaPlayerWiring() {
+  const context = this.context;
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_20__["default"])(context).getInstance();
+
+  // keys that MediaPlayer.setConfig() may inject and that live on the shared state object
+  const STATE_CONFIG_KEYS = ['streamController', 'textController', 'throughputController', 'playbackController', 'contentSteeringController', 'customParametersModel', 'abrController', 'mediaController', 'settings', 'dashMetrics'];
+  let instance, state, debug, schemeLoaderFactory, timelineConverter, metricsReportingController, mssHandler, mediaPlayerModel, errHandler, capabilities, capabilitiesFilter, gapController, serviceDescriptionController, catchupController, cmcdController, cmsdModel, domStorage, segmentBaseController, clientDataReportingController;
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.state) {
+      state = config.state;
+    }
+    if (config.debug) {
+      debug = config.debug;
+    }
+    STATE_CONFIG_KEYS.forEach(key => {
+      if (config[key]) {
+        state[key] = config[key];
+      }
+    });
+    if (config.capabilities) {
+      capabilities = config.capabilities;
+    }
+    if (config.capabilitiesFilter) {
+      capabilitiesFilter = config.capabilitiesFilter;
+    }
+    if (config.gapController) {
+      gapController = config.gapController;
+    }
+    if (config.serviceDescriptionController) {
+      serviceDescriptionController = config.serviceDescriptionController;
+    }
+    if (config.clientDataReportingController) {
+      clientDataReportingController = config.clientDataReportingController;
+    }
+    if (config.catchupController) {
+      catchupController = config.catchupController;
+    }
+    if (config.mediaPlayerModel) {
+      mediaPlayerModel = config.mediaPlayerModel;
+    }
+    if (config.schemeLoaderFactory) {
+      schemeLoaderFactory = config.schemeLoaderFactory;
+    }
+  }
+  function setup() {
+    state.mediaPlayerInitialized = false;
+    state.playbackInitialized = false;
+    state.streamingInitialized = false;
+    state.autoPlay = true;
+    state.providedStartTime = NaN;
+    state.protectionController = null;
+    state.protectionData = null;
+    state.adapter = null;
+    _core_events_Events_js__WEBPACK_IMPORTED_MODULE_21__["default"].extend(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_29__["default"]);
+    state.customParametersModel = (0,_models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
+    state.videoModel = (0,_models_VideoModel_js__WEBPACK_IMPORTED_MODULE_42__["default"])(context).getInstance();
+    state.uriFragmentModel = (0,_models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_41__["default"])(context).getInstance();
+    state.offlineController = null;
+    segmentBaseController = null;
+    mediaPlayerModel = (0,_models_MediaPlayerModel_js__WEBPACK_IMPORTED_MODULE_30__["default"])(context).getInstance();
+  }
+
+  /**
+   * Ensures Capabilities/ErrorHandler exist and reports a CAPABILITY_MEDIASOURCE_ERROR if MSE is unavailable.
+   * @return {boolean} true if MediaSource is supported
+   */
+  function supportsMediaSource() {
+    if (!capabilities) {
+      capabilities = (0,_utils_Capabilities_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
+      capabilities.setConfig({
+        settings: state.settings,
+        protectionController: state.protectionController
+      });
+    }
+    if (!errHandler) {
+      errHandler = (0,_utils_ErrorHandler_js__WEBPACK_IMPORTED_MODULE_18__["default"])(context).getInstance();
+    }
+    if (!capabilities.supportsMediaSource()) {
+      errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_16__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_19__["default"].CAPABILITY_MEDIASOURCE_ERROR_CODE, _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_19__["default"].CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Creates the controllers and models that exist for the lifetime of the player (called once from initialize()).
+   */
+  function createCoreControllers() {
+    // init some controllers and models
+    timelineConverter = (0,_dash_utils_TimelineConverter_js__WEBPACK_IMPORTED_MODULE_39__["default"])(context).getInstance();
+    if (!state.throughputController) {
+      state.throughputController = (0,_controllers_ThroughputController_js__WEBPACK_IMPORTED_MODULE_38__["default"])(context).getInstance();
+    }
+    if (!state.abrController) {
+      state.abrController = (0,_controllers_AbrController_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
+    }
+    if (!schemeLoaderFactory) {
+      schemeLoaderFactory = (0,_net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_33__["default"])(context).getInstance();
+    }
+    if (!state.playbackController) {
+      state.playbackController = (0,_controllers_PlaybackController_js__WEBPACK_IMPORTED_MODULE_32__["default"])(context).getInstance();
+    }
+    if (!state.mediaController) {
+      state.mediaController = (0,_controllers_MediaController_js__WEBPACK_IMPORTED_MODULE_28__["default"])(context).getInstance();
+    }
+    if (!state.streamController) {
+      state.streamController = (0,_controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_36__["default"])(context).getInstance();
+    }
+    if (!gapController) {
+      gapController = (0,_controllers_GapController_js__WEBPACK_IMPORTED_MODULE_23__["default"])(context).getInstance();
+    }
+    if (!catchupController) {
+      catchupController = (0,_controllers_CatchupController_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
+    }
+    if (!serviceDescriptionController) {
+      serviceDescriptionController = (0,_dash_controllers_ServiceDescriptionController_js__WEBPACK_IMPORTED_MODULE_35__["default"])(context).getInstance();
+    }
+    if (!state.contentSteeringController) {
+      state.contentSteeringController = (0,_dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
+    }
+    if (!capabilitiesFilter) {
+      capabilitiesFilter = (0,_utils_CapabilitiesFilter_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
+    }
+    state.adapter = (0,_dash_DashAdapter_js__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
+    state.manifestModel = (0,_models_ManifestModel_js__WEBPACK_IMPORTED_MODULE_26__["default"])(context).getInstance();
+    cmcdController = (0,_controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+    cmsdModel = (0,_models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
+    clientDataReportingController = (0,_controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
+    state.dashMetrics = (0,_dash_DashMetrics_js__WEBPACK_IMPORTED_MODULE_17__["default"])(context).getInstance({
+      settings: state.settings
+    });
+    domStorage = (0,_utils_DOMStorage_js__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance({
+      settings: state.settings
+    });
+    state.adapter.setConfig({
+      constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
+      cea608parser: new _svta_cml_608__WEBPACK_IMPORTED_MODULE_44__.Cta608Parser(),
+      errHandler: errHandler,
+      BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"]
+    });
+    if (!state.baseURLController) {
+      state.baseURLController = (0,_controllers_BaseURLController_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create();
+    }
+    state.baseURLController.setConfig({
+      adapter: state.adapter,
+      contentSteeringController: state.contentSteeringController
+    });
+    serviceDescriptionController.setConfig({
+      adapter: state.adapter
+    });
+    if (!segmentBaseController) {
+      segmentBaseController = (0,_dash_controllers_SegmentBaseController_js__WEBPACK_IMPORTED_MODULE_34__["default"])(context).getInstance({
+        dashMetrics: state.dashMetrics,
+        mediaPlayerModel: mediaPlayerModel,
+        errHandler: errHandler,
+        baseURLController: state.baseURLController,
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_21__["default"],
+        eventBus: eventBus,
+        debug: debug,
+        boxParser: (0,_utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance(),
+        errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_19__["default"]
+      });
+    }
+
+    // configure controllers
+    state.mediaController.setConfig({
+      domStorage,
+      settings: state.settings,
+      mediaPlayerModel,
+      customParametersModel: state.customParametersModel,
+      videoModel: state.videoModel
+    });
+    mediaPlayerModel.setConfig({
+      playbackController: state.playbackController,
+      serviceDescriptionController
+    });
+    state.contentSteeringController.setConfig({
+      adapter: state.adapter,
+      errHandler,
+      dashMetrics: state.dashMetrics,
+      mediaPlayerModel,
+      manifestModel: state.manifestModel,
+      serviceDescriptionController,
+      throughputController: state.throughputController,
+      eventBus
+    });
+  }
+
+  /**
+   * Resets the controllers involved in the current playback session; called before a new source or view is attached.
+   */
+  function resetPlaybackControllers() {
+    state.playbackInitialized = false;
+    state.streamingInitialized = false;
+    state.adapter.reset();
+    state.streamController.reset();
+    gapController.reset();
+    catchupController.reset();
+    state.playbackController.reset();
+    serviceDescriptionController.reset();
+    state.contentSteeringController.reset();
+    state.abrController.reset();
+    state.throughputController.reset();
+    state.mediaController.reset();
+    segmentBaseController.reset();
+    if (state.protectionController) {
+      if (state.settings.get().streaming.protection.keepProtectionMediaKeys) {
+        state.protectionController.stop();
+      } else {
+        state.protectionController.reset();
+        state.protectionController = null;
+        detectProtection();
+      }
+    }
+    state.textController.reset();
+    cmcdController.reset();
+    cmsdModel.reset();
+  }
+  function createPlaybackControllers() {
+    // creates or get objects instances
+    const manifestLoader = createManifestLoader();
+    if (!state.streamController) {
+      state.streamController = (0,_controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_36__["default"])(context).getInstance();
+    }
+    if (!state.textController) {
+      state.textController = (0,_text_TextController_js__WEBPACK_IMPORTED_MODULE_37__["default"])(context).create({
+        adapter: state.adapter,
+        baseURLController: state.baseURLController,
+        errHandler,
+        manifestModel: state.manifestModel,
+        mediaController: state.mediaController,
+        settings: state.settings,
+        videoModel: state.videoModel,
+        timelineConverter
+      });
+    }
+    capabilitiesFilter.setConfig({
+      adapter: state.adapter,
+      capabilities,
+      customParametersModel: state.customParametersModel,
+      errHandler,
+      manifestModel: state.manifestModel,
+      protectionController: state.protectionController,
+      settings: state.settings
+    });
+    state.streamController.setConfig({
+      abrController: state.abrController,
+      adapter: state.adapter,
+      baseURLController: state.baseURLController,
+      capabilities,
+      capabilitiesFilter,
+      contentSteeringController: state.contentSteeringController,
+      customParametersModel: state.customParametersModel,
+      dashMetrics: state.dashMetrics,
+      errHandler,
+      manifestLoader,
+      manifestModel: state.manifestModel,
+      mediaController: state.mediaController,
+      mediaPlayerModel,
+      playbackController: state.playbackController,
+      protectionController: state.protectionController,
+      segmentBaseController,
+      serviceDescriptionController,
+      settings: state.settings,
+      textController: state.textController,
+      throughputController: state.throughputController,
+      timelineConverter,
+      uriFragmentModel: state.uriFragmentModel,
+      videoModel: state.videoModel
+    });
+    gapController.setConfig({
+      adapter: state.adapter,
+      playbackController: state.playbackController,
+      settings: state.settings,
+      streamController: state.streamController,
+      timelineConverter,
+      videoModel: state.videoModel
+    });
+    state.playbackController.setConfig({
+      adapter: state.adapter,
+      dashMetrics: state.dashMetrics,
+      serviceDescriptionController,
+      settings: state.settings,
+      streamController: state.streamController,
+      timelineConverter,
+      videoModel: state.videoModel
+    });
+    catchupController.setConfig({
+      mediaPlayerModel,
+      playbackController: state.playbackController,
+      settings: state.settings,
+      streamController: state.streamController,
+      videoModel: state.videoModel
+    });
+    state.throughputController.setConfig({
+      settings: state.settings,
+      playbackController: state.playbackController
+    });
+    state.abrController.setConfig({
+      adapter: state.adapter,
+      capabilities,
+      cmsdModel,
+      customParametersModel: state.customParametersModel,
+      dashMetrics: state.dashMetrics,
+      domStorage,
+      mediaPlayerModel,
+      settings: state.settings,
+      streamController: state.streamController,
+      throughputController: state.throughputController,
+      videoModel: state.videoModel
+    });
+    cmcdController.setConfig({
+      abrController: state.abrController,
+      dashMetrics: state.dashMetrics,
+      errHandler,
+      mediaPlayerModel,
+      playbackController: state.playbackController,
+      serviceDescriptionController,
+      throughputController: state.throughputController
+    });
+    clientDataReportingController.setConfig({
+      serviceDescriptionController
+    });
+    cmsdModel.setConfig({});
+
+    // initializes controller
+    state.mediaController.initialize();
+    state.throughputController.initialize();
+    state.abrController.initialize();
+    state.streamController.initialize(state.autoPlay, state.protectionData);
+    state.textController.initialize();
+    gapController.initialize();
+    catchupController.initialize();
+    cmcdController.initialize(state.autoPlay);
+    cmsdModel.initialize();
+    state.contentSteeringController.initialize();
+    segmentBaseController.initialize();
+  }
+  function createManifestLoader() {
+    return (0,_ManifestLoader_js__WEBPACK_IMPORTED_MODULE_25__["default"])(context).create({
+      debug: debug,
+      errHandler: errHandler,
+      dashMetrics: state.dashMetrics,
+      mediaPlayerModel: mediaPlayerModel,
+      mssHandler: mssHandler,
+      settings: state.settings
+    });
+  }
+  function detectProtection() {
+    if (state.protectionController) {
+      return state.protectionController;
+    }
+    if (typeof dashjs === 'undefined') {
+      return null;
+    }
+    // do not require Protection as dependencies as this is optional and intended to be loaded separately
+    let detectedProtection = dashjs.Protection;
+    if (typeof detectedProtection === 'function') {
+      //TODO need a better way to register/detect plugin components
+      let protection = detectedProtection(context).create();
+      _core_events_Events_js__WEBPACK_IMPORTED_MODULE_21__["default"].extend(detectedProtection.events);
+      _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_29__["default"].extend(detectedProtection.events, {
+        publicOnly: true
+      });
+      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_19__["default"].extend(detectedProtection.errors);
+      state.protectionController = protection.createProtectionSystem({
+        debug,
+        errHandler,
+        videoModel: state.videoModel,
+        customParametersModel: state.customParametersModel,
+        capabilities,
+        eventBus,
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_21__["default"],
+        BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"],
+        constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
+        cmcdController,
+        settings: state.settings
+      });
+      if (!capabilities) {
+        capabilities = (0,_utils_Capabilities_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
+      }
+      capabilities.setProtectionController(state.protectionController);
+      return state.protectionController;
+    }
+    return null;
+  }
+  function detectMetricsReporting() {
+    if (metricsReportingController || typeof dashjs === 'undefined') {
+      return;
+    }
+    // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
+    let detectedMetricsReporting = dashjs.MetricsReporting;
+    if (typeof detectedMetricsReporting === 'function') {
+      //TODO need a better way to register/detect plugin components
+      let metricsReporting = detectedMetricsReporting(context).create();
+      metricsReportingController = metricsReporting.createMetricsReporting({
+        debug: debug,
+        eventBus: eventBus,
+        mediaElement: state.videoModel.getElement(),
+        adapter: state.adapter,
+        dashMetrics: state.dashMetrics,
+        mediaPlayerModel: mediaPlayerModel,
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_21__["default"],
+        constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
+        metricsConstants: _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_31__["default"]
+      });
+    }
+  }
+  function detectMss() {
+    if (mssHandler || typeof dashjs === 'undefined') {
+      return;
+    }
+
+    // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
+    let detectedMssHandler = dashjs.MssHandler;
+    if (typeof detectedMssHandler === 'function') {
+      //TODO need a better way to register/detect plugin components
+      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_19__["default"].extend(detectedMssHandler.errors);
+      mssHandler = detectedMssHandler(context).create({
+        eventBus: eventBus,
+        mediaPlayerModel: mediaPlayerModel,
+        dashMetrics: state.dashMetrics,
+        manifestModel: state.manifestModel,
+        playbackController: state.playbackController,
+        streamController: state.streamController,
+        protectionController: state.protectionController,
+        baseURLController: state.baseURLController,
+        errHandler: errHandler,
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_21__["default"],
+        constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
+        debug: debug,
+        initSegmentType: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_43__.HTTPRequest.INIT_SEGMENT_TYPE,
+        BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"],
+        ISOBoxer: codem_isoboxer__WEBPACK_IMPORTED_MODULE_24__,
+        settings: state.settings
+      });
+    }
+  }
+  function detectOffline() {
+    if (!state.mediaPlayerInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_45__.MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+    }
+    if (state.offlineController) {
+      return state.offlineController;
+    }
+    if (typeof dashjs === 'undefined') {
+      return null;
+    }
+
+    // do not require Offline as dependencies as this is optional and intended to be loaded separately
+    let detectedOfflineController = dashjs.OfflineController;
+    if (typeof detectedOfflineController === 'function') {
+      //TODO need a better way to register/detect plugin components
+      _core_events_Events_js__WEBPACK_IMPORTED_MODULE_21__["default"].extend(detectedOfflineController.events);
+      _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_29__["default"].extend(detectedOfflineController.events, {
+        publicOnly: true
+      });
+      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_19__["default"].extend(detectedOfflineController.errors);
+      const manifestLoader = createManifestLoader();
+      const manifestUpdater = (0,_ManifestUpdater_js__WEBPACK_IMPORTED_MODULE_27__["default"])(context).create();
+      manifestUpdater.setConfig({
+        manifestModel: state.manifestModel,
+        adapter: state.adapter,
+        manifestLoader,
+        errHandler,
+        contentSteeringController: state.contentSteeringController
+      });
+      state.offlineController = detectedOfflineController(context).create({
+        debug: debug,
+        manifestUpdater: manifestUpdater,
+        baseURLController: state.baseURLController,
+        manifestLoader: manifestLoader,
+        manifestModel: state.manifestModel,
+        mediaPlayerModel: mediaPlayerModel,
+        abrController: state.abrController,
+        playbackController: state.playbackController,
+        adapter: state.adapter,
+        errHandler: errHandler,
+        dashMetrics: state.dashMetrics,
+        timelineConverter: timelineConverter,
+        segmentBaseController: segmentBaseController,
+        schemeLoaderFactory: schemeLoaderFactory,
+        eventBus: eventBus,
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_21__["default"],
+        errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_19__["default"],
+        constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
+        settings: state.settings,
+        dashConstants: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_15__["default"],
+        urlUtils: (0,_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_40__["default"])(context).getInstance()
+      });
+      return state.offlineController;
+    }
+    return null;
+  }
+
+  /**
+   * Resets the plugin controllers created by the detect*() functions.
+   */
+  function reset() {
+    if (metricsReportingController) {
+      metricsReportingController.reset();
+      metricsReportingController = null;
+    }
+    if (state.offlineController) {
+      state.offlineController.reset();
+      state.offlineController = null;
+    }
+  }
+  instance = {
+    createCoreControllers,
+    createManifestLoader,
+    createPlaybackControllers,
+    detectMetricsReporting,
+    detectMss,
+    detectOffline,
+    detectProtection,
+    reset,
+    resetPlaybackControllers,
+    setConfig,
+    setup,
+    supportsMediaSource
+  };
+  return instance;
+}
+MediaPlayerWiring.__dashjs_factory_name = 'MediaPlayerWiring';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_22__["default"].getSingletonFactory(MediaPlayerWiring));
+
+/***/ }),
+
+/***/ "./src/streaming/mediaplayer/PlaybackApi.js":
+/*!**************************************************!*\
+  !*** ./src/streaming/mediaplayer/PlaybackApi.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
+/* harmony import */ var _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./MediaPlayerApiErrors.js */ "./src/streaming/mediaplayer/MediaPlayerApiErrors.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+function PlaybackApi() {
+  let instance, state, mediaPlayer;
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.state) {
+      state = config.state;
+    }
+    if (config.mediaPlayer) {
+      mediaPlayer = config.mediaPlayer;
+    }
+  }
+
+  /**
+   * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
+   * This method will call play on the native Video Element.
+   *
+   * @see {@link module:MediaPlayer#attachSource attachSource()}
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function play() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    if (!state.autoPlay || isPaused() && state.playbackInitialized) {
+      state.playbackController.play(true);
+    }
+  }
+
+  /**
+   * This method will call pause on the native Video Element.
+   *
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function pause() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    state.playbackController.pause();
+  }
+
+  /**
+   * Returns a Boolean that indicates whether the Video Element is paused.
+   * @return {boolean}
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function isPaused() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    return state.playbackController.isPaused();
+  }
+
+  /**
+   * Sets the currentTime property of the attached video element.  If it is a live stream with a
+   * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
+   *
+   * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
+   * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this function should be relative to DVRWindow.start.
+   * @see {@link module:MediaPlayer#getDvrSeekOffset getDvrSeekOffset()}
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function seek(value) {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    ;(0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_2__.checkParameterType)(value, 'number');
+    if (isNaN(value)) {
+      throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].BAD_ARGUMENT_ERROR;
+    }
+    if (value < 0) {
+      value = 0;
+    }
+    let s = state.playbackController.getIsDynamic() ? getDvrSeekOffset(value) : value;
+
+    // For VoD limit the seek to the duration of the content
+    const videoElement = mediaPlayer.getVideoElement();
+    if (!state.playbackController.getIsDynamic() && videoElement.duration) {
+      s = Math.min(videoElement.duration, s);
+    }
+    state.playbackController.seek(s, false, false, true);
+  }
+
+  /**
+   * Sets the currentTime property of the attached video element. Compared to the seek() function this function does not add the DVR window offset. Instead, it takes a presentation time relative to the availability start time.
+   * For VoD this function behaves similar to the seek() function.
+    * @param {number} value - A presentation time in seconds
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function seekToPresentationTime(seektime) {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    ;(0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_2__.checkParameterType)(seektime, 'number');
+    if (isNaN(seektime)) {
+      throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].BAD_ARGUMENT_ERROR;
+    }
+    if (seektime < 0) {
+      seektime = 0;
+    }
+
+    // For VoD limit the seek to the duration of the content
+    const videoElement = mediaPlayer.getVideoElement();
+    if (!state.playbackController.getIsDynamic() && videoElement.duration) {
+      seektime = Math.min(videoElement.duration, seektime);
+    }
+
+    // For live, take live delay into account
+    if (state.playbackController.getIsDynamic()) {
+      const type = state.streamController && state.streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO;
+      let metric = state.dashMetrics.getCurrentDVRInfo(type);
+      if (!metric) {
+        return;
+      }
+      seektime = _adjustSeekTimeBasedOnLiveDelay(seektime, metric);
+      if (seektime < metric.range.start) {
+        seektime = metric.range.start;
+      }
+    }
+    state.playbackController.seek(seektime, false, false, true);
+  }
+
+  /**
+   * Seeks back to the original live edge (live edge as calculated at playback start). Only applies to live streams, for VoD streams this call will be ignored.
+   */
+  function seekToOriginalLive() {
+    if (!state.playbackInitialized || !isDynamic()) {
+      return;
+    }
+    state.playbackController.seekToOriginalLive();
+  }
+
+  /**
+   * Returns a Boolean that indicates whether the media is in the process of seeking to a new position.
+   * @return {boolean}
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function isSeeking() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    return state.playbackController.isSeeking();
+  }
+
+  /**
+   * Returns a Boolean that indicates whether the media is in the process of dynamic.
+   * @return {boolean}
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function isDynamic() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    return state.playbackController.getIsDynamic();
+  }
+
+  /**
+   * Returns a boolean that indicates whether the player is operating in low latency mode.
+   * @return {boolean}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getLowLatencyModeEnabled() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    return state.playbackController.getLowLatencyModeEnabled();
+  }
+
+  /**
+   * Use this method to set the native Video Element's playback rate.
+   * @param {number} value
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function setPlaybackRate(value) {
+    mediaPlayer.getVideoElement().playbackRate = value;
+  }
+
+  /**
+   * Returns the current playback rate.
+   * @returns {number}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getPlaybackRate() {
+    return mediaPlayer.getVideoElement().playbackRate;
+  }
+
+  /**
+   * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
+   * @param {boolean} value
+   * @memberof module:MediaPlayer
+   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
+   * @instance
+   */
+  function setMute(value) {
+    ;(0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_2__.checkParameterType)(value, 'boolean');
+    mediaPlayer.getVideoElement().muted = value;
+  }
+
+  /**
+   * A Boolean that determines whether audio is muted.
+   * @returns {boolean}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function isMuted() {
+    return mediaPlayer.getVideoElement().muted;
+  }
+
+  /**
+   * A double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest).
+   * @param {number} value
+   * @memberof module:MediaPlayer
+   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type, or is NaN or not between 0 and 1.
+   * @instance
+   */
+  function setVolume(value) {
+    if (typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 1.0) {
+      throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].BAD_ARGUMENT_ERROR;
+    }
+    mediaPlayer.getVideoElement().volume = value;
+  }
+
+  /**
+   * Returns the current audio volume, from 0.0 (silent) to 1.0 (loudest).
+   * @returns {number}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getVolume() {
+    return mediaPlayer.getVideoElement().volume;
+  }
+
+  /**
+   * The length of the buffer for a given media type, in seconds. Valid media
+   * types are "video", "audio" and "text". If no type is passed
+   * in, then the minimum of video, audio and text buffer length is
+   * returned. NaN is returned if an invalid type is requested, the
+   * presentation does not contain that type, or if no arguments are passed
+   * and the presentation does not include any adaption sets of valid media
+   * type.
+   *
+   * @param {MediaType} type - 'video', 'audio' or 'text'
+   * @returns {number} The length of the buffer for the given media type, in
+   *  seconds, or NaN
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getBufferLength(type) {
+    const types = [_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT];
+    if (!type) {
+      const buffer = types.map(t => mediaPlayer.getTracksFor(t).length > 0 ? state.dashMetrics.getCurrentBufferLevel(t) : Number.MAX_VALUE).reduce((p, c) => Math.min(p, c));
+      return buffer === Number.MAX_VALUE ? NaN : buffer;
+    } else {
+      if (types.indexOf(type) !== -1) {
+        const buffer = state.dashMetrics.getCurrentBufferLevel(type);
+        return buffer ? buffer : NaN;
+      } else {
+        state.logger.warn('getBufferLength requested for invalid type');
+        return NaN;
+      }
+    }
+  }
+
+  /**
+   * This method should only be used with a live stream that has a valid timeShiftBufferLength (DVR Window).
+   * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the {@link module:MediaPlayer#seek seek()} method
+   * which will calculate this value for you and set the video element's currentTime property all in one simple call.
+   *
+   * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected.
+   * @returns {number} A value that is relative the available range within the timeShiftBufferLength (DVR Window).
+   * @see {@link module:MediaPlayer#seek seek()}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getDvrSeekOffset(value) {
+    const type = state.streamController && state.streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO;
+    let metric = state.dashMetrics.getCurrentDVRInfo(type);
+    if (!metric) {
+      return 0;
+    }
+    let val = metric.range.start + value;
+    return _adjustSeekTimeBasedOnLiveDelay(val, metric);
+  }
+  function _adjustSeekTimeBasedOnLiveDelay(seektime, metric) {
+    let liveDelay = state.playbackController.getOriginalLiveDelay();
+    if (seektime > metric.range.end - liveDelay) {
+      seektime = metric.range.end - liveDelay;
+    }
+    return seektime;
+  }
+
+  /**
+   * Returns the target live delay
+   * @returns {number} The target live delay
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getTargetLiveDelay() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    return state.playbackController.getOriginalLiveDelay();
+  }
+
+  /**
+   * Current playhead time in seconds.
+   *
+   * If called with no arguments then the returned value is the current time of the video element.
+   * However, if a period ID is supplied then time is relative to the start of that period, or is null if there is no such period id in the manifest.
+   *
+   * @param {string} periodId - The ID of a period that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first period or the AST.
+   * @returns {number} The current playhead time of the media, or null.
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function time(periodId = '') {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    let t = mediaPlayer.getVideoElement().currentTime;
+    if (periodId !== '') {
+      t = state.streamController.getTimeRelativeToStreamId(t, periodId);
+    }
+    return t;
+  }
+
+  /**
+   * Returns the current playhead time relative to the start of the DVR window.
+   * For VoD this method returns the same value as time()
+   * @returns {number} The current playhead time of the media relative to the start of the DVR window
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function timeInDvrWindow() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    if (!state.playbackController.getIsDynamic()) {
+      return time();
+    }
+    let t = mediaPlayer.getVideoElement().currentTime;
+    const type = state.streamController && state.streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO;
+    let metric = state.dashMetrics.getCurrentDVRInfo(type);
+    t = metric === null || t === 0 ? 0 : Math.max(0, t - metric.range.start);
+    return t;
+  }
+
+  /**
+   * Returns information about the current DVR window including the start time, the end time, the window size.
+   * @returns {{startAsUtc: (*|number), size: number, endAsUtc: (*|number), start, end}|{}}
+   */
+  function getDvrWindow() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    const type = state.streamController && state.streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO;
+    let metric = state.dashMetrics.getCurrentDVRInfo(type);
+    if (!metric) {
+      return {};
+    }
+    let offset = 0;
+    const isDynamic = state.playbackController.getIsDynamic();
+    if (isDynamic) {
+      offset = metric.manifestInfo.availableFrom.getTime() / 1000;
+    }
+    return {
+      start: metric.range.start,
+      end: metric.range.end,
+      startAsUtc: isDynamic ? offset + metric.range.start : NaN,
+      endAsUtc: isDynamic ? offset + metric.range.end : NaN,
+      size: metric.range.end - metric.range.start
+    };
+  }
+
+  /**
+   * Total duration of the media in seconds.
+   *
+   * @returns {number} The total duration of the media. For a dynamic stream this will return DVRWindow.end - DVRWindow.start
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function duration() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    let d = mediaPlayer.getVideoElement().duration;
+    if (state.playbackController.getIsDynamic()) {
+      const type = state.streamController && state.streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO;
+      let metric = state.dashMetrics.getCurrentDVRInfo(type);
+      d = metric ? metric.range.end - metric.range.start : 0;
+    }
+    return d;
+  }
+
+  /**
+   * Use this method to get the current playhead time as an absolute value in seconds since midnight UTC, Jan 1 1970.
+   * Note - this property only has meaning for live streams and is NaN for VoD content. If called before play() has begun, it will return a value of NaN.
+   *
+   * @returns {number} The current playhead time as UTC timestamp.
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function timeAsUTC() {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    if (!state.playbackController.getIsDynamic() || time() < 0) {
+      return NaN;
+    }
+    const type = state.streamController && state.streamController.hasVideoTrack() ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO;
+    let metric = state.dashMetrics.getCurrentDVRInfo(type);
+    let availabilityStartTime, utcValue;
+    if (!metric) {
+      return 0;
+    }
+    availabilityStartTime = metric.manifestInfo.availableFrom.getTime() / 1000;
+    utcValue = availabilityStartTime + time();
+    return utcValue;
+  }
+
+  /**
+   * <p>Set to false to prevent stream from auto-playing when the view is attached.</p>
+   *
+   * @param {boolean} value
+   * @default true
+   * @memberof module:MediaPlayer
+   * @see {@link module:MediaPlayer#attachView attachView()}
+   * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
+   * @instance
+   *
+   */
+  function setAutoPlay(value) {
+    ;(0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_2__.checkParameterType)(value, 'boolean');
+    state.autoPlay = value;
+  }
+
+  /**
+   * @returns {boolean} The current autoPlay state.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getAutoPlay() {
+    return state.autoPlay;
+  }
+
+  /**
+   * @memberof module:MediaPlayer
+   * @instance
+   * @returns {number|NaN} Current live stream latency in seconds. It is the difference between now time and time position at the playback head.
+   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+   */
+  function getCurrentLiveLatency() {
+    if (!state.mediaPlayerInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+    }
+    if (!state.playbackInitialized) {
+      return NaN;
+    }
+    return state.playbackController.getCurrentLiveLatency();
+  }
+  instance = {
+    duration,
+    getAutoPlay,
+    getBufferLength,
+    getCurrentLiveLatency,
+    getDvrSeekOffset,
+    getDvrWindow,
+    getLowLatencyModeEnabled,
+    getPlaybackRate,
+    getTargetLiveDelay,
+    getVolume,
+    isDynamic,
+    isMuted,
+    isPaused,
+    isSeeking,
+    pause,
+    play,
+    seek,
+    seekToOriginalLive,
+    seekToPresentationTime,
+    setAutoPlay,
+    setConfig,
+    setMute,
+    setPlaybackRate,
+    setVolume,
+    time,
+    timeAsUTC,
+    timeInDvrWindow
+  };
+  return instance;
+}
+PlaybackApi.__dashjs_factory_name = 'PlaybackApi';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__["default"].getClassFactory(PlaybackApi));
+
+/***/ }),
+
+/***/ "./src/streaming/mediaplayer/TextApi.js":
+/*!**********************************************!*\
+  !*** ./src/streaming/mediaplayer/TextApi.js ***!
+  \**********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./MediaPlayerApiErrors.js */ "./src/streaming/mediaplayer/MediaPlayerApiErrors.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+function TextApi() {
+  let instance, state;
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.state) {
+      state = config.state;
+    }
+  }
+
+  /**
+   * Enable/disable text
+   * When enabling text, dash will choose the previous selected text track
+   *
+   * @param {boolean} enable - true to enable text, false otherwise (same as setTextTrack(-1))
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function enableText(enable) {
+    const activeStreamInfo = _getActiveStreamInfo();
+    if (!activeStreamInfo) {
+      return false;
+    }
+    return state.textController.enableText(activeStreamInfo.id, enable);
+  }
+
+  /**
+   * Enable/disable text
+   * When enabling dash will keep downloading and process fragmented text tracks even if all tracks are in mode "hidden"
+   *
+   * @param {boolean} enable - true to enable text streaming even if all text tracks are hidden.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function enableForcedTextStreaming(enable) {
+    const activeStreamInfo = _getActiveStreamInfo();
+    if (!activeStreamInfo) {
+      return false;
+    }
+    return state.textController.enableForcedTextStreaming(enable);
+  }
+
+  /**
+   * Return if text is enabled
+   *
+   * @return {boolean} return true if text is enabled, false otherwise
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function isTextEnabled() {
+    const activeStreamInfo = _getActiveStreamInfo();
+    if (!activeStreamInfo) {
+      return false;
+    }
+    return state.textController.isTextEnabled(activeStreamInfo);
+  }
+
+  /**
+   * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
+   * set the track mode on the video object to switch a track when using this method.
+   * @param {number} idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
+   * @see {@link MediaPlayerEvents#event:TEXT_TRACK_ADDED dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
+   * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function setTextTrack(idx) {
+    if (!state.playbackInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_1__.PLAYBACK_NOT_INITIALIZED_ERROR;
+    }
+    const activeStreamInfo = _getActiveStreamInfo();
+    if (!activeStreamInfo) {
+      return;
+    }
+    state.textController.setTextTrack(activeStreamInfo.id, idx);
+  }
+  function getCurrentTextTrackIndex() {
+    const activeStreamInfo = _getActiveStreamInfo();
+    if (!activeStreamInfo) {
+      return;
+    }
+    return state.textController.getCurrentTrackIdx(activeStreamInfo.id);
+  }
+
+  /**
+   * Returns instance of Div that was attached by calling attachTTMLRenderingDiv()
+   * @returns {Object}
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getTTMLRenderingDiv() {
+    return state.videoModel ? state.videoModel.getTTMLRenderingDiv() : null;
+  }
+
+  /**
+   * Use this method to attach an HTML5 div for dash.js to render rich TTML subtitles.
+   *
+   * @param {HTMLDivElement} div - An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
+   * @instance
+   */
+  function attachTTMLRenderingDiv(div) {
+    if (!state.videoModel.getElement()) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_1__.ELEMENT_NOT_ATTACHED_ERROR;
+    }
+    state.videoModel.setTTMLRenderingDiv(div);
+  }
+  function attachVttRenderingDiv(div) {
+    if (!state.videoModel.getElement()) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_1__.ELEMENT_NOT_ATTACHED_ERROR;
+    }
+    state.videoModel.setVttRenderingDiv(div);
+  }
+
+  /**
+   * @return {object|null} active stream info, or null when there is no active stream or no text controller
+   * @private
+   */
+  function _getActiveStreamInfo() {
+    const activeStreamInfo = state.streamController.getActiveStreamInfo();
+    return activeStreamInfo && state.textController ? activeStreamInfo : null;
+  }
+  instance = {
+    attachTTMLRenderingDiv,
+    attachVttRenderingDiv,
+    enableForcedTextStreaming,
+    enableText,
+    getCurrentTextTrackIndex,
+    getTTMLRenderingDiv,
+    isTextEnabled,
+    setConfig,
+    setTextTrack
+  };
+  return instance;
+}
+TextApi.__dashjs_factory_name = 'TextApi';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(TextApi));
+
+/***/ }),
+
+/***/ "./src/streaming/mediaplayer/TrackApi.js":
+/*!***********************************************!*\
+  !*** ./src/streaming/mediaplayer/TrackApi.js ***!
+  \***********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./MediaPlayerApiErrors.js */ "./src/streaming/mediaplayer/MediaPlayerApiErrors.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+function TrackApi() {
+  let instance, state, mediaPlayer;
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.state) {
+      state = config.state;
+    }
+    if (config.mediaPlayer) {
+      mediaPlayer = config.mediaPlayer;
+    }
+  }
+
+  /**
+   * Returns the average latency computed in the ThroughputController in milliseconds
+   *
+   * @param {MediaType} type
+   * @param {string} calculationMode
+   * @param {number} sampleSize
+   * @return {number} value
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getAverageLatency(type = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO, calculationMode = null, sampleSize = NaN) {
+    return state.throughputController ? state.throughputController.getAverageLatency(type, calculationMode, sampleSize) : 0;
+  }
+
+  /**
+   * Returns the average throughput computed in the ThroughputController in kbit/s
+   *
+   * @param {MediaType} type
+   * @param {string} calculationMode
+   * @param {number} sampleSize
+   * @return {number} value
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getAverageThroughput(type = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO, calculationMode = null, sampleSize = NaN) {
+    return state.throughputController ? state.throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
+  }
+
+  /**
+   * Returns the safe average throughput computed in the ThroughputController in kbit/s. The safe average throughput is the average throughput multiplied by bandwidthSafetyFactor
+   *
+   * @param {MediaType} type
+   * @param {string} calculationMode
+   * @param {number} sampleSize
+   * @return {number} value
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getSafeAverageThroughput(type = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO, calculationMode = null, sampleSize = NaN) {
+    return state.throughputController ? state.throughputController.getSafeAverageThroughput(type, calculationMode, sampleSize) : 0;
+  }
+
+  /**
+   *  Returns the raw throughput data without calculating the average. This can be used to calculate the current throughput yourself.
+   *
+   * @param {MediaType} type
+   * @return {Array} value
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getRawThroughputData(type = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO) {
+    return state.throughputController ? state.throughputController.getRawThroughputData(type) : [];
+  }
+
+  /**
+   * Gets the current download quality for media type video, audio or images. For video and audio types the ABR
+   * rules update this value before every new download unless autoSwitchBitrate is set to false. For 'image'
+   * type, thumbnails, there is no ABR algorithm and quality is set manually.
+   *
+   * @param {MediaType} type - 'video', 'audio' or 'image' (thumbnails)
+   * @returns {Representation | null} the quality index, 0 corresponding to the lowest bitrate
+   * @memberof module:MediaPlayer
+   * @see {@link module:MediaPlayer#getCurrentRepresentationForType getCurrentRepresentationForType()}
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function getCurrentRepresentationForType(type) {
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    if (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO) {
+      return null;
+    }
+    const activeStream = mediaPlayer.getActiveStream();
+    if (!activeStream) {
+      return null;
+    }
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE) {
+      const thumbnailController = activeStream.getThumbnailController();
+      return !thumbnailController ? -1 : thumbnailController.getCurrentTrack();
+    }
+    return activeStream.getCurrentRepresentationForType(type);
+  }
+
+  /**
+   * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.
+   * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
+   *
+   * @param {MediaType} type - 'video', 'audio' or 'image'
+   * @param {number} id , The ID of the Representation
+   * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function setRepresentationForTypeById(type, id, forceReplace = false) {
+    if (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO) {
+      return;
+    }
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    const activeStream = mediaPlayer.getActiveStream();
+    if (!activeStream) {
+      return;
+    }
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE) {
+      const thumbnailController = activeStream.getThumbnailController();
+      if (thumbnailController) {
+        thumbnailController.setTrackById(id);
+      }
+    } else {
+      const representation = activeStream.getRepresentationForTypeById(type, id);
+      if (representation) {
+        state.abrController.manuallySetPlaybackQuality(type, state.streamController.getActiveStreamInfo(), representation, {
+          forceReplace
+        });
+      }
+    }
+  }
+
+  /**
+   * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.
+   * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
+   * Note that you need to specify a relative index based on the position of the target entry in the return value of getRepresentationsByType().
+   * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If you want to select a specific representation then use setRepresentationForTypeById() instead.
+   *
+   * @param {MediaType} type - 'video', 'audio' or 'image'
+   * @param {number} index - the quality index, 0 corresponding to the lowest possible index
+   * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function setRepresentationForTypeByIndex(type, index, forceReplace = false) {
+    if (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO) {
+      return;
+    }
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    const activeStream = mediaPlayer.getActiveStream();
+    if (!activeStream) {
+      return;
+    }
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE) {
+      const thumbnailController = activeStream.getThumbnailController();
+      if (thumbnailController) {
+        thumbnailController.setTrackByIndex(index);
+      }
+    } else {
+      const representation = activeStream.getRepresentationForTypeByIndex(type, index);
+      if (representation) {
+        state.abrController.manuallySetPlaybackQuality(type, state.streamController.getActiveStreamInfo(), representation, {
+          forceReplace
+        });
+      }
+    }
+  }
+
+  /**
+   * This method returns the list of all available representations for a given media type. The returned list is filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).
+   * If you want to get the unfiltered list of representations then use getRepresentationsByTypeUnfiltered() instead.
+   * @param {MediaType} type
+   * @param {string} streamId
+   * @returns {Array}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function getRepresentationsByType(type, streamId = null) {
+    return _getRepresentations(type, streamId, true);
+  }
+
+  /**
+   * This method returns the list of all available representations for a given media type. The returned list is unfiltered and settings like max/min bitrate and limitBitrateByPortal are not taken into account.
+   * If you want to get the filtered list of representations then use getRepresentationsByType() instead.
+   * @param {MediaType} type
+   * @param {string} streamId
+   * @returns {Array}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function getRepresentationsByTypeUnfiltered(type, streamId = null) {
+    return _getRepresentations(type, streamId, false);
+  }
+  function _getRepresentations(type, streamId, filterBySettings = true) {
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    let stream = streamId ? state.streamController.getStreamById(streamId) : mediaPlayer.getActiveStream();
+    return stream ? stream.getRepresentationsByType(type, filterBySettings) : [];
+  }
+
+  /**
+   * This method returns the list of all available tracks for a given media type
+   * @param {MediaType} type
+   * @returns {Array} list of {@link MediaInfo}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function getTracksFor(type) {
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    let streamInfo = state.streamController.getActiveStreamInfo();
+    if (!streamInfo) {
+      return [];
+    }
+    const tracks = state.mediaController.getTracksFor(type, streamInfo.id);
+    return tracks.filter(track => {
+      return state.protectionController ? state.protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true;
+    });
+  }
+
+  /**
+   * @param {MediaType} type
+   * @returns {Object|null} {@link MediaInfo}
+   *
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function getCurrentTrackFor(type) {
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    let streamInfo = state.streamController.getActiveStreamInfo();
+    if (streamInfo) {
+      return state.mediaController.getCurrentTrackFor(type, streamInfo.id);
+    }
+    return null;
+  }
+
+  /**
+   * This method allows to set media settings that will be used to pick the initial track. The settings object supports the following properties:
+   * <ul>
+   * <li><code>lang</code>: a string primitive, a string object, or a RegExp object to match</li>
+   * <li><code>index</code>: the index of the track</li>
+   * <li><code>viewpoint</code>: object <code>{schemeIdUri, value}</code> or value-primitive</li>
+   * <li><code>audioChannelConfiguration</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:mpegB:cicp:ChannelConfiguration')</li>
+   * <li><code>accessibility</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+   * <li><code>role</code>: object <code>{schemeIdUri, value}</code> or value-primitive (assumes schemeIdUri='urn:mpeg:dash:role:2011')</li>
+   * <li><code>codec</code>: full codec string as exposed in MediaInfo.codec, e.g. <code>'audio/mp4;codecs="ec-3"'</code>, compared with strict equality</li>
+   * </ul>
+   *
+   * @example
+   * player.setInitialMediaSettingsFor('audio', {
+   *     lang: 'de',
+   *     role: 'main',
+   *     codec: 'audio/mp4;codecs="ec-3"'
+   * });
+   * @param {MediaType} type
+   * @param {Object} value
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+   * @instance
+   */
+  function setInitialMediaSettingsFor(type, value) {
+    if (!state.mediaPlayerInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+    }
+    let sanitizedValue = _sanitizeSettings(value);
+    state.mediaController.setInitialSettings(type, sanitizedValue);
+  }
+
+  /**
+   * This method returns the media settings that are used to pick the initial track.
+   *
+   * @example
+   * // Returned object has the following format:
+   * {
+   *     lang: langValue,
+   *     index: indexValue,
+   *     viewpoint: viewpointValue,
+   *     audioChannelConfiguration: audioChannelConfigurationValue,
+   *     accessibility: accessibilityValue,
+   *     role: roleValue,
+   *     codec: codecValue
+   * }
+   * @param {MediaType} type
+   * @returns {Object}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
+   * @instance
+   */
+  function getInitialMediaSettingsFor(type) {
+    if (!state.mediaPlayerInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+    }
+    return state.mediaController.getInitialSettings(type);
+  }
+
+  /**
+   * @param {MediaInfo} track - instance of {@link MediaInfo}
+   * @param {boolean} [noSettingsSave] - specify if settings from the track must not be saved for incoming track selection
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function setCurrentTrack(track, noSettingsSave = false) {
+    if (!state.streamingInitialized) {
+      throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.STREAMING_NOT_INITIALIZED_ERROR;
+    }
+    const canUseTrack = state.protectionController ? state.protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true;
+    if (!canUseTrack) {
+      state.logger.error(`Can not switch to track with index ${track.index} because key is not usable`);
+      return;
+    }
+    state.mediaController.setTrack(track, {
+      noSettingsSave
+    });
+  }
+
+  /**
+   * Provide the thumbnail at time position. This can be asynchronous, so you must provide a callback ro retrieve thumbnails informations
+   * @param {number} time - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
+   * @param {function} callback - A Callback function provided when retrieving thumbnail the given time position. Thumbnail object is null in case there are is not a thumbnails representation or
+   * if it doesn't contain a thumbnail for the given time position.
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function provideThumbnail(time, callback) {
+    if (typeof callback !== 'function') {
+      return;
+    }
+    if (time < 0) {
+      callback(null);
+      return;
+    }
+    const s = state.playbackController.getIsDynamic() ? mediaPlayer.getDvrSeekOffset(time) : time;
+    const stream = state.streamController.getStreamForTime(s);
+    if (stream === null) {
+      callback(null);
+      return;
+    }
+    const thumbnailController = stream.getThumbnailController();
+    if (!thumbnailController) {
+      callback(null);
+      return;
+    }
+    return thumbnailController.provide(s, callback);
+  }
+  function _sanitizeSettings(value) {
+    const defaults = state.settings.get().streaming.defaultSchemeIdUri;
+    let output = {};
+    function __sanitizeDescriptorType(name, val, defaultSchemeIdUri) {
+      let out = {};
+      // For an empty string, let's unset the descriptor, i.e. return null
+      if (val) {
+        if (val instanceof Array) {
+          throw _MediaPlayerApiErrors_js__WEBPACK_IMPORTED_MODULE_3__.ARRAY_NOT_SUPPORTED_ERROR;
+        } else if (val instanceof Object) {
+          out.schemeIdUri = val.schemeIdUri ? val.schemeIdUri : '';
+          out.value = val.value ? val.value : '';
+        } else {
+          out.schemeIdUri = defaultSchemeIdUri;
+          out.value = val;
+          state.logger.warn('No schemeIdUri provided for ' + name + ', using default \"' + defaultSchemeIdUri + '\"');
+        }
+        return out;
+      }
+      return null;
+    }
+    if (value.id !== undefined) {
+      output.id = value.id;
+    }
+    if (value.lang !== undefined) {
+      output.lang = value.lang;
+    }
+    if (!isNaN(value.index)) {
+      output.index = value.index;
+    }
+    if (value.viewpoint !== undefined) {
+      output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
+    }
+    if (value.audioChannelConfiguration !== undefined) {
+      output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
+    }
+    if (value.role !== undefined && value.role !== null) {
+      output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
+
+      // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+      if (output.role.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DASH_ROLE_SCHEME_ID && output.role.value === 'Main') {
+        output.role.value = _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].MAIN;
+      }
+    }
+    if (value.accessibility !== undefined) {
+      output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
+    }
+    if (value.codec !== undefined) {
+      output.codec = value.codec;
+    }
+    return output;
+  }
+  instance = {
+    getAverageLatency,
+    getAverageThroughput,
+    getCurrentRepresentationForType,
+    getCurrentTrackFor,
+    getInitialMediaSettingsFor,
+    getRawThroughputData,
+    getRepresentationsByType,
+    getRepresentationsByTypeUnfiltered,
+    getSafeAverageThroughput,
+    getTracksFor,
+    provideThumbnail,
+    setConfig,
+    setCurrentTrack,
+    setInitialMediaSettingsFor,
+    setRepresentationForTypeById,
+    setRepresentationForTypeByIndex
+  };
+  return instance;
+}
+TrackApi.__dashjs_factory_name = 'TrackApi';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].getClassFactory(TrackApi));
 
 /***/ }),
 
@@ -55515,7 +58346,8 @@ const REQUEST_TYPE_TO_CMCD_FILTER = {
   [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
   [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE]: 'mpd',
   [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
-  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE]: 'other'
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE]: 'other',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.LICENSE]: 'license'
 };
 function CmcdModel() {
   let instance,
@@ -55530,6 +58362,7 @@ function CmcdModel() {
     _bufferLevelStarved,
     _initialMediaRequestsDone,
     _playbackStartedTime,
+    _msd,
     _isSeeking,
     streamProcessors,
     _rebufferingStartTime = {},
@@ -55917,11 +58750,16 @@ function CmcdModel() {
     _updateStreamProcessors();
   }
   function onPlaybackStarted() {
-    if (!_playbackStartedTime) {
+    if (_playbackStartedTime === undefined) {
       _playbackStartedTime = Date.now();
     }
   }
   function onPlaybackPlaying() {
+    // MSD is the wall-clock time between the player being instructed to play (play event,
+    // or start of manifest loading for autoplay) and the first transition to the playing state.
+    if (_msd === undefined && _playbackStartedTime !== undefined) {
+      _msd = Date.now() - _playbackStartedTime;
+    }
     for (const mediaType in _rebufferingStartTime) {
       if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
         onRebufferingCompleted(mediaType);
@@ -55940,10 +58778,7 @@ function CmcdModel() {
     }
   }
   function _calculateMsd() {
-    if (!_playbackStartedTime) {
-      return null;
-    }
-    return Date.now() - _playbackStartedTime;
+    return _msd !== undefined ? _msd : null;
   }
   function getGenericCmcdData(mediaType) {
     const data = {};
@@ -55990,6 +58825,7 @@ function CmcdModel() {
     _isSeeking = false;
     _lastMediaTypeRequest = undefined;
     _playbackStartedTime = undefined;
+    _msd = undefined;
     _rebufferingStartTime = {};
     _rebufferingDuration = {};
     _streamType = undefined;
@@ -56110,24 +58946,21 @@ function CmcdModel() {
     _topBitrateCache = new Map();
     try {
       _updateLastMediaTypeRequest(request.type, request.mediaType);
-      let cmcdData = {};
-      if (isIncludedInRequestFilter(request.type)) {
-        if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE) {
-          return _calculateCmcdDataForRequestForMpd(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
-          _initForMediaType(request.mediaType);
-          return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.INIT_SEGMENT_TYPE) {
-          return _calculateCmcdDataForRequestForInitSegment(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE) {
-          return _calculateCmcdDataForRequestForOther(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.LICENSE) {
-          return _calculateCmcdDataForRequestForLicense(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE) {
-          return _calculateCmcdDataForRequestForSteering(request);
-        }
+      if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE) {
+        return _calculateCmcdDataForRequestForMpd(request);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+        _initForMediaType(request.mediaType);
+        return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.INIT_SEGMENT_TYPE) {
+        return _calculateCmcdDataForRequestForInitSegment(request);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE) {
+        return _calculateCmcdDataForRequestForOther(request);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.LICENSE) {
+        return _calculateCmcdDataForRequestForLicense(request);
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE) {
+        return _calculateCmcdDataForRequestForSteering(request);
       }
-      return cmcdData;
+      return {};
     } catch (e) {
       return null;
     } finally {
@@ -56508,8 +59341,24 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
+function createCallbackRegistry(callbacks = []) {
+  return {
+    add(callback) {
+      callbacks.push(callback);
+    },
+    getAll() {
+      return callbacks;
+    },
+    remove(callback) {
+      const index = callbacks.indexOf(callback);
+      if (index !== -1) {
+        callbacks.splice(index, 1);
+      }
+    }
+  };
+}
 function CustomParametersModel() {
-  let instance, utcTimingSources, xhrWithCredentials, requestInterceptors, responseInterceptors, licenseRequestFilters, certificateRequestFilters, certificateResponseFilters, licenseResponseFilters, customCapabilitiesFilters, customInitialTrackSelectionFunction, externalSubtitles, customAbrRules, cmcdController;
+  let instance, utcTimingSources, xhrWithCredentials, requestInterceptorRegistry, responseInterceptorRegistry, licenseRequestFilterRegistry, certificateRequestFilterRegistry, certificateResponseFilterRegistry, licenseResponseFilterRegistry, customCapabilitiesFilterRegistry, customInitialTrackSelectionFunction, externalSubtitles, customAbrRules, cmcdController;
   const context = this.context;
   const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
   function setup() {
@@ -56520,18 +59369,18 @@ function CustomParametersModel() {
     _resetInitialSettings();
   }
   function _resetInitialSettings() {
-    licenseRequestFilters = [];
-    licenseResponseFilters = [];
-    certificateRequestFilters = [];
-    certificateResponseFilters = [];
-    customCapabilitiesFilters = [];
+    licenseRequestFilterRegistry = createCallbackRegistry();
+    licenseResponseFilterRegistry = createCallbackRegistry();
+    certificateRequestFilterRegistry = createCallbackRegistry();
+    certificateResponseFilterRegistry = createCallbackRegistry();
+    customCapabilitiesFilterRegistry = createCallbackRegistry();
     customAbrRules = [];
     customInitialTrackSelectionFunction = null;
     utcTimingSources = [];
 
     // Initialize request interceptors with default CMCD interceptors
-    requestInterceptors = cmcdController.getCmcdRequestInterceptors();
-    responseInterceptors = cmcdController.getCmcdResponseReceivedInterceptors();
+    requestInterceptorRegistry = createCallbackRegistry(cmcdController.getCmcdRequestInterceptors());
+    responseInterceptorRegistry = createCallbackRegistry(cmcdController.getCmcdResponseReceivedInterceptors());
     externalSubtitles = new Set();
   }
   function reset() {
@@ -56570,7 +59419,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getCertificateRequestFilters() {
-    return certificateRequestFilters;
+    return certificateRequestFilterRegistry.getAll();
   }
 
   /**
@@ -56578,7 +59427,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getCertificateResponseFilters() {
-    return certificateResponseFilters;
+    return certificateResponseFilterRegistry.getAll();
   }
 
   /**
@@ -56588,7 +59437,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license request filter callback
    */
   function registerCertificateRequestFilter(filter) {
-    certificateRequestFilters.push(filter);
+    certificateRequestFilterRegistry.add(filter);
   }
 
   /**
@@ -56598,7 +59447,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license response filter callback
    */
   function registerCertificateResponseFilter(filter) {
-    certificateResponseFilters.push(filter);
+    certificateResponseFilterRegistry.add(filter);
   }
 
   /**
@@ -56606,7 +59455,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license request filter callback
    */
   function unregisterCertificateRequestFilter(filter) {
-    _unregisterFilter(certificateRequestFilters, filter);
+    certificateRequestFilterRegistry.remove(filter);
   }
 
   /**
@@ -56614,7 +59463,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license response filter callback
    */
   function unregisterCertificateResponseFilter(filter) {
-    _unregisterFilter(certificateResponseFilters, filter);
+    certificateResponseFilterRegistry.remove(filter);
   }
 
   /**
@@ -56622,7 +59471,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getLicenseRequestFilters() {
-    return licenseRequestFilters;
+    return licenseRequestFilterRegistry.getAll();
   }
 
   /**
@@ -56630,7 +59479,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getLicenseResponseFilters() {
-    return licenseResponseFilters;
+    return licenseResponseFilterRegistry.getAll();
   }
 
   /**
@@ -56640,7 +59489,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license request filter callback
    */
   function registerLicenseRequestFilter(filter) {
-    licenseRequestFilters.push(filter);
+    licenseRequestFilterRegistry.add(filter);
   }
 
   /**
@@ -56650,7 +59499,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license response filter callback
    */
   function registerLicenseResponseFilter(filter) {
-    licenseResponseFilters.push(filter);
+    licenseResponseFilterRegistry.add(filter);
   }
 
   /**
@@ -56658,7 +59507,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license request filter callback
    */
   function unregisterLicenseRequestFilter(filter) {
-    _unregisterFilter(licenseRequestFilters, filter);
+    licenseRequestFilterRegistry.remove(filter);
   }
 
   /**
@@ -56666,7 +59515,7 @@ function CustomParametersModel() {
    * @param {function} filter - the license response filter callback
    */
   function unregisterLicenseResponseFilter(filter) {
-    _unregisterFilter(licenseResponseFilters, filter);
+    licenseResponseFilterRegistry.remove(filter);
   }
 
   /**
@@ -56674,7 +59523,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getCustomCapabilitiesFilters() {
-    return customCapabilitiesFilters;
+    return customCapabilitiesFilterRegistry.getAll();
   }
 
   /**
@@ -56684,7 +59533,7 @@ function CustomParametersModel() {
    * @param {function} filter - the custom capabilities filter callback
    */
   function registerCustomCapabilitiesFilter(filter) {
-    customCapabilitiesFilters.push(filter);
+    customCapabilitiesFilterRegistry.add(filter);
   }
 
   /**
@@ -56692,27 +59541,7 @@ function CustomParametersModel() {
    * @param {function} filter - the custom capabilities filter callback
    */
   function unregisterCustomCapabilitiesFilter(filter) {
-    _unregisterFilter(customCapabilitiesFilters, filter);
-  }
-
-  /**
-   * Unregister a filter from the list of existing filers.
-   * @param {array} filters
-   * @param {function} filter
-   * @private
-   */
-  function _unregisterFilter(filters, filter) {
-    let index = -1;
-    filters.some((item, i) => {
-      if (item === filter) {
-        index = i;
-        return true;
-      }
-    });
-    if (index < 0) {
-      return;
-    }
-    filters.splice(index, 1);
+    customCapabilitiesFilterRegistry.remove(filter);
   }
 
   /**
@@ -56799,7 +59628,7 @@ function CustomParametersModel() {
    * @param {function} interceptor - the request interceptor callback
    */
   function addRequestInterceptor(interceptor) {
-    requestInterceptors.push(interceptor);
+    requestInterceptorRegistry.add(interceptor);
   }
 
   /**
@@ -56809,7 +59638,7 @@ function CustomParametersModel() {
    * @param {function} interceptor - the response interceptor callback
    */
   function addResponseInterceptor(interceptor) {
-    responseInterceptors.push(interceptor);
+    responseInterceptorRegistry.add(interceptor);
   }
 
   /**
@@ -56817,7 +59646,7 @@ function CustomParametersModel() {
    * @param {function} interceptor - the request interceptor callback
    */
   function removeRequestInterceptor(interceptor) {
-    _unregisterFilter(requestInterceptors, interceptor);
+    requestInterceptorRegistry.remove(interceptor);
   }
 
   /**
@@ -56825,7 +59654,7 @@ function CustomParametersModel() {
    * @param {function} interceptor - the request interceptor callback
    */
   function removeResponseInterceptor(interceptor) {
-    _unregisterFilter(responseInterceptors, interceptor);
+    responseInterceptorRegistry.remove(interceptor);
   }
 
   /**
@@ -56833,7 +59662,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getRequestInterceptors() {
-    return requestInterceptors;
+    return requestInterceptorRegistry.getAll();
   }
 
   /**
@@ -56841,7 +59670,7 @@ function CustomParametersModel() {
    * @return {array}
    */
   function getResponseInterceptors() {
-    return responseInterceptors;
+    return responseInterceptorRegistry.getAll();
   }
   function addExternalSubtitle(externalSubtitleObj) {
     if (!externalSubtitleObj || typeof externalSubtitleObj.id === 'undefined' || !externalSubtitleObj.url || !externalSubtitleObj.language || !externalSubtitleObj.mimeType || typeof externalSubtitleObj.bandwidth === 'undefined') {
@@ -56906,7 +59735,7 @@ function CustomParametersModel() {
    * @param {string} value
    */
   function removeUTCTimingSource(schemeIdUri, value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_3__.checkParameterType)(schemeIdUri, 'string');
+    ;(0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_3__.checkParameterType)(schemeIdUri, 'string');
     (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_3__.checkParameterType)(value, 'string');
     utcTimingSources.forEach(function (obj, idx) {
       if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
@@ -57923,7 +60752,7 @@ function MetricsModel(config) {
         status: null,
         headers: null
       };
-      addHttpRequest(adjustedRequest, adjustedResponse, null, cmsd);
+      addHttpRequest(adjustedRequest, adjustedResponse, null, null);
       vo.actualurl = response.url;
     }
     vo.tcpid = null;
@@ -57933,7 +60762,6 @@ function MetricsModel(config) {
     vo.trequest = request.startDate;
     vo.tresponse = request.firstByteDate;
     vo.responsecode = response.status;
-    vo.cmsd = cmsd;
     vo._tfinish = request.endDate;
     vo._stream = request.mediaType;
     vo._mediaduration = request.duration;
@@ -57945,6 +60773,7 @@ function MetricsModel(config) {
     vo._serviceLocation = request.serviceLocation || null;
     vo._fileLoaderType = request.fileLoaderType;
     vo._resourceTimingValues = request.resourceTimingValues;
+    vo._cmsd = cmsd || null;
     vo._streamId = request && request.representation && request.representation.mediaInfo && request.representation.mediaInfo.streamInfo ? request.representation.mediaInfo.streamInfo.id : null;
     if (traces) {
       traces.forEach(trace => {
@@ -58207,8 +61036,8 @@ function ThroughputModel(config) {
       }
 
       // Get estimated throughput (etp, in kbits/s) from CMSD response headers
-      if (httpRequest.cmsd) {
-        const etp = httpRequest.cmsd.dynamic && httpRequest.cmsd.dynamic.etp ? httpRequest.cmsd.dynamic.etp : null;
+      if (httpRequest._cmsd) {
+        const etp = httpRequest._cmsd.dynamic && httpRequest._cmsd.dynamic.etp ? httpRequest._cmsd.dynamic.etp : null;
         if (etp) {
           // Apply weight ratio on etp
           const etpWeightRatio = settings.get().streaming.cmsd.abr.etpWeightRatio;
@@ -59737,7 +62566,11 @@ function HTTPLoader(cfg) {
         // If lengthComputable is false within the XMLHttpRequestProgressEvent, that means the server never sent a Content-Length header in the response.
         if (!event.lengthComputable || event.lengthComputable && event.total !== event.loaded) {
           requestObject.firstByteDate = currentTime;
-          commonMediaResponse.resourceTiming.responseStart = currentTime.getTime();
+          // resourceTiming values are DOMHighResTimeStamps relative to performance.timeOrigin
+          // (like the Resource Timing API values they mirror), not epoch timestamps.
+          // startTime and responseEnd use performance.now(), so responseStart must too,
+          // otherwise derived durations (e.g. CMCD ttfb) mix the two clocks.
+          commonMediaResponse.resourceTiming.responseStart = performance.now();
         }
       }
 
@@ -64103,8 +66936,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
 /* harmony import */ var _vo_KeyMessage_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../vo/KeyMessage.js */ "./src/streaming/protection/vo/KeyMessage.js");
 /* harmony import */ var _vo_KeySystemAccess_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vo/KeySystemAccess.js */ "./src/streaming/protection/vo/KeySystemAccess.js");
-/* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
-/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../vo/KeySystemMetadata.js */ "./src/streaming/protection/vo/KeySystemMetadata.js");
+/* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -64152,11 +66986,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const SYSTEM_STRING_PRIORITY = {};
-SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYREADY_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYREADY_KEYSTEM_STRING, _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].WIDEVINE_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].WIDEVINE_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].FAIRPLAY_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].FAIRPLAY_KEYSTEM_STRING];
-SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].CLEARKEY_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].CLEARKEY_KEYSTEM_STRING];
+
 function DefaultProtectionModel(config) {
   config = config || {};
   const context = this.context;
@@ -64251,16 +67081,9 @@ function DefaultProtectionModel(config) {
       });
       return;
     }
-
-    // If a systemStringPriority is defined by the application we use these values. Otherwise, we use the default system string
-    // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
-    const protDataSystemStringPriority = keySystemConfigurationsToRequest[idx].protData && keySystemConfigurationsToRequest[idx].protData.systemStringPriority ? keySystemConfigurationsToRequest[idx].protData.systemStringPriority : null;
     const configs = keySystemConfigurationsToRequest[idx].configs;
     const currentKeySystem = keySystemConfigurationsToRequest[idx].ks;
-    let systemString = currentKeySystem.systemString;
-
-    // Use the default values in case no values are provided by the application
-    const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : SYSTEM_STRING_PRIORITY[systemString] ? SYSTEM_STRING_PRIORITY[systemString] : [systemString];
+    const systemStringsToApply = _vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_6__["default"].getSystemStringsToApply(currentKeySystem, keySystemConfigurationsToRequest[idx].protData);
 
     // Check all the available system strings and the available configurations for support
     _checkAccessForKeySystem(systemStringsToApply, configs).then(data => {
@@ -64405,12 +67228,12 @@ function DefaultProtectionModel(config) {
     // - FairPlay: use 'sinf'
     // - All others: use 'cenc'
     let dataType;
-    if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || keySystemMetadata.protData && keySystemMetadata.protData.clearkeys)) {
-      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_KEYIDS;
-    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].FAIRPLAY_KEYSTEM_STRING) {
-      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_SINF;
+    if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || keySystemMetadata.protData && keySystemMetadata.protData.clearkeys)) {
+      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].INITIALIZATION_DATA_TYPE_KEYIDS;
+    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].FAIRPLAY_KEYSTEM_STRING) {
+      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].INITIALIZATION_DATA_TYPE_SINF;
     } else {
-      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_CENC;
+      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].INITIALIZATION_DATA_TYPE_CENC;
     }
     mediaKeySession.generateRequest(dataType, keySystemMetadata.initData).then(function () {
       logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
@@ -64609,7 +67432,7 @@ function DefaultProtectionModel(config) {
         let usable = false;
         session.keyStatuses.forEach(function () {
           let keyStatus = _parseKeyStatus(arguments);
-          if (keyStatus.status === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].MEDIA_KEY_STATUSES.USABLE) {
+          if (keyStatus.status === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MEDIA_KEY_STATUSES.USABLE) {
             usable = true;
           }
         });
@@ -64677,7 +67500,7 @@ function DefaultProtectionModel(config) {
   return instance;
 }
 DefaultProtectionModel.__dashjs_factory_name = 'DefaultProtectionModel';
-/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_7__["default"].getClassFactory(DefaultProtectionModel));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_8__["default"].getClassFactory(DefaultProtectionModel));
 
 /***/ }),
 
@@ -66621,6 +69444,7 @@ class KeySystemConfiguration {
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -66651,6 +69475,8 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 /**
  * @classdesc A model class to save metadata about a key system
  * @ignore
@@ -66665,6 +69491,18 @@ class KeySystemMetadata {
     this.cdmData = config.cdmData;
     this.sessionId = config.sessionId;
     this.sessionType = config.sessionType;
+  }
+
+  /**
+   * Returns the system strings to try in order for a key system. A systemStringPriority defined by the application
+   * takes precedence over the defaults, e.g. com.microsoft.playready and com.microsoft.playready.recommendation
+   * @param {object} ks
+   * @param {object} protData
+   * @return {Array.<string>}
+   */
+  static getSystemStringsToApply(ks, protData) {
+    // An empty systemStringPriority would leave nothing to request, so it falls back to the defaults
+    return protData && protData.systemStringPriority && protData.systemStringPriority.length > 0 && protData.systemStringPriority || _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DEFAULT_SYSTEM_STRING_PRIORITY[ks.systemString] || [ks.systemString];
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (KeySystemMetadata);
@@ -70665,18 +73503,34 @@ class CueIntervalTree {
       return cue1.endTime - cue2.endTime;
     }
 
-    // Finally compare by text content
-    if (typeof VTTCue !== 'undefined' && cue1 instanceof VTTCue && cue2 instanceof VTTCue) {
-      return cue1.text.localeCompare(cue2.text);
+    // Compare by text content
+    const textComparison = (cue1.text || '').localeCompare(cue2.text || '');
+    if (textComparison !== 0) {
+      return textComparison;
     }
 
-    // For non-VTTCue objects, compare by text property if available
-    if (cue1.text && cue2.text) {
-      return cue1.text.localeCompare(cue2.text);
+    // IMSC/TTML cues carry their content in isd with an empty text;
+    // distinct captions at identical timing must not be treated as
+    // duplicates. Stringify only runs when timing and text already match.
+    if (cue1.isd || cue2.isd) {
+      const isdComparison = JSON.stringify(cue1.isd || null).localeCompare(JSON.stringify(cue2.isd || null));
+      if (isdComparison !== 0) {
+        return isdComparison;
+      }
     }
 
-    // If no text property, consider them equal if timing matches
-    return 0;
+    // CEA-608 (and other) HTML cues carry their rendered content in a DOM
+    // node (cueHTMLElement) and have an empty VTTCue text. Compare position
+    // (the element's own cssText holds the region placement) plus visible
+    // text, so the two rows of one 608 screen stay distinct while a
+    // re-parsed duplicate of the same caption still deduplicates. The
+    // element id / cueID is deliberately NOT compared: it embeds a
+    // monotonically increasing counter that differs on every re-parse of
+    // the same segment. The inner wrapper's style is also excluded because
+    // _scaleCue mutates it on activation.
+    const key1 = cue1.cueHTMLElement ? cue1.cueHTMLElement.style.cssText + '|' + cue1.cueHTMLElement.textContent : '';
+    const key2 = cue2.cueHTMLElement ? cue2.cueHTMLElement.style.cssText + '|' + cue2.cueHTMLElement.textContent : '';
+    return key1.localeCompare(key2);
   }
 
   /**
@@ -71851,6 +74705,7 @@ function TextController(config) {
   const baseURLController = config.baseURLController;
   const videoModel = config.videoModel;
   const settings = config.settings;
+  const timelineConverter = config.timelineConverter;
   let instance, streamData, textSourceBuffers, textTracks, vttParser, vttCustomRenderingParser, ttmlParser, eventBus, allTracksAreDisabled, forceTextStreaming, textTracksAdded, disableTextBeforeTextTracksAdded, dvbFonts, logger;
   function setup() {
     forceTextStreaming = false;
@@ -71899,7 +74754,8 @@ function TextController(config) {
       vttCustomRenderingParser,
       ttmlParser,
       streamInfo,
-      settings
+      settings,
+      timelineConverter
     });
     textSourceBuffer.initialize();
     textSourceBuffers[streamId] = textSourceBuffer;
@@ -71998,6 +74854,7 @@ function TextController(config) {
           codec: currentTrack.codec,
           accessibility: currentTrack.accessibility[0]
         };
+        defaultSettings.lang = mediaController.getAvailablePreferredLanguages(tracks, defaultSettings);
         tracks.some((item, idx) => {
           // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
           if (mediaController.matchSettings(defaultSettings, item)) {
@@ -72085,7 +74942,7 @@ function TextController(config) {
     }
   }
   function enableText(streamId, enable) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_11__.checkParameterType)(enable, 'boolean');
+    ;(0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_11__.checkParameterType)(enable, 'boolean');
     if (isTextEnabled() !== enable) {
       // change track selection
       if (enable) {
@@ -72114,7 +74971,7 @@ function TextController(config) {
 
   // when set to true ScheduleController will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
   function enableForcedTextStreaming(enable) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_11__.checkParameterType)(enable, 'boolean');
+    ;(0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_11__.checkParameterType)(enable, 'boolean');
     forceTextStreaming = enable;
     return true;
   }
@@ -72393,6 +75250,7 @@ function TextSourceBuffer(config) {
   const ttmlParser = config.ttmlParser;
   const streamInfo = config.streamInfo;
   const settings = config.settings;
+  const timelineConverter = config.timelineConverter;
   const context = this.context;
   const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
   let embeddedInitialized = false;
@@ -72721,12 +75579,19 @@ function TextSourceBuffer(config) {
           }
         }
         const allCcData = _extractCea608Data(bytes, samplesInfo.sampleList);
+
+        // _extractCea608Data returns null when there are no samples,
+        // which happens for any chunk that is not fragmented ISOBMFF.
+        if (!allCcData) {
+          return;
+        }
         for (let fieldNr = 0; fieldNr < embeddedCea608FieldParsers.length; fieldNr++) {
           const ccData = allCcData.fields[fieldNr];
           const fieldParser = embeddedCea608FieldParsers[fieldNr];
           if (fieldParser) {
             for (i = 0; i < ccData.length; i++) {
-              fieldParser.addData(ccData[i][0] / embeddedTimescale, ccData[i][1]);
+              const time = timelineConverter.calcPresentationTimeFromMediaTime(ccData[i][0] / embeddedTimescale, chunk.representation);
+              fieldParser.addData(time, ccData[i][1]);
             }
           }
         }
@@ -73281,6 +76146,44 @@ function TextTracks(config) {
           }
         }
       }
+
+      // CEA-608 uses a fixed 32-column monospace grid, but the caption
+      // font is only sized by height (videoHeight/15), so its glyphs are
+      // narrower than a grid cell (videoWidth/32). Left-aligned at their
+      // start column, rows then drift left of where the 608 columns place
+      // them (e.g. a centered caption looks left-shifted). Stretch the
+      // wrapper so its widest row fills exactly the number of grid
+      // columns it occupies, anchored at its start column — offsetWidth
+      // is that widest row's natural width (and, unlike a client rect, is
+      // not affected by a transform left over from a previous
+      // activation), so the columns count must be the widest row's
+      // character count, not the concatenation of all <br>-separated
+      // rows. Scaling the wrapper (not letter-spacing) keeps every
+      // character's solid background rectangle contiguous with no gaps.
+      if (activeCue.isFromCEA608 && activeCue.cueHTMLElement) {
+        const wrappers = activeCue.cueHTMLElement.getElementsByClassName('cueUniWrapper');
+        for (let w = 0; w < wrappers.length; w++) {
+          const wrapper = wrappers[w];
+          let columns = 0;
+          let rowLength = 0;
+          for (let n = 0; n < wrapper.childNodes.length; n++) {
+            const node = wrapper.childNodes[n];
+            if (node.nodeName === 'BR') {
+              columns = Math.max(columns, rowLength);
+              rowLength = 0;
+            } else {
+              rowLength += node.textContent.length;
+            }
+          }
+          columns = Math.max(columns, rowLength);
+          const naturalWidth = wrapper.offsetWidth;
+          if (columns > 0 && naturalWidth > 0) {
+            const targetWidth = columns * cellUnit[0];
+            wrapper.style.transformOrigin = 'left';
+            wrapper.style.transform = 'scaleX(' + targetWidth / naturalWidth + ')';
+          }
+        }
+      }
     }
     if (activeCue.isd) {
       let htmlCaptionDiv = document.getElementById(activeCue.cueID);
@@ -73401,6 +76304,7 @@ function TextTracks(config) {
     const track = getTrackByIdx(trackIdx);
     const cueData = tracksCueData.get(track);
     const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
+    const extendSegmentedCues = settings.get().streaming.text.extendSegmentedCues;
     if (!track || !cueData) {
       return;
     }
@@ -73411,7 +76315,22 @@ function TextTracks(config) {
       let cue = null;
       const currentItem = captionData[item];
       track.cellResolution = currentItem.cellResolution;
-      track.isFromCEA608 = currentItem.isFromCEA608;
+      if (track.isFromCEA608 !== currentItem.isFromCEA608) {
+        // The 608 flag changes the caption box geometry in
+        // checkVideoSize (forced 3.5/3 aspect ratio, 80% box). It is
+        // only known once the first caption arrives — and can be stale
+        // from a previous stream, because native TextTrack objects are
+        // reused across streams — so the box must be recomputed
+        // whenever it flips, or the caption size depends on which
+        // stream was played before. 608 data is parsed from the
+        // video segments and appended for every embedded track, no
+        // matter which one is selected, so only recompute the box for
+        // the track that is actually being rendered.
+        track.isFromCEA608 = currentItem.isFromCEA608;
+        if (trackIdx === currentTrackIdx) {
+          checkVideoSize.call(this, track, true);
+        }
+      }
       if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
         if (dispatchForManualRendering) {
           cue = _handleCaptionEvents(currentItem, timeOffset);
@@ -73422,7 +76341,15 @@ function TextTracks(config) {
         }
       }
       if (cue) {
-        if (settings.get().streaming.text.extendSegmentedCues) {
+        // CEA-608 captions use a paint-on model: each screen is a
+        // self-contained caption with its own explicit timing and is
+        // never split across segments. The extendSegmentedCues logic is
+        // meant to stitch segmented TTML/WebVTT cues back together, so it
+        // must not run for 608 or it would merge distinct captions
+        // (their rendered content lives in cueHTMLElement, which the cue
+        // equality check does not inspect) and only the first caption of
+        // each segment would ever be shown.
+        if (extendSegmentedCues && !currentItem.isFromCEA608) {
           const cueToExtend = _findCueToExtend(cue, cueData.allCues);
           if (cueToExtend) {
             cueData.allCues.removeCue(cueToExtend);
@@ -73562,6 +76489,7 @@ function TextTracks(config) {
     cue.cueID = currentItem.cueID;
     cue.scaleCue = _scaleCue.bind(self);
     //useful parameters for cea608 subtitles, not for TTML one.
+    cue.isFromCEA608 = currentItem.isFromCEA608;
     cue.cellResolution = currentItem.cellResolution;
     cue.lineHeight = currentItem.lineHeight;
     cue.linePadding = currentItem.linePadding;
@@ -74549,7 +77477,9 @@ function getNChanFromAudioChannelConfig(audioChannelConfiguration, includeLFE = 
   const value = audioChannelConfiguration['value'];
   if (scheme === 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011' || scheme === 'urn:mpeg:mpegB:cicp:ChannelConfiguration') {
     // see ISO/IEC 23091-3
-    nChan = _mapping_CICP[value] && _mapping_CICP[value].channels + (includeLFE ? _mapping_CICP[value].lfe : 0);
+    const numericValue = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/.test(value) ? Number(value) : NaN;
+    const channels = _mapping_CICP[numericValue];
+    nChan = channels && channels.channels + (includeLFE ? channels.lfe : 0);
   } else if (scheme === 'tag:dolby.com,2014:dash:audio_channel_configuration:2011') {
     nChan = _getNChanDolby2011(value, includeLFE);
   } else if (scheme === 'tag:dolby.com,2015:dash:audio_channel_configuration:2015') {
@@ -74610,9 +77540,16 @@ __webpack_require__.r(__webpack_exports__);
 /**
  * Lightweight BCP-47 tag normalization.
  *
- * Handles:
- * 1. Case normalization per RFC 5646 section 2.1.1
- * 2. ISO 639-2/B and 639-2/T (3-letter) to ISO 639-1 (2-letter) conversion
+ * Produces the RFC 5646 section 4.5 canonical tag in "extlang form":
+ * 1. Grandfathered and redundant tags replaced by their IANA Preferred-Value
+ * 2. Deprecated language and region subtags replaced by their IANA Preferred-Value
+ * 3. ISO 639-2/B and 639-2/T (3-letter) to ISO 639-1 (2-letter) conversion (RFC 5646 section 2.2.1)
+ * 4. Extended language subtags prefixed with their macrolanguage (e.g. cmn -> zh-cmn)
+ * 5. Extension sequences ordered by singleton, private use kept last
+ * 6. Case normalization per RFC 5646 section 2.1.1
+ *
+ * CLDR canonicalization (likely-subtag minimization such as nl-NL -> nl, macrolanguage
+ * folding such as zh-cmn -> zh, und -> en) is not part of BCP 47 and deliberately not applied.
  *
  * Replaces the heavy bcp-47-normalize package (~280 KB) which carried
  * a full IANA subtag registry (8039 entries) that dash.js never needed.
@@ -74827,25 +77764,150 @@ const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescriptors({
   zho: 'zh',
   zul: 'zu'
 }));
+
+/**
+ * IANA Language Subtag Registry: grandfathered and redundant tags that have a Preferred-Value.
+ * Grandfathered tags without a Preferred-Value (e.g. i-default, zh-min) are kept as they are.
+ */
+const TAG_PREFERRED_VALUES = Object.create(null, Object.getOwnPropertyDescriptors({
+  'art-lojban': 'jbo',
+  'en-gb-oed': 'en-GB-oxendict',
+  'i-ami': 'ami',
+  'i-bnn': 'bnn',
+  'i-hak': 'hak',
+  'i-klingon': 'tlh',
+  'i-lux': 'lb',
+  'i-navajo': 'nv',
+  'i-pwn': 'pwn',
+  'i-tao': 'tao',
+  'i-tay': 'tay',
+  'i-tsu': 'tsu',
+  'no-bok': 'nb',
+  'no-nyn': 'nn',
+  'sgn-be-fr': 'sfb',
+  'sgn-be-nl': 'vgt',
+  'sgn-ch-de': 'sgg',
+  'zh-guoyu': 'cmn',
+  'zh-hakka': 'hak',
+  'zh-min-nan': 'nan',
+  'zh-xiang': 'hsn',
+  'sgn-br': 'bzs',
+  'sgn-co': 'csn',
+  'sgn-de': 'gsg',
+  'sgn-dk': 'dsl',
+  'sgn-es': 'ssp',
+  'sgn-fr': 'fsl',
+  'sgn-gb': 'bfi',
+  'sgn-gr': 'gss',
+  'sgn-ie': 'isg',
+  'sgn-it': 'ise',
+  'sgn-jp': 'jsl',
+  'sgn-mx': 'mfs',
+  'sgn-ni': 'ncs',
+  'sgn-nl': 'dse',
+  'sgn-no': 'nsl',
+  'sgn-pt': 'psr',
+  'sgn-se': 'swl',
+  'sgn-us': 'ase',
+  'sgn-za': 'sfs'
+}));
+
+/**
+ * IANA Language Subtag Registry: deprecated language subtags with a Preferred-Value.
+ * ponytail: only the 2-letter ones; add deprecated 3-letter codes if they show up in content
+ */
+const DEPRECATED_LANGUAGES = Object.create(null, Object.getOwnPropertyDescriptors({
+  in: 'id',
+  iw: 'he',
+  ji: 'yi',
+  jw: 'jv',
+  mo: 'ro'
+}));
+
+/**
+ * IANA Language Subtag Registry: deprecated region subtags with a Preferred-Value.
+ */
+const DEPRECATED_REGIONS = Object.create(null, Object.getOwnPropertyDescriptors({
+  BU: 'MM',
+  DD: 'DE',
+  FX: 'FR',
+  TP: 'TL',
+  YD: 'YE',
+  ZR: 'CD'
+}));
+
+/**
+ * IANA Language Subtag Registry: extlang subtags and their Prefix, used to produce the extlang form.
+ * ponytail: Chinese, Arabic, Malay, Swahili and sign language families only; add other extlangs from the registry if needed
+ */
+const EXTLANG_PREFIXES = Object.create(null);
+[['zh', 'cdo cjy cmn cpx czh czo gan hak hsn lzh mnp nan wuu yue'], ['ar', 'acm afb aeb ajp apc apd arb arq ars ary arz ayl'], ['ms', 'min zlm zsm'], ['sw', 'swc swh'], ['sgn', 'ase bfi bzs csn dse dsl fsl gsg gss isg ise jsl mfs ncs nsl psr sfb sfs sgg ssp swl vgt']].forEach(([prefix, extlangs]) => extlangs.split(' ').forEach(extlang => EXTLANG_PREFIXES[extlang] = prefix));
+
+// Grandfathered and redundant tags, longest match first (zh-min-nan before zh-min)
+function _replacePreferredTag(parts) {
+  for (let n = Math.min(3, parts.length); n > 1; n--) {
+    const preferredValue = TAG_PREFERRED_VALUES[parts.slice(0, n).join('-')];
+    if (preferredValue) {
+      return preferredValue.toLowerCase().split('-').concat(parts.slice(n));
+    }
+  }
+  return parts;
+}
 function normalizeBcp47(tag) {
   if (!tag || typeof tag !== 'string') {
     return tag;
   }
-  const parts = tag.split('-');
+  let parts = _replacePreferredTag(tag.toLowerCase().split('-'));
 
-  // Language: lowercase + ISO 639-2 to 639-1 conversion
-  parts[0] = parts[0].toLowerCase();
-  parts[0] = ISO_639_2_TO_1[parts[0]] || parts[0];
-  for (let i = 1; i < parts.length; i++) {
+  // Private use (x-...) and irregular grandfathered tags without Preferred-Value (i-default) stay lowercase
+  if (parts[0].length === 1) {
+    return parts.join('-');
+  }
+
+  // Language: deprecated subtags and ISO 639-2 to 639-1
+  parts[0] = DEPRECATED_LANGUAGES[parts[0]] || ISO_639_2_TO_1[parts[0]] || parts[0];
+
+  // Deprecated regions, up to the first singleton
+  for (let i = 1; i < parts.length && parts[i].length !== 1; i++) {
+    const region = DEPRECATED_REGIONS[parts[i].toUpperCase()];
+    if (parts[i].length === 2 && region) {
+      parts[i] = region.toLowerCase();
+    }
+  }
+
+  // The replacements above can produce a redundant tag (sgn-DD -> sgn-DE -> gsg), resolve it in the same call
+  parts = _replacePreferredTag(parts);
+
+  // Extlang form (cmn -> zh-cmn)
+  if (EXTLANG_PREFIXES[parts[0]]) {
+    parts.unshift(EXTLANG_PREFIXES[parts[0]]);
+  }
+
+  // Script and region casing applies only up to the first singleton, extension subtags stay lowercase
+  let i = 1;
+  for (; i < parts.length && parts[i].length !== 1; i++) {
     if (parts[i].length === 4) {
       // Script: titlecase (e.g. latn -> Latn)
-      parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1).toLowerCase();
-    } else if (parts[i].length === 2 && /^[a-zA-Z]+$/.test(parts[i])) {
+      parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1);
+    } else if (parts[i].length === 2 && /^[a-z]+$/.test(parts[i])) {
       // Region (2 alpha): uppercase (e.g. us -> US)
       parts[i] = parts[i].toUpperCase();
     }
   }
-  return parts.join('-');
+
+  // Extension sequences ordered by singleton, private use sequence kept last
+  const privateUseIndex = parts.indexOf('x', i);
+  const end = privateUseIndex === -1 ? parts.length : privateUseIndex;
+  const extensions = [];
+  for (let j = i; j < end; j++) {
+    if (parts[j].length === 1) {
+      extensions.push([parts[j]]);
+    } else {
+      extensions[extensions.length - 1].push(parts[j]);
+    }
+  }
+  extensions.sort((a, b) => a[0] < b[0] ? -1 : 1);
+  return parts.slice(0, i).concat(...extensions, parts.slice(end)).join('-');
 }
 
 /***/ }),
@@ -74943,7 +78005,7 @@ function BaseURLSelector() {
     }
   }
   function chooseSelector(isDVB) {
-    (0,_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_8__.checkParameterType)(isDVB, 'boolean');
+    ;(0,_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_8__.checkParameterType)(isDVB, 'boolean');
     selector = isDVB ? dvbSelector : basicSelector;
   }
   function select(data) {
@@ -75144,6 +78206,19 @@ function BoxParser(/*config*/
     let moofBoxes = isoFile.getBoxes('moof');
     // exactly one mfhd per moof
     let mfhdBoxes = isoFile.getBoxes('mfhd');
+
+    // Not every buffer reaching this function is ISOBMFF. WebM media
+    // segments contain no moof or mfhd at all, and reading
+    // mfhdBoxes[mfhdBoxes.length - 1] below then throws. Return the same
+    // empty shape used for an empty buffer above.
+    if (moofBoxes.length === 0 || mfhdBoxes.length === 0) {
+      return {
+        sampleList: [],
+        lastSequenceNumber: NaN,
+        totalDuration: NaN,
+        numSequences: NaN
+      };
+    }
     let sampleDuration, sampleCompositionTimeOffset, sampleCount, sampleSize, sampleDts, sampleList, sample, i, j, k, l, m, n, dataOffset, lastSequenceNumber, numSequences, totalDuration;
     numSequences = isoFile.getBoxes('moof').length;
     lastSequenceNumber = mfhdBoxes[mfhdBoxes.length - 1].sequence_number;
@@ -75258,6 +78333,239 @@ BoxParser.__dashjs_factory_name = 'BoxParser';
 
 /***/ }),
 
+/***/ "./src/streaming/utils/BufferRangeUtils.js":
+/*!*************************************************!*\
+  !*** ./src/streaming/utils/BufferRangeUtils.js ***!
+  \*************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getBufferedEndBefore: function() { return /* binding */ getBufferedEndBefore; },
+/* harmony export */   getBufferedTimeInInterval: function() { return /* binding */ getBufferedTimeInInterval; },
+/* harmony export */   getContinuousBufferTime: function() { return /* binding */ getContinuousBufferTime; },
+/* harmony export */   getPruningRanges: function() { return /* binding */ getPruningRanges; },
+/* harmony export */   getRangeAt: function() { return /* binding */ getRangeAt; },
+/* harmony export */   hasBufferAtTime: function() { return /* binding */ hasBufferAtTime; }
+/* harmony export */ });
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+const BUFFER_END_THRESHOLD = 0.5;
+const DEFAULT_RANGE_TOLERANCE = 0.15;
+function isValidTargetTime(time) {
+  return (time || time === 0) && !isNaN(time);
+}
+
+/**
+ * Returns the end of the buffered range that contains targetTime, i.e. the time until which the buffer is continuous.
+ * Returns NaN if targetTime is not buffered.
+ */
+function getContinuousBufferTime(ranges, targetTime) {
+  if (!ranges || ranges.length === 0) {
+    return NaN;
+  }
+  let adjustedTime = targetTime;
+  let i = 0;
+  while (adjustedTime === targetTime && i < ranges.length) {
+    const start = ranges.start(i);
+    const end = ranges.end(i);
+    if (adjustedTime >= start && adjustedTime <= end) {
+      adjustedTime = end;
+    }
+    i += 1;
+  }
+  return adjustedTime === targetTime ? NaN : adjustedTime;
+}
+function getRangeBehindForPruning(ranges, targetTime, bufferToKeepBehind, currentTimeRequest) {
+  const keepBehind = Number(bufferToKeepBehind);
+  if (isNaN(keepBehind)) {
+    return null;
+  }
+  const startOfBuffer = ranges.start(0);
+  if (targetTime - startOfBuffer > keepBehind) {
+    let rangeEnd = Math.max(0, targetTime - keepBehind);
+    if (currentTimeRequest) {
+      rangeEnd = Math.min(currentTimeRequest.startTime, rangeEnd);
+    }
+    if (rangeEnd > 0) {
+      return {
+        start: startOfBuffer,
+        end: rangeEnd
+      };
+    }
+  }
+  return null;
+}
+function getRangeAheadForPruning(ranges, targetTime, options) {
+  const endOfLastRange = ranges.end(ranges.length - 1);
+  const endOfBuffer = endOfLastRange + BUFFER_END_THRESHOLD;
+  const {
+    bufferToKeepAhead,
+    currentTimeRequest,
+    avoidCurrentTimeRangePruning,
+    logger
+  } = options;
+  const continuousBufferTime = getContinuousBufferTime(ranges, targetTime);
+  let rangeStart;
+  if (!isNaN(continuousBufferTime)) {
+    const keepAhead = Number(bufferToKeepAhead);
+    if (isNaN(keepAhead)) {
+      return null;
+    }
+    rangeStart = Math.min(continuousBufferTime, targetTime + keepAhead);
+  } else {
+    rangeStart = targetTime;
+  }
+  if (rangeStart >= endOfLastRange) {
+    return null;
+  }
+  if (currentTimeRequest) {
+    rangeStart = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeStart);
+  }
+  if (avoidCurrentTimeRangePruning) {
+    for (let i = 0; i < ranges.length; i++) {
+      if (ranges.start(i) <= targetTime && targetTime <= ranges.end(i) && ranges.start(i) <= rangeStart && rangeStart <= ranges.end(i)) {
+        const oldRangeStart = rangeStart;
+        rangeStart = i + 1 < ranges.length ? ranges.start(i + 1) : ranges.end(i) + 1;
+        if (logger) {
+          logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer + '] instead' + (rangeStart < endOfBuffer ? '' : ' (no actual pruning)'));
+        }
+        break;
+      }
+    }
+  }
+  if (rangeStart < endOfLastRange) {
+    return {
+      start: rangeStart,
+      end: endOfBuffer
+    };
+  }
+  return null;
+}
+function getPruningRanges(ranges, seekTime, options) {
+  const clearRanges = [];
+  if (!ranges || ranges.length === 0) {
+    return clearRanges;
+  }
+  if (!isValidTargetTime(seekTime)) {
+    clearRanges.push({
+      start: ranges.start(0),
+      end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD
+    });
+    return clearRanges;
+  }
+  const pruningOptions = options || {};
+  const behindPruningRange = getRangeBehindForPruning(ranges, seekTime, pruningOptions.bufferToKeepBehind, pruningOptions.currentTimeRequest);
+  const aheadPruningRange = getRangeAheadForPruning(ranges, seekTime, pruningOptions);
+  if (behindPruningRange) {
+    clearRanges.push(behindPruningRange);
+  }
+  if (aheadPruningRange) {
+    clearRanges.push(aheadPruningRange);
+  }
+  return clearRanges;
+}
+function hasBufferAtTime(ranges, time) {
+  if (!ranges || ranges.length === 0) {
+    return false;
+  }
+  for (let i = 0; i < ranges.length; i++) {
+    if (time >= ranges.start(i) && time <= ranges.end(i)) {
+      return true;
+    }
+  }
+  return false;
+}
+function getRangeAt(ranges, time, tolerance) {
+  let firstStart = null;
+  let lastEnd = null;
+  const actualTolerance = !isNaN(tolerance) ? tolerance : DEFAULT_RANGE_TOLERANCE;
+  if (ranges !== null && ranges !== undefined) {
+    for (let i = 0; i < ranges.length; i++) {
+      const start = ranges.start(i);
+      const end = ranges.end(i);
+      if (firstStart === null) {
+        const gap = Math.abs(start - time);
+        if (time >= start && time < end || gap <= actualTolerance) {
+          firstStart = start;
+          lastEnd = end;
+        }
+      } else if (start - lastEnd <= actualTolerance) {
+        lastEnd = end;
+      } else {
+        break;
+      }
+    }
+  }
+  return firstStart === null ? null : {
+    start: firstStart,
+    end: lastEnd
+  };
+}
+
+/**
+ * Returns the buffered time within the interval [start, end]. In contrast to getContinuousBufferTime this includes ranges behind a gap.
+ */
+function getBufferedTimeInInterval(ranges, start, end) {
+  let bufferedTime = 0;
+  if (!ranges) {
+    return bufferedTime;
+  }
+  for (let i = 0; i < ranges.length; i++) {
+    bufferedTime += Math.max(0, Math.min(ranges.end(i), end) - Math.max(ranges.start(i), start));
+  }
+  return bufferedTime;
+}
+
+/**
+ * Returns the end of the buffered data in front of time, limited to time. Ranges starting at or after time are ignored.
+ * Returns NaN if nothing is buffered in front of time.
+ */
+function getBufferedEndBefore(ranges, time) {
+  let bufferedEnd = NaN;
+  if (!ranges) {
+    return bufferedEnd;
+  }
+  for (let i = 0; i < ranges.length; i++) {
+    if (ranges.start(i) < time) {
+      bufferedEnd = Math.min(ranges.end(i), time);
+    }
+  }
+  return bufferedEnd;
+}
+
+
+/***/ }),
+
 /***/ "./src/streaming/utils/Capabilities.js":
 /*!*********************************************!*\
   !*** ./src/streaming/utils/Capabilities.js ***!
@@ -75271,8 +78579,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
-/* harmony import */ var _ObjectUtils_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./ObjectUtils.js */ "./src/streaming/utils/ObjectUtils.js");
-/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _protection_vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../protection/vo/KeySystemMetadata.js */ "./src/streaming/protection/vo/KeySystemMetadata.js");
+/* harmony import */ var _ObjectUtils_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./ObjectUtils.js */ "./src/streaming/utils/ObjectUtils.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -75308,6 +78617,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 function supportsMediaSource() {
   let hasManagedMediaSource = 'ManagedMediaSource' in window;
   let hasWebKit = 'WebKitMediaSource' in window;
@@ -75317,11 +78627,11 @@ function supportsMediaSource() {
 function Capabilities() {
   let instance, settings, protectionController, testedCodecConfigurations, encryptedMediaSupported, logger;
   const context = this.context;
-  const objectUtils = (0,_ObjectUtils_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance();
+  const objectUtils = (0,_ObjectUtils_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
   function setup() {
     encryptedMediaSupported = false;
     testedCodecConfigurations = [];
-    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance().getLogger(instance);
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance().getLogger(instance);
   }
   function setConfig(config) {
     if (!config) {
@@ -75524,14 +78834,7 @@ function Capabilities() {
         });
         return;
       }
-
-      // If a systemStringPriority is defined by the application we use these values. Otherwise, we use the default system string
-      // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
-      const protDataSystemStringPriority = keySystemMetadata.protData && keySystemMetadata.protData.systemStringPriority ? keySystemMetadata.protData.systemStringPriority : null;
-      let systemString = keySystemMetadata.ks.systemString;
-
-      // Use the default values in case no values are provided by the application
-      const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : [systemString];
+      const systemStringsToApply = _protection_vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_3__["default"].getSystemStringsToApply(keySystemMetadata.ks, keySystemMetadata.protData);
       systemStringsToApply.forEach(systemString => {
         const curr = {
           ...genericConfiguration
@@ -75850,11 +79153,7 @@ function CapabilitiesFilter() {
     period.Preselection = period.Preselection.filter(prsl => {
       if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
         const prslCodec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
-        let isPrslCodecSupported = true;
-        if (prslCodec) {
-          let commonRepresentation = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
-          isPrslCodecSupported = _isCodecSupported(type, prsl, prslCodec, commonRepresentation);
-        }
+        const isPrslCodecSupported = !prslCodec || _getRepresentationsForPreselection(prsl, period.AdaptationSet).every(representation => _isCodecSupported(type, prsl, prslCodec, representation));
         if (!isPrslCodecSupported) {
           logger.warn(`[CapabilitiesFilter] Preselection@codecs ${prslCodec} not supported. Removing Preselection with ID ${prsl.id}`);
         }
@@ -75863,6 +79162,10 @@ function CapabilitiesFilter() {
         return true;
       }
     });
+  }
+  function _getRepresentationsForPreselection(preselection, adaptations) {
+    const mainAdaptationSet = adapter.getMainAdaptationSetForPreselection(preselection, adaptations);
+    return mainAdaptationSet && mainAdaptationSet.Representation ? mainAdaptationSet.Representation : [];
   }
   function _filterUnsupportedRepresentationsOfAdaptation(as, type) {
     if (!as.Representation || as.Representation.length === 0) {
@@ -75921,8 +79224,10 @@ function CapabilitiesFilter() {
         period.Preselection.forEach(prsl => {
           if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
             const prslCodec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
-            const prslCommonRepresentation = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
-            _processCodecToCheck(type, prsl, prslCodec, configurationsSet, configurations, prslCommonRepresentation);
+            const representations = _getRepresentationsForPreselection(prsl, period.AdaptationSet);
+            representations.forEach(representation => {
+              _processCodecToCheck(type, prsl, prslCodec, configurationsSet, configurations, representation);
+            });
           }
         });
       }
@@ -76033,28 +79338,29 @@ function CapabilitiesFilter() {
     };
     for (const prop of representation.EssentialProperty || []) {
       // note: MCA does not reflect a parameter related to 'urn:mpeg:mpegB:cicp:VideoFullRangeFlag'
+      const numericValue = /^[-+]?[0-9]+[.]?[0-9]*([eE][-+]?[0-9]+)?$/.test(prop.value) ? Number(prop.value) : NaN;
 
       // translate ColourPrimaries signaling into capability queries
-      if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].COLOUR_PRIMARIES_SCHEME_ID_URI && ['1', '5', '6', '7'].includes(prop.value.toString())) {
+      if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].COLOUR_PRIMARIES_SCHEME_ID_URI && [1, 5, 6, 7].includes(numericValue)) {
         cfg.colorGamut = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_CAPABILITIES_API.COLORGAMUT.SRGB;
-      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].COLOUR_PRIMARIES_SCHEME_ID_URI && ['11', '12'].includes(prop.value.toString())) {
+      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].COLOUR_PRIMARIES_SCHEME_ID_URI && [11, 12].includes(numericValue)) {
         cfg.colorGamut = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_CAPABILITIES_API.COLORGAMUT.P3;
-      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].COLOUR_PRIMARIES_SCHEME_ID_URI && ['9'].includes(prop.value.toString())) {
+      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].COLOUR_PRIMARIES_SCHEME_ID_URI && [9].includes(numericValue)) {
         cfg.colorGamut = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_CAPABILITIES_API.COLORGAMUT.REC2020;
-      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].COLOUR_PRIMARIES_SCHEME_ID_URI && ['2'].includes(prop.value.toString())) {
+      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].COLOUR_PRIMARIES_SCHEME_ID_URI && [2].includes(numericValue)) {
         cfg.colorGamut = null;
       } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].COLOUR_PRIMARIES_SCHEME_ID_URI) {
         cfg.isSupported = false;
       }
 
       // translate TransferCharacteristics signaling into capability queries
-      if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['1', '6', '13', '14', '15'].includes(prop.value.toString())) {
+      if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [1, 6, 13, 14, 15].includes(numericValue)) {
         cfg.transferFunction = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.SRGB;
-      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['16'].includes(prop.value.toString())) {
+      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [16].includes(numericValue)) {
         cfg.transferFunction = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.PQ;
-      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['18'].includes(prop.value.toString())) {
+      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [18].includes(numericValue)) {
         cfg.transferFunction = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.HLG;
-      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && ['2'].includes(prop.value.toString())) {
+      } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [2].includes(numericValue)) {
         cfg.transferFunction = null;
       } else if (prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TRANSFER_CHARACTERISTICS_SCHEME_ID_URI) {
         cfg.isSupported = false;
@@ -76567,14 +79873,14 @@ function CustomTimeRanges(/*config*/
     return false;
   }
   function start(index) {
-    (0,_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_1__.checkInteger)(index);
+    ;(0,_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_1__.checkInteger)(index);
     if (index >= this.customTimeRangeArray.length || index < 0) {
       return NaN;
     }
     return this.customTimeRangeArray[index].start;
   }
   function end(index) {
-    (0,_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_1__.checkInteger)(index);
+    ;(0,_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_1__.checkInteger)(index);
     if (index >= this.customTimeRangeArray.length || index < 0) {
       return NaN;
     }
@@ -78196,7 +81502,43 @@ function TimeUtils() {
     const start = new Date(Date.UTC(1900, 0, 1, 0, 0, 0));
     return new Date(start.getTime() + ntpTimeStamp).getTime();
   }
+
+  /**
+   * Format a UTC time (in seconds) as a locale time string, optionally with the date appended.
+   * @param {number} time - UTC time in seconds
+   * @param {string} locales - locale string(s) passed to Date#toLocaleTimeString
+   * @param {boolean} hour12 - 12 vs 24 hour formatting
+   * @param {boolean} withDate - append the date
+   * @return {string}
+   * @memberof module:TimeUtils
+   * @instance
+   */
+  function formatUTC(time, locales, hour12, withDate = false) {
+    const dt = new Date(time * 1000);
+    const d = dt.toLocaleDateString(locales);
+    const t = dt.toLocaleTimeString(locales, {
+      hour12: hour12
+    });
+    return withDate ? t + ' ' + d : t;
+  }
+
+  /**
+   * Convert seconds into a time code string (i.e. 300 --> 05:00).
+   * @param {number} value - seconds
+   * @return {string}
+   * @memberof module:TimeUtils
+   * @instance
+   */
+  function convertToTimeCode(value) {
+    value = Math.max(value, 0);
+    let h = Math.floor(value / 3600);
+    let m = Math.floor(value % 3600 / 60);
+    let s = Math.floor(value % 3600 % 60);
+    return (h === 0 ? '' : h < 10 ? '0' + h.toString() + ':' : h.toString() + ':') + (m < 10 ? '0' + m.toString() : m.toString()) + ':' + (s < 10 ? '0' + s.toString() : s.toString());
+  }
   instance = {
+    convertToTimeCode,
+    formatUTC,
     ntpToUTC
   };
   return instance;
@@ -80463,11 +83805,6 @@ class HTTPRequest {
      * @public
      */
     this.trace = [];
-    /**
-     * The CMSD static and dynamic values retrieved from CMSD response headers.
-     * @public
-     */
-    this.cmsd = null;
 
     /**
      * Type of stream ("audio" | "video" etc..)
@@ -80502,6 +83839,20 @@ class HTTPRequest {
      * The values derived from the ResourceTimingAPI.
      */
     this._resourceTimingValues = null;
+    /**
+     * The CMSD static and dynamic values retrieved from CMSD response headers.
+     * Not part of the HttpList metric defined in ISO/IEC 23009-1 Annex D.4.3, hence private.
+     * @public
+     */
+    this._cmsd = null;
+  }
+
+  /**
+   * Prototype getter, so it is not serialised as part of the HttpList metric.
+   * @deprecated since 5.3.0, use `_cmsd` instead. Will be removed in v6.
+   */
+  get cmsd() {
+    return this._cmsd;
   }
 }
 
@@ -81155,6 +84506,12 @@ class SchedulingInfo {
 /******/ 	};
 /******/ 
 /******/ 	// Execute the module function
+/******/ 	if (!(moduleId in __webpack_modules__)) {
+/******/ 		delete __webpack_module_cache__[moduleId];
+/******/ 		var e = new Error("Cannot find module '" + moduleId + "'");
+/******/ 		e.code = 'MODULE_NOT_FOUND';
+/******/ 		throw e;
+/******/ 	}
 /******/ 	__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
 /******/ 
 /******/ 	// Return the exports of the module
@@ -81163,47 +84520,41 @@ class SchedulingInfo {
 /******/ 
 /************************************************************************/
 /******/ /* webpack/runtime/define property getters */
-/******/ !function() {
-/******/ 	// define getter functions for harmony exports
-/******/ 	__webpack_require__.d = function(exports, definition) {
-/******/ 		for(var key in definition) {
-/******/ 			if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 			}
+/******/ // define getter/value functions for harmony exports
+/******/ __webpack_require__.d = function(exports, definition) {
+/******/ 	for(var key in definition) {
+/******/ 		if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 			Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 		}
-/******/ 	};
-/******/ }();
+/******/ 	}
+/******/ };
 /******/ 
 /******/ /* webpack/runtime/global */
-/******/ !function() {
-/******/ 	__webpack_require__.g = (function() {
-/******/ 		if (typeof globalThis === 'object') return globalThis;
-/******/ 		try {
-/******/ 			return this || new Function('return this')();
-/******/ 		} catch (e) {
-/******/ 			if (typeof window === 'object') return window;
-/******/ 		}
-/******/ 	})();
-/******/ }();
+/******/ __webpack_require__.g = (function() {
+/******/ 	if (typeof globalThis === 'object') return globalThis;
+/******/ 	try {
+/******/ 		return this || new Function('return this')();
+/******/ 	} catch (e) {
+/******/ 		if (typeof window === 'object') return window;
+/******/ 	}
+/******/ })();
 /******/ 
 /******/ /* webpack/runtime/hasOwnProperty shorthand */
-/******/ !function() {
-/******/ 	__webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); }
-/******/ }();
+/******/ __webpack_require__.o = function(obj, prop) { return Object.prototype.hasOwnProperty.call(obj, prop); };
 /******/ 
 /******/ /* webpack/runtime/make namespace object */
-/******/ !function() {
-/******/ 	// define __esModule on exports
-/******/ 	__webpack_require__.r = function(exports) {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/ }();
+/******/ // define __esModule on exports
+/******/ __webpack_require__.r = function(exports) {
+/******/ 	if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 		Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 	}
+/******/ 	Object.defineProperty(exports, '__esModule', { value: true });
+/******/ };
 /******/ 
 /************************************************************************/
 var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be isolated against other modules in the chunk.
+!function() {
 /*!******************!*\
   !*** ./index.js ***!
   \******************/
@@ -81274,6 +84625,7 @@ _index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"].Constants = _s
 _index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"].ExternalSubtitle = _src_streaming_vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_7__["default"];
 /* harmony default export */ __webpack_exports__["default"] = (_index_mediaplayerOnly_js__WEBPACK_IMPORTED_MODULE_0__["default"]);
 
+}();
 var __webpack_exports__Constants = __webpack_exports__.Constants;
 var __webpack_exports__Debug = __webpack_exports__.Debug;
 var __webpack_exports__ExternalSubtitle = __webpack_exports__.ExternalSubtitle;
