@@ -10,6 +10,7 @@ class DashJsAdapter {
         this.videoElement = document.getElementById('video-element');
         this.ttmlRenderingDiv = document.getElementById('ttml-rendering-div');
         this.startedFragmentDownloads = [];
+        this.requestedMediaEnd = {};
         this.logEvents = {};
         this.errorEvents = [];
         this.registeredEvents = new Set();
@@ -177,7 +178,20 @@ class DashJsAdapter {
                 targetString += e.request.range;
             }
             this.startedFragmentDownloads.push(targetString);
+            const end = e.request.startTime + e.request.duration;
+            if (!isNaN(end)) {
+                this.requestedMediaEnd[e.request.mediaType] = Math.max(this.requestedMediaEnd[e.request.mediaType] || 0, end);
+            }
         }
+    }
+
+    /**
+     * Returns the end of the furthest media segment that has been requested for the given media type
+     * @param {string} mediaType
+     * @returns {number}
+     */
+    getRequestedMediaEnd(mediaType) {
+        return this.requestedMediaEnd[mediaType] || 0;
     }
 
     _onLogEvent(e) {
@@ -195,6 +209,7 @@ class DashJsAdapter {
      */
     attachSource(mpd, startTime = null) {
         this.startedFragmentDownloads = [];
+        this.requestedMediaEnd = {};
         this.player.attachSource(mpd, startTime);
     }
 
@@ -235,6 +250,15 @@ class DashJsAdapter {
 
     getBufferLengthByType(type) {
         return this.player.getBufferLength(type);
+    }
+
+    /**
+     * Forward buffer of the main media type. getBufferLength() without a type returns the minimum of all types, including fragmented text which is only buffered one segment ahead.
+     * @return {number}
+     */
+    getForwardBufferLength() {
+        const type = this.player.getTracksFor(Constants.DASH_JS.MEDIA_TYPES.VIDEO).length > 0 ? Constants.DASH_JS.MEDIA_TYPES.VIDEO : Constants.DASH_JS.MEDIA_TYPES.AUDIO;
+        return this.getBufferLengthByType(type);
     }
 
     getTargetLiveDelay() {
@@ -546,6 +570,33 @@ class DashJsAdapter {
         })
     }
 
+    async isKeepingForwardBufferTarget(timeoutValue, target, tolerance) {
+        return new Promise((resolve) => {
+            let timeout = null;
+            let hasVideoBufferUpdate = false;
+
+            const _onComplete = (res) => {
+                clearTimeout(timeout);
+                timeout = null;
+                this.player.off(MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated);
+                resolve(res);
+            }
+            const _onTimeout = () => {
+                _onComplete(hasVideoBufferUpdate);
+            }
+            const _onBufferLevelUpdated = (e) => {
+                if (e.mediaType === Constants.DASH_JS.MEDIA_TYPES.VIDEO) {
+                    hasVideoBufferUpdate = true;
+                    if (e.bufferLevel > target + tolerance) {
+                        _onComplete(false);
+                    }
+                }
+            }
+            timeout = setTimeout(_onTimeout, timeoutValue);
+            this.player.on(MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated);
+        })
+    }
+
     getBufferStartForCurrentTime(currentTime) {
         const ranges = this.videoElement.buffered;
         for (let i = 0; i < ranges.length; i++) {
@@ -696,7 +747,7 @@ class DashJsAdapter {
             }
 
             const _checkBuffer = () => {
-                const buffer = this.getBufferLengthByType();
+                const buffer = this.getForwardBufferLength();
                 if (buffer >= targetBuffer - tolerance) {
                     _onComplete(true);
                 }

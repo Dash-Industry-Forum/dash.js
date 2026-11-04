@@ -52,7 +52,44 @@ function TimeUtils() {
         return new Date(start.getTime() + ntpTimeStamp).getTime();
     }
 
+    /**
+     * Format a UTC time (in seconds) as a locale time string, optionally with the date appended.
+     * @param {number} time - UTC time in seconds
+     * @param {string} locales - locale string(s) passed to Date#toLocaleTimeString
+     * @param {boolean} hour12 - 12 vs 24 hour formatting
+     * @param {boolean} withDate - append the date
+     * @return {string}
+     * @memberof module:TimeUtils
+     * @instance
+     */
+    function formatUTC(time, locales, hour12, withDate = false) {
+        const dt = new Date(time * 1000);
+        const d = dt.toLocaleDateString(locales);
+        const t = dt.toLocaleTimeString(locales, {
+            hour12: hour12
+        });
+        return withDate ? t + ' ' + d : t;
+    }
+
+    /**
+     * Convert seconds into a time code string (i.e. 300 --> 05:00).
+     * @param {number} value - seconds
+     * @return {string}
+     * @memberof module:TimeUtils
+     * @instance
+     */
+    function convertToTimeCode(value) {
+        value = Math.max(value, 0);
+
+        let h = Math.floor(value / 3600);
+        let m = Math.floor((value % 3600) / 60);
+        let s = Math.floor((value % 3600) % 60);
+        return (h === 0 ? '' : (h < 10 ? '0' + h.toString() + ':' : h.toString() + ':')) + (m < 10 ? '0' + m.toString() : m.toString()) + ':' + (s < 10 ? '0' + s.toString() : s.toString());
+    }
+
     instance = {
+        convertToTimeCode,
+        formatUTC,
         ntpToUTC
     };
 

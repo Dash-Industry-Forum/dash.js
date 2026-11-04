@@ -197,6 +197,22 @@ const CmcdPropertyMap = {
     },
 
     /**
+     * Maximum number of error codes (ec) buffered per report destination
+     * Priority: settings > default (10)
+     */
+    maxBufferedErrorCodes: {
+        version: [1, 2],
+        sources: [
+            {
+                path: 'settings.streaming.cmcd.maxBufferedErrorCodes',
+                priority: 1,
+                type: 'number',
+                default: 10
+            }
+        ]
+    },
+
+    /**
      * Global enabled CMCD keys
      * Priority: manifest > settings > default (all keys)
      *
@@ -228,8 +244,25 @@ const CmcdPropertyMap = {
     },
 
     /**
+     * Custom CMCD keys as a list of { key, value } entries
+     * (hyphenated key prefix required, e.g. 'org.svta-p-n').
+     * Settings only; not configurable via manifest.
+     */
+    customKeys: {
+        version: [1, 2],
+        sources: [
+            {
+                path: 'settings.streaming.cmcd.customKeys',
+                priority: 1,
+                type: 'array',
+                default: []
+            }
+        ]
+    },
+
+    /**
      * Request types to include CMCD data in
-     * Priority: manifest > settings > default (['segment', 'mpd'])
+     * Priority: manifest > settings > default (['segment', 'mpd', 'license'])
      */
     includeInRequests: {
         version: [1, 2],
@@ -250,7 +283,7 @@ const CmcdPropertyMap = {
                 path: 'settings.streaming.cmcd.includeInRequests',
                 priority: 2,
                 type: 'array',
-                default: ['segment', 'mpd']
+                default: ['segment', 'mpd', 'license']
             }
         ]
     },
@@ -384,22 +417,16 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target includeInRequests filter
-     * Note: This is target-specific, requires context
+     * V2: Target filter for response received (rr) reports
+     * Note: This is target-specific, requires context. No default: rr is reported for every request type.
      */
-    targetIncludeInRequests: {
+    targetResponseReceivedTypes: {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeInRequests',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].responseReceivedTypes',
                 priority: 1,
                 type: 'array'
-            },
-            {
-                path: 'settings.streaming.cmcd.includeInRequests',
-                priority: 2,
-                type: 'array',
-                default: ['segment', 'mpd']
             }
         ]
     }

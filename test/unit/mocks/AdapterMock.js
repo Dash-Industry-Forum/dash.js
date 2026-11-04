@@ -9,6 +9,10 @@ function AdapterMock() {
         return null;
     };
 
+    this.getFragmentDurationForLiveDelayCalculation = function () {
+        return NaN;
+    };
+
     this.getAvailabilityStartTime = function () {
         return null;
     };
@@ -245,10 +249,14 @@ function AdapterMock() {
         return 'audio/mp4;codecs="' + adaptations[0].Representation[0].codecs + '"'
     }
 
-    this.getCommonRepresentationForPreselection = function (preselection, adaptations) {
+    this.getMainAdaptationSetForPreselection = function (preselection, adaptations) {
         const id = preselection.preselectionComponents.split(' ')[0];
-        const as = adaptations.find((as) => as.id == id);
-        return (as ? as.Representation[0] : undefined);
+        return adaptations.find((adaptation) => adaptation.id === id);
+    }
+
+    this.getCommonRepresentationForPreselection = function (preselection, adaptations) {
+        const adaptation = this.getMainAdaptationSetForPreselection(preselection, adaptations);
+        return adaptation ? adaptation.Representation[0] : undefined;
     }
 
 }

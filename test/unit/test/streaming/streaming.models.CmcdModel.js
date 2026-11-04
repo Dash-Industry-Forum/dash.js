@@ -1,4 +1,5 @@
 import CmcdModel from '../../../../src/streaming/models/CmcdModel.js';
+import CmcdConfigAccessor from '../../../../src/streaming/cmcd/config/CmcdConfigAccessor.js';
 import Settings from '../../../../src/core/Settings.js';
 import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
@@ -210,15 +211,65 @@ describe('CmcdModel', function () {
             const isIncluded = cmcdModel.isIncludedInRequestFilter(HTTPRequest.MEDIA_SEGMENT_TYPE);
             expect(isIncluded).to.be.false;
         });
+
+        it('should return true for license requests if license is included', function () {
+            expect(cmcdModel.isIncludedInRequestFilter(HTTPRequest.LICENSE, ['license'])).to.be.true;
+            expect(cmcdModel.isIncludedInRequestFilter(HTTPRequest.LICENSE)).to.be.false;
+        });
+
+        it('should use the manifest includeInRequests for license requests', function () {
+            const cmcdConfigAccessor = CmcdConfigAccessor(context).getInstance();
+            settings.update({ streaming: { cmcd: { includeInRequests: ['segment', 'license'] } } });
+
+            try {
+                cmcdConfigAccessor.setManifestParams({ version: 1, includeInRequests: ['segment', 'license'] });
+                expect(cmcdModel.isIncludedInRequestFilter(HTTPRequest.LICENSE)).to.be.true;
+
+                cmcdConfigAccessor.setManifestParams({ version: 1, includeInRequests: ['segment'] });
+                expect(cmcdModel.isIncludedInRequestFilter(HTTPRequest.LICENSE)).to.be.false;
+            } finally {
+                cmcdConfigAccessor.setManifestParams(null);
+            }
+        });
     });
 
     describe('calculateMsd', function () {
-        it('should return MSD data when playback has started', function () {
+        let clock;
+
+        beforeEach(function () {
+            clock = sinon.useFakeTimers();
+        });
+
+        afterEach(function () {
+            clock.restore();
+        });
+
+        it('should return the time between playback start and the playing state', function () {
             cmcdModel.onPlaybackStarted();
+            clock.tick(500);
             cmcdModel.onPlaybackPlaying();
 
             const msdData = cmcdModel.calculateMsd();
-            expect(msdData).to.have.property('msd').that.is.a('number');
+            expect(msdData.msd).to.equal(500);
+        });
+
+        it('should freeze MSD at the first playing transition', function () {
+            cmcdModel.onPlaybackStarted();
+            clock.tick(500);
+            cmcdModel.onPlaybackPlaying();
+
+            // Later reports and playing transitions must not change the value
+            clock.tick(1000);
+            cmcdModel.onPlaybackPlaying();
+            const msdData = cmcdModel.calculateMsd();
+            expect(msdData.msd).to.equal(500);
+        });
+
+        it('should return empty object before the playing state is reached', function () {
+            cmcdModel.onPlaybackStarted();
+
+            const msdData = cmcdModel.calculateMsd();
+            expect(Object.keys(msdData)).to.have.length(0);
         });
 
         it('should return empty object when playback has not started', function () {

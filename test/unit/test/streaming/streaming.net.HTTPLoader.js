@@ -1,6 +1,7 @@
 import HTTPLoader from '../../../../src/streaming/net/HTTPLoader.js';
 import Errors from '../../../../src/core/errors/Errors.js';
 import ErrorHandler from '../../../../src/streaming/utils/ErrorHandler.js';
+import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 import DashMetrics from '../../../../src/dash/DashMetrics.js';
 import MediaPlayerModelMock from '../../mocks/MediaPlayerModelMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
@@ -153,6 +154,54 @@ describe('HTTPLoader', function () {
         sinon.assert.calledOnce(callbacks.success);
         sinon.assert.calledOnce(callbacks.complete);
         sinon.assert.notCalled(callbacks.error);
+    });
+
+    it('should set resourceTiming.responseStart on the performance.now() clock, not epoch time', async () => {
+        const customParametersModel = CustomParametersModel(context).getInstance();
+        let capturedRequest;
+        let capturedResponse;
+        let resolveOnComplete;
+        const completePromise = new Promise((resolve) => {
+            resolveOnComplete = resolve;
+        });
+        const callbacks = _createCallbacks({ complete: sinon.spy(() => resolveOnComplete()) });
+
+        const requestInterceptor = (request) => {
+            capturedRequest = request;
+            return Promise.resolve(request);
+        };
+        const responseInterceptor = (response) => {
+            capturedResponse = response;
+            return Promise.resolve(response);
+        };
+        customParametersModel.addRequestInterceptor(requestInterceptor);
+        customParametersModel.addResponseInterceptor(responseInterceptor);
+
+        try {
+            httpLoader = _createHttpLoader();
+
+            await httpLoader.load({
+                request: {},
+                success: callbacks.success,
+                complete: callbacks.complete,
+                error: callbacks.error
+            });
+
+            // Simulate the first progress event with partial data, i.e. the first byte arriving
+            capturedRequest.customData.onprogress({ lengthComputable: true, loaded: 5, total: 100 });
+
+            requests[0].respond(200, {}, 'ok');
+            await completePromise;
+
+            const resourceTiming = capturedResponse.resourceTiming;
+            // startTime and responseEnd use performance.now(); responseStart must be on the same
+            // clock, otherwise derived durations (e.g. CMCD ttfb) become epoch-sized timestamps
+            expect(resourceTiming.responseStart).to.be.at.least(resourceTiming.startTime);
+            expect(resourceTiming.responseStart).to.be.at.most(performance.now());
+        } finally {
+            customParametersModel.removeRequestInterceptor(requestInterceptor);
+            customParametersModel.removeResponseInterceptor(responseInterceptor);
+        }
     });
 
     it('should use XHRLoader and call error and complete callback when load is called with error', async () => {
