@@ -218,7 +218,7 @@ function CapabilitiesFilter() {
         const configurations = [];
 
         manifest.Period.forEach((period) => {
-            period.AdaptationSet.forEach((as) => {
+            period.AdaptationSet?.forEach((as) => {
                 if (adapter.getIsTypeOf(as, type)) {
                     as.Representation.forEach((rep, i) => {
                         const codec = adapter.getCodec(as, i, false);
@@ -480,6 +480,9 @@ function CapabilitiesFilter() {
         }
 
         manifest.Period.forEach((period) => {
+            if (!period.AdaptationSet) {
+                return;
+            }
             period.AdaptationSet = period.AdaptationSet.filter((as) => {
 
                 if (!as.Representation || as.Representation.length === 0) {
