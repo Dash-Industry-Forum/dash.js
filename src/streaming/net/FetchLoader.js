@@ -60,6 +60,7 @@ function FetchLoader() {
      * @param {CommonMediaResponse} commonMediaResponse
      */
     function load(commonMediaRequest, commonMediaResponse) {
+        commonMediaRequest.customData.cancelled = false;
         const headers = _getHeaders(commonMediaRequest);
         const abortController = _setupAbortMechanism(commonMediaRequest);
         const fetchResourceRequestObject = _getFetchResourceRequestObject(commonMediaRequest, headers, abortController);
@@ -100,6 +101,9 @@ function FetchLoader() {
          * @param done - true if the stream has already given you all its data.
          */
         const _processResult = ({ value, done }) => {
+            if (commonMediaRequest.customData.cancelled) {
+                return;
+            }
 
             if (done) {
                 _handleRequestComplete()
@@ -376,6 +380,7 @@ function FetchLoader() {
      */
     function abort() {
         // this = httpRequest (CommonMediaRequest)
+        this.customData.cancelled = true;
         if (this.customData.abortController) {
             // For devices supporting AbortController
             this.customData.abortController.abort();
