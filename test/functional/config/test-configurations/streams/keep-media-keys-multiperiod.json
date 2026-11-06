@@ -1,0 +1,29 @@
+{
+    "testfiles": {
+        "included": [
+            "drm/keep-media-key-sessions-multiperiod"
+        ],
+        "excluded": []
+    },
+    "testvectors": [
+        {
+            "name": "Multiperiod encrypted to unencrypted to encrypted",
+            "type": "vod",
+            "url": "/base/test/functional/content/multi-period/enc-unenc-enc.mpd",
+            "testdata": {
+                "periods": {
+                    "waitingTimeForPeriodSwitches": 40000,
+                    "numberOfPeriodSwitches": 2
+                }
+            },
+            "includedTestfiles": [
+                "drm/keep-media-key-sessions-multiperiod"
+            ],
+            "excludedPlatforms": [
+                {
+                    "browser": "safari"
+                }
+            ]
+        }
+    ]
+}

@@ -484,6 +484,25 @@
             ]
         },
         {
+            "name": "Multiperiod encrypted to unencrypted to encrypted",
+            "type": "vod",
+            "url": "/base/test/functional/content/multi-period/enc-unenc-enc.mpd",
+            "testdata": {
+                "periods": {
+                    "waitingTimeForPeriodSwitches": 40000,
+                    "numberOfPeriodSwitches": 2
+                }
+            },
+            "includedTestfiles": [
+                "drm/keep-media-key-sessions-multiperiod"
+            ],
+            "excludedPlatforms": [
+                {
+                    "browser": "safari"
+                }
+            ]
+        },
+        {
             "name": "DASH-IF Multiperiod Segment Template",
             "type": "live",
             "url": "https://livesim2.dashif.org/livesim2/periods_60/continuous_1/testpic_2s/Manifest.mpd",

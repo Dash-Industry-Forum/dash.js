@@ -505,6 +505,55 @@ class DashJsAdapter {
         })
     }
 
+    /**
+     * Counts period transitions and how many of them were not seamless, i.e. dash.js replaced the MediaSource.
+     * A non-seamless switch detaches the MediaSource and attaches a new one, which changes the src (object URL)
+     * of the video element between PERIOD_SWITCH_STARTED and PERIOD_SWITCH_COMPLETED.
+     * The initial stream activation (no previous period) is ignored.
+     * Resolves once targetNumberOfPeriodSwitches is reached or the timeout expires.
+     * @param {number} timeoutValue
+     * @param {number} targetNumberOfPeriodSwitches
+     * @return {Promise<{periodSwitches: number, mediaSourceResets: number}>}
+     */
+    async trackPeriodTransitionsAndMediaSourceResets(timeoutValue, targetNumberOfPeriodSwitches) {
+        return new Promise((resolve) => {
+            let timeout = null;
+            let sourceBeforeSwitch = null;
+            const result = { periodSwitches: 0, mediaSourceResets: 0 };
+
+            const _onComplete = () => {
+                clearTimeout(timeout);
+                timeout = null;
+                this.player.off(MediaPlayer.events.PERIOD_SWITCH_STARTED, _onPeriodSwitchStarted);
+                this.player.off(MediaPlayer.events.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted);
+                resolve(result);
+            }
+            const _onPeriodSwitchStarted = (e) => {
+                if (!e || !e.fromStreamInfo) {
+                    sourceBeforeSwitch = null;
+                    return;
+                }
+                sourceBeforeSwitch = this.videoElement.src;
+            }
+            const _onPeriodSwitchCompleted = () => {
+                if (sourceBeforeSwitch === null) {
+                    return;
+                }
+                result.periodSwitches += 1;
+                if (this.videoElement.src !== sourceBeforeSwitch) {
+                    result.mediaSourceResets += 1;
+                }
+                sourceBeforeSwitch = null;
+                if (result.periodSwitches >= targetNumberOfPeriodSwitches) {
+                    _onComplete();
+                }
+            }
+            timeout = setTimeout(_onComplete, timeoutValue);
+            this.player.on(MediaPlayer.events.PERIOD_SWITCH_STARTED, _onPeriodSwitchStarted);
+            this.player.on(MediaPlayer.events.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted);
+        })
+    }
+
     async replacedSegmentsInBuffer(maxNumberOfSegmentDownloadsToWait, timeoutValue, bufferInformation) {
         return new Promise((resolve) => {
             let timeout = null;
