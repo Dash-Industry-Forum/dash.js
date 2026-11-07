@@ -10,6 +10,11 @@
             "name": "Multiperiod encrypted to unencrypted to encrypted",
             "type": "vod",
             "url": "/base/test/functional/content/multi-period/enc-unenc-enc.mpd",
+            "drm": {
+                "com.widevine.alpha": {
+                    "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
+                }
+            },
             "testdata": {
                 "periods": {
                     "waitingTimeForPeriodSwitches": 40000,

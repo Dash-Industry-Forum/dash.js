@@ -1517,6 +1517,30 @@ function ProtectionController(config) {
         }
     }
 
+    /**
+     * Checks if at least one of the existing key sessions holds a usable key.
+     * This is the case after a license was applied in the current playback session, but also when key sessions were
+     * kept from a previous playback session (keepProtectionMediaKeys) and are reused without a new license exchange.
+     * @return {boolean}
+     * @memberof module:ProtectionController
+     * @instance
+     */
+    function hasUsableKeySession() {
+        try {
+            if (!protectionModel || typeof protectionModel.getSessionTokens !== 'function') {
+                return false;
+            }
+            const sessionTokens = protectionModel.getSessionTokens() || [];
+
+            return sessionTokens.some((sessionToken) => {
+                return sessionToken && typeof sessionToken.getUsable === 'function' && sessionToken.getUsable();
+            });
+        } catch (error) {
+            logger.error(error);
+            return false;
+        }
+    }
+
     function _shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap) {
         if (normalizedKeyIds.size <= 0) {
             return false;
@@ -1557,6 +1581,7 @@ function ProtectionController(config) {
         getProtectionData,
         getSupportedKeySystemMetadataFromContentProtection,
         handleKeySystemFromManifest,
+        hasUsableKeySession,
         initializeForMedia,
         loadKeySession,
         removeKeySession,
