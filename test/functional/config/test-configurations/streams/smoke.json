@@ -484,7 +484,7 @@
             ]
         },
         {
-            "name": "Multiperiod encrypted to unencrypted to encrypted",
+            "name": "Channel switch with multiperiod encrypted to unencrypted to encrypted",
             "type": "vod",
             "url": "/base/test/functional/content/multi-period/enc-unenc-enc.mpd",
             "drm": {
@@ -496,6 +496,9 @@
                 "periods": {
                     "waitingTimeForPeriodSwitches": 40000,
                     "numberOfPeriodSwitches": 2
+                },
+                "secondChannel": {
+                    "url": "/base/test/functional/content/drm/sintel-widevine.mpd"
                 }
             },
             "includedTestfiles": [

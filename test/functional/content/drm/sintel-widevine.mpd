@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Single period Widevine content with different keys than angel-one (enc-unenc-enc.mpd).
+    Used as "second channel" in channel switching tests.
+    Derived from https://storage.googleapis.com/shaka-demo-assets/sintel-widevine/dash.mpd
+-->
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd" xmlns:cenc="urn:mpeg:cenc:2013"
+     profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" minBufferTime="PT2S" type="static"
+     xmlns:dashif="https://dashif.org/"
+     mediaPresentationDuration="PT20S">
+    <Period id="0" duration="PT20S">
+        <BaseURL>https://storage.googleapis.com/shaka-demo-assets/sintel-widevine/</BaseURL>
+        <AdaptationSet id="10" contentType="video" maxWidth="256" maxHeight="110" frameRate="12288/512"
+                       subsegmentAlignment="true" par="40:17">
+            <ContentProtection value="cenc" schemeIdUri="urn:mpeg:dash:mp4protection:2011"
+                               cenc:default_KID="51745386-2d42-56fd-8bad-4f58422004d7"/>
+            <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+                <dashif:Laurl>https://cwip-shaka-proxy.appspot.com/no_auth</dashif:Laurl>
+                <cenc:pssh>AAAAp3Bzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAIcSEFF0U4YtQlb9i61PWEIgBNcSEPCTfpp3yFXwptQ4ZMXZ82USEE1LDKJawVjwucGYPFF+4rUSEJAqBRprNlaurBkm/A9dkjISECZHD0KW1F0Eqbq7RC4WmAAaDXdpZGV2aW5lX3Rlc3QiFnNoYWthX2NlYzViZmY1ZGM0MGRkYzlI49yVmwY=</cenc:pssh>
+            </ContentProtection>
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+            <Representation id="10" bandwidth="103942" codecs="avc1.42c01e" mimeType="video/mp4" sar="110:109"
+                            width="256" height="110">
+                <BaseURL>v-0144p-0100k-libx264.mp4</BaseURL>
+                <SegmentBase indexRange="1237-3932" timescale="12288">
+                    <Initialization range="0-1236"/>
+                </SegmentBase>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet id="11" contentType="audio" lang="en" subsegmentAlignment="true">
+            <ContentProtection value="cenc" schemeIdUri="urn:mpeg:dash:mp4protection:2011"
+                               cenc:default_KID="26470f42-96d4-5d04-a9ba-bb442e169800"/>
+            <ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed">
+                <dashif:Laurl>https://cwip-shaka-proxy.appspot.com/no_auth</dashif:Laurl>
+                <cenc:pssh>AAAAp3Bzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAIcSEFF0U4YtQlb9i61PWEIgBNcSEPCTfpp3yFXwptQ4ZMXZ82USEE1LDKJawVjwucGYPFF+4rUSEJAqBRprNlaurBkm/A9dkjISECZHD0KW1F0Eqbq7RC4WmAAaDXdpZGV2aW5lX3Rlc3QiFnNoYWthX2NlYzViZmY1ZGM0MGRkYzlI49yVmwY=</cenc:pssh>
+            </ContentProtection>
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+            <Representation id="11" bandwidth="135512" codecs="mp4a.40.2" mimeType="audio/mp4" audioSamplingRate="48000">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
+                                           value="2"/>
+                <BaseURL>a-eng-0128k-aac.mp4</BaseURL>
+                <SegmentBase indexRange="1079-3786" timescale="48000">
+                    <Initialization range="0-1078"/>
+                </SegmentBase>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>
