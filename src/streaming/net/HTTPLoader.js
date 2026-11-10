@@ -322,7 +322,15 @@ function HTTPLoader(cfg) {
         const _loadRequest = function (loader, httpRequest, httpResponse) {
             return new Promise((resolve) => {
                 _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
+                    // Interceptors may return a replacement request (e.g. CMCD copies customData).
+                    // The loader installs abort/xhr on the replacement, so ensure these are
+                    // set on the commonMediaRequest so they are available elsewhere.
+                    const index = httpRequests.indexOf(httpRequest);
                     httpRequest = _httpRequest;
+                    commonMediaRequest = httpRequest;
+                    if (index !== -1) {
+                        httpRequests[index] = httpRequest;
+                    }
                     httpResponse.request = httpRequest;
                     httpRequest.customData.onloadend = _onloadend;
                     httpRequest.customData.onprogress = _onprogress;
