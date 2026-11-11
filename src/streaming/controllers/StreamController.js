@@ -799,15 +799,26 @@ function StreamController() {
     function _canSourceBuffersBeKept(nextStream, previousStream) {
         try {
             // Seamless period switch allowed only if:
-            // - none of the periods uses contentProtection.
+            // - the protection of the periods is compatible (no switch from unencrypted to encrypted)
+            //   OR a usable license is already in place: either fetched in this session or kept from a previous
+            //   session (keepProtectionMediaKeys), in which case no new license exchange happens
             // - AND changeType method is implemented
             // TODO: If the codec family is the same or if there is period connectivity we can also use the same SourceBuffer
             return (settings.get().streaming.buffer.reuseExistingSourceBuffers
-                && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched)
+                && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched || _hasUsableKeySession())
                 && (capabilities.supportsChangeType() && settings.get().streaming.buffer.useChangeType));
         } catch (e) {
             return false;
         }
+    }
+
+    /**
+     * Checks if a key session with a usable key exists, e.g. kept from a previous playback session
+     * @return {boolean}
+     * @private
+     */
+    function _hasUsableKeySession() {
+        return !!protectionController && typeof protectionController.hasUsableKeySession === 'function' && protectionController.hasUsableKeySession();
     }
 
     /**
