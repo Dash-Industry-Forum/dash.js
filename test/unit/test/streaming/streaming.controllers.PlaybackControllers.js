@@ -283,6 +283,73 @@ describe('PlaybackController', function () {
             });
         });
 
+        describe('isPlayingBufferedMediaBeyondStreamEnd()', function () {
+            const createBufferedRange = function (start, end) {
+                return {
+                    length: 1,
+                    start: () => start,
+                    end: () => end
+                };
+            };
+
+            beforeEach(function () {
+                playbackController.initialize({
+                    manifestInfo: { isDynamic: false },
+                    start: 10,
+                    duration: 600,
+                    isLast: true
+                });
+                // Video track is buffered slightly beyond the signaled end of the period
+                videoModelMock.bufferedRange = createBufferedRange(10, 610.5);
+                videoModelMock.time = 610.2;
+            });
+
+            afterEach(function () {
+                videoModelMock.bufferedRange = null;
+                videoModelMock.time = 0;
+                videoModelMock.ispaused = false;
+            });
+
+            it('should return true if the playhead is beyond the end of the last period and media is still buffered ahead', function () {
+                expect(playbackController.isPlayingBufferedMediaBeyondStreamEnd()).to.be.true;
+            });
+
+            it('should return false if the playhead reached the end of the buffered media', function () {
+                videoModelMock.time = 610.5;
+                expect(playbackController.isPlayingBufferedMediaBeyondStreamEnd()).to.be.false;
+            });
+
+            it('should return false if the end of the period has not been reached yet', function () {
+                videoModelMock.time = 500;
+                expect(playbackController.isPlayingBufferedMediaBeyondStreamEnd()).to.be.false;
+            });
+
+            it('should return false if the video is paused', function () {
+                videoModelMock.ispaused = true;
+                expect(playbackController.isPlayingBufferedMediaBeyondStreamEnd()).to.be.false;
+            });
+
+            it('should return false if the period is not the last one', function () {
+                playbackController.initialize({
+                    manifestInfo: { isDynamic: false },
+                    start: 10,
+                    duration: 600,
+                    isLast: false
+                });
+                expect(playbackController.isPlayingBufferedMediaBeyondStreamEnd()).to.be.false;
+            });
+
+            it('should return false for dynamic streams', function () {
+                playbackController.initialize({
+                    manifestInfo: { isDynamic: true },
+                    start: 10,
+                    duration: 600,
+                    isLast: true
+                });
+                expect(playbackController.isPlayingBufferedMediaBeyondStreamEnd()).to.be.false;
+            });
+        });
+
         describe('video event handler', function () {
             it('should handle canplay event', function (done) {
                 let onCanPlay = function () {

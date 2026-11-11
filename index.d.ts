@@ -3470,6 +3470,8 @@ export interface PlaybackController {
 
     isSeeking(): boolean | null;
 
+    isPlayingBufferedMediaBeyondStreamEnd(): boolean;
+
     isStalled(): boolean | null;
 
     pause(): void;

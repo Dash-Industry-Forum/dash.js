@@ -6,6 +6,7 @@ class VideoModelMock {
         this.time = 0;
         this.playbackRate = 1;
         this.playedRange = 1;
+        this.bufferedRange = null;
         this.ended = false;
         this.State = 'ready';
         this.tracks = [];
@@ -137,6 +138,10 @@ class VideoModelMock {
 
     getPlayedRanges() {
         return this.playedRange;
+    }
+
+    getBufferRange() {
+        return this.bufferedRange;
     }
 
     getEnded() {

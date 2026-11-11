@@ -58,6 +58,10 @@ class PlaybackControllerMock {
         return this.seeking;
     }
 
+    isPlayingBufferedMediaBeyondStreamEnd() {
+        return false;
+    }
+
     getIsManifestUpdateInProgress() {
         return false;
     }

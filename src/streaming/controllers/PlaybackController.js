@@ -37,6 +37,7 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import MetricsConstants from '../constants/MetricsConstants.js';
 
 const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
+const BUFFERED_MEDIA_END_TOLERANCE = 0.01;
 
 function PlaybackController() {
 
@@ -316,6 +317,31 @@ function PlaybackController() {
      */
     function isStalled() {
         return streamInfo && videoModel ? videoModel.isStalled() : null;
+    }
+
+    /**
+     * For static content the media of one track can be longer than the signaled duration of the last period (e.g. video slightly longer than audio).
+     * In that case the playhead keeps advancing beyond the end of the period until the native ended event is fired.
+     * @return {boolean}
+     */
+    function isPlayingBufferedMediaBeyondStreamEnd() {
+        if (!streamInfo || !videoModel || isDynamic || !streamInfo.isLast || isPaused() || isStalled() || getTimeToStreamEnd() > 0) {
+            return false;
+        }
+
+        const buffered = getBufferedRanges();
+        if (!buffered) {
+            return false;
+        }
+
+        const time = getTime();
+        for (let i = 0; i < buffered.length; i++) {
+            if (time >= buffered.start(i) && time < buffered.end(i) - BUFFERED_MEDIA_END_TOLERANCE) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function isProgressing(timeoutValue = 500) {
@@ -953,6 +979,7 @@ function PlaybackController() {
         isPaused,
         isProgressing,
         isSeeking,
+        isPlayingBufferedMediaBeyondStreamEnd,
         isStalled,
         pause,
         play,
