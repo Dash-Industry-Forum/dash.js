@@ -1046,7 +1046,7 @@ function StreamController() {
     function _startPlaybackEndedTimerInterval() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
-                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 && !playbackController.isSeeking()) {
+                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 && !playbackController.isSeeking() && !playbackController.isPlayingBufferedMediaBeyondStreamEnd()) {
                     eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
