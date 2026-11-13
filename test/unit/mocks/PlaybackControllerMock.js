@@ -58,6 +58,10 @@ class PlaybackControllerMock {
         return this.seeking;
     }
 
+    getIsManifestUpdateInProgress() {
+        return false;
+    }
+
     seek() {
         this.seeking = true;
     }
@@ -71,6 +75,10 @@ class PlaybackControllerMock {
     }
 
     getPlaybackRate() {
+        return null;
+    }
+
+    getBufferedRanges() {
         return null;
     }
 

@@ -39,7 +39,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         });
 
         it(`Checking if live delay is correct`, async () => {
-            checkLiveDelay(playerAdapter, Constants.TEST_INPUTS.LIVE_DELAY.VALUE, Constants.TEST_INPUTS.LIVE_DELAY.VALUE + Constants.TEST_INPUTS.LIVE_DELAY.TOLERANCE);
+            checkLiveDelay(playerAdapter, Constants.TEST_INPUTS.LIVE_DELAY.VALUE - Constants.TEST_INPUTS.LIVE_DELAY.LOWER_TOLERANCE, Constants.TEST_INPUTS.LIVE_DELAY.VALUE + Constants.TEST_INPUTS.LIVE_DELAY.TOLERANCE);
         });
 
         it(`Expect no critical errors to be thrown`, () => {

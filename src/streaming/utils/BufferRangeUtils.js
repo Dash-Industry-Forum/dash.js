@@ -225,7 +225,46 @@ function getRangeAt(ranges, time, tolerance) {
     };
 }
 
+/**
+ * Returns the buffered time within the interval [start, end]. In contrast to getContinuousBufferTime this includes ranges behind a gap.
+ */
+function getBufferedTimeInInterval(ranges, start, end) {
+    let bufferedTime = 0;
+
+    if (!ranges) {
+        return bufferedTime;
+    }
+
+    for (let i = 0; i < ranges.length; i++) {
+        bufferedTime += Math.max(0, Math.min(ranges.end(i), end) - Math.max(ranges.start(i), start));
+    }
+
+    return bufferedTime;
+}
+
+/**
+ * Returns the end of the buffered data in front of time, limited to time. Ranges starting at or after time are ignored.
+ * Returns NaN if nothing is buffered in front of time.
+ */
+function getBufferedEndBefore(ranges, time) {
+    let bufferedEnd = NaN;
+
+    if (!ranges) {
+        return bufferedEnd;
+    }
+
+    for (let i = 0; i < ranges.length; i++) {
+        if (ranges.start(i) < time) {
+            bufferedEnd = Math.min(ranges.end(i), time);
+        }
+    }
+
+    return bufferedEnd;
+}
+
 export {
+    getBufferedEndBefore,
+    getBufferedTimeInInterval,
     getContinuousBufferTime,
     getPruningRanges,
     getRangeAt,
