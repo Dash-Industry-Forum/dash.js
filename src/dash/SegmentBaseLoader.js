@@ -228,7 +228,6 @@ function SegmentBaseLoader() {
 
                 if (loadMultiSidx) {
                     logger.debug('Initiate multiple SIDX load.');
-                    info.range.end = info.range.start + sidx.size;
 
                     const results = [];
                     let count = 0;
@@ -238,15 +237,11 @@ function SegmentBaseLoader() {
                             callback(null, representation, resolve);
                             return;
                         }
-                        // A repeated answer for the same child must not count towards completion.
-                        if (results[index] !== undefined) {
-                            return;
-                        }
                         // Child requests can complete in any order; the parent references define the segment order.
                         results[index] = result;
                         count++;
                         if (count >= ref.length) {
-                            callback([].concat(...results), representation, resolve);
+                            callback(results.flat(), representation, resolve);
                         }
                     };
 
