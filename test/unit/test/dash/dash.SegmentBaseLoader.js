@@ -9,7 +9,6 @@ import MediaPlayerModelMock from '../../mocks/MediaPlayerModelMock.js';
 import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import BaseURLControllerMock from '../../mocks/BaseURLControllerMock.js';
 import DebugMock from '../../mocks/DebugMock.js';
-import BoxParser from '../../../../src/streaming/utils/BoxParser.js';
 import {expect} from 'chai';
 import {fakeXhr} from 'nise';
 
