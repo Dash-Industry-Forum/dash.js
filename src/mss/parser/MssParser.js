@@ -297,8 +297,8 @@ function MssParser(config) {
                 objectType = 0x05; // High Efficiency AAC Profile = object Type = 5 SBR
                 codecPrivateData = new Uint8Array(4);
                 // in HE AAC Extension Sampling frequence
-                extensionSamplingFrequencyIndex = samplingFrequencyIndex[samplingRate * 2];
                 // equals to SamplingRate*2
+                extensionSamplingFrequencyIndex = samplingFrequencyIndex[samplingRate * 2];
                 //Freq Index is present for 3 bits in the first byte, last bit is in the second
                 codecPrivateData[0] = (objectType << 3) | (indexFreq >> 1);
                 codecPrivateData[1] = (indexFreq << 7) | (qualityLevel.Channels << 3) |

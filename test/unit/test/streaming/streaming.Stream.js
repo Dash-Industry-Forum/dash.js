@@ -125,10 +125,10 @@ describe('Stream', function () {
             });
 
             expect(errHandlerMock.errorCode)
-                .to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE); // jshint ignore:line
+                .to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE);
             expect(errHandlerMock.errorValue).to.be.equal(
                 ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE
-            ); // jshint ignore:line
+            );
         });
 
         it('Licenser request error behavior', function () {
@@ -143,9 +143,9 @@ describe('Stream', function () {
             });
 
             expect(errHandlerMock.errorCode)
-                .to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE); // jshint ignore:line
+                .to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE);
             expect(errHandlerMock.errorValue)
-                .to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE); // jshint ignore:line
+                .to.be.equal(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE);
         });
 
         it('CDM Access denied behavior', function () {
@@ -160,9 +160,9 @@ describe('Stream', function () {
             });
 
             expect(errHandlerMock.errorCode)
-                .to.be.equal(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE); // jshint ignore:line
+                .to.be.equal(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE);
             expect(errHandlerMock.errorValue)
-                .to.be.equal(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE); // jshint ignore:line
+                .to.be.equal(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE);
         });
 
         it('Unable to create key session behavior', function () {
@@ -177,9 +177,9 @@ describe('Stream', function () {
             });
 
             expect(errHandlerMock.errorCode)
-                .to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE); // jshint ignore:line
+                .to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE);
             expect(errHandlerMock.errorValue)
-                .to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE); // jshint ignore:line
+                .to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE);
         });
 
         it('should return preloaded to true after a call to preload without parameters', (done) => {
