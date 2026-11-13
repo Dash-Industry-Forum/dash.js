@@ -222,6 +222,38 @@ describe('ProtectionController', function () {
             expect(protectionModelMock.getSessionTokens().map(s => s.keyId)).to.deep.equal(['session-1', 'session-2', 'session-3']);
         });
 
+        describe('hasUsableKeySession', function () {
+            beforeEach(function () {
+                CommonEncryption.getPSSHForKeySystem = (selectedKeySystem, initData) => initData;
+            });
+
+            it('should return false if no key session exists', function () {
+                expect(protectionController.hasUsableKeySession()).to.be.false;
+            });
+
+            it('should return false if the existing key sessions hold no usable key', function () {
+                protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'session-1' });
+                protectionModelMock.getSessionTokens()[0].getUsable = () => false;
+
+                expect(protectionController.hasUsableKeySession()).to.be.false;
+            });
+
+            it('should return false if the key session can not report its usability', function () {
+                protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'session-1' });
+
+                expect(protectionController.hasUsableKeySession()).to.be.false;
+            });
+
+            it('should return true if at least one key session holds a usable key', function () {
+                protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'session-1' });
+                protectionController.createKeySession({ initData: new ArrayBuffer(16), keyId: 'session-2' });
+                protectionModelMock.getSessionTokens()[0].getUsable = () => false;
+                protectionModelMock.getSessionTokens()[1].getUsable = () => true;
+
+                expect(protectionController.hasUsableKeySession()).to.be.true;
+            });
+        });
+
     });
 
     describe('CMCD integration', function () {
