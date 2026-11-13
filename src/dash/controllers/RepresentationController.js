@@ -30,12 +30,18 @@
  */
 import Constants from '../../streaming/constants/Constants.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import Settings from '../../core/Settings.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import {getTimeBasedSegment} from '../utils/SegmentsUtils.js';
+
+// The retry delay doubles with every failed segment list load in a row, up to this factor of segmentListRetryDelay
+const MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR = 8;
 
 function RepresentationController(config) {
 
     config = config || {};
+    const context = this.context;
     const eventBus = config.eventBus;
     const events = config.events;
     const abrController = config.abrController;
@@ -45,14 +51,20 @@ function RepresentationController(config) {
     const type = config.type;
     const streamInfo = config.streamInfo;
     const segmentsController = config.segmentsController;
+    const settings = Settings(context).getInstance();
 
     let isDynamic = config.isDynamic;
 
     let instance,
         voAvailableRepresentations,
-        currentVoRepresentation;
+        currentVoRepresentation,
+        hasSegmentData,
+        logger,
+        segmentListFailures,
+        segmentListLoads;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
@@ -112,6 +124,9 @@ function RepresentationController(config) {
     function resetInitialSettings() {
         currentVoRepresentation = null;
         voAvailableRepresentations = [];
+        hasSegmentData = false;
+        segmentListFailures = new WeakMap();
+        segmentListLoads = new WeakMap();
     }
 
     function reset() {
@@ -126,16 +141,26 @@ function RepresentationController(config) {
             const selectedRepresentation = getRepresentationById(selectedRepresentationId);
             _setCurrentVoRepresentation(selectedRepresentation);
 
-            if (type !== Constants.VIDEO && type !== Constants.ENHANCEMENT && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
+            // Non-fragmented text (e.g. a single WebVTT file) has no segment data to load
+            hasSegmentData = type === Constants.VIDEO || type === Constants.ENHANCEMENT || type === Constants.AUDIO || (type === Constants.TEXT && isFragmented);
+            if (!hasSegmentData) {
                 _endDataUpdate();
                 resolve();
                 return;
             }
 
+            // The dependent Representation is scheduled on as well (e.g. the base layer of an enhancement Representation)
+            const dependentRepresentationId = selectedRepresentation?.dependentRepresentation?.id;
             const promises = [];
             for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
                 const currentRep = voAvailableRepresentations[i];
-                promises.push(_updateRepresentation(currentRep));
+                const isSelected = currentRep.id === selectedRepresentationId || currentRep.id === dependentRepresentationId;
+                const update = _updateRepresentation(currentRep, isSelected);
+                // Share the segment list load with loadSegmentList()
+                if (isSelected && !currentRep.hasSegments()) {
+                    _trackSegmentListLoad(currentRep, update);
+                }
+                promises.push(update);
             }
 
             Promise.all(promises)
@@ -159,7 +184,7 @@ function RepresentationController(config) {
         _endDataUpdate();
     }
 
-    function _updateRepresentation(currentRep) {
+    function _updateRepresentation(currentRep, isSelected) {
         return new Promise((resolve, reject) => {
             const hasInitialization = currentRep.hasInitialization();
             const hasSegments = currentRep.hasSegments();
@@ -169,7 +194,9 @@ function RepresentationController(config) {
             const promises = [];
 
             promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
-            promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
+            // For SegmentBase streams the segment list is only fetched for the Representation we
+            // are about to play. The others are loaded by the ScheduleController via loadSegmentList() once scheduled on.
+            promises.push(isSelected ? segmentsController.updateSegmentData(currentRep, hasSegments) : Promise.resolve());
 
             Promise.all(promises)
                 .then((data) => {
@@ -312,13 +339,64 @@ function RepresentationController(config) {
      * @param newRep
      */
     function prepareQualityChange(newRep) {
-        const voRepresentations = voAvailableRepresentations.filter((rep) => {
-            return rep.id === newRep.id;
-        })
-
-        if (voRepresentations.length > 0) {
-            _setCurrentVoRepresentation(voRepresentations[0]);
+        const rep = getRepresentationById(newRep.id);
+        if (rep) {
+            _setCurrentVoRepresentation(rep);
+            // Start loading the segment list right away, so it overlaps with the init segment request
+            loadSegmentList(rep);
+            loadSegmentList(rep.dependentRepresentation);
         }
+    }
+
+    /**
+     * Loads the segment list of a SegmentBase Representation that was skipped in updateData().
+     * Concurrent calls for the same Representation share one request.
+     * @param newRep
+     * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to be loaded or the load failed recently
+     */
+    function loadSegmentList(newRep) {
+        if (!isSegmentListMissing(newRep)) {
+            return null;
+        }
+        const rep = getRepresentationById(newRep.id);
+        // A failed load is excluded from ABR and only retried after its retry delay, callers must not wait for it in the meantime
+        const failure = segmentListFailures.get(rep);
+        if (failure && Date.now() - failure.failedAt < failure.retryDelay) {
+            return null;
+        }
+        if (!segmentListLoads.has(rep)) {
+            _trackSegmentListLoad(rep, _updateRepresentation(rep, true));
+        }
+        return segmentListLoads.get(rep);
+    }
+
+    function _trackSegmentListLoad(rep, update) {
+        const load = update
+            .catch((e) => {
+                logger.warn(`Updating representation ${rep.id} for ${type} failed`, e);
+            })
+            .then(() => {
+                // Ignore loads that outlived a reset() or an updateData() with new Representations
+                if (!rep.segments && voAvailableRepresentations.includes(rep)) {
+                    const failureCount = (segmentListFailures.get(rep)?.failureCount || 0) + 1;
+                    const retryDelay = settings.get().streaming.scheduling.segmentListRetryDelay * Math.min(2 ** (failureCount - 1), MAX_SEGMENT_LIST_RETRY_DELAY_FACTOR);
+                    segmentListFailures.set(rep, { failureCount, failedAt: Date.now(), retryDelay });
+                    segmentListLoads.delete(rep);
+                    abrController.excludeRepresentation(rep, retryDelay);
+                }
+                return rep;
+            });
+        segmentListLoads.set(rep, load);
+    }
+
+    /**
+     * SegmentBase: true while the segment list of the Representation is not loaded yet, or could not be loaded
+     * @param newRep
+     * @return {boolean}
+     */
+    function isSegmentListMissing(newRep) {
+        const rep = newRep ? getRepresentationById(newRep.id) : null;
+        return hasSegmentData && !!rep && !rep.hasSegments() && !rep.segments;
     }
 
     function _setCurrentVoRepresentation(value) {
@@ -344,6 +422,8 @@ function RepresentationController(config) {
         getRepresentationById,
         getStreamId,
         getType,
+        isSegmentListMissing,
+        loadSegmentList,
         prepareQualityChange,
         reset,
         setIsDynamic,
