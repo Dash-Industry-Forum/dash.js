@@ -461,10 +461,20 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 expect(withEc[0].ec).to.deep.equal([String(DOWNLOAD_ERROR_ID_CONTENT_CODE)]);
             });
 
-            it('Event reports after the error event do not repeat ec', () => {
-                const reports = getEventReports();
-                const errorIndex = reports.findIndex((d) => d.e === 'e');
-                const later = reports.slice(errorIndex + 1);
+            it('Event reports after the error event do not repeat ec', async function () {
+                this.timeout(30000);
+                const getReportsAfterError = () => {
+                    const reports = getEventReports();
+                    const errorIndex = reports.findIndex((d) => d.e === 'e');
+                    return reports.slice(errorIndex + 1);
+                };
+
+                // rr reports are sent asynchronously, wait until one arrived after the error event
+                const deadline = Date.now() + TIMEOUTS.REQUEST_COLLECTION;
+                while (!getReportsAfterError().some((d) => d.e === 'rr') && Date.now() < deadline) {
+                    await playForDuration(200);
+                }
+                const later = getReportsAfterError();
 
                 expect(later.filter((d) => d.e === 'rr')).to.not.be.empty;
                 later.forEach((d) => expect(d).to.not.have.property('ec'));

@@ -365,6 +365,15 @@ function PlaybackController() {
     }
 
     /**
+     * Returns the buffered ranges of the video element, i.e. the intersection of the buffered ranges of all
+     * SourceBuffers
+     * @return {TimeRanges|null}
+     */
+    function getBufferedRanges() {
+        return streamInfo && videoModel ? videoModel.getBufferRange() : null;
+    }
+
+    /**
      * Returns ended attribute of the video element
      * @return {boolean|null}
      */
@@ -949,6 +958,7 @@ function PlaybackController() {
         computeAndSetLiveDelay,
         getAvailabilityStartTime,
         getBufferLevel,
+        getBufferedRanges,
         getCurrentLiveLatency,
         getEnded,
         getInitialCatchupModeActivated,

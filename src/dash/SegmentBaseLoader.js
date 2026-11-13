@@ -32,7 +32,6 @@ import DashJSError from '../streaming/vo/DashJSError.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import URLLoader from '../streaming/net/URLLoader.js';
-import FullSegment from './vo/FullSegment.js';
 
 function SegmentBaseLoader() {
 
@@ -200,8 +199,10 @@ function SegmentBaseLoader() {
 
             if (!sidx || !sidx.isComplete) {
                 if (sidx) {
-                    info.range.start = sidx.offset || info.range.start;
-                    info.range.end = info.range.start + (sidx.size || extraBytes);
+                    // Box offsets are relative to the loaded chunk, not to the file.
+                    info.range.start += sidx.offset;
+                    // HTTP byte ranges are inclusive, so the box ends at start + size - 1.
+                    info.range.end = info.range.start + (sidx.size ? sidx.size - 1 : extraBytes);
                 } else if (loadedLength < info.bytesLoaded) {
                     // if we have reached a search limit or if we have reached the end of the file we have to stop
                     // trying to find sidx
@@ -211,13 +212,13 @@ function SegmentBaseLoader() {
                     const lastBox = isoFile.getLastBox();
 
                     if (lastBox && lastBox.size) {
-                        info.range.start = lastBox.offset + lastBox.size;
+                        info.range.start += lastBox.offset + lastBox.size;
                         info.range.end = info.range.start + extraBytes;
                     } else {
                         info.range.end += extraBytes;
                     }
                 }
-                _loadSegmentsRecursively(representation, mediaType, info.range, resolve, null, info);
+                _loadSegmentsRecursively(representation, mediaType, info.range, resolve, callback, info);
             } else {
                 const ref = sidx.references;
                 let loadMultiSidx,
@@ -229,36 +230,29 @@ function SegmentBaseLoader() {
 
                 if (loadMultiSidx) {
                     logger.debug('Initiate multiple SIDX load.');
-                    info.range.end = info.range.start + sidx.size;
 
-                    let j, len, ss, se, r;
-                    let segs = [];
+                    const results = [];
                     let count = 0;
-                    let offset = (sidx.offset || info.range.start) + sidx.size;
-                    const tmpCallback = function (result) {
-                        if (result) {
-                            segs = segs.concat(result);
-                            count++;
-
-                            if (count >= len) {
-                                // http requests can be processed in a wrong order, so, we have to reorder segments with
-                                // an ascending start Time order
-                                segs.sort(function (a, b) {
-                                    return a.startTime - b.startTime < 0 ? -1 : 0;
-                                });
-                                callback(segs, representation, resolve);
-                            }
-                        } else {
+                    let offset = info.range.start + sidx.offset + sidx.first_offset + sidx.size;
+                    const tmpCallback = function (index, result) {
+                        if (!result) {
                             callback(null, representation, resolve);
+                            return;
+                        }
+                        // Child requests can complete in any order; the parent references define the segment order.
+                        results[index] = result;
+                        count++;
+                        if (count >= ref.length) {
+                            callback(results.flat(), representation, resolve);
                         }
                     };
 
-                    for (j = 0, len = ref.length; j < len; j++) {
-                        ss = offset;
-                        se = offset + ref[j].referenced_size - 1;
-                        offset = offset + ref[j].referenced_size;
-                        r = { start: ss, end: se };
-                        _loadSegmentsRecursively(representation, mediaType, r, resolve, tmpCallback, info);
+                    for (let j = 0; j < ref.length; j++) {
+                        const r = { start: offset, end: offset + ref[j].referenced_size - 1 };
+                        offset += ref[j].referenced_size;
+                        _loadSegmentsRecursively(
+                            representation, mediaType, r, resolve, tmpCallback.bind(null, j), info
+                        );
                     }
 
                 } else {
@@ -301,24 +295,29 @@ function SegmentBaseLoader() {
         let time = sidx.earliest_presentation_time;
         let start = info.range.start + sidx.offset + sidx.first_offset + sidx.size;
         const segments = [];
-        let segment,
-            end,
+        let end,
             duration,
             size;
 
         for (let i = 0; i < len; i++) {
             duration = refs[i].subsegment_duration;
             size = refs[i].referenced_size;
-
-            segment = new FullSegment();
-            // note that we don't explicitly set segment.media as this will be
-            // computed when all BaseURLs are resolved later
-            segment.duration = duration;
-            segment.startTime = time;
-            segment.timescale = timescale;
             end = start + size - 1;
-            segment.mediaRange = start + '-' + end;
-            segments.push(segment);
+
+            // Plain record rather than a FullSegment. This list is an intermediate: the only
+            // consumers, RepresentationController._onSegmentDataUpdated() and
+            // ThumbnailTracks._normalizeSegments(), read these five fields off each entry and
+            // then build the real Segment through getTimeBasedSegment().
+            // media stays null. The request URL is resolved later from the BaseURL, this record
+            // is not updated.
+            segments.push({
+                duration,
+                startTime: time,
+                timescale,
+                mediaRange: start + '-' + end,
+                media: null
+            });
+
             time += duration;
             start += size;
         }

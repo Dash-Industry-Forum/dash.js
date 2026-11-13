@@ -110,8 +110,16 @@ object, all Adaptation Sets are kept. This processing iterates sequentially the 
 8. `@codecs`
 
 Notes and Exceptions:
-- dash.js does normalize and compare the values provided via the `@lang` attributes and the `lang` setting according to 
-  the rules provided with IETF BCP 47 (e.g. `spa` will get converted to `es` prior to comparison)
+- dash.js normalizes the values provided via the `@lang` attributes and the `lang` setting according to IETF BCP 47
+  (e.g. `spa` will get converted to `es` prior to comparison). It then considers all available languages and picks the
+  first of the following steps that yields a match:
+  1. Exact match (`en-GB` selects `en-GB`)
+  2. Tracks more specific than the preference (`de` selects `de-AT` and `de-DE`, `zh` selects `zh-cmn`)
+  3. The longest less specific track (`en-AU` selects `en`, `zh-Hant-TW` selects `zh-Hant`)
+  4. Tracks with the same primary language subtag (`de-CH` selects `de-AT` and `de-DE`)
+- `lang` can also be an array of preferences. The matches for all entries are kept.
+- If `lang` is a `RegExp` it is not normalized and is applied to the normalized `@lang` value. For instance,
+  `@lang="eng"` is matched as `en`, so use `/^en/` rather than `/^eng$/`.
 - If `accessibility` is not provided as parameter, dash.js prioritizes those AdaptationSets where no `Accessibility` 
   element is present
 

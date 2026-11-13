@@ -96,9 +96,9 @@ function ThroughputModel(config) {
             }
 
             // Get estimated throughput (etp, in kbits/s) from CMSD response headers
-            if (httpRequest.cmsd) {
-                const etp = httpRequest.cmsd.dynamic && httpRequest.cmsd.dynamic.etp
-                    ? httpRequest.cmsd.dynamic.etp
+            if (httpRequest._cmsd) {
+                const etp = httpRequest._cmsd.dynamic && httpRequest._cmsd.dynamic.etp
+                    ? httpRequest._cmsd.dynamic.etp
                     : null;
                 if (etp) {
                     // Apply weight ratio on etp
