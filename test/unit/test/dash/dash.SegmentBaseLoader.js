@@ -144,6 +144,50 @@ describe('SegmentBaseLoader', function () {
                 expect(error).to.equal(undefined);
                 expect(segments.map((segment) => segment.mediaRange)).to.deep.equal(['268-367', '368-467']);
             });
+
+            it('should reload an incomplete SIDX relative to the index range start', async function () {
+                // A free box, then a parent SIDX with first_offset 16; the index range only covers its first 32 bytes.
+                const offsetParent = toBuffer([8, 0x66726565, 56, 0x73696478, 0, 1, 1000, 0, 16, 2, 0x8000002c, 1000, 0, 0x8000002c, 1000, 0]);
+
+                const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video', '100-139');
+                requests[0].success(offsetParent.slice(0, 40));
+                // 100 (index range start) + 8 (free box), up to the end of the 56 byte parent
+                expect(requests[1].request.range).to.equal('108-163');
+                requests[1].success(offsetParent.slice(8));
+                expect(requests.slice(2).map(({ request }) => request.range)).to.deep.equal(['180-223', '224-267']);
+                requests[2].success(firstChild);
+                requests[3].success(secondChild);
+
+                const { segments, error } = await loading;
+                expect(error).to.equal(undefined);
+                expect(segments.map((segment) => segment.mediaRange)).to.deep.equal(['268-367', '368-467']);
+            });
+
+            it('should continue the SIDX search from the end of the last box in the current chunk', async function () {
+                // Search chunks are 1500 bytes; each starts with a box that extends past the chunk end.
+                const chunkStartingWithBox = (size) => {
+                    const data = new DataView(new ArrayBuffer(1501));
+                    data.setUint32(0, size);
+                    data.setUint32(4, 0x66726565);
+                    return data.buffer;
+                };
+
+                const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video');
+                expect(requests[0].request.range).to.equal('0-1500');
+                requests[0].success(chunkStartingWithBox(2000));
+                expect(requests[1].request.range).to.equal('2000-3500');
+                requests[1].success(chunkStartingWithBox(3000));
+                // 2000 (chunk start) + 3000 (box size)
+                expect(requests[2].request.range).to.equal('5000-6500');
+                requests[2].success(parent);
+                expect(requests.slice(3).map(({ request }) => request.range)).to.deep.equal(['5056-5099', '5100-5143']);
+                requests[3].success(firstChild);
+                requests[4].success(secondChild);
+
+                const { segments, error } = await loading;
+                expect(error).to.equal(undefined);
+                expect(segments.map((segment) => segment.mediaRange)).to.deep.equal(['5144-5243', '5244-5343']);
+            });
         });
     });
 
