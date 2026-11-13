@@ -49,7 +49,7 @@ const FactoryMaker = (function () {
     }
 
     /**
-     * Use this method from your extended object.  this.factory is injected into your object.
+     * Use this method from your extended object.  this.factory is injected into your object.<br>
      * this.factory.getSingletonInstance(this.context, 'VideoModel')
      * will return the video model for use in the extended object.
      *

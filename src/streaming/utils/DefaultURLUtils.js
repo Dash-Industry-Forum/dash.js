@@ -49,7 +49,7 @@ function DefaultURLUtils() {
     const originRegex = /^([a-z][a-z0-9+\-_.]*:\/\/[^\/]+)\/?/i;
 
     /**
-     * Resolves a url given an optional base url
+     * Resolves a url given an optional base url<br>
      * Uses window.URL to do the resolution.
      *
      * @param {string} url
@@ -68,7 +68,7 @@ function DefaultURLUtils() {
     };
 
     /**
-     * Resolves a url given an optional base url
+     * Resolves a url given an optional base url<br>
      * Does not resolve ./, ../ etc but will do enough to construct something
      * which will satisfy XHR etc when window.URL is not available ie
      * IE11/node etc.

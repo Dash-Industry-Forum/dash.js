@@ -89,7 +89,8 @@ function CoreApi() {
      *
      * @param {string} type - {@link MediaPlayerEvents}
      * @param {object} payload - Payload of the event
-     * @param {Object} filters - Define a "streamId" and/or a "mediaType" for which this event is valid, e.g. {streamId, mediaType}
+     * @param {Object} filters - Define a "streamId" and/or a "mediaType" for which this event is valid, e.g. {streamId,
+     * mediaType}
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -164,7 +165,8 @@ function CoreApi() {
     /**
      * @summary Update the current settings object being used on the player. Anything left unspecified is not modified.
      * @param {PlayerSettings} settingsObj - An object corresponding to the settings definition.
-     * @description This function does not update the entire object, only properties in the passed in object are updated.
+     * @description This function does not update the entire object, only properties in the passed in object are
+     * updated.
      *
      * This means that updateSettings({a: x}) and updateSettings({b: y}) are functionally equivalent to
      * updateSettings({a: x, b: y}). If the default values are required again, @see{@link resetSettings}.

@@ -131,7 +131,9 @@ describe('SegmentBaseLoader', function () {
 
             it('should request child SIDX boxes relative to the parent SIDX position and first_offset', async function () {
                 // A free box, then a parent SIDX with first_offset 16 referencing two child indexes.
-                const offsetParent = toBuffer([8, 0x66726565, 56, 0x73696478, 0, 1, 1000, 0, 16, 2, 0x8000002c, 1000, 0, 0x8000002c, 1000, 0]);
+                const offsetParent = toBuffer([
+                    8, 0x66726565, 56, 0x73696478, 0, 1, 1000, 0, 16, 2, 0x8000002c, 1000, 0, 0x8000002c, 1000, 0
+                ]);
 
                 const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video', '100-163');
                 requests[0].success(offsetParent);
@@ -147,7 +149,9 @@ describe('SegmentBaseLoader', function () {
 
             it('should reload an incomplete SIDX relative to the index range start', async function () {
                 // A free box, then a parent SIDX with first_offset 16; the index range only covers its first 32 bytes.
-                const offsetParent = toBuffer([8, 0x66726565, 56, 0x73696478, 0, 1, 1000, 0, 16, 2, 0x8000002c, 1000, 0, 0x8000002c, 1000, 0]);
+                const offsetParent = toBuffer([
+                    8, 0x66726565, 56, 0x73696478, 0, 1, 1000, 0, 16, 2, 0x8000002c, 1000, 0, 0x8000002c, 1000, 0
+                ]);
 
                 const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video', '100-139');
                 requests[0].success(offsetParent.slice(0, 40));

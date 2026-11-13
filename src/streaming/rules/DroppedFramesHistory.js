@@ -16,8 +16,12 @@ function DroppedFramesHistory() {
             _initializeForStream(streamId);
         }
 
-        let droppedVideoFrames = playbackQuality && playbackQuality.droppedVideoFrames ? playbackQuality.droppedVideoFrames : 0;
-        let totalVideoFrames = playbackQuality && playbackQuality.totalVideoFrames ? playbackQuality.totalVideoFrames : 0;
+        let droppedVideoFrames = playbackQuality && playbackQuality.droppedVideoFrames
+            ? playbackQuality.droppedVideoFrames
+            : 0;
+        let totalVideoFrames = playbackQuality && playbackQuality.totalVideoFrames
+            ? playbackQuality.totalVideoFrames
+            : 0;
 
         let intervalDroppedFrames = droppedVideoFrames - lastDroppedFrames[streamId];
         lastDroppedFrames[streamId] = droppedVideoFrames;

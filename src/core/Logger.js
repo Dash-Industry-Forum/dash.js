@@ -36,31 +36,37 @@
  */
 
 /**
-* This method allows you to send fatal error messages (fatal errors implies playback interruption) to the browser's console.
-* @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+* This method allows you to send fatal error messages (fatal errors implies playback interruption) to the browser's
+* console.
+* @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can
+* send in comma separated logging items.
 * @function Logger#fatal
 */
 
 /**
  * This method allows you to send error messages to the browser's console.
- * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+ * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can
+ * send in comma separated logging items.
  * @function Logger#error
  */
 
 /**
  * This method allows you to send warning messages to the browser's console.
- * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+ * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can
+ * send in comma separated logging items.
  * @function Logger#warning
  */
 
 /**
  * This method allows you to send info messages to the browser's console.
- * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+ * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can
+ * send in comma separated logging items.
  * @function Logger#info
  */
 
 /**
  * This method allows you to send debug messages to the browser's console.
- * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can send in comma separated logging items.
+ * @param {...*} arguments The message you want to debug. The Arguments object is supported for this method so you can
+ * send in comma separated logging items.
  * @function Logger#debug
  */

@@ -225,7 +225,8 @@ describe('ProtectionController', function () {
     });
 
     describe('CMCD integration', function () {
-        let protectionModelMock, settingsMock, cmcdControllerMock, customParametersModelMock, protectionKeyControllerMock;
+        let protectionModelMock, settingsMock, cmcdControllerMock, customParametersModelMock,
+            protectionKeyControllerMock;
         let xhrMock, requests;
 
         beforeEach(function () {

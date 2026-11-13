@@ -60,7 +60,7 @@ import Constants from '../../constants/Constants.js';
  */
 const CmcdPropertyMap = {
     /**
-     * CMCD version number
+     * CMCD version number<br>
      * Priority: manifest > settings > default (1)
      */
     version: {
@@ -81,9 +81,9 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * CMCD enabled flag
-     * Note: This only exists in player settings, not in manifest.
-     * Manifest presence (CMCDParameters tag) implies enabled=true.
+     * CMCD enabled flag<br>
+     * Note: This only exists in player settings, not in manifest.<br>
+     * Manifest presence (CMCDParameters tag) implies enabled=true.<br>
      * Priority: settings > default (false)
      */
     enabled: {
@@ -99,7 +99,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Session ID (sid)
+     * Session ID (sid)<br>
      * Priority: manifest > settings > null
      */
     sessionID: {
@@ -120,7 +120,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Content ID (cid)
+     * Content ID (cid)<br>
      * Priority: manifest > settings > null
      */
     contentID: {
@@ -141,10 +141,10 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Transmission mode (query, header, body)
+     * Transmission mode (query, header, body)<br>
      * Priority: manifest > settings > default (query)
      *
-     * V1: Single global mode
+     * V1: Single global mode<br>
      * V2: Can be per-target or global
      */
     mode: {
@@ -165,7 +165,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Requested throughput (rtp)
+     * Requested throughput (rtp)<br>
      * Priority: settings > null (calculated dynamically if null)
      */
     rtp: {
@@ -181,7 +181,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * RTP safety factor for throughput calculation
+     * RTP safety factor for throughput calculation<br>
      * Priority: settings > default (5)
      */
     rtpSafetyFactor: {
@@ -197,7 +197,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Maximum number of error codes (ec) buffered per report destination
+     * Maximum number of error codes (ec) buffered per report destination<br>
      * Priority: settings > default (10)
      */
     maxBufferedErrorCodes: {
@@ -213,10 +213,10 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Global enabled CMCD keys
+     * Global enabled CMCD keys<br>
      * Priority: manifest > settings > default (all keys)
      *
-     * Note: In V1, this is a global setting.
+     * Note: In V1, this is a global setting.<br>
      * In V2, keys can be per-target (see targetKeys), and this serves as a fallback.
      */
     keys: {
@@ -245,7 +245,7 @@ const CmcdPropertyMap = {
 
     /**
      * Custom CMCD keys as a list of { key, value } entries
-     * (hyphenated key prefix required, e.g. 'org.svta-p-n').
+     * (hyphenated key prefix required, e.g. 'org.svta-p-n').<br>
      * Settings only; not configurable via manifest.
      */
     customKeys: {
@@ -261,7 +261,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Request types to include CMCD data in
+     * Request types to include CMCD data in<br>
      * Priority: manifest > settings > default (['segment', 'mpd', 'license'])
      */
     includeInRequests: {
@@ -289,7 +289,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Apply CMCD parameters from MPD manifest
+     * Apply CMCD parameters from MPD manifest<br>
      * Priority: settings > default (true)
      */
     applyParametersFromMpd: {
@@ -305,7 +305,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Reporting eventTargets array
+     * V2: Reporting eventTargets array<br>
      * Priority: settings > default ([])
      */
     eventTargets: {
@@ -321,7 +321,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target enabled flag
+     * V2: Target enabled flag<br>
      * Note: This is target-specific, requires context
      */
     targetEnabled: {
@@ -337,7 +337,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target URL for event reporting
+     * V2: Target URL for event reporting<br>
      * Note: This is target-specific, requires context
      */
     targetUrl: {
@@ -353,7 +353,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target enabled keys (can override global keys)
+     * V2: Target enabled keys (can override global keys)<br>
      * Note: This is target-specific, requires context
      */
     targetKeys: {
@@ -369,7 +369,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target events to report
+     * V2: Target events to report<br>
      * Note: This is target-specific, requires context
      */
     targetEvents: {
@@ -385,7 +385,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target time interval for periodic reporting
+     * V2: Target time interval for periodic reporting<br>
      * Note: This is target-specific, requires context
      */
     targetInterval: {
@@ -401,7 +401,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target batch size for batched reporting
+     * V2: Target batch size for batched reporting<br>
      * Note: This is target-specific, requires context
      */
     targetBatchSize: {
@@ -417,7 +417,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target filter for response received (rr) reports
+     * V2: Target filter for response received (rr) reports<br>
      * Note: This is target-specific, requires context. No default: rr is reported for every request type.
      */
     targetResponseReceivedTypes: {

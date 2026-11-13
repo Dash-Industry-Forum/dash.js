@@ -1386,7 +1386,9 @@ describe('CmcdController', function () {
                 triggerError(123);
                 triggerError(456);
 
-                const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                const result = cmcdController.getCmcdRequestInterceptors()[0](
+                    createCommonMediaRequest({ ...segmentRequest })
+                );
                 expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123', '456']);
             });
 
@@ -1395,7 +1397,9 @@ describe('CmcdController', function () {
                     triggerError(code);
                 }
 
-                const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                const result = cmcdController.getCmcdRequestInterceptors()[0](
+                    createCommonMediaRequest({ ...segmentRequest })
+                );
                 expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
             });
 
@@ -1405,7 +1409,9 @@ describe('CmcdController', function () {
                 triggerError(2);
                 triggerError(3);
 
-                const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                const result = cmcdController.getCmcdRequestInterceptors()[0](
+                    createCommonMediaRequest({ ...segmentRequest })
+                );
                 expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['2', '3']);
             });
 
@@ -1417,7 +1423,9 @@ describe('CmcdController', function () {
                 cmcdController.applyCmcdToRequest(licenseRequest);
                 expect(getCmcdFromUrl(licenseRequest.url).ec).to.deep.equal(['123']);
 
-                const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                const result = cmcdController.getCmcdRequestInterceptors()[0](
+                    createCommonMediaRequest({ ...segmentRequest })
+                );
                 expect(getCmcdFromUrl(result.url)).to.not.have.property('ec');
             });
 
@@ -1429,7 +1437,9 @@ describe('CmcdController', function () {
                 triggerError(123);
 
                 try {
-                    const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                    const result = cmcdController.getCmcdRequestInterceptors()[0](
+                        createCommonMediaRequest({ ...segmentRequest })
+                    );
                     expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123']);
                 } finally {
                     eventBus.off(MetricsReportingEvents.CMCD_DATA_GENERATED, throwingListener);
@@ -1444,7 +1454,9 @@ describe('CmcdController', function () {
                 cmcdController.applyCmcdToRequest(licenseRequest);
                 expect(licenseRequest.url).to.equal('http://example.com/license');
 
-                const result = cmcdController.getCmcdRequestInterceptors()[0](createCommonMediaRequest({ ...segmentRequest }));
+                const result = cmcdController.getCmcdRequestInterceptors()[0](
+                    createCommonMediaRequest({ ...segmentRequest })
+                );
                 expect(getCmcdFromUrl(result.url).ec).to.deep.equal(['123']);
             });
         });
@@ -2004,7 +2016,9 @@ describe('CmcdController', function () {
         });
 
         function setup(cmcdParameters, cmcdSettings = {}) {
-            internalServiceDescriptionControllerMock.applyServiceDescription({ clientDataReporting: { cmcdParameters } });
+            internalServiceDescriptionControllerMock.applyServiceDescription({
+                clientDataReporting: { cmcdParameters }
+            });
             cmcdController.reset();
             settings.update({ streaming: { cmcd: cmcdSettings } });
             cmcdController.setConfig({

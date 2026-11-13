@@ -150,7 +150,7 @@ const ProtectionModel = function () { };
  */
 
 /**
- * Removes any persisted key session data associated with the given session.
+ * Removes any persisted key session data associated with the given session.<br>
  * Also closes the session.  Sends KEY_SESSION_REMOVED and
  * ENAME_KEY_SESSION_CLOSED with sessionID as data
  *

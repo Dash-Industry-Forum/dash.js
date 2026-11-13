@@ -307,7 +307,8 @@ describe('StreamController', function () {
                             try {
                                 const seekEvent = { seekTime: 999999999 };
                                 eventBus.trigger(Events.PLAYBACK_SEEKING, seekEvent);
-                                const expectedTime = staticStreamInfo.start + staticStreamInfo.duration - settings.get().streaming.seekDurationBackoff;
+                                const expectedTime = staticStreamInfo.start + staticStreamInfo.duration -
+                                    settings.get().streaming.seekDurationBackoff;
                                 expect(seekEvent.seekTime).to.equal(expectedTime);
                                 done();
                             } catch (e) {
@@ -351,7 +352,8 @@ describe('StreamController', function () {
 
                     uriFragmentModelMock.setURIFragmentData({ t: '999999999' });
 
-                    expectedStartTime = staticStreamInfo.start + staticStreamInfo.duration - settings.get().streaming.seekDurationBackoff;
+                    expectedStartTime = staticStreamInfo.start + staticStreamInfo.duration -
+                        settings.get().streaming.seekDurationBackoff;
 
                     getStreamsInfoStub.returns([staticStreamInfo]);
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);

@@ -38,7 +38,8 @@ function _getSegment(data) {
         return null;
     }
 
-    if (data.totalNumberOfPartialSegments && !isNaN(data.totalNumberOfPartialSegments) && data.totalNumberOfPartialSegments > 0 && !isNaN(data.subNumberOfPartialSegmentToRequest)) {
+    if (data.totalNumberOfPartialSegments && !isNaN(data.totalNumberOfPartialSegments) &&
+        data.totalNumberOfPartialSegments > 0 && !isNaN(data.subNumberOfPartialSegmentToRequest)) {
         return _getPartialSegment(data);
     } else {
         return _getFullSegment(data);
@@ -61,11 +62,14 @@ function _createSinglePartialSegment(data, subNumberOfPartialSegmentToRequest) {
     const inputData = {
         representation,
         segmentDurationInSeconds: partialSegmentDurationInSeconds,
-        presentationStartTime: data.presentationStartTime + subNumberOfPartialSegmentToRequest * partialSegmentDurationInSeconds,
-        presentationEndTime: data.presentationStartTime + ((subNumberOfPartialSegmentToRequest + 1) * partialSegmentDurationInSeconds),
+        presentationStartTime: data.presentationStartTime +
+            subNumberOfPartialSegmentToRequest * partialSegmentDurationInSeconds,
+        presentationEndTime: data.presentationStartTime +
+            ((subNumberOfPartialSegmentToRequest + 1) * partialSegmentDurationInSeconds),
         timelineConverter,
         isDynamic,
-        mediaTimeInSeconds: data.mediaTimeInSeconds + subNumberOfPartialSegmentToRequest * partialSegmentDurationInSeconds,
+        mediaTimeInSeconds: data.mediaTimeInSeconds +
+            subNumberOfPartialSegmentToRequest * partialSegmentDurationInSeconds,
         index
     }
     const segmentData = _getCommonSegmentData(inputData);
@@ -100,8 +104,12 @@ function _getCommonSegmentData(data) {
     } = data;
 
     const segmentData = {
-        availabilityEndTime: timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime + segmentDurationInSeconds, representation, isDynamic),
-        availabilityStartTime: timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic),
+        availabilityEndTime: timelineConverter.calcAvailabilityEndTimeFromPresentationTime(
+            presentationEndTime + segmentDurationInSeconds, representation, isDynamic
+        ),
+        availabilityStartTime: timelineConverter.calcAvailabilityStartTimeFromPresentationTime(
+            presentationEndTime, representation, isDynamic
+        ),
         duration: segmentDurationInSeconds,
         index: index,
         mediaStartTime: mediaTimeInSeconds,
@@ -142,13 +150,15 @@ function _isSegmentAvailable(timelineConverter, representation, segment, isDynam
             return true;
         }
 
-        // For dynamic manifests we check if the presentation start time + duration is included in the availability window
+        // For dynamic manifests we check if the presentation start time + duration is included in the availability
+        // window
         // SAST = Period@start + seg@presentationStartTime + seg@duration
         // ASAST = SAST - ATO
         // SAET = SAST + TSBD + seg@duration
         // refTime serves as an anchor time to compare the availability time of the segments against.
         const refTime = timelineConverter.getClientReferenceTime();
-        const isAvailable = segment.availabilityStartTime.getTime() <= refTime && (!isFinite(segment.availabilityEndTime) || segment.availabilityEndTime.getTime() >= refTime);
+        const isAvailable = segment.availabilityStartTime.getTime() <= refTime &&
+            (!isFinite(segment.availabilityEndTime) || segment.availabilityEndTime.getTime() >= refTime);
 
         return isAvailable
     }
@@ -192,10 +202,14 @@ function getIndexBasedSegment(data) {
         segmentDurationInSeconds = representation.adaptation.period.duration;
     }
 
-    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * segmentDurationInSeconds)).toFixed(5));
+    presentationStartTime = parseFloat(
+        (representation.adaptation.period.start + (index * segmentDurationInSeconds)).toFixed(5)
+    );
     presentationEndTime = parseFloat((presentationStartTime + segmentDurationInSeconds).toFixed(5));
 
-    const mediaTimeInSeconds = timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation);
+    const mediaTimeInSeconds = timelineConverter.calcMediaTimeFromPresentationTime(
+        presentationStartTime, representation
+    );
 
     const segment = _getSegment(
         {

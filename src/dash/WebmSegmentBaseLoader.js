@@ -360,7 +360,10 @@ function WebmSegmentBaseLoader() {
                     resolve({
                         segments: segments,
                         representation: representation,
-                        error: segments ? undefined : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+                        error: segments ? undefined : new DashJSError(
+                            errors.SEGMENT_BASE_LOADER_ERROR_CODE,
+                            errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE
+                        )
                     });
                 });
             };
@@ -368,7 +371,10 @@ function WebmSegmentBaseLoader() {
             const onloadend = function () {
                 resolve({
                     representation: representation,
-                    error: new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+                    error: new DashJSError(
+                        errors.SEGMENT_BASE_LOADER_ERROR_CODE,
+                        errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE
+                    )
                 });
             };
 

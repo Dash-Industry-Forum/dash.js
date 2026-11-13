@@ -41,7 +41,9 @@ function DroppedFramesRule() {
                 droppedFrames = droppedFramesHistoryData[currentRepresentation.id].droppedVideoFrames;
                 totalFrames = droppedFramesHistoryData[currentRepresentation.id].totalVideoFrames;
 
-                if (totalFrames > settings.get().streaming.abr.rules.droppedFramesRule.parameters.minimumSampleSize && droppedFrames / totalFrames > settings.get().streaming.abr.rules.droppedFramesRule.parameters.droppedFramesPercentageThreshold) {
+                if (totalFrames > settings.get().streaming.abr.rules.droppedFramesRule.parameters.minimumSampleSize &&
+                    droppedFrames / totalFrames >
+                    settings.get().streaming.abr.rules.droppedFramesRule.parameters.droppedFramesPercentageThreshold) {
                     newRepresentation = representations[i - 1];
                     break;
                 }

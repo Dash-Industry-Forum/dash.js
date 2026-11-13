@@ -41,7 +41,8 @@ describe('WebmSegmentBaseLoader', function () {
         });
 
         it('should throw an exception when attempting to call setConfig with an empty config parameter or malformed', function () {
-            expect(webmSegmentBaseLoader.setConfig.bind(webmSegmentBaseLoader, {})).to.throw(Constants.MISSING_CONFIG_ERROR);
+            expect(webmSegmentBaseLoader.setConfig.bind(webmSegmentBaseLoader, {}))
+                .to.throw(Constants.MISSING_CONFIG_ERROR);
         });
     });
 

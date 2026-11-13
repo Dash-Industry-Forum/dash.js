@@ -247,9 +247,11 @@ function ManifestUpdater() {
         }
 
         // See DASH-IF IOP v4.3 section 4.6.4 "Transition Phase between Live and On-Demand"
-        // Stop the manifest updates and signal the end of the dynamic stream. If enabled, apply the final static manifest so that duration, seekable range and segment information reflect the static MPD.
+        // Stop the manifest updates and signal the end of the dynamic stream. If enabled, apply the final static
+        // manifest so that duration, seekable range and segment information reflect the static MPD.
         const currentManifest = manifestModel.getValue();
-        if (currentManifest && currentManifest.type === DashConstants.DYNAMIC && manifest.type === DashConstants.STATIC) {
+        if (currentManifest && currentManifest.type === DashConstants.DYNAMIC &&
+            manifest.type === DashConstants.STATIC) {
             eventBus.trigger(Events.DYNAMIC_TO_STATIC);
             isStopped = true;
             if (settings.get().streaming.ignoreFinalStaticManifestOnDynamicToStaticTransition) {

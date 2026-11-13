@@ -176,49 +176,56 @@ export default {
     MISSING_CONFIG_ERROR: 'Missing config parameter(s)',
 
     /**
-     *  @constant {string} TRACK_SWITCH_MODE_ALWAYS_REPLACE used to clear the buffered data (prior to current playback position) after track switch. Default for audio
+     *  @constant {string} TRACK_SWITCH_MODE_ALWAYS_REPLACE used to clear the buffered data (prior to current playback
+     *  position) after track switch. Default for audio
      *  @memberof Constants#
      *  @static
      */
     TRACK_SWITCH_MODE_ALWAYS_REPLACE: 'alwaysReplace',
 
     /**
-     *  @constant {string} TRACK_SWITCH_MODE_NEVER_REPLACE used to forbid clearing the buffered data (prior to current playback position) after track switch. Defers to fastSwitchEnabled for placement of new data. Default for video
+     *  @constant {string} TRACK_SWITCH_MODE_NEVER_REPLACE used to forbid clearing the buffered data (prior to current
+     *  playback position) after track switch. Defers to fastSwitchEnabled for placement of new data. Default for video
      *  @memberof Constants#
      *  @static
      */
     TRACK_SWITCH_MODE_NEVER_REPLACE: 'neverReplace',
 
     /**
-     *  @constant {string} TRACK_SELECTION_MODE_FIRST_TRACK makes the player select the first track found in the manifest.
+     *  @constant {string} TRACK_SELECTION_MODE_FIRST_TRACK makes the player select the first track found in the
+     *  manifest.
      *  @memberof Constants#
      *  @static
      */
     TRACK_SELECTION_MODE_FIRST_TRACK: 'firstTrack',
 
     /**
-     *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest bitrate. This mode is a default mode.
+     *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest
+     *  bitrate. This mode is a default mode.
      *  @memberof Constants#
      *  @static
      */
     TRACK_SELECTION_MODE_HIGHEST_BITRATE: 'highestBitrate',
 
     /**
-     *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY makes the player select the track with the lowest bitrate per pixel average.
+     *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY makes the player select the track with the lowest
+     *  bitrate per pixel average.
      *  @memberof Constants#
      *  @static
      */
     TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency',
 
     /**
-     *  @constant {string} TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY makes the player select the track that contains partial segments that start with SAP type 0 or 1.
+     *  @constant {string} TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY makes the player select the track that contains
+     *  partial segments that start with SAP type 0 or 1.
      *  @memberof Constants#
      *  @static
      */
     TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY: 'lowestStartupDelay',
 
     /**
-     *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of bitrates.
+     *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of
+     *  bitrates.
      *  @memberof Constants#
      *  @static
      */

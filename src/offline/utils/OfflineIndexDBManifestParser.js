@@ -355,7 +355,9 @@ function OfflineIndexDBManifestParser(config) {
             let segmentTimelineElement = DOM.createElement(dashConstants.SEGMENT_TIMELINE);
             let changedDuration = getDurationChangeArray(rep);
             for (let i = 0; i < changedDuration.length; i++) {
-                let repeatValue = i + 1 < changedDuration.length ? (changedDuration[i + 1] - changedDuration[i]) - 1 : 0;
+                let repeatValue = i + 1 < changedDuration.length
+                    ? (changedDuration[i + 1] - changedDuration[i]) - 1
+                    : 0;
                 if (repeatValue > 1) {
                     S.setAttribute('r', repeatValue);
                 }

@@ -111,10 +111,12 @@ describe('TextSourceBuffer', function () {
             expect(addCaptionsCalls[0].captionArray).to.have.lengthOf(1);
             expect(addCaptionsCalls[0].captionArray[0].data).to.equal('Hello');
             expect(addCaptionsCalls[0].captionArray[0].start).to.equal(BASE_MEDIA_DECODE_TIME / TIMESCALE);
-            expect(addCaptionsCalls[0].captionArray[0].end).to.equal((BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
+            expect(addCaptionsCalls[0].captionArray[0].end)
+                .to.equal((BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
             // Buffered range is in presentation time: timestampOffset + cts / timescale
             expect(buffer.buffered.start(0)).to.equal(TIMESTAMP_OFFSET + BASE_MEDIA_DECODE_TIME / TIMESCALE);
-            expect(buffer.buffered.end(0)).to.equal(TIMESTAMP_OFFSET + (BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
+            expect(buffer.buffered.end(0))
+                .to.equal(TIMESTAMP_OFFSET + (BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
         });
     });
 });

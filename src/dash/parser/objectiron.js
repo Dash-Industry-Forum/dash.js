@@ -88,10 +88,14 @@ function ObjectIron(mappers) {
 
                 if (Array.isArray(propertyFromParentElement)) {
                     propertyFromParentElement.forEach(propParentEl => {
-                        _conditionallyMapProperty(exceptions[propertyName], propertyName, true, propParentEl, childNode);
+                        _conditionallyMapProperty(
+                            exceptions[propertyName], propertyName, true, propParentEl, childNode
+                        );
                     });
                 } else {
-                    _conditionallyMapProperty(exceptions[propertyName], propertyName, false, propertyFromParentElement, childNode);
+                    _conditionallyMapProperty(
+                        exceptions[propertyName], propertyName, false, propertyFromParentElement, childNode
+                    );
                 }
             }
         }

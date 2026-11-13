@@ -204,7 +204,8 @@ function SegmentBaseLoader() {
                     // HTTP byte ranges are inclusive, so the box ends at start + size - 1.
                     info.range.end = info.range.start + (sidx.size ? sidx.size - 1 : extraBytes);
                 } else if (loadedLength < info.bytesLoaded) {
-                    // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
+                    // if we have reached a search limit or if we have reached the end of the file we have to stop
+                    // trying to find sidx
                     callback(null, representation, resolve);
                     return;
                 } else {
@@ -249,7 +250,9 @@ function SegmentBaseLoader() {
                     for (let j = 0; j < ref.length; j++) {
                         const r = { start: offset, end: offset + ref[j].referenced_size - 1 };
                         offset += ref[j].referenced_size;
-                        _loadSegmentsRecursively(representation, mediaType, r, resolve, tmpCallback.bind(null, j), info);
+                        _loadSegmentsRecursively(
+                            representation, mediaType, r, resolve, tmpCallback.bind(null, j), info
+                        );
                     }
 
                 } else {
@@ -272,7 +275,9 @@ function SegmentBaseLoader() {
         resolve({
             segments: segments,
             representation: representation,
-            error: segments ? undefined : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+            error: segments
+                ? undefined
+                : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
         });
     }
 

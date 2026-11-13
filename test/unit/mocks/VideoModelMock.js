@@ -154,7 +154,8 @@ class VideoModelMock {
     getTextTrack(kind, label/*, lang, isTTML, isEmbedded*/) {
         for (let i = 0; i < this.element.textTracks.length; i++) {
 
-            if (this.element.textTracks[i].kind === kind && (label ? this.element.textTracks[i].label == label : true)) {
+            if (this.element.textTracks[i].kind === kind &&
+                (label ? this.element.textTracks[i].label == label : true)) {
                 return this.element.textTracks[i];
             }
         }
