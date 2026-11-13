@@ -372,8 +372,10 @@ function DashHandler(config) {
         }
 
         const indexToRequest = lastSegment ? lastSegment.index : 0;
-        const subNumberOfPartialSegmentToRequest = lastSegment && lastSegment.isPartialSegment &&
-        !isNaN(lastSegment.replacementSubNumber) ? lastSegment.replacementSubNumber : NaN;
+        const subNumberOfPartialSegmentToRequest = (lastSegment && lastSegment.isPartialSegment &&
+            !isNaN(lastSegment.replacementSubNumber))
+            ? lastSegment.replacementSubNumber
+            : NaN;
 
         return _getRequest(mediaInfo, representation, indexToRequest, subNumberOfPartialSegmentToRequest);
     }

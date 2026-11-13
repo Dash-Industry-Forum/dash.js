@@ -741,8 +741,8 @@ function MssParser(config) {
         if (manifest.type === 'dynamic') {
             let targetLiveDelay = settings.get().streaming.delay.liveDelay;
             if (!targetLiveDelay) {
-                const liveDelayFragmentCount = settings.get().streaming.delay.liveDelayFragmentCount !== null &&
-                !isNaN(settings.get().streaming.delay.liveDelayFragmentCount)
+                const liveDelayFragmentCount = (settings.get().streaming.delay.liveDelayFragmentCount !== null &&
+                    !isNaN(settings.get().streaming.delay.liveDelayFragmentCount))
                     ? settings.get().streaming.delay.liveDelayFragmentCount
                     : 4;
                 targetLiveDelay = segmentDuration * liveDelayFragmentCount;

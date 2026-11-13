@@ -300,8 +300,8 @@ function TimelineConverter() {
         // if range is NaN all periods are in the future. we should return range.start > range.end in this case
         range.end = isNaN(adjustedEndTime) ? range.end : adjustedEndTime;
 
-        range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth &&
-        !isNaN(voPeriod.mpd.timeShiftBufferDepth) && !isNaN(range.end)
+        range.start = (voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth &&
+            !isNaN(voPeriod.mpd.timeShiftBufferDepth) && !isNaN(range.end))
             ? Math.max(range.end - voPeriod.mpd.timeShiftBufferDepth, range.start)
             : range.start;
         range.start = _adjustTimeBasedOnPeriodRanges(streams, range.start);
