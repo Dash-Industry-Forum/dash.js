@@ -228,8 +228,8 @@ function EventController() {
     }
 
     /**
-     * Add MPD events to the list of events.
-     * Events that are not in the MPD anymore but not triggered yet will still be deleted.
+     * Add MPD events to the list of events.<br>
+     * Events that are not in the MPD anymore but not triggered yet will still be deleted.<br>
      * Existing events might get updated.
      * @param {Array.<Object>} values
      * @param {string} periodId

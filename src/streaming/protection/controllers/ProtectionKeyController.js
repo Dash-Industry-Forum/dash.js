@@ -201,7 +201,7 @@ function ProtectionKeyController() {
     /**
      * Returns a set of supported key systems and CENC initialization data
      * from the given array of ContentProtection elements.  Only
-     * key systems that are supported by this player will be returned.
+     * key systems that are supported by this player will be returned.<br>
      * Key systems are returned in priority order (highest first).
      *
      * @param {Array.<Object>} contentProtectionElements - array of content protection elements parsed
@@ -304,7 +304,7 @@ function ProtectionKeyController() {
     }
 
     /**
-     * Build key system metadata for sinf (FairPlay) initData.
+     * Build key system metadata for sinf (FairPlay) initData.<br>
      * Since sinf data has no PSSH UUIDs, we match against the FairPlay key system directly.
      * @param {ArrayBuffer} initData
      * @return {Array}
@@ -330,7 +330,7 @@ function ProtectionKeyController() {
     }
 
     /**
-     * Extract the defaultKID from the tenc box inside a sinf initData.
+     * Extract the defaultKID from the tenc box inside a sinf initData.<br>
      * Safari sends sinf initData as JSON: {"sinf": ["<base64-encoded sinf box>"]}<br>
      * The sinf box contains: sinf > schi > tenc, where the KID is 12 bytes after the 'tenc' fourcc.
      * @param {ArrayBuffer} initData

@@ -588,7 +588,7 @@ function StreamProcessor(config) {
     }
 
     /**
-     * SegmentBase: the segment list of a Representation is only loaded once we need its media segments.
+     * SegmentBase: the segment list of a Representation is only loaded once we need its media segments.<br>
      * Scheduling restarts as soon as the segment list of the current Representation was loaded.
      * @return {boolean} true if no media segment can be requested yet
      * @private
@@ -752,7 +752,7 @@ function StreamProcessor(config) {
     }
 
     /**
-     * This function is called when the corresponding SourceBuffer encountered an error.
+     * This function is called when the corresponding SourceBuffer encountered an error.<br>
      * We blacklist the last segment assuming it caused the error
      * @param {object} e
      * @private
@@ -910,7 +910,7 @@ function StreamProcessor(config) {
     }
 
     /**
-     * The quality has changed which means we have switched to a different representation.
+     * The quality has changed which means we have switched to a different representation.<br>
      * If we want to aggressively replace existing parts in the buffer we need to make sure that the new quality is
      * higher than the already buffered one.
      * @param {object} e
@@ -1380,7 +1380,7 @@ function StreamProcessor(config) {
 
     /**
      * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation
-     * for this quality.
+     * for this quality.<br>
      * Otherwise, this function will return the current voRepresentation used by the representationController.
      * @param {number} id - id of the voRepresentation.
      * @return {object} voRepresentation

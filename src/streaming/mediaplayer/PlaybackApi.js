@@ -52,7 +52,7 @@ function PlaybackApi() {
 
     /**
      * The play method initiates playback of the media defined by the
-     * {@link module:MediaPlayer#attachSource attachSource()} method.
+     * {@link module:MediaPlayer#attachSource attachSource()} method.<br>
      * This method will call play on the native Video Element.
      *
      * @see {@link module:MediaPlayer#attachSource attachSource()}
@@ -105,7 +105,7 @@ function PlaybackApi() {
      * timeShiftBufferLength, then the DVR window offset will be automatically calculated.
      *
      * @param {number} value - A relative time, in seconds, based on the return value of the
-     * {@link module:MediaPlayer#duration duration()} method is expected.
+     * {@link module:MediaPlayer#duration duration()} method is expected.<br>
      * For dynamic streams duration() returns DVRWindow.end - DVRWindow.start. Consequently, the value provided to this
      * function should be relative to DVRWindow.start.
      * @see {@link module:MediaPlayer#getDvrSeekOffset getDvrSeekOffset()}
@@ -144,7 +144,7 @@ function PlaybackApi() {
 
     /**
      * Sets the currentTime property of the attached video element. Compared to the seek() function this function does
-     * not add the DVR window offset. Instead, it takes a presentation time relative to the availability start time.
+     * not add the DVR window offset. Instead, it takes a presentation time relative to the availability start time.<br>
      * For VoD this function behaves similar to the seek() function.
 
      * @param {number} value - A presentation time in seconds
@@ -356,7 +356,7 @@ function PlaybackApi() {
     }
 
     /**
-     * This method should only be used with a live stream that has a valid timeShiftBufferLength (DVR Window).
+     * This method should only be used with a live stream that has a valid timeShiftBufferLength (DVR Window).<br>
      * NOTE - If you do not need the raw offset value (i.e. media analytics, tracking, etc) consider using the
      * {@link module:MediaPlayer#seek seek()} method
      * which will calculate this value for you and set the video element's currentTime property all in one simple call.
@@ -408,7 +408,7 @@ function PlaybackApi() {
     /**
      * Current playhead time in seconds.
      *
-     * If called with no arguments then the returned value is the current time of the video element.
+     * If called with no arguments then the returned value is the current time of the video element.<br>
      * However, if a period ID is supplied then time is relative to the start of that period, or is null if there is no
      * such period id in the manifest.
      *
@@ -434,7 +434,7 @@ function PlaybackApi() {
     }
 
     /**
-     * Returns the current playhead time relative to the start of the DVR window.
+     * Returns the current playhead time relative to the start of the DVR window.<br>
      * For VoD this method returns the same value as time()
      * @returns {number} The current playhead time of the media relative to the start of the DVR window
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before
@@ -520,7 +520,8 @@ function PlaybackApi() {
     }
 
     /**
-     * Use this method to get the current playhead time as an absolute value in seconds since midnight UTC, Jan 1 1970.
+     * Use this method to get the current playhead time as an absolute value in seconds since midnight UTC, Jan 1
+     * 1970.<br>
      * Note - this property only has meaning for live streams and is NaN for VoD content. If called before play() has
      * begun, it will return a value of NaN.
      *

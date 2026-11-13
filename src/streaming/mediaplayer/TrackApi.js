@@ -152,7 +152,7 @@ function TrackApi() {
     }
 
     /**
-     * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.<br>
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
@@ -193,10 +193,10 @@ function TrackApi() {
     }
 
     /**
-     * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.
-     * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.<br>
+     * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.<br>
      * Note that you need to specify a relative index based on the position of the target entry in the return value of
-     * getRepresentationsByType().
+     * getRepresentationsByType().<br>
      * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If
      * you want to select a specific representation then use setRepresentationForTypeById() instead.
      *
@@ -239,7 +239,7 @@ function TrackApi() {
 
     /**
      * This method returns the list of all available representations for a given media type. The returned list is
-     * filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).
+     * filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).<br>
      * If you want to get the unfiltered list of representations then use getRepresentationsByTypeUnfiltered() instead.
      * @param {MediaType} type
      * @param {string} streamId
@@ -255,7 +255,7 @@ function TrackApi() {
 
     /**
      * This method returns the list of all available representations for a given media type. The returned list is
-     * unfiltered and settings like max/min bitrate and limitBitrateByPortal are not taken into account.
+     * unfiltered and settings like max/min bitrate and limitBitrateByPortal are not taken into account.<br>
      * If you want to get the filtered list of representations then use getRepresentationsByType() instead.
      * @param {MediaType} type
      * @param {string} streamId

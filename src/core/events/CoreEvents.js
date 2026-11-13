@@ -31,7 +31,7 @@
 import EventsBase from './EventsBase.js';
 
 /**
- * These are internal events that should not be needed at the player level.
+ * These are internal events that should not be needed at the player level.<br>
  * If you find and event in here that you would like access to from MediaPlayer level
  * please add an issue at https://github.com/Dash-Industry-Forum/dash.js/issues/new
  * @class

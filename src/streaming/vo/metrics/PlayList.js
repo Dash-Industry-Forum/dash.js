@@ -88,7 +88,7 @@ class PlayListTrace {
          */
         this.representationid = null;
         /**
-         * If not present, this metrics concerns the Representation as a whole.
+         * If not present, this metrics concerns the Representation as a whole.<br>
          * If present, subreplevel indicates the greatest value of any
          * Subrepresentation@level being rendered.
          * @type {number}
@@ -123,7 +123,7 @@ class PlayListTrace {
          */
         this.playbackspeed = null;
         /**
-         * The reason why continuous presentation of this Representation was stopped.
+         * The reason why continuous presentation of this Representation was stopped.<br>
          * representation switch
          * rebuffering
          * user request

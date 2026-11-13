@@ -77,7 +77,7 @@ import { MEDIA_PLAYER_NOT_INITIALIZED_ERROR } from './MediaPlayerApiErrors.js';
 
 /**
  * Builds and wires the controller graph behind MediaPlayer: creates the singletons, calls setConfig()/initialize()
- * on them, and detects the optional plugin bundles (Protection, MetricsReporting, MssHandler, OfflineController).
+ * on them, and detects the optional plugin bundles (Protection, MetricsReporting, MssHandler, OfflineController).<br>
  * Shared controllers are written into the MediaPlayer `state` object; construction-only objects stay here.
  * @ignore
  */

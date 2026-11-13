@@ -64,7 +64,7 @@ const CERTIFICATE_REQUEST_DEFAULT_TIMEOUT = 8000;
  * functionality provided in {@link ProtectionKeyController}.
  * @todo ProtectionController does almost all of its tasks automatically after init() is
  * called.  Applications might want more control over this process and want to go through
- * each step manually (key system selection, session creation, session maintenance).
+ * each step manually (key system selection, session creation, session maintenance).<br>
  * This module can be accessed using the MediaPlayer API getProtectionController()
  * @param {Object} config
  */
@@ -819,7 +819,7 @@ function ProtectionController(config) {
     /**
      * Returns a set of supported key systems and CENC initialization data
      * from the given array of ContentProtection elements.  Only
-     * key systems that are supported by this player will be returned.
+     * key systems that are supported by this player will be returned.<br>
      * Key systems are returned in priority order (highest first).
      *
      * @param {Array.<Object>} cps - array of content protection elements parsed
@@ -976,7 +976,7 @@ function ProtectionController(config) {
     }
 
     /**
-     * Sets the robustness level for video and audio capabilities. Optional to remove Chrome warnings.
+     * Sets the robustness level for video and audio capabilities. Optional to remove Chrome warnings.<br>
      * Possible values are SW_SECURE_CRYPTO, SW_SECURE_DECODE, HW_SECURE_CRYPTO, HW_SECURE_CRYPTO, HW_SECURE_DECODE,
      * HW_SECURE_ALL.
      *

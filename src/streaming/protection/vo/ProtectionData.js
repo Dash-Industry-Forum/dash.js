@@ -31,7 +31,7 @@
 
 /**
  * @classdesc Data provided for a particular piece of content to customize license server URLs,
- *  license server HTTP request headers, clearkeys, or other content-specific data.
+ *  license server HTTP request headers, clearkeys, or other content-specific data.<br>
  *  In practice protData objects are plain objects passed by the application; this class
  *  serves as documentation and as a canonical reference for all supported properties.
  * @ignore
@@ -39,15 +39,15 @@
 class ProtectionData {
     /**
      * @param {Object} [config={}] configuration object
-     * @param {string|Object} [config.serverURL] a license server URL to use with this key system.
-     * When specified as a string, a single URL will be used regardless of message type.
+     * @param {string|Object} [config.serverURL] a license server URL to use with this key system.<br>
+     * When specified as a string, a single URL will be used regardless of message type.<br>
      * When specified as an object, the object will have property names for each message
      * type ({@link https://w3c.github.io/encrypted-media/#idl-def-MediaKeyMessageType|message types defined here)} with
      * the corresponding property value being the URL to use for
      * messages of that type
      * @param {Object} [config.httpRequestHeaders] headers to add to the license request
      * @param {Object} [config.clearkeys] defines a set of clear keys that are available to
-     * the key system.  Object properties are base64-encoded keyIDs (with no padding).
+     * the key system.  Object properties are base64-encoded keyIDs (with no padding).<br>
      * Corresponding property values are keys, base64-encoded (no padding).
      * @param {number} [config.priority] priority order of the key system (0 is highest, -1 for undefined)
      * @param {string} [config.serverCertificate] Base64 string representation of the server certificate
@@ -120,7 +120,7 @@ class ProtectionData {
  */
 
 /**
- * ClearKey key-pairs that can be used to decrypt the content.
+ * ClearKey key-pairs that can be used to decrypt the content.<br>
  * Object properties are base64-encoded keyIDs (no padding),
  * corresponding values are base64-encoded keys (no padding).
  *

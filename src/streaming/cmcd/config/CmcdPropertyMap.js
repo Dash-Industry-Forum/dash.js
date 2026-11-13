@@ -82,7 +82,7 @@ const CmcdPropertyMap = {
 
     /**
      * CMCD enabled flag<br>
-     * Note: This only exists in player settings, not in manifest.
+     * Note: This only exists in player settings, not in manifest.<br>
      * Manifest presence (CMCDParameters tag) implies enabled=true.<br>
      * Priority: settings > default (false)
      */
@@ -216,7 +216,7 @@ const CmcdPropertyMap = {
      * Global enabled CMCD keys<br>
      * Priority: manifest > settings > default (all keys)
      *
-     * Note: In V1, this is a global setting.
+     * Note: In V1, this is a global setting.<br>
      * In V2, keys can be per-target (see targetKeys), and this serves as a fallback.
      */
     keys: {
@@ -245,7 +245,7 @@ const CmcdPropertyMap = {
 
     /**
      * Custom CMCD keys as a list of { key, value } entries
-     * (hyphenated key prefix required, e.g. 'org.svta-p-n').
+     * (hyphenated key prefix required, e.g. 'org.svta-p-n').<br>
      * Settings only; not configurable via manifest.
      */
     customKeys: {

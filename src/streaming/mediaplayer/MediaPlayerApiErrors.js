@@ -30,7 +30,7 @@
  */
 
 /**
- * Error strings thrown by the MediaPlayer public API when a method is called too early.
+ * Error strings thrown by the MediaPlayer public API when a method is called too early.<br>
  * Shared by MediaPlayer and its API sub-modules. Must stay byte-identical (unit tests compare them).
  */
 

@@ -110,7 +110,7 @@ class ProtectionEvents extends EventsBase {
 
         /**
          * Triggered when the key statuses Map() of the ProtectionController was updated. This happens after there is a
-         * keystatuseschange.
+         * keystatuseschange.<br>
          * The event can be used as an indicator when to refresh the list of possible Representations
          * @event ProtectionEvents#KEY_STATUSES_MAP_UPDATED
          */

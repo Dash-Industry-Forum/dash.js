@@ -61,10 +61,11 @@ function InsufficientBufferRule(config) {
 
     /**
      * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest. Quality=0 until BUFFER_LOADED
-     * happens.
+     * happens.<br>
      * Otherwise, InsufficientBufferRule gives a maximum bitrate depending on throughput and bufferLevel such that
-     * a whole fragment can be downloaded before the buffer runs out, subject to a conservative safety factor of 0.5.
-     * If the bufferLevel is low, then InsufficientBufferRule avoids rebuffering risk.
+     * a whole fragment can be downloaded before the buffer runs out, subject to a conservative safety factor of
+     * 0.5.<br>
+     * If the bufferLevel is low, then InsufficientBufferRule avoids rebuffering risk.<br>
      * If the bufferLevel is high, then InsufficientBufferRule give a high MaxIndex allowing other rules to take over.
      * @param rulesContext
      * @return {object}

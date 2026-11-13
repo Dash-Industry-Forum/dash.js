@@ -62,11 +62,11 @@ function LifecycleApi() {
     }
 
     /**
-     * Upon creating the MediaPlayer you must call initialize before you call anything else.
+     * Upon creating the MediaPlayer you must call initialize before you call anything else.<br>
      * There is one exception to this rule. It is crucial to call {@link module:MediaPlayer#extend extend()}
      * with all your extensions prior to calling initialize.
      *
-     * ALL arguments are optional and there are individual methods to set each argument later on.
+     * ALL arguments are optional and there are individual methods to set each argument later on.<br>
      * The args in this method are just for convenience and should only be used for a simple player setup.
      *
      * @param {HTML5MediaElement=} view - Optional arg to set the video element.
@@ -75,11 +75,11 @@ function LifecycleApi() {
      * {@link module:MediaPlayer#attachSource attachSource()}
      * @param {boolean=} autoPlay - Optional arg to set auto play. {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
      * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first
-     * period.
+     * period.<br>
      * For live content
      * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated
      * Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of
-     * seconds may be optionally specified down to the millisecond level.
+     * seconds may be optionally specified down to the millisecond level.<br>
      * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#setAutoPlay setAutoPlay()}
@@ -182,7 +182,7 @@ function LifecycleApi() {
      * Causes the player to begin streaming the media as set by the
      * {@link module:MediaPlayer#attachSource attachSource()}
      * method in preparation for playing. It specifically does not require a view to be attached with
-     * {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
+     * {@link module:MediaPlayer#attachSource attachView()} to begin preloading.<br>
      * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
      *
      * @see {@link module:MediaPlayer#attachSource attachSource()}
@@ -344,11 +344,11 @@ function LifecycleApi() {
      * @param {string|Object} urlOrManifest - A URL to a valid MPD manifest file, or a
      * parsed manifest object.
      * @param {number|string} startTime - For VoD content the start time is relative to the start time of the first
-     * period.
+     * period.<br>
      * For live content
      * If the parameter starts from prefix posix: it signifies the absolute time range defined in seconds of Coordinated
      * Universal Time (ITU-R TF.460-6). This is the number of seconds since 01-01-1970 00:00:00 UTC. Fractions of
-     * seconds may be optionally specified down to the millisecond level.
+     * seconds may be optionally specified down to the millisecond level.<br>
      * If no posix prefix is used the starttime is relative to MPD@availabilityStartTime
      *
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if

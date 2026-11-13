@@ -49,7 +49,7 @@ const DEFAULT_CATCHUP_STEP_TUNING_STOP_MIN = 0;
 const DEFAULT_CATCHUP_STEP_TUNING_STOP_MAX = 1;
 
 /**
- * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
+ * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.<br>
  * In some cases we require additional logic to be applied and the settings might need to be adjusted before being used.
  * @class
  * @ignore

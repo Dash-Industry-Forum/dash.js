@@ -45,7 +45,7 @@ class CueIntervalTree {
     }
 
     /**
-     * Adds a cue to the interval tree.
+     * Adds a cue to the interval tree.<br>
      * Duplicates (according to {@link _compareCues}) are discarded.
      *
      * @param {TextTrackCue} cue - The cue to add
@@ -140,7 +140,7 @@ class CueIntervalTree {
     // Private methods
 
     /**
-     * Compares two cues for ordering and equality.
+     * Compares two cues for ordering and equality.<br>
      * Returns negative if a < b, positive if a > b, 0 if equal.
      *
      * @param {TextTrackCue} cue1 - First cue
@@ -202,7 +202,7 @@ class CueIntervalTree {
     }
 
     /**
-     * Inserts a node into the tree and returns the new root and a flag indicating whether it was inserted.
+     * Inserts a node into the tree and returns the new root and a flag indicating whether it was inserted.<br>
      * Duplicated cues are not inserted.
      *
      * @param {IntervalTreeNode} newNode - Node to insert

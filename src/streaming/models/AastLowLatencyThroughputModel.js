@@ -204,7 +204,7 @@ function AastLowLatencyThroughputModel() {
     }
 
     /**
-     * Get calculated value for a safe artificial delay of the next request to allow to accumulate some chunks.
+     * Get calculated value for a safe artificial delay of the next request to allow to accumulate some chunks.<br>
      * This allows better line throughput measurement.
      * @param {*} request
      * @param {*} currentBufferLevel current buffer level in milliseconds

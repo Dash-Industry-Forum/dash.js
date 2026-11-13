@@ -384,7 +384,7 @@ function HTTPLoader(cfg) {
         }
 
         /**
-         * Returns the request timeout value from Settings based on the request type.
+         * Returns the request timeout value from Settings based on the request type.<br>
          * This reads the value dynamically so that runtime changes via updateSettings() take effect.
          * @param {Object} requestObject
          * @returns {number}

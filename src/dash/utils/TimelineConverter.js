@@ -80,7 +80,7 @@ function TimelineConverter() {
     }
 
     /**
-     * Returns a "now" reference time for the client to compare the availability time of a segment against.
+     * Returns a "now" reference time for the client to compare the availability time of a segment against.<br>
      * Takes the client/server drift into account
      */
     function getClientReferenceTime() {

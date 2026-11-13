@@ -492,7 +492,7 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the fragment duration to be used for the live delay calculation for the period given by streamInfo.
+     * Returns the fragment duration to be used for the live delay calculation for the period given by streamInfo.<br>
      * For SSR/L3D content using partial segments (k > 1) the request unit at the live edge is the partial segment,
      * so the effective duration is segmentDuration / k. Without partial segments
      * streamInfo.manifestInfo.maxFragmentDuration is used.

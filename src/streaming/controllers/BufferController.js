@@ -445,7 +445,7 @@ function BufferController(config) {
 
     /**
      * In some cases the segment we requested might start at a different time than we initially aimed for. segments
-     * timeline/template tolerance.
+     * timeline/template tolerance.<br>
      * We might need to do an internal seek if there is drift.
      * @private
      */
@@ -1060,7 +1060,7 @@ function BufferController(config) {
     }
 
     /**
-     * This function returns the maximum time for which the buffer is continuous starting from a target time.
+     * This function returns the maximum time for which the buffer is continuous starting from a target time.<br>
      * As soon as there is a gap we return the time before the gap starts
      * @param {number} targetTime
      */

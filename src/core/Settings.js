@@ -341,7 +341,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                maxBufferedErrorCodes: 10,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid',
- *                    'pr', 'sf', 'sid', 'st', 'v']
+ *                    'pr', 'sf', 'sid', 'st', 'v'],
  *                includeInRequests: ['segment', 'mpd', 'license'],
  *                version: 1,
  *                eventTargets: [],
@@ -381,7 +381,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [calcFromSegmentTimeline=false]
  * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
  * @property {boolean} [fallbackToSegmentTimeline=true]
- * In case the MPD uses \<SegmentTimeline\ and no segment is found within the DVR window the DVR window is calculated
+ * In case the MPD uses \<SegmentTimeline\> and no segment is found within the DVR window the DVR window is calculated
  * based on the entries in \<SegmentTimeline\>.
  */
 
@@ -391,11 +391,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Interval timer used by the EventController to check if events need to be triggered or removed.
  * @property {number} [deleteEventMessageDataTimeout=10000]
  * If this value is larger than -1 the EventController will delete the message data attributes of events after they have
- * been started and dispatched to the application.
- * This is to save memory in case events have a long duration and need to be persisted in the EventController.
- * This parameter defines the time in milliseconds between the start of an event and when the message data is deleted.
+ * been started and dispatched to the application.<br>
+ * This is to save memory in case events have a long duration and need to be persisted in the EventController.<br>
+ * This parameter defines the time in milliseconds between the start of an event and when the message data is
+ * deleted.<br>
  * If an event is dispatched for the second time (e.g. when the user seeks back) the message data will not be included
- * in the dispatched event if it has been deleted already.
+ * in the dispatched event if it has been deleted already.<br>
  * Set this value to -1 to not delete any message data.
  */
 
@@ -408,9 +409,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * from the live edge.
  *
  * For SSR/L3D content using partial segments (SegmentTemplate@k > 1) the maximum effective segment duration across all
- * audio, video and fragmented text adaptation sets is used instead.
+ * audio, video and fragmented text adaptation sets is used instead.<br>
  * The effective segment duration is the partial segment duration (segment duration / k) for adaptation sets using
- * partial segments, and the full segment duration otherwise.
+ * partial segments, and the full segment duration otherwise.<br>
  * Consequently, the partial segment duration is only applied if all these adaptation sets use partial segments.
  *
  * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
@@ -430,7 +431,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 /**
  * @typedef {Object} Buffer
  * @property {boolean} [enableSeekDecorrelationFix=false]
- * Enables a workaround for playback start on some devices, e.g. WebOS 4.9.
+ * Enables a workaround for playback start on some devices, e.g. WebOS 4.9.<br>
  * It is necessary because some browsers do not support setting currentTime on video element to a value that is outside
  * of current buffer.
  *
@@ -470,7 +471,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [bufferToKeep=20]
  * This value influences the buffer pruning logic.
  *
- * Allows you to modify the buffer that is kept in source buffer in seconds.
+ * Allows you to modify the buffer that is kept in source buffer in seconds.<br>
  * 0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
  * @property {number} [bufferTimeDefault=18]
  * The time that the internal buffer target will be set to when not playing at the top quality.
@@ -507,12 +508,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
  * @property {boolean} [useChangeType=true]
  * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different
- * codec family.
+ * codec family.<br>
  * Note that some platforms might not implement the changeType function. dash.js is checking for the availability before
  * trying to call it.
  * @property {boolean} [mediaSourceDurationInfinity=true]
  * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the
- * duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.
+ * duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.<br>
  * Some platforms such as WebOS 4.x have issues with seeking when duration is set to `Infinity`, setting this flag to
  * false resolve this.
  * @property {boolean} [resetSourceBuffersForTrackSwitch=false]
@@ -534,7 +535,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [enabled]
  * Enables manual stall events and sets the playback rate to 0 once the stall threshold is reached.
  * @property {boolean} [ignoreReadyState]
- * Ignore the media element's ready state when entering or exiting a stall.
+ * Ignore the media element's ready state when entering or exiting a stall.<br>
  * Enable this when either of these scenarios still occur with synthetic stalls enabled:
  * - If the buffer is empty, but playback is not stalled.
  * - If playback resumes, but a playing event isn't reported.
@@ -554,7 +555,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * No message is written in the browser console.
  *
  * - dashjs.Debug.LOG_LEVEL_FATAL<br>
- * Log fatal errors.
+ * Log fatal errors.<br>
  * An error is considered fatal when it causes playback to fail completely.
  *
  * - dashjs.Debug.LOG_LEVEL_ERROR<br>
@@ -603,8 +604,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Time in seconds for a gap to be considered small.
  * @property {number} [threshold=0.3]
  * Threshold at which the gap handling is executed. If currentRangeEnd - currentTime < threshold the gap jump will be
- * triggered.
- * For live stream the jump might be delayed to keep a consistent live edge.
+ * triggered.<br>
+ * For live stream the jump might be delayed to keep a consistent live edge.<br>
  * Note that the amount of buffer at which platforms automatically stall might differ.
  * @property {boolean} [enableSeekFix=true]
  * Enables the adjustment of the seek target once no valid segment request could be generated for a specific seek time.
@@ -681,7 +682,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * paused.
  * @property {number} [segmentListRetryDelay=10000]
  * SegmentBase: Time in milliseconds after which the segment list (sidx) of a Representation is requested again once
- * loading it failed.
+ * loading it failed.<br>
  * In the meantime the Representation is excluded from ABR decisions. The delay doubles with every failure in a row, up
  * to eight times this value.
  */
@@ -696,13 +697,13 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [extendSegmentedCues=true]
  * Enable/disable patching of segmented cues in order to merge as a single cue by extending cue end time.
  * @property {boolean} [imsc.displayForcedOnlyMode=false]
- * Enable/disable forced only mode in IMSC captions.
+ * Enable/disable forced only mode in IMSC captions.<br>
  * When true, only those captions where itts:forcedDisplay="true" will be displayed.
  * @property {boolean} [imsc.enableRollUp=true]
  * Enable/disable rollUp style display of IMSC captions.
  * @property {object} [webvtt.customRenderingEnabled=false]
  * Enables the custom rendering for WebVTT captions. For details refer to the "Subtitles and Captions" sample section of
- * dash.js.
+ * dash.js.<br>
  * Custom WebVTT rendering requires the external library vtt.js that can be found in the contrib folder.
  */
 
@@ -804,7 +805,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 /**
  * @typedef {Object} Protection
  * @property {boolean} [keepProtectionMediaKeys=false]
- * Set the value for the ProtectionController and MediaKeys life cycle.
+ * Set the value for the ProtectionController and MediaKeys life cycle.<br>
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the
  * MediaPlayer lifetime.
  *
@@ -835,7 +836,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * be used instead.
  * @property {boolean} [filterVideoColorimetryEssentialProperties=true]
  * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris:
- * 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
+ * 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').<br>
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking
  * (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=true]
@@ -862,7 +863,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * @property {module:Settings~AbrRules} [rules]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time
- * we switch to a dynamic mode.
+ * we switch to a dynamic mode.<br>
  * In the dynamic mode either ThroughputRule or BolaRule are active but not both at the same time.
  *
  * l2ARule and loLPRule are ABR rules that are designed for low latency streams. They are tested as standalone rules
@@ -990,17 +991,16 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * For arithmetic and harmonic mean calculations we use a sliding window with the values defined in "sampleSettings"
  *
  * For exponential weighted moving average calculation the default values can be changed in "ewma"
- * @property {string}
- * [lowLatencyDownloadTimeCalculationMode=Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING]
+ * @property {string} [lowLatencyDownloadTimeCalculationMode=Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING]
  * Defines the effective download time estimation method we use for low latency streams that utilize the Fetch API and
  * chunked transfer coding
  * @property {boolean} [useResourceTimingApi=true]
- * If set to true the ResourceTimingApi is used to derive the download time and the number of downloaded bytes.
+ * If set to true the ResourceTimingApi is used to derive the download time and the number of downloaded bytes.<br>
  * This option has no effect for low latency streaming as the download time equals the segment duration in most of the
  * cases and therefor does not provide reliable values
  * @property {object} [useNetworkInformationApi = { xhr=false, fetch=false}]
  * If set to true the NetworkInformationApi is used to derive the current throughput. Browser support is limited, only
- * available in Chrome and Edge.
+ * available in Chrome and Edge.<br>
  * Applies to standard (XHR requests) and/or low latency streaming (Fetch API requests).
  * @property {boolean} [useDeadTimeLatency=true]
  * If true, only the download portion will be considered part of the download bitrate and latency will be regarded as
@@ -1061,7 +1061,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
  * @property {number} [maxBufferedErrorCodes=10]
- * The maximum number of error codes (ec) buffered per CMCD v2 report destination until its next report.
+ * The maximum number of error codes (ec) buffered per CMCD v2 report destination until its next report.<br>
  * When the limit is reached, the oldest code is dropped. This bounds the buffer of a destination that does not report
  * again.
  *
@@ -1089,7 +1089,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Custom CMCD keys to include in reports as persistent session data, e.g. [{ key: 'org.svta-p-n', value: 'dash.js' }].
  *
  * Per the CMCD specification, custom keys must carry a hyphenated prefix (reverse-DNS syntax recommended)
- * to avoid namespace collisions, e.g. 'com.example-mykey'. Keys without a valid prefix are ignored.
+ * to avoid namespace collisions, e.g. 'com.example-mykey'. Keys without a valid prefix are ignored.<br>
  * See the SVTA CMCD custom keys registry for registered keys.
  *
  * Note: event/response targets filter keys by their own enabledKeys; add custom keys there to include
@@ -1110,7 +1110,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
  * @property {Array.<string>} [responseReceivedTypes]
- * Types of requests whose responses trigger a response received (rr) report (e.g., 'mpd', 'segment').
+ * Types of requests whose responses trigger a response received (rr) report (e.g., 'mpd', 'segment').<br>
  * If not specified, rr is reported for every request type.
  * @property {number} [batchSize]
  * The batch size for the CMCD reporting.
@@ -1174,7 +1174,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * redirected to (end of last period - seekDurationBackoff).
  *
  * Seeking to, or starting at, exactly the duration of the presentation does not work consistently across browsers: the
- * playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the beginning.
+ * playhead can end up pending forever or in the "ended" state in which a subsequent play() restarts from the
+ * beginning.<br>
  * Keeping the playhead slightly before the end lets playback finish organically. Set to 0 to disable the backoff and
  * seek to the exact end of the content.
  * @property {number} [wallclockTimeUpdateInterval=100]
@@ -1289,9 +1290,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * This mode makes the player select the track with a widest range of bitrates.
  *
  * @property {number} [blacklistExpiryTime=-1]
- * The time in seconds that a Service Location remains on the blacklist.
+ * The time in seconds that a Service Location remains on the blacklist.<br>
  * After this period expires, the Service Location becomes eligible for selection again during a subsequent failover.
- * However, the system will not proactively switch back to it on its own.
+ * However, the system will not proactively switch back to it on its own.<br>
  * When Content Steering is enabled, this setting is ignored: the blacklist duration is automatically set to the
  * steering response’s TTL, and the steering algorithm may actively switch back to that Service Location as needed.
  *
@@ -1748,7 +1749,7 @@ function Settings() {
      * not match it is ignored, and a warning is logged.
      *
      * Use to change the settings object. Any new values defined will overwrite the settings and anything undefined will
-     * not change.
+     * not change.<br>
      * Implementers of new settings should add it in an approriate namespace to the defaultSettings object and give it a
      * default value (that is not undefined).
      *

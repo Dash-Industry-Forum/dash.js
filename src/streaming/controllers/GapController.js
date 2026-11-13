@@ -125,7 +125,7 @@ function GapController() {
 
     /**
      *  If the track was changed in the current active period and the player might aggressively replace segments the
-     *  buffer will be empty for a short period of time. Avoid gap jumping at that time.
+     *  buffer will be empty for a short period of time. Avoid gap jumping at that time.<br>
      *  We wait until the next media fragment of the target type has been appended before activating again
      * @param {object} e
      * @private
@@ -219,7 +219,7 @@ function GapController() {
 
     /**
      * There are cases in which we never transition out of the seeking state and still need to jump a gap. For instance
-     * if the user seeks right before a gap and video element will not transition out of the seeking state.
+     * if the user seeks right before a gap and video element will not transition out of the seeking state.<br>
      * For now limit this to period boundaries. In this case the current period is completely buffered and we are right
      * before the end of the period.
      * @private

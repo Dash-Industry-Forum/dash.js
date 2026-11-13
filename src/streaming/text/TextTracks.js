@@ -226,7 +226,7 @@ function TextTracks(config) {
     }
 
     /**
-     * Updates all native `TextTrack`s with cues within a window around currentTime.
+     * Updates all native `TextTrack`s with cues within a window around currentTime.<br>
      * Only actually updates the TextTrack periodically, according to bufferPruningInterval setting.
      *
      * @param {number} currentTime - Current playback time
@@ -565,7 +565,7 @@ function TextTracks(config) {
     }
 
     /**
-     * Finds an existing cue in the interval tree that can be extended with the new cue.
+     * Finds an existing cue in the interval tree that can be extended with the new cue.<br>
      * Looks for cues that are adjacent and have identical content.
      *
      * @param {TextTrackCue} newCue - The new cue to potentially extend
@@ -604,7 +604,7 @@ function TextTracks(config) {
     }
 
     /**
-     * Mutates and returns an existing cue by extending it with a new cue by merging their timing.
+     * Mutates and returns an existing cue by extending it with a new cue by merging their timing.<br>
      * Assumes that the two cues are adjacent and have identical content.
      *
      * @param {TextTrackCue} existingCue - The existing cue to extend

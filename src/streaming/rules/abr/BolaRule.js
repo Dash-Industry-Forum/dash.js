@@ -165,13 +165,15 @@ function BolaRule(config) {
 
     /**
      * When a new segment is downloaded, we get two notifications: onMediaFragmentLoaded() and onMetricAdded(). It is
-     * possible that the quality for the downloaded segment was lower (not higher) than the quality indicated by BOLA.
+     * possible that the quality for the downloaded segment was lower (not higher) than the quality indicated by
+     * BOLA.<br>
      * This might happen because of other rules such as the DroppedFramesRule. When this happens, we trim the
      * placeholder buffer to make BOLA more stable. This mechanism also avoids inflating the buffer when BOLA itself
      * decides not to increase the quality to avoid oscillations.
      *
      * We should also check for replacement segments (fast switching). In this case, a segment is downloaded but does
-     * not grow the actual buffer. Fast switching might cause the buffer to deplete, causing BOLA to drop the bitrate.
+     * not grow the actual buffer. Fast switching might cause the buffer to deplete, causing BOLA to drop the
+     * bitrate.<br>
      * We avoid this by growing the placeholder buffer.
      * @param bolaState
      * @param mediaType
@@ -357,7 +359,7 @@ function BolaRule(config) {
 
 
     /**
-     *  The placeholder buffer increases the effective buffer that is used to calculate the bitrate.
+     *  The placeholder buffer increases the effective buffer that is used to calculate the bitrate.<br>
      *  There are two main reasons we might want to increase the placeholder buffer:
      *
      *  1. When a segment finishes downloading, we would expect to get a call on getSwitchRequest() regarding the

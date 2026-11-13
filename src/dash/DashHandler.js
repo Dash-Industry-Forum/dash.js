@@ -407,7 +407,7 @@ function DashHandler(config) {
     }
 
     /**
-     * This function returns a time larger than the current time for which we can generate a request.
+     * This function returns a time larger than the current time for which we can generate a request.<br>
      * This is useful in scenarios in which the user seeks into a gap in a dynamic Timeline manifest. We will not find
      * a valid request then and need to adjust the seektime.
      * @param {number} time

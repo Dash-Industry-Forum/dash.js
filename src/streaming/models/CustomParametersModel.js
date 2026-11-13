@@ -155,9 +155,9 @@ function CustomParametersModel() {
 
     /**
      * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter
-     * and/or request data.
+     * and/or request data.<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
-     * completed.
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license request filter callback
      */
@@ -168,7 +168,7 @@ function CustomParametersModel() {
     /**
      * Registers a certificate response filter. This enables application to manipulate/overwrite the response data<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
-     * completed.
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license response filter callback
      */
@@ -210,9 +210,9 @@ function CustomParametersModel() {
 
     /**
      * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or
-     * request data.
+     * request data.<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
-     * completed.
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license request filter callback
      */
@@ -223,7 +223,7 @@ function CustomParametersModel() {
     /**
      * Registers a license response filter. This enables application to manipulate/overwrite the response data<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
-     * completed.
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license response filter callback
      */
@@ -256,9 +256,9 @@ function CustomParametersModel() {
     }
 
     /**
-     * Registers a custom capabilities filter. This enables application to filter representations to use.
+     * Registers a custom capabilities filter. This enables application to filter representations to use.<br>
      * The provided callback function shall return a boolean or promise resolving to a boolean based on whether or not
-     * to use the representation.
+     * to use the representation.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the custom capabilities filter callback
      */
@@ -355,9 +355,9 @@ function CustomParametersModel() {
 
     /**
      * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter
-     * and/or request data.
+     * and/or request data.<br>
      * The provided callback function shall return a promise with updated request that shall be resolved once the
-     * process of the request is completed.
+     * process of the request is completed.<br>
      * The interceptors are applied in the order they are added.
      * @param {function} interceptor - the request interceptor callback
      */
@@ -368,7 +368,7 @@ function CustomParametersModel() {
     /**
      * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data<br>
      * The provided callback function shall return a promise with updated response that shall be resolved once the
-     * process of the response is completed.
+     * process of the response is completed.<br>
      * The interceptors are applied in the order they are added.
      * @param {function} interceptor - the response interceptor callback
      */

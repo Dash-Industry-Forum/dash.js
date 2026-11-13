@@ -260,8 +260,7 @@ function CatchupController() {
                 const minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRates.max);
 
                 // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't
-                // overload element with playbackrate changes)
-                // non-null
+                // overload element with playbackrate changes). newRate must be non-null.
                 if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange || newRate == 1.0) {
                     logger.debug(`[CatchupController]: Setting playback rate to ${newRate}`);
                     videoModel.setPlaybackRate(newRate);

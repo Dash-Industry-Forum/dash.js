@@ -241,10 +241,10 @@ function ScheduleController(config) {
     }
 
     /**
-     * Returns the buffered time between the current playback time and the end of the last requested segment.
+     * Returns the buffered time between the current playback time and the end of the last requested segment.<br>
      * In contrast to the buffer level this includes media behind a gap in the buffer, e.g. caused by segments without
      * samples. Otherwise, we would continue buffering until the end of the content as the buffer level never reaches
-     * the buffer target.
+     * the buffer target.<br>
      * Media behind a gap does not count as long as another track has data further ahead and the tracks do not overlap
      * behind the gap yet. Otherwise, the GapController has no range to jump to, e.g. if the audio gap ends after the
      * video gap. Buffering further creates the overlap.
@@ -389,13 +389,13 @@ function ScheduleController(config) {
     }
 
     /**
-     * Returns the time between the current playback time and the end of the appended video data.
+     * Returns the time between the current playback time and the end of the appended video data.<br>
      * In contrast to the video buffer level this includes video behind a gap in the video buffer, e.g. caused by
-     * segments without samples.
+     * segments without samples.<br>
      * The buffered ranges of the video element are the intersection of all SourceBuffers. If audio stops at the video
-     * gap, the GapController can not jump it.
+     * gap, the GapController can not jump it.<br>
      * The value is limited to the buffer target audio would use on its own. Otherwise, a large gap would make audio
-     * buffer the whole gap duration, which can exceed the SourceBuffer quota.
+     * buffer the whole gap duration, which can exceed the SourceBuffer quota.<br>
      * Video gaps larger than that limit are not covered by audio and can not be jumped.
      * @return {number}
      * @private

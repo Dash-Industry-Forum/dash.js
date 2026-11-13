@@ -89,10 +89,10 @@ function CustomParametersApi() {
     }
 
     /**
-     * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.
+     * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.<br>
      * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
      * <p>If you have exposed the Date header, use the method
-     * {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}.
+     * {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}.<br>
      * This will allow the date header on the manifest to be used instead of a time server</p>
      * @param {string} schemeIdUri - <ul>
      * <li>urn:mpeg:dash:utc:http-head:2014</li>
@@ -200,9 +200,9 @@ function CustomParametersApi() {
     }
 
     /**
-     * Registers a custom capabilities filter. This enables application to filter representations to use.
+     * Registers a custom capabilities filter. This enables application to filter representations to use.<br>
      * The provided callback function shall return either a boolean or a promise resolving to a boolean based on whether
-     * or not to use the representation.
+     * or not to use the representation.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the custom capabilities filter callback
      * @memberof module:MediaPlayer
@@ -281,9 +281,9 @@ function CustomParametersApi() {
 
     /**
      * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter
-     * and/or request data.
+     * and/or request data.<br>
      * The provided callback function shall return a promise with updated request that shall be resolved once the
-     * process of the request is completed.
+     * process of the request is completed.<br>
      * The interceptors are applied in the order they are added.
      * @param {function} interceptor - the request interceptor callback
      * @memberof module:MediaPlayer
@@ -306,7 +306,7 @@ function CustomParametersApi() {
     /**
      * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data<br>
      * The provided callback function shall return a promise with updated response that shall be resolved once the
-     * process of the response is completed.
+     * process of the response is completed.<br>
      * The interceptors are applied in the order they are added.
      * @param {function} interceptor - the response interceptor
      * @memberof module:MediaPlayer
@@ -328,9 +328,9 @@ function CustomParametersApi() {
 
     /**
      * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter
-     * and/or request data.
+     * and/or request data.<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
-     * completed.
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license request filter callback
      * @memberof module:MediaPlayer
@@ -343,7 +343,7 @@ function CustomParametersApi() {
     /**
      * Registers a certificate response filter. This enables application to manipulate/overwrite the response data<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
-     * completed.
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license response filter callback
      * @memberof module:MediaPlayer
@@ -375,9 +375,9 @@ function CustomParametersApi() {
 
     /**
      * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or
-     * request data.
+     * request data.<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
-     * completed.
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license request filter callback
      * @memberof module:MediaPlayer
@@ -390,7 +390,7 @@ function CustomParametersApi() {
     /**
      * Registers a license response filter. This enables application to manipulate/overwrite the response data<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
-     * completed.
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license response filter callback
      * @memberof module:MediaPlayer

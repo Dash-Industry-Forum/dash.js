@@ -295,7 +295,7 @@ function CmcdController() {
 
     /**
      * Per the CMCD v2 specification, error codes are buffered per report destination and reported
-     * as an inner list of strings with the next report to that destination, e.g. ec=("16" "27").
+     * as an inner list of strings with the next report to that destination, e.g. ec=("16" "27").<br>
      * Codes a destination does not report (e.g. ec not in its enabled keys) are dropped with that report.
      * @param {string[]} errorCodes - The buffer of the report destination, emptied by this call
      * @param {object} data - The report data
@@ -430,11 +430,11 @@ function CmcdController() {
     }
 
     /**
-     * Applies CMCD data to a request by decorating its URL and/or headers.
+     * Applies CMCD data to a request by decorating its URL and/or headers.<br>
      * Delegates to CmcdReporter.createRequestReport() which handles
      * transmission mode (query vs header) internally.
      *
-     * @param {object} request - The request object with at least { url, type }.
+     * @param {object} request - The request object with at least { url, type }.<br>
      *                           Will be mutated with CMCD-decorated url/headers.
      * @return {boolean} True if the request was decorated
      */

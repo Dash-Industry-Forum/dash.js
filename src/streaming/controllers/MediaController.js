@@ -860,7 +860,7 @@ function MediaController() {
     }
 
     /**
-     * Returns all MediaInfo objects that have at least one bitrate that fulfills the constraint.
+     * Returns all MediaInfo objects that have at least one bitrate that fulfills the constraint.<br>
      * If all fail the constraint we return the original array.
      * @param {MediaInfo[]} mediaInfos
      * @return {MediaInfo[]}

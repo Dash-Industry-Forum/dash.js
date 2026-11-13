@@ -327,7 +327,7 @@ function ServiceDescriptionController() {
     }
 
     /**
-     * Calculates an array of time offsets each with matching ProducerReferenceTime id.
+     * Calculates an array of time offsets each with matching ProducerReferenceTime id.<br>
      * Call before applyServiceDescription if producer reference time elements should be considered.
      * @param {array} streamInfos
      * @returns {array}

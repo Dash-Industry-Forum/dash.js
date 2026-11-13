@@ -349,7 +349,7 @@ function RepresentationController(config) {
 
     /**
      * We get the new selected Representation which will not hold the ranges and the segment references in case of
-     * SegmentBase.
+     * SegmentBase.<br>
      * In any case use the id to find the right Representation instance in our array of Representations.
      * @param newRep
      */
@@ -364,7 +364,7 @@ function RepresentationController(config) {
     }
 
     /**
-     * Loads the segment list of a SegmentBase Representation that was skipped in updateData().
+     * Loads the segment list of a SegmentBase Representation that was skipped in updateData().<br>
      * Concurrent calls for the same Representation share one request.
      * @param newRep
      * @return {Promise|null} resolves with the Representation instance once the load settled, null if nothing has to

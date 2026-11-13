@@ -651,7 +651,7 @@ function StreamController() {
 
     /**
      * A playback seeking event was triggered. We need to disable the preloading streams and call the respective seeking
-     * handler.
+     * handler.<br>
      * We distinguish between inner period seeks and outer period seeks
      * @param {object} e
      * @private
@@ -680,10 +680,10 @@ function StreamController() {
 
     /**
      * A seek to a time at or beyond the end of the last period is not assigned to any stream. Route it to the last
-     * stream and clamp the seek target to slightly before the end of the content, so playback can end there.
+     * stream and clamp the seek target to slightly before the end of the content, so playback can end there.<br>
      * A playhead resting exactly at the (post endOfStream) MediaSource duration is in the "ended" state, where play()
      * restarts from the beginning instead of finishing playback, and seeking to the exact duration does not complete
-     * reliably.
+     * reliably.<br>
      * Static manifests only: on a dynamic manifest with a finite announced duration (planned-end live event) the last
      * period's end can lie beyond the current live edge, and clamping would actively park the playhead in a region
      * without segments. Live seek targets are constrained by the DVR window logic instead.
@@ -921,7 +921,7 @@ function StreamController() {
 
     /**
      * The buffer level for a certain media type has been updated. If this is the initial playback and we want to
-     * autoplay the content we check if we can start playback now.
+     * autoplay the content we check if we can start playback now.<br>
      * For livestreams we might have a drift of the target live delay compared to the current live delay because
      * reaching the initial buffer level took time.
      * @param {object} e
@@ -1176,7 +1176,7 @@ function StreamController() {
 
     /**
      * Returns the next stream to be played relative to the stream provided. If no stream is provided we use the active
-     * stream.
+     * stream.<br>
      * In order to avoid rounding issues we should not use the duration of the periods. Instead find the stream with
      * starttime closest to startTime of the previous stream.
      * @param {object} stream
@@ -1449,7 +1449,7 @@ function StreamController() {
 
     /**
      * Callback handler after the manifest has been updated. Trigger an update in the adapter and filter unsupported
-     * stuff.
+     * stuff.<br>
      * Finally, attempt UTC sync
      * @param {object} e
      * @private

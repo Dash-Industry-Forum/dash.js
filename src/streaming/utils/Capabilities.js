@@ -161,8 +161,8 @@ function Capabilities() {
     }
 
     /**
-     * Checks whether a codec is supported according to the previously tested configurations.
-     * Note that you need to call runCodecSupportCheck() first to populate the testedCodecConfigurations array.
+     * Checks whether a codec is supported according to the previously tested configurations.<br>
+     * Note that you need to call runCodecSupportCheck() first to populate the testedCodecConfigurations array.<br>
      * This function only validates codec support based on previously tested configurations.
      * @param basicConfiguration
      * @param type

@@ -44,7 +44,7 @@ class KeySystemConfiguration {
      * @param {Array.<MediaCapability>} videoCapabilities array of
      * desired video capabilities.  Higher preference capabilities should be placed earlier
      * in the array.
-     * @param {string} distinctiveIdentifier desired use of distinctive identifiers.
+     * @param {string} distinctiveIdentifier desired use of distinctive identifiers.<br>
      * One of "required", "optional", or "not-allowed"
      * @param {string} persistentState desired support for persistent storage of
      * key systems.  One of "required", "optional", or "not-allowed"

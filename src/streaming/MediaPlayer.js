@@ -111,14 +111,14 @@ function MediaPlayer() {
     }
 
     /**
-     * This method should be used to extend or replace internal dash.js objects.
+     * This method should be used to extend or replace internal dash.js objects.<br>
      * There are two ways to extend dash.js (determined by the override argument):
      * <ol>
      * <li>If you set override to true any public method or property in your custom object will
      * override the dash.js parent object's property(ies) and will be used instead but the
      * dash.js parent module will still be created.</li>
      *
-     * <li>If you set override to false your object will completely replace the dash.js object.
+     * <li>If you set override to false your object will completely replace the dash.js object.<br>
      * (Note: This is how it was in 1.x of Dash.js with Dijon).</li>
      * </ol>
      * <b>When you extend you get access to this.context, this.factory and this.parent to operate with in your custom

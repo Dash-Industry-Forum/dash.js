@@ -85,7 +85,7 @@
 
 /**
  * For some key systems, the CDM message contains HTTP headers that
- * can be parsed by the application and attached to the license request.
+ * can be parsed by the application and attached to the license request.<br>
  * Returns a header object with key/value pairs as object properties/values
  *
  * @function

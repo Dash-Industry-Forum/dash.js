@@ -816,7 +816,7 @@ function AbrController() {
     }
 
     /**
-     * This function is called by the scheduleControllers to check if the quality should be changed.
+     * This function is called by the scheduleControllers to check if the quality should be changed.<br>
      * Consider this the main entry point for the ABR decision logic
      * @param {string} type
      * @param {string} streamId
@@ -932,7 +932,7 @@ function AbrController() {
     }
 
     /**
-     * Sets the new playback quality. Starts from index 0.
+     * Sets the new playback quality. Starts from index 0.<br>
      * If the index of the new quality is the same as the old one changeQuality will not be called.
      * @param {string} type
      * @param {object} streamInfo

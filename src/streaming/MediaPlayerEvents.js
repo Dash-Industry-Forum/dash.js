@@ -43,7 +43,7 @@ class MediaPlayerEvents extends EventsBase {
         super();
         /**
          * Triggered when playback will not start yet
-         * as the MPD's availabilityStartTime is in the future.
+         * as the MPD's availabilityStartTime is in the future.<br>
          * Check delay property in payload to determine time before playback will start.
          * @event MediaPlayerEvents#AST_IN_FUTURE
          */
@@ -56,14 +56,14 @@ class MediaPlayerEvents extends EventsBase {
         this.BASE_URLS_UPDATED = 'baseUrlsUpdated';
 
         /**
-         * Triggered when the video element's buffer state changes to stalled.
+         * Triggered when the video element's buffer state changes to stalled.<br>
          * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
          * @event MediaPlayerEvents#BUFFER_EMPTY
          */
         this.BUFFER_EMPTY = 'bufferStalled';
 
         /**
-         * Triggered when the video element's buffer state changes to loaded.
+         * Triggered when the video element's buffer state changes to loaded.<br>
          * Check mediaType in payload to determine type (Video, Audio, FragmentedText).
          * @event MediaPlayerEvents#BUFFER_LOADED
          */
@@ -338,7 +338,7 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_ERROR = 'playbackError';
 
         /**
-         * This event is fired once the playback has been initialized by MediaPlayer.js.
+         * This event is fired once the playback has been initialized by MediaPlayer.js.<br>
          * After that event methods such as setTextTrack() can be used.
          * @event MediaPlayerEvents#PLAYBACK_INITIALIZED
          */
