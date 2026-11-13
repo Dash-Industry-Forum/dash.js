@@ -1,3 +1,5 @@
+const { commonBaseConfig } = require('../../../build/webpack/common/webpack.common.base.cjs');
+
 module.exports = function (config) {
     // Coverage instrumentation slows down compilation and execution considerably,
     // so it is only enabled when the COVERAGE environment variable is set.
@@ -71,6 +73,7 @@ module.exports = function (config) {
 
 
         webpack: {
+            plugins: commonBaseConfig.plugins,
             module: {
                 rules: [
                     {
@@ -92,7 +95,6 @@ module.exports = function (config) {
             },
             resolve: {
                 fallback: {
-                    stream: require.resolve('stream-browserify'),
                     timers: require.resolve('timers-browserify'),
                 },
             },
