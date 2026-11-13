@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C2PA provenance validation</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+
+    <style>
+        .c2pa-summary {
+            margin-top: 12px;
+            font-size: 0.9em;
+        }
+        .c2pa-grid-row {
+            margin-top: 8px;
+        }
+        .c2pa-grid-label {
+            font-size: 0.75em;
+            font-weight: 600;
+            opacity: 0.7;
+        }
+        .c2pa-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 2px;
+            max-height: 110px;
+            overflow-y: auto;
+        }
+        .c2pa-chip {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            font-size: 0.75em;
+            cursor: pointer;
+            color: #fff;
+        }
+        .c2pa-chip.valid { background: #2e7d32; }
+        .c2pa-chip.invalid { background: #c62828; }
+        .c2pa-chip.replayed,
+        .c2pa-chip.reordered,
+        .c2pa-chip.missing { background: #ef6c00; }
+        .c2pa-chip.continuityInvalid { background: #ad1457; }
+        .c2pa-chip.continuityUnsupported { background: #f9a825; color: #000; }
+        .c2pa-chip.unverified { background: #757575; }
+        .c2pa-details {
+            margin-top: 12px;
+            padding: 8px;
+            border: 1px solid var(--bs-border-color, #ccc);
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8em;
+            white-space: pre-wrap;
+            min-height: 60px;
+        }
+    </style>
+</head>
+<body>
+
+<script class="code">
+    // C2PA validation is delivered through the public dash.js event system. This sample
+    // enables the off-by-default `streaming.c2pa` capability, lets the operator pick the
+    // signing method at runtime, and renders a per-segment provenance indicator.
+    var STATUS_ICONS = {
+        valid: '✅',            // check mark
+        invalid: '❌',          // cross mark
+        replayed: '♻',         // recycle
+        reordered: '⇅',        // up-down arrows
+        missing: '⁉',          // gap
+        continuityInvalid: '🔗', // broken continuity link, hash still valid
+        continuityUnsupported: '⚠', // unrecognized continuity method, hash still valid
+        unverified: '❔'        // question mark
+    };
+
+    var STATUS_MESSAGES = {
+        continuityUnsupported: 'This segment\'s continuity method isn\'t recognized: this player only ' +
+            'implements the spec-default (manifest ID chain, §19.7.2). The content is still authentic ' +
+            '(its hash is valid), but continuity to the previous segment couldn\'t be confirmed.'
+    };
+
+    var player = null;
+    var videoElement = null;
+    var wrapperElement = null;
+
+    function initC2paSample(video, wrapper) {
+        videoElement = video;
+        wrapperElement = wrapper;
+
+        document.getElementById('c2pa-load').addEventListener('click', reload);
+        document.getElementById('c2pa-enabled').addEventListener('change', onEnabledChange);
+        document.getElementById('c2pa-method').addEventListener('change', onMethodChange);
+        document.querySelectorAll('.c2pa-example').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('c2pa-url').value = btn.dataset.url;
+                reload();
+            });
+        });
+
+        reload();
+    }
+
+    function readOptions() {
+        return {
+            url: document.getElementById('c2pa-url').value.trim(),
+            enabled: document.getElementById('c2pa-enabled').checked,
+            method: document.getElementById('c2pa-method').value
+        };
+    }
+
+    // Full (re)load: the interceptor is registered during initialization, so a new source
+    // is attached with a fresh player. Toggling enable/method afterwards is handled live.
+    function reload() {
+        var options = readOptions();
+        if (player) {
+            player.destroy();
+            player = null;
+        }
+        resetPanel();
+        if (!options.url) {
+            setSummary('Enter a signed DASH stream URL and press Load.');
+            return;
+        }
+
+        player = dashjs.MediaPlayer().create();
+        player.updateSettings({
+            streaming: {
+                c2pa: {
+                    enabled: options.enabled,
+                    method: options.method
+                }
+            }
+        });
+        subscribeToC2paEvents(player);
+        player.initialize(videoElement, options.url, true);
+        window.createControlBar(player, videoElement, wrapperElement);
+    }
+
+    // Runtime toggle: the C2paController reacts to the enabled-setting change and
+    // registers / detaches the scanning interceptor without reloading.
+    function onEnabledChange() {
+        if (!player) {
+            return;
+        }
+        player.updateSettings({ streaming: { c2pa: { enabled: document.getElementById('c2pa-enabled').checked } } });
+    }
+
+    // The coordinator reads the method per segment, so a change takes effect live.
+    function onMethodChange() {
+        if (!player) {
+            return;
+        }
+        player.updateSettings({ streaming: { c2pa: { method: document.getElementById('c2pa-method').value } } });
+    }
+
+    function subscribeToC2paEvents(activePlayer) {
+        var events = dashjs.MediaPlayer.events;
+        activePlayer.on(events.C2PA_INIT_PROCESSED, onInitProcessed);
+        activePlayer.on(events.C2PA_SEGMENT_VALIDATED, onSegmentValidated);
+        activePlayer.on(events.C2PA_ERROR, onC2paError);
+    }
+
+    function onInitProcessed(e) {
+        var methodLabel = e.method ? ('§' + e.method) : 'no provenance';
+        setSummary(
+            'Track ' + e.trackKey + ' — ' + methodLabel +
+            ' | manifest: ' + (e.manifestId || '—') +
+            ' | issuer: ' + (e.issuer || '—') +
+            ' | session keys: ' + e.sessionKeyCount +
+            ' | valid: ' + e.isValid
+        );
+    }
+
+    var MAX_VISIBLE_SEGMENT_CHIPS = 300;
+
+    function onSegmentValidated(e) {
+        var chip = document.createElement('div');
+        chip.className = 'c2pa-chip ' + e.status;
+        chip.textContent = STATUS_ICONS[e.status] || '?';
+        chip.title = 'segment ' + e.segmentNumber + ' (' + e.mediaType + ')';
+        chip.addEventListener('click', function () {
+            showDetails(e);
+        });
+        // A separate row per media type, so a track validating both video and audio
+        // doesn't read as one jumbled interleaved sequence.
+        var grid = document.getElementById('c2pa-grid-' + e.mediaType) || document.getElementById('c2pa-grid-video');
+        grid.appendChild(chip);
+        while (grid.childElementCount > MAX_VISIBLE_SEGMENT_CHIPS) {
+            grid.removeChild(grid.firstElementChild);
+        }
+    }
+
+    function onC2paError(e) {
+        showDetails(e);
+    }
+
+    function showDetails(record) {
+        var message = STATUS_MESSAGES[record.status];
+        var json = JSON.stringify(record, null, 2);
+        document.getElementById('c2pa-details').textContent = message ? (message + '\n\n' + json) : json;
+    }
+
+    function setSummary(text) {
+        document.getElementById('c2pa-summary').textContent = text;
+    }
+
+    function resetPanel() {
+        document.getElementById('c2pa-grid-video').innerHTML = '';
+        document.getElementById('c2pa-grid-audio').innerHTML = '';
+        document.getElementById('c2pa-details').textContent = '';
+        setSummary('');
+    }
+</script>
+
+<script type="module">
+    import {initSamplePage} from '../lib/sample-template.js';
+
+    var sidePanel =
+        '<div class="sample-side-panel">' +
+        '  <div class="sample-side-panel-header">C2PA controls</div>' +
+        '  <div class="sample-side-panel-body">' +
+        '    <label for="c2pa-url">Signed DASH stream (MPD)</label>' +
+        '    <input type="text" id="c2pa-url" placeholder="https://.../manifest.mpd">' +
+        '    <div>' +
+        '      <button type="button" class="btn btn-link btn-sm p-0 c2pa-example" ' +
+        '        data-url="https://live.unified-streaming.com/trusted_media/wdr.ism/.mpd">§19.4 VSI example</button>' +
+        '      &nbsp;|&nbsp;' +
+        '      <button type="button" class="btn btn-link btn-sm p-0 c2pa-example" ' +
+        '        data-url="https://ezdrm-live-signer-dash-outputbucket-sykaqzo1yxog.s3.us-east-1.amazonaws.com/processed/stream.mpd">§19.3 Manifest Box example</button>' +
+        '    </div>' +
+        '    <label for="c2pa-enabled"><input type="checkbox" id="c2pa-enabled" checked> Enable C2PA checking</label>' +
+        '    <label for="c2pa-method">Method</label>' +
+        '    <select id="c2pa-method">' +
+        '      <option value="auto">auto (detect)</option>' +
+        '      <option value="19.3">19.3 (Manifest Box)</option>' +
+        '      <option value="19.4">19.4 (VSI)</option>' +
+        '    </select>' +
+        '    <button type="button" id="c2pa-load" class="btn btn-primary btn-sm" style="margin-top:10px;">Load</button>' +
+        '    <div class="c2pa-summary" id="c2pa-summary"></div>' +
+        '    <div class="c2pa-grid-row">' +
+        '      <div class="c2pa-grid-label">Video</div>' +
+        '      <div class="c2pa-grid" id="c2pa-grid-video"></div>' +
+        '    </div>' +
+        '    <div class="c2pa-grid-row">' +
+        '      <div class="c2pa-grid-label">Audio</div>' +
+        '      <div class="c2pa-grid" id="c2pa-grid-audio"></div>' +
+        '    </div>' +
+        '    <div class="c2pa-details" id="c2pa-details"></div>' +
+        '  </div>' +
+        '</div>';
+
+    initSamplePage({
+        title: 'C2PA provenance validation',
+        description: 'Validates C2PA provenance of a live DASH stream per segment. Enable checking, ' +
+            'pick the signing method (auto / §19.3 Manifest Box / §19.4 VSI), and load a signed ' +
+            'stream to see a per-segment ✅ / ❌ / ⚠ indicator; click a segment for its manifest id, ' +
+            'issuer and error codes. Enable/disable and method changes take effect at runtime. Requires a ' +
+            'C2PA-signed DASH stream (e.g. §19.3 segments signed with c2patool, or a custom §19.4 VSI signer).',
+        category: 'C2PA',
+        sidePanel: sidePanel,
+        onInit: (video, container, wrapper) => initC2paSample(video, wrapper)
+    });
+</script>
+</body>
+</html>
