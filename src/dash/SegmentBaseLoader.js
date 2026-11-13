@@ -200,7 +200,8 @@ function SegmentBaseLoader() {
             if (!sidx || !sidx.isComplete) {
                 if (sidx) {
                     info.range.start = sidx.offset || info.range.start;
-                    info.range.end = info.range.start + (sidx.size || extraBytes);
+                    // HTTP byte ranges are inclusive, so the box ends at start + size - 1.
+                    info.range.end = info.range.start + (sidx.size ? sidx.size - 1 : extraBytes);
                 } else if (loadedLength < info.bytesLoaded) {
                     // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
                     callback(null, representation, resolve);
@@ -235,6 +236,10 @@ function SegmentBaseLoader() {
                     const tmpCallback = function (index, result) {
                         if (!result) {
                             callback(null, representation, resolve);
+                            return;
+                        }
+                        // A repeated answer for the same child must not count towards completion.
+                        if (results[index] !== undefined) {
                             return;
                         }
                         // Child requests can complete in any order; the parent references define the segment order.

@@ -118,9 +118,21 @@ describe('SegmentBaseLoader', function () {
                 const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video', '0-55');
                 requests[0].success(parent);
                 requests[1].success(firstChild.slice(0, 40));
-                expect(requests[3].request.range).to.equal('56-100');
+                expect(requests[3].request.range).to.equal('56-99');
                 requests[2].success(secondChild);
                 requests[3].success(firstChild);
+
+                const { segments, error } = await loading;
+                expect(error).to.equal(undefined);
+                expect(segments.map((segment) => segment.mediaRange)).to.deep.equal(['144-243', '244-343']);
+            });
+
+            it('should wait for every child when one child reports more than once', async function () {
+                const loading = segmentBaseLoader.loadSegments({ path: { url: 'video.mp4' } }, 'video', '0-55');
+                requests[0].success(parent);
+                requests[1].success(firstChild);
+                requests[1].success(firstChild);
+                requests[2].success(secondChild);
 
                 const { segments, error } = await loading;
                 expect(error).to.equal(undefined);
