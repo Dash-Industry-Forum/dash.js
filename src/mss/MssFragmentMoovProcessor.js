@@ -141,7 +141,9 @@ function MssFragmentMoovProcessor(config) {
         createTrexBox(mvex);
 
         if (contentProtection && protectionController) {
-            let supportedKS = protectionController.getSupportedKeySystemMetadataFromContentProtection(contentProtection);
+            let supportedKS = protectionController.getSupportedKeySystemMetadataFromContentProtection(
+                contentProtection
+            );
             createProtectionSystemSpecificHeaderBox(moov, supportedKS);
         }
     }
@@ -155,7 +157,8 @@ function MssFragmentMoovProcessor(config) {
         mvhd.creation_time = 0; // the creation time of the presentation => ignore (set to 0)
         mvhd.modification_time = 0; // the most recent time the presentation was modified => ignore (set to 0)
         mvhd.timescale = timescale; // the time-scale for the entire presentation => 10000000 for MSS
-        mvhd.duration = period.duration === Infinity ? 0xFFFFFFFFFFFFFFFF : Math.round(period.duration * timescale); // the length of the presentation (in the indicated timescale) =>  take duration of period
+        // the length of the presentation (in the indicated timescale) =>  take duration of period
+        mvhd.duration = period.duration === Infinity ? 0xFFFFFFFFFFFFFFFF : Math.round(period.duration * timescale);
         mvhd.rate = 1.0; // 16.16 number, '1.0' = normal playback
         mvhd.volume = 1.0; // 8.8 number, '1.0' = full volume
         mvhd.reserved1 = 0;
@@ -166,7 +169,8 @@ function MssFragmentMoovProcessor(config) {
             0, 0, 16384
         ];
         mvhd.pre_defined = [0, 0, 0, 0, 0, 0];
-        mvhd.next_track_ID = trackId + 1; // indicates a value to use for the track ID of the next track to be added to this presentation
+        // indicates a value to use for the track ID of the next track to be added to this presentation
+        mvhd.next_track_ID = trackId + 1;
 
         return mvhd;
     }
@@ -184,9 +188,12 @@ function MssFragmentMoovProcessor(config) {
         tkhd.modification_time = 0; // the most recent time the presentation was modified => ignore (set to 0)
         tkhd.track_ID = trackId; // uniquely identifies this track over the entire life-time of this presentation
         tkhd.reserved1 = 0;
-        tkhd.duration = period.duration === Infinity ? 0xFFFFFFFFFFFFFFFF : Math.round(period.duration * timescale); // the duration of this track (in the timescale indicated in the Movie Header Box) =>  take duration of period
+        // the duration of this track (in the timescale indicated in the Movie Header Box) =>  take duration of period
+        tkhd.duration = period.duration === Infinity ? 0xFFFFFFFFFFFFFFFF : Math.round(period.duration * timescale);
         tkhd.reserved2 = [0x0, 0x0];
-        tkhd.layer = 0; // specifies the front-to-back ordering of video tracks; tracks with lower numbers are closer to the viewer => 0 since only one video track
+        // specifies the front-to-back ordering of video tracks; tracks with lower numbers are closer to the viewer
+        // => 0 since only one video track
+        tkhd.layer = 0;
         tkhd.alternate_group = 0; // specifies a group or collection of tracks => ignore
         tkhd.volume = 1.0; // '1.0' = full volume
         tkhd.reserved3 = 0;
@@ -210,7 +217,9 @@ function MssFragmentMoovProcessor(config) {
         mdhd.creation_time = 0; // the creation time of the presentation => ignore (set to 0)
         mdhd.modification_time = 0; // the most recent time the presentation was modified => ignore (set to 0)
         mdhd.timescale = timescale; // the time-scale for the entire presentation
-        mdhd.duration = period.duration === Infinity ? 0xFFFFFFFFFFFFFFFF : Math.round(period.duration * timescale); // the duration of this media (in the scale of the timescale). If the duration cannot be determined then duration is set to all 1s.
+        // the duration of this media (in the scale of the timescale). If the duration cannot be determined then
+        // duration is set to all 1s.
+        mdhd.duration = period.duration === Infinity ? 0xFFFFFFFFFFFFFFFF : Math.round(period.duration * timescale);
         mdhd.language = adaptationSet.lang || 'und'; // declares the language code for this media
         mdhd.pre_defined = 0;
 
@@ -245,7 +254,9 @@ function MssFragmentMoovProcessor(config) {
 
         vmhd.flags = 1;
 
-        vmhd.graphicsmode = 0; // specifies a composition mode for this video track, from the following enumerated set, which may be extended by derived specifications: copy = 0 copy over the existing image
+        // specifies a composition mode for this video track, from the following enumerated set, which may be
+        // extended by derived specifications: copy = 0 copy over the existing image
+        vmhd.graphicsmode = 0;
         vmhd.opcolor = [0, 0, 0]; // is a set of 3 colour values (red, green, blue) available for use by graphics modes
 
         return vmhd;
@@ -257,7 +268,9 @@ function MssFragmentMoovProcessor(config) {
 
         smhd.flags = 1;
 
-        smhd.balance = 0; // is a fixed-point 8.8 number that places mono audio tracks in a stereo space; 0 is centre (the normal value); full left is -1.0 and full right is 1.0.
+        // is a fixed-point 8.8 number that places mono audio tracks in a stereo space; 0 is centre (the normal
+        // value); full left is -1.0 and full right is 1.0.
+        smhd.balance = 0;
         smhd.reserved = 0;
 
         return smhd;
@@ -482,7 +495,8 @@ function MssFragmentMoovProcessor(config) {
 
     function createMPEG4AACESDescriptor() {
 
-        // AudioSpecificConfig (see ISO/IEC 14496-3, subpart 1) => corresponds to hex bytes contained in 'codecPrivateData' field
+        // AudioSpecificConfig (see ISO/IEC 14496-3, subpart 1) => corresponds to hex bytes contained in
+        // 'codecPrivateData' field
         let audioSpecificConfig = hexStringtoBuffer(representation.codecPrivateData);
 
         // ESDS length = esds box header length (= 12) +
@@ -633,9 +647,11 @@ function MssFragmentMoovProcessor(config) {
 
         period = adaptationSet.period;
         trackId = adaptationSet.index + 1;
-        contentProtection = period.mpd.manifest.Period[period.index].AdaptationSet[adaptationSet.index].ContentProtection;
+        contentProtection = period.mpd.manifest.Period[period.index].AdaptationSet[adaptationSet.index]
+            .ContentProtection;
 
-        timescale = period.mpd.manifest.Period[period.index].AdaptationSet[adaptationSet.index].SegmentTemplate.timescale;
+        timescale = period.mpd.manifest.Period[period.index].AdaptationSet[adaptationSet.index].SegmentTemplate
+            .timescale;
 
         isoFile = ISOBoxer.createFile();
         createFtypBox(isoFile);

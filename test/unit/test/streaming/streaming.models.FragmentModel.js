@@ -37,10 +37,14 @@ describe('FragmentModel', function () {
         const expectedValue = 0;
 
         expect(fragmentModel.getRequests().length).to.be.equal(expectedValue);
-        expect(fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING }).length).to.be.equal(expectedValue);
-        expect(fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_EXECUTED }).length).to.be.equal(expectedValue);
-        expect(fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_CANCELED }).length).to.be.equal(expectedValue);
-        expect(fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_FAILED }).length).to.be.equal(expectedValue);
+        expect(fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING }).length)
+            .to.be.equal(expectedValue);
+        expect(fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_EXECUTED }).length)
+            .to.be.equal(expectedValue);
+        expect(fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_CANCELED }).length)
+            .to.be.equal(expectedValue);
+        expect(fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_FAILED }).length)
+            .to.be.equal(expectedValue);
     });
 
     it('should return false when isFragmentLoaded is called and request is undefined', () => {

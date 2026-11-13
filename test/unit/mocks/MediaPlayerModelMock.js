@@ -32,8 +32,8 @@ import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest.js';
 
 
 const DEFAULT_UTC_TIMING_SOURCE = {
-    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
-    value: 'http://time.akamai.com/?iso&ms'
+    scheme: 'urn:mpeg:dash:utc:http-iso:2014',
+    value: 'https://time.akamai.com/?iso&ms'
 };
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
@@ -150,11 +150,15 @@ class MediaPlayerModelMock {
     }
 
     getBufferTimeDefault() {
-        return this.bufferTimeDefault > -1 ? this.bufferTimeDefault : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return this.bufferTimeDefault > -1
+            ? this.bufferTimeDefault
+            : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     getBufferTimeDefaultUnadjusted() {
-        return this.bufferTimeDefault > -1 ? this.bufferTimeDefault : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return this.bufferTimeDefault > -1
+            ? this.bufferTimeDefault
+            : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     setRetryAttemptsForType(type, value) {

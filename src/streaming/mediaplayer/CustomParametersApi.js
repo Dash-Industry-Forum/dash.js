@@ -45,11 +45,12 @@ function CustomParametersApi() {
     }
 
     /**
-     * Add a custom ABR Rule
+     * Add a custom ABR Rule<br>
      * Rule will be apply on next stream if a stream is being played
      *
      * @param {string} type - rule type (one of ['qualitySwitchRules','abandonFragmentRules'])
-     * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added, then existing rule will be updated
+     * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added,
+     * then existing rule will be updated
      * @param {object} rule - the rule object instance
      * @memberof module:MediaPlayer
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
@@ -88,9 +89,10 @@ function CustomParametersApi() {
     }
 
     /**
-     * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.
+     * <p>Allows you to set a scheme and server source for UTC live edge detection for dynamic streams.<br>
      * If UTCTiming is defined in the manifest, it will take precedence over any time source manually added.</p>
-     * <p>If you have exposed the Date header, use the method {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}.
+     * <p>If you have exposed the Date header, use the method
+     * {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}.<br>
      * This will allow the date header on the manifest to be used instead of a time server</p>
      * @param {string} schemeIdUri - <ul>
      * <li>urn:mpeg:dash:utc:http-head:2014</li>
@@ -109,8 +111,8 @@ function CustomParametersApi() {
      * @param {string} value - Path to a time source.
      * @default
      * <ul>
-     *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-     *     <li>value:http://time.akamai.com/?iso&ms/li>
+     *     <li>schemeIdUri:urn:mpeg:dash:utc:http-iso:2014</li>
+     *     <li>value:https://time.akamai.com/?iso&ms</li>
      * </ul>
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#removeUTCTimingSource removeUTCTimingSource()}
@@ -121,13 +123,15 @@ function CustomParametersApi() {
     }
 
     /**
-     * <p>Allows you to remove a UTC time source. Both schemeIdUri and value need to match the Dash.vo.UTCTiming properties in order for the
+     * <p>Allows you to remove a UTC time source. Both schemeIdUri and value need to match the Dash.vo.UTCTiming
+     * properties in order for the
      * entry to be removed from the array</p>
      * @param {string} schemeIdUri - see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
      * @param {string} value - see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, schemeIdUri and value are not string type.
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, schemeIdUri and
+     * value are not string type.
      * @instance
      */
     function removeUTCTimingSource(schemeIdUri, value) {
@@ -138,7 +142,8 @@ function CustomParametersApi() {
      * <p>Allows you to clear the stored array of time sources.</p>
      * <p>Example use: If you have exposed the Date header, calling this method
      * will allow the date header on the manifest to be used instead of the time server.</p>
-     * <p>Example use: Calling this method, assuming there is not an exposed date header on the manifest,  will default back
+     * <p>Example use: Calling this method, assuming there is not an exposed date header on the manifest,  will default
+     * back
      * to using a binary search to discover the live edge</p>
      *
      * @memberof module:MediaPlayer
@@ -150,12 +155,13 @@ function CustomParametersApi() {
     }
 
     /**
-     * <p>Allows you to restore the default time sources after calling {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}</p>
+     * <p>Allows you to restore the default time sources after calling
+     * {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}</p>
      *
      * @default
      * <ul>
-     *     <li>schemeIdUri:urn:mpeg:dash:utc:http-xsdate:2014</li>
-     *     <li>value:http://time.akamai.com/?iso&ms</li>
+     *     <li>schemeIdUri:urn:mpeg:dash:utc:http-iso:2014</li>
+     *     <li>value:https://time.akamai.com/?iso&ms</li>
      * </ul>
      *
      * @memberof module:MediaPlayer
@@ -194,8 +200,9 @@ function CustomParametersApi() {
     }
 
     /**
-     * Registers a custom capabilities filter. This enables application to filter representations to use.
-     * The provided callback function shall return either a boolean or a promise resolving to a boolean based on whether or not to use the representation.
+     * Registers a custom capabilities filter. This enables application to filter representations to use.<br>
+     * The provided callback function shall return either a boolean or a promise resolving to a boolean based on whether
+     * or not to use the representation.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the custom capabilities filter callback
      * @memberof module:MediaPlayer
@@ -216,7 +223,8 @@ function CustomParametersApi() {
     }
 
     /**
-     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
+     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will
+     * overwrite a potentially existing function.
      * @param {function} customFunc - the custom function that returns the initial track
      * @memberof module:MediaPlayer
      * @instance
@@ -272,8 +280,10 @@ function CustomParametersApi() {
     }
 
     /**
-     * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
-     * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
+     * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter
+     * and/or request data.<br>
+     * The provided callback function shall return a promise with updated request that shall be resolved once the
+     * process of the request is completed.<br>
      * The interceptors are applied in the order they are added.
      * @param {function} interceptor - the request interceptor callback
      * @memberof module:MediaPlayer
@@ -294,8 +304,9 @@ function CustomParametersApi() {
     }
 
     /**
-     * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
-     * The provided callback function shall return a promise with updated response that shall be resolved once the process of the response is completed.
+     * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data<br>
+     * The provided callback function shall return a promise with updated response that shall be resolved once the
+     * process of the response is completed.<br>
      * The interceptors are applied in the order they are added.
      * @param {function} interceptor - the response interceptor
      * @memberof module:MediaPlayer
@@ -316,8 +327,10 @@ function CustomParametersApi() {
     }
 
     /**
-     * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter
+     * and/or request data.<br>
+     * The provided callback function shall return a promise that shall be resolved once the filter process is
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license request filter callback
      * @memberof module:MediaPlayer
@@ -328,8 +341,9 @@ function CustomParametersApi() {
     }
 
     /**
-     * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * Registers a certificate response filter. This enables application to manipulate/overwrite the response data<br>
+     * The provided callback function shall return a promise that shall be resolved once the filter process is
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license response filter callback
      * @memberof module:MediaPlayer
@@ -360,8 +374,10 @@ function CustomParametersApi() {
     }
 
     /**
-     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or
+     * request data.<br>
+     * The provided callback function shall return a promise that shall be resolved once the filter process is
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license request filter callback
      * @memberof module:MediaPlayer
@@ -372,8 +388,9 @@ function CustomParametersApi() {
     }
 
     /**
-     * Registers a license response filter. This enables application to manipulate/overwrite the response data
-     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * Registers a license response filter. This enables application to manipulate/overwrite the response data<br>
+     * The provided callback function shall return a promise that shall be resolved once the filter process is
+     * completed.<br>
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license response filter callback
      * @memberof module:MediaPlayer

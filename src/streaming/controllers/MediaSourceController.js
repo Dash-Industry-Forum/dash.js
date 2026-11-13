@@ -109,7 +109,9 @@ function MediaSourceController() {
         }
 
         if (!_isBufferUpdating(mediaSource)) {
-            // Setting the duration below the highest presentation timestamp of any buffered coded frames throws an InvalidStateError. Clamp the duration to the highest buffered end time, for instance when applying the final duration after a transition from dynamic to static.
+            // Setting the duration below the highest presentation timestamp of any buffered coded frames throws an
+            // InvalidStateError. Clamp the duration to the highest buffered end time, for instance when applying the
+            // final duration after a transition from dynamic to static.
             const highestBufferedEnd = _getHighestBufferedEnd(mediaSource);
             if (highestBufferedEnd > value) {
                 value = highestBufferedEnd;

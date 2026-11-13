@@ -103,7 +103,8 @@ function MssFragmentInfoController(config) {
         // Get last segment from SegmentTimeline
         const representation = getCurrentRepresentation();
         const manifest = representation.adaptation.period.mpd.manifest;
-        const adaptation = manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index];
+        const adaptation = manifest.Period[representation.adaptation.period.index]
+            .AdaptationSet[representation.adaptation.index];
         const segments = adaptation.SegmentTemplate.SegmentTimeline.S;
         const segment = segments[segments.length - 1];
 

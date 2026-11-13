@@ -48,7 +48,9 @@ class ContentProtection extends DescriptorType {
         this.pssh = null;
         this.pro = null;
         this.laUrl = null;
-        this.certUrls = []; // Array of certificate URL descriptors: [{url: string, certType: string|null}]. dash.js treats certType as an opaque label.
+        // Array of certificate URL descriptors: [{url: string, certType: string|null}].
+        // dash.js treats certType as an opaque label.
+        this.certUrls = [];
     }
 
     init(data) {
@@ -58,10 +60,14 @@ class ContentProtection extends DescriptorType {
             this.ref = data.hasOwnProperty(DashConstants.REF) ? data[DashConstants.REF] : null;
             this.refId = data.hasOwnProperty(DashConstants.REF_ID) ? data[DashConstants.REF_ID] : null;
             this.robustness = data.hasOwnProperty(DashConstants.ROBUSTNESS) ? data[DashConstants.ROBUSTNESS] : null;
-            this.cencDefaultKid = data.hasOwnProperty(DashConstants.CENC_DEFAULT_KID) ? data[DashConstants.CENC_DEFAULT_KID] : null;
+            this.cencDefaultKid = data.hasOwnProperty(DashConstants.CENC_DEFAULT_KID)
+                ? data[DashConstants.CENC_DEFAULT_KID]
+                : null;
             this.pssh = data.hasOwnProperty(DashConstants.PSSH) ? data[DashConstants.PSSH] : null;
             this.pro = data.hasOwnProperty(DashConstants.PRO) ? data[DashConstants.PRO] : null;
-            this.laUrl = data.hasOwnProperty(DashConstants.LA_URL) ? data[DashConstants.LA_URL] : data.hasOwnProperty(DashConstants.LA_URL_LOWER_CASE) ? data[DashConstants.LA_URL_LOWER_CASE] : null;
+            this.laUrl = data.hasOwnProperty(DashConstants.LA_URL)
+                ? data[DashConstants.LA_URL]
+                : data.hasOwnProperty(DashConstants.LA_URL_LOWER_CASE) ? data[DashConstants.LA_URL_LOWER_CASE] : null;
             const certKey = Object.keys(data).find(k => k.toLowerCase() === DashConstants.CERT_URL.toLowerCase());
             const rawCert = certKey ? data[certKey] : null;
             this.certUrls = CertUrlUtils.normalizeCertUrls(rawCert);

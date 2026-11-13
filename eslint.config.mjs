@@ -61,5 +61,14 @@ export default [{
             int32Hint: true,
         }],
         'no-unreachable': 'error',
+        'max-len': ['error', {
+            code: 120,
+            ignoreUrls: true,
+            ignoreStrings: true,
+            ignoreTemplateLiterals: true,
+            ignoreRegExpLiterals: true,
+            // JSDoc cannot parse [name=default] split across lines
+            ignorePattern: '^\\s*\\* @property ',
+        }],
     },
 }];

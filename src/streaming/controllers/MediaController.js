@@ -34,7 +34,6 @@ import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import {normalizeBcp47} from '../utils/BCP47Utils.js';
-import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 import getNChanFromAudioChannelConfig from '../utils/AudioChannelConfiguration.js';
@@ -101,13 +100,14 @@ function MediaController() {
     }
 
     /**
-     * Save the last selected bitrate for each media type. In case we transition to a new period and have multiple AdaptationSets that we can choose
-     * from we choose the one with a bitrate closest to the current one.
+     * Save the last selected bitrate for each media type. In case we transition to a new period and have multiple
+     * AdaptationSets that we can choose from we choose the one with a bitrate closest to the current one.
      * @param e
      * @private
      */
     function _onRepresentationSwitched(e) {
-        if (!e || !e.currentRepresentation || !e.currentRepresentation.mediaInfo || !e.currentRepresentation.mediaInfo.type) {
+        if (!e || !e.currentRepresentation || !e.currentRepresentation.mediaInfo ||
+            !e.currentRepresentation.mediaInfo.type) {
             return
         }
         const type = e.currentRepresentation.mediaInfo.type;
@@ -151,7 +151,9 @@ function MediaController() {
             logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, localSettings)
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, {
+                lang: getAvailablePreferredLanguages(filteredTracks, localSettings)
+            });
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, localSettings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, localSettings);
             if (!(type === Constants.AUDIO && !!lastSelectedTracks[type])) {
@@ -273,7 +275,8 @@ function MediaController() {
 
         tracks[id][type].current = track;
 
-        if (tracks[id][type].current && ((type !== Constants.TEXT && !areTracksEqual(track, current)) || (type === Constants.TEXT && track.isFragmented))) {
+        if (tracks[id][type].current && ((type !== Constants.TEXT && !areTracksEqual(track, current)) ||
+            (type === Constants.TEXT && track.isFragmented))) {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
                 oldMediaInfo: current,
                 newMediaInfo: track,
@@ -351,7 +354,8 @@ function MediaController() {
      * @memberof MediaController#
      */
     function _isMultiTrackSupportedByType(type) {
-        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT || type === Constants.IMAGE);
+        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT ||
+            type === Constants.IMAGE);
     }
 
     /**
@@ -381,11 +385,15 @@ function MediaController() {
         const sameCodec = t1.codec === t2.codec;
         const sameRoles = objectUtils.areEqual(t1.roles, t2.roles);
         const sameAccessibility = objectUtils.areEqual(t1.accessibility, t2.accessibility);
-        const sameAudioChannelConfiguration = objectUtils.areEqual(t1.audioChannelConfiguration, t2.audioChannelConfiguration);
+        const sameAudioChannelConfiguration = objectUtils.areEqual(
+            t1.audioChannelConfiguration,
+            t2.audioChannelConfiguration
+        );
         const sameSupplementalProps = objectUtils.areEqual(t1.supplementalProperties, t2.supplementalProperties);
         const sameEssentialProps = objectUtils.areEqual(t1.essentialProperties, t2.essentialProperties);
 
-        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration && sameSupplementalProps && sameEssentialProps);
+        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility &&
+            sameAudioChannelConfiguration && sameSupplementalProps && sameEssentialProps);
     }
 
 
@@ -410,7 +418,8 @@ function MediaController() {
             codec: mediaInfo.codec
         };
         let notEmpty = settings.lang || settings.viewpoint || (settings.role && settings.role.length > 0) ||
-            (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
+            (settings.accessibility && settings.accessibility.length > 0) ||
+            (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
 
         return notEmpty ? settings : null;
     }
@@ -427,10 +436,11 @@ function MediaController() {
             return tracksAfterMatcher;
         }
 
-        if (filterFn === matchSettingsRole && settings.get().streaming.assumeDefaultRoleAsMain && _compareDescriptorType(preferences.role, {
-            schemeIdUri: Constants.DASH_ROLE_SCHEME_ID,
-            value: DashConstants.MAIN
-        })) {
+        if (filterFn === matchSettingsRole && settings.get().streaming.assumeDefaultRoleAsMain &&
+            _compareDescriptorType(preferences.role, {
+                schemeIdUri: Constants.DASH_ROLE_SCHEME_ID,
+                value: DashConstants.MAIN
+            })) {
             logger.info('no track with Role set to main - assuming main as default and searching again');
             tracksAfterMatcher = filterTracksBySettings(tracks, _matchRoleAbsent, null);
             if (tracksAfterMatcher.length !== 0) {
@@ -442,12 +452,65 @@ function MediaController() {
         return tracks;
     }
 
+    function getAvailablePreferredLanguages(tracks, settings) {
+        function _getAllLanguages(tracks) {
+            const languages = new Set();
+            tracks.forEach(track => {
+                if (track.lang) {
+                    languages.add(track.lang);
+                }
+            });
+            return Array.from(languages);
+        }
+
+        function _getBestLanguageMatch(langs, pref_lang) {
+            if (!pref_lang || typeof pref_lang !== 'string') {
+                return [];
+            }
+
+            const pref = normalizeBcp47(pref_lang);
+            const pick = fn => langs.filter((lang, i) => fn(normalized[i]));
+
+            // 1. exact match
+            let arr = pick(t => t === pref);
+            // 2. track is more specific than the preference (de -> de-AT, zh -> zh-cmn)
+            arr = arr.length ? arr : pick(t => t.startsWith(pref + '-'));
+            if (arr.length) {
+                return arr;
+            }
+            // 3. track is less specific than the preference, longest prefix wins (en-AU -> en, zh-Hant-TW -> zh-Hant)
+            const longestPrefix = Math.max(-1, ...normalized.filter(t => pref.startsWith(t + '-')).map(t => t.length));
+            arr = pick(t => t.length === longestPrefix && pref.startsWith(t + '-'));
+            // 4. same primary language subtag (de-CH -> de-AT, de-DE)
+            // ponytail: extlang families (zh-cmn, zh-yue) count as one language here, compare up to the extlang
+            // if that matters
+            return arr.length ? arr : pick(t => t.split('-')[0] === pref.split('-')[0]);
+        }
+
+        const prefLang = settings.lang;
+        const availableLanguages = _getAllLanguages(tracks);
+        const normalized = availableLanguages.map(lang => normalizeBcp47(lang));
+
+        if (!prefLang || prefLang instanceof RegExp) {
+            return prefLang;
+        }
+
+        const preferredLanguages = Array.isArray(prefLang) ? prefLang : [prefLang];
+        return [...new Set(
+            preferredLanguages.flatMap(preference => _getBestLanguageMatch(availableLanguages, preference))
+        )];
+    }
+
     function matchSettingsLang(settings, track) {
         try {
-            return !settings.lang ||
-            (settings.lang instanceof RegExp) ?
-                (track.lang.match(settings.lang)) : track.lang !== '' ?
-                    (extendedFilter(track.lang, normalizeBcp47(settings.lang)).length > 0) : false;
+            if (!settings.lang) {
+                return true;
+            }
+            if (settings.lang instanceof RegExp) {
+                return !!track.lang.match(settings.lang);
+            }
+            const trackLang = normalizeBcp47(track.lang);
+            return !!trackLang && [].concat(settings.lang).some(l => normalizeBcp47(l) === trackLang);
         } catch (e) {
             return false
         }
@@ -507,27 +570,9 @@ function MediaController() {
 
     function matchSettings(settings, track, isTrackActive = false) {
         try {
-            let matchLang = false;
-
-            // If there is no language defined in the target settings we got a match
-            if (!settings.lang) {
-                matchLang = true;
-            }
-
-            // If the target language is provided as a RegExp apply match function
-            else if (settings.lang instanceof RegExp) {
-                matchLang = track.lang.match(settings.lang);
-            }
-
-            // If the track has a language and we can normalize the target language check if we got a match
-            else if (track.lang !== '') {
-                const normalizedSettingsLang = normalizeBcp47(settings.lang);
-                if (normalizedSettingsLang) {
-                    matchLang = extendedFilter(track.lang, normalizedSettingsLang).length > 0
-                }
-            }
-
-            const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
+            const matchLang = matchSettingsLang(settings, track);
+            const matchIndex = (settings.index === undefined) || (settings.index === null) ||
+                (track.index === settings.index);
             const matchViewPoint = !settings.viewpoint || !!track.viewpoint.filter(function (item) {
                 return _compareDescriptorType(item, settings.viewpoint);
             })[0];
@@ -537,11 +582,14 @@ function MediaController() {
             let matchAccessibility = !settings.accessibility || !!track.accessibility.filter(function (item) {
                 return _compareDescriptorType(item, settings.accessibility);
             })[0];
-            let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
-                return _compareDescriptorType(item, settings.audioChannelConfiguration);
-            })[0];
+            let matchAudioChannelConfiguration = !settings.audioChannelConfiguration ||
+                !!track.audioChannelConfiguration.filter(function (item) {
+                    return _compareDescriptorType(item, settings.audioChannelConfiguration);
+                })[0];
 
-            return (matchLang && matchIndex && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration);
+            return (matchLang && matchIndex && matchViewPoint &&
+                (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility &&
+                matchAudioChannelConfiguration);
         } catch (e) {
             logger.error(e);
             return false;
@@ -721,7 +769,8 @@ function MediaController() {
             tmpArr = customInitialTrackSelectionFunction(tmpArr);
         }
 
-        // If we know the current selected bitrate for the media type we select the AdaptationSet that comes closest to this. This should only be relevant for multiperiod when we transition to the next period.
+        // If we know the current selected bitrate for the media type we select the AdaptationSet that comes closest to
+        // this. This should only be relevant for multiperiod when we transition to the next period.
         else if (lastSelectedRepresentations[type]) {
             tmpArr = _trackSelectionModeClosestBitrate(tmpArr, type)
         }
@@ -778,7 +827,8 @@ function MediaController() {
         const filteredMediaInfos = mediaInfos.filter((mediaInfo) => {
             if (mediaInfo && mediaInfo.roles && mediaInfo.roles.length > 0) {
                 return mediaInfo.roles.every((role) => {
-                    return role.schemeIdUri !== Constants.DASH_ROLE_SCHEME_ID || role.value !== DashConstants.FORCED_SUBTITLE
+                    return role.schemeIdUri !== Constants.DASH_ROLE_SCHEME_ID ||
+                        role.value !== DashConstants.FORCED_SUBTITLE
                 })
             }
             return true
@@ -810,7 +860,7 @@ function MediaController() {
     }
 
     /**
-     * Returns all MediaInfo objects that have at least one bitrate that fulfills the constraint.
+     * Returns all MediaInfo objects that have at least one bitrate that fulfills the constraint.<br>
      * If all fail the constraint we return the original array.
      * @param {MediaInfo[]} mediaInfos
      * @return {MediaInfo[]}
@@ -1003,6 +1053,8 @@ function MediaController() {
         addTrack,
         areTracksEqual,
         clearDataForStream,
+        filterTracksBySettings,
+        getAvailablePreferredLanguages,
         getCurrentTrackFor,
         getInitialSettings,
         getTracksFor,

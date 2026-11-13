@@ -224,8 +224,14 @@ describe('BaseURLController', function () {
         const spy = sinon.spy();
 
         eventBus.on(MediaPlayerEvents.BASE_URLS_UPDATED, spy);
-        baseURLTreeModel.getBaseUrlsForPayload.onFirstCall().returns({ rootBaseUrls: [rootBaseUrl], childBaseUrls: [periodBaseUrl] });
-        baseURLTreeModel.getBaseUrlsForPayload.onSecondCall().returns({ rootBaseUrls: [rootBaseUrl], childBaseUrls: [] });
+        baseURLTreeModel.getBaseUrlsForPayload.onFirstCall().returns({
+            rootBaseUrls: [rootBaseUrl],
+            childBaseUrls: [periodBaseUrl]
+        });
+        baseURLTreeModel.getBaseUrlsForPayload.onSecondCall().returns({
+            rootBaseUrls: [rootBaseUrl],
+            childBaseUrls: []
+        });
         adapter.getIsDVB.withArgs(firstManifest).returns(false);
         adapter.getIsDVB.withArgs(secondManifest).returns(false);
         baseURLController.setConfig({

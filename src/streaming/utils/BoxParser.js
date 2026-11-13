@@ -140,6 +140,14 @@ function BoxParser(/*config*/) {
         // exactly one mfhd per moof
         let mfhdBoxes = isoFile.getBoxes('mfhd');
 
+        // Not every buffer reaching this function is ISOBMFF. WebM media
+        // segments contain no moof or mfhd at all, and reading
+        // mfhdBoxes[mfhdBoxes.length - 1] below then throws. Return the same
+        // empty shape used for an empty buffer above.
+        if (moofBoxes.length === 0 || mfhdBoxes.length === 0) {
+            return { sampleList: [], lastSequenceNumber: NaN, totalDuration: NaN, numSequences: NaN };
+        }
+
         let sampleDuration,
             sampleCompositionTimeOffset,
             sampleCount,
@@ -182,9 +190,15 @@ function BoxParser(/*config*/) {
 
                     for (i = 0; i < sampleCount; i++) {
                         sample = trunBox.samples[i];
-                        sampleDuration = (sample.sample_duration !== undefined) ? sample.sample_duration : tfhdBox.default_sample_duration;
-                        sampleSize = (sample.sample_size !== undefined) ? sample.sample_size : tfhdBox.default_sample_size;
-                        sampleCompositionTimeOffset = (sample.sample_composition_time_offset !== undefined) ? sample.sample_composition_time_offset : 0;
+                        sampleDuration = (sample.sample_duration !== undefined)
+                            ? sample.sample_duration
+                            : tfhdBox.default_sample_duration;
+                        sampleSize = (sample.sample_size !== undefined)
+                            ? sample.sample_size
+                            : tfhdBox.default_sample_size;
+                        sampleCompositionTimeOffset = (sample.sample_composition_time_offset !== undefined)
+                            ? sample.sample_composition_time_offset
+                            : 0;
                         let sampleData = {
                             'dts': sampleDts,
                             'cts': (sampleDts + sampleCompositionTimeOffset),

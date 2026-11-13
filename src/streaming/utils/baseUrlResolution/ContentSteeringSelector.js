@@ -59,7 +59,9 @@ function ContentSteeringSelector() {
         if (isNaN(data.selectedIdx)) {
             const steeringDataFromMpd = contentSteeringController.getSteeringDataFromManifest();
             if (steeringDataFromMpd && steeringDataFromMpd.defaultServiceLocationArray.length > 0) {
-                steeringIndex = _findexIndexOfServiceLocation(steeringDataFromMpd.defaultServiceLocationArray, data.baseUrls);
+                steeringIndex = _findexIndexOfServiceLocation(
+                    steeringDataFromMpd.defaultServiceLocationArray, data.baseUrls
+                );
             }
         }
 

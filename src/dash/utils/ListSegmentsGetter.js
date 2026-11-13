@@ -54,7 +54,10 @@ function ListSegmentsGetter(config, isDynamic) {
             return mediaFinishedInformation;
         }
 
-        const list = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+        const list = representation.adaptation.period.mpd.manifest
+            .Period[representation.adaptation.period.index]
+            .AdaptationSet[representation.adaptation.index]
+            .Representation[representation.index].SegmentList;
         const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
         const offset = Math.max(startNumber - 1, 0);
 
@@ -70,7 +73,10 @@ function ListSegmentsGetter(config, isDynamic) {
             return null;
         }
 
-        const list = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+        const list = representation.adaptation.period.mpd.manifest
+            .Period[representation.adaptation.period.index]
+            .AdaptationSet[representation.adaptation.index]
+            .Representation[representation.index].SegmentList;
         const len = list.SegmentURL.length;
 
         const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;

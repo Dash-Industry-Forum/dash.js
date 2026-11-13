@@ -97,7 +97,8 @@ function BaseURLSelector() {
             return;
         }
 
-        // Check if we got any instructions from the content steering element in the MPD or from the content steering server
+        // Check if we got any instructions from the content steering element in the MPD or from the content steering
+        // server
         if (settings.get().streaming.applyContentSteering) {
             const steeringIndex = contentSteeringSelector.selectBaseUrlIndex(data);
             if (!isNaN(steeringIndex) && steeringIndex !== -1) {

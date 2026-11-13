@@ -53,7 +53,8 @@ class CommonEncryption {
         for (let i = 0; i < cpArray.length; ++i) {
             let cp = cpArray[i];
             if (cp.schemeIdUri && cp.schemeIdUri.toLowerCase() === DashConstants.MP4_PROTECTION_SCHEME && cp.value &&
-                (cp.value.toLowerCase() === ProtectionConstants.ENCRYPTION_SCHEME_CENC || cp.value.toLowerCase() === ProtectionConstants.ENCRYPTION_SCHEME_CBCS)) {
+                (cp.value.toLowerCase() === ProtectionConstants.ENCRYPTION_SCHEME_CENC ||
+                    cp.value.toLowerCase() === ProtectionConstants.ENCRYPTION_SCHEME_CBCS)) {
                 retVal = cp;
             }
         }
@@ -245,7 +246,8 @@ class CommonEncryption {
                             const contentProtection = targetProtectionData[j];
                             if (contentProtection.laUrl
                                 && contentProtection.laUrl.__prefix
-                                && LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.includes(contentProtection.laUrl.__prefix)
+                                && LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes
+                                    .includes(contentProtection.laUrl.__prefix)
                                 && contentProtection.laUrl.__text) {
                                 licenseServer = contentProtection.laUrl.__text;
                             }

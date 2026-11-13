@@ -347,7 +347,8 @@ function SourceBufferSink(config) {
             _waitForUpdateEnd(function () {
                 try {
                     buffer.remove(start, end);
-                    // updating is in progress, we should wait for it to complete before signaling that this operation is done
+                    // updating is in progress, we should wait for it to complete before signaling that this operation
+                    // is done
                     _waitForUpdateEnd(function () {
                         resolve({
                             from: start,
@@ -388,8 +389,10 @@ function SourceBufferSink(config) {
                 if (appendQueue.length > 0) {
                     _appendNextInQueue.call(this);
                 }
-                // Init segments are cached. In any other case we dont need the chunk bytes anymore and can free the memory
-                if (nextChunk && nextChunk.data && nextChunk.data.segmentType && nextChunk.data.segmentType !== HTTPRequest.INIT_SEGMENT_TYPE) {
+                // Init segments are cached. In any other case we dont need the chunk bytes anymore and can free the
+                // memory
+                if (nextChunk && nextChunk.data && nextChunk.data.segmentType &&
+                    nextChunk.data.segmentType !== HTTPRequest.INIT_SEGMENT_TYPE) {
                     delete nextChunk.data.bytes;
                 }
                 nextChunk.promise.resolve({chunk: nextChunk.data});
@@ -412,7 +415,8 @@ function SourceBufferSink(config) {
                     } else {
                         buffer.append(nextChunk.data.bytes, nextChunk.data);
                     }
-                    // updating is in progress, we should wait for it to complete before signaling that this operation is done
+                    // updating is in progress, we should wait for it to complete before signaling that this operation
+                    // is done
                     _waitForUpdateEnd(afterSuccess.bind(this));
                 }
             } catch (err) {

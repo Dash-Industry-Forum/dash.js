@@ -87,7 +87,10 @@ function NotFragmentedTextBufferController(config) {
                 }
                 resolve(sourceBufferSink);
             } catch (e) {
-                errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
+                errHandler.error(new DashJSError(
+                    Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE,
+                    Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type
+                ));
                 reject(e);
             }
         });

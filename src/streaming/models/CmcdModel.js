@@ -52,6 +52,7 @@ const REQUEST_TYPE_TO_CMCD_FILTER = {
     [HTTPRequest.MPD_TYPE]: 'mpd',
     [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
     [HTTPRequest.OTHER_TYPE]: 'other',
+    [HTTPRequest.LICENSE]: 'license',
 };
 
 function CmcdModel() {
@@ -668,7 +669,8 @@ function CmcdModel() {
 
             // Calculate RTP
             let segmentSize = (bandwidth * duration) / 1000; // Calculate file size in kilobits
-            let timeToLoad = (currentBufferLevel / playbackRate) / 1000; // Calculate time available to load file in seconds
+            // Calculate time available to load file in seconds
+            let timeToLoad = (currentBufferLevel / playbackRate) / 1000;
             let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
             const rtpSafetyFactor = cmcdConfigAccessor.get('rtpSafetyFactor', { defaultValue: RTP_SAFETY_FACTOR });
             let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
@@ -750,25 +752,22 @@ function CmcdModel() {
         _topBitrateCache = new Map();
         try {
             _updateLastMediaTypeRequest(request.type, request.mediaType);
-            let cmcdData = {};
 
-            if (isIncludedInRequestFilter(request.type)) {
-                if (request.type === HTTPRequest.MPD_TYPE) {
-                    return _calculateCmcdDataForRequestForMpd(request);
-                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                    _initForMediaType(request.mediaType);
-                    return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
-                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-                    return _calculateCmcdDataForRequestForInitSegment(request);
-                } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
-                    return _calculateCmcdDataForRequestForOther(request);
-                } else if (request.type === HTTPRequest.LICENSE) {
-                    return _calculateCmcdDataForRequestForLicense(request);
-                } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
-                    return _calculateCmcdDataForRequestForSteering(request);
-                }
+            if (request.type === HTTPRequest.MPD_TYPE) {
+                return _calculateCmcdDataForRequestForMpd(request);
+            } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                _initForMediaType(request.mediaType);
+                return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
+            } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                return _calculateCmcdDataForRequestForInitSegment(request);
+            } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
+                return _calculateCmcdDataForRequestForOther(request);
+            } else if (request.type === HTTPRequest.LICENSE) {
+                return _calculateCmcdDataForRequestForLicense(request);
+            } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
+                return _calculateCmcdDataForRequestForSteering(request);
             }
-            return cmcdData;
+            return {};
         } catch (e) {
             return null;
         } finally {
@@ -797,7 +796,9 @@ function CmcdModel() {
     }
 
     function _calculateCmcdDataForRequestForSteering(request) {
-        const data = !_lastMediaTypeRequest ? getGenericCmcdData() : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
+        const data = !_lastMediaTypeRequest
+            ? getGenericCmcdData()
+            : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
 
         data.ot = CmcdObjectType.OTHER;
 
@@ -859,8 +860,12 @@ function CmcdModel() {
         }
 
         // Calculate lowest aggregated bitrate
-        const lowestVideoBitrate = allVideoReps.length > 0 ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit)) : 0;
-        const lowestAudioBitrate = allAudioReps.length > 0 ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit)) : 0;
+        const lowestVideoBitrate = allVideoReps.length > 0
+            ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit))
+            : 0;
+        const lowestAudioBitrate = allAudioReps.length > 0
+            ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit))
+            : 0;
         const labValues = _toInnerList(
             lowestVideoBitrate > 0 ? Math.round(lowestVideoBitrate) : null,
             lowestAudioBitrate > 0 ? Math.round(lowestAudioBitrate) : null

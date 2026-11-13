@@ -31,7 +31,7 @@
 /**
  * All session identifiers (tokens) returned by ProtectionController as well as
  * ProtectionModel implementations are guaranteed to contain certain properties
- * regardless of the proprietary data each ProtectionModel will need to attach.
+ * regardless of the proprietary data each ProtectionModel will need to attach.<br>
  * This interface defines the common APIs for session tokens available for
  * applications to access.
  *

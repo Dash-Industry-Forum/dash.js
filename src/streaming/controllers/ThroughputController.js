@@ -95,7 +95,10 @@ function ThroughputController() {
      * @private
      */
     function _onMetricAdded(e) {
-        if (e.metric === MetricsConstants.HTTP_REQUEST && e.value && (e.value.type === HTTPRequest.MPD_TYPE || (e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)))) {
+        if (e.metric === MetricsConstants.HTTP_REQUEST && e.value &&
+            (e.value.type === HTTPRequest.MPD_TYPE ||
+                (e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE &&
+                    (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)))) {
             throughputModel.addEntry(e.mediaType, e.value);
         }
     }
@@ -123,18 +126,28 @@ function ThroughputController() {
 
             // Set the parameters for the standard bandwidth calculation based on throughput values for a media type
             case Constants.THROUGHPUT_TYPES.BANDWIDTH:
-                dict = calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.EWMA ? throughputModel.getEwmaThroughputDict(mediaType) : throughputModel.getThroughputDict(mediaType);
+                dict = calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.EWMA
+                    ? throughputModel.getEwmaThroughputDict(mediaType)
+                    : throughputModel.getThroughputDict(mediaType);
                 halfLife = ewmaHalfLife.bandwidthHalfLife;
                 useMin = true;
-                sampleSize = !isNaN(sampleSize) ? sampleSize : playbackController.getIsDynamic() ? settings.get().streaming.abr.throughput.sampleSettings.live : settings.get().streaming.abr.throughput.sampleSettings.vod;
+                sampleSize = !isNaN(sampleSize)
+                    ? sampleSize
+                    : playbackController.getIsDynamic()
+                        ? settings.get().streaming.abr.throughput.sampleSettings.live
+                        : settings.get().streaming.abr.throughput.sampleSettings.vod;
                 break;
 
             // Set the parameters for the standard latency calculation based on throughput values for a media type
             case Constants.THROUGHPUT_TYPES.LATENCY:
-                dict = calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.EWMA ? throughputModel.getEwmaLatencyDict(mediaType) : throughputModel.getLatencyDict(mediaType);
+                dict = calculationMode === Constants.THROUGHPUT_CALCULATION_MODES.EWMA
+                    ? throughputModel.getEwmaLatencyDict(mediaType)
+                    : throughputModel.getLatencyDict(mediaType);
                 halfLife = ewmaHalfLife.latencyHalfLife;
                 useMin = false;
-                sampleSize = !isNaN(sampleSize) ? sampleSize : settings.get().streaming.abr.throughput.sampleSettings.averageLatencySampleAmount;
+                sampleSize = !isNaN(sampleSize)
+                    ? sampleSize
+                    : settings.get().streaming.abr.throughput.sampleSettings.averageLatencySampleAmount;
                 break;
 
         }
@@ -183,11 +196,13 @@ function ThroughputController() {
             sampleSize = 0;
         } else if (sampleSize >= dict.length) {
             sampleSize = dict.length;
-        } else if (type === Constants.THROUGHPUT_TYPES.BANDWIDTH && settings.get().streaming.abr.throughput.sampleSettings.enableSampleSizeAdjustment) {
+        } else if (type === Constants.THROUGHPUT_TYPES.BANDWIDTH &&
+            settings.get().streaming.abr.throughput.sampleSettings.enableSampleSizeAdjustment) {
             // if throughput samples vary a lot, average over a wider sample
             for (let i = 1; i < sampleSize; ++i) {
                 const ratio = dict[dict.length - i].value / dict[dict.length - i - 1].value;
-                if (ratio >= settings.get().streaming.abr.throughput.sampleSettings.increaseScale || ratio <= settings.get().streaming.abr.throughput.sampleSettings.decreaseScale) {
+                if (ratio >= settings.get().streaming.abr.throughput.sampleSettings.increaseScale ||
+                    ratio <= settings.get().streaming.abr.throughput.sampleSettings.decreaseScale) {
                     sampleSize += 1;
                     if (sampleSize === dict.length) { // cannot increase sampleSize beyond arr.length
                         break;
@@ -416,7 +431,8 @@ function ThroughputController() {
     }
 
     /**
-     * Returns the average throughout applying the bandwidth safety factor provided in the settings. The returned value is depicted in kbit/s
+     * Returns the average throughout applying the bandwidth safety factor provided in the settings. The returned value
+     * is depicted in kbit/s
      * @param {string} mediaType
      * @param {string | null} calculationMode
      * @param {number | NaN} sampleSize

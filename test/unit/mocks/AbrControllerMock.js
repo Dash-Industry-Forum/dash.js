@@ -77,6 +77,15 @@ function AbrControllerMock () {
         return this.elementHeight;
     };
 
+    this.registerStreamType = function (/*type, streamProcessor*/) {
+    };
+
+    this.handleNewMediaInfo = function (/*mediaInfo*/) {
+    };
+
+    this.excludeRepresentation = function (/*representation*/) {
+    };
+
     this.unRegisterStreamType = function (/*type*/) {
     };
 
