@@ -200,7 +200,8 @@ function SegmentBaseLoader() {
             if (!sidx || !sidx.isComplete) {
                 if (sidx) {
                     info.range.start = sidx.offset || info.range.start;
-                    info.range.end = info.range.start + (sidx.size || extraBytes);
+                    // HTTP byte ranges are inclusive, so the box ends at start + size - 1.
+                    info.range.end = info.range.start + (sidx.size ? sidx.size - 1 : extraBytes);
                 } else if (loadedLength < info.bytesLoaded) {
                     // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
                     callback(null, representation, resolve);
@@ -215,7 +216,7 @@ function SegmentBaseLoader() {
                         info.range.end += extraBytes;
                     }
                 }
-                _loadSegmentsRecursively(representation, mediaType, info.range, resolve, null, info);
+                _loadSegmentsRecursively(representation, mediaType, info.range, resolve, callback, info);
             } else {
                 const ref = sidx.references;
                 let loadMultiSidx,
@@ -227,35 +228,27 @@ function SegmentBaseLoader() {
 
                 if (loadMultiSidx) {
                     logger.debug('Initiate multiple SIDX load.');
-                    info.range.end = info.range.start + sidx.size;
 
-                    let j, len, ss, se, r;
-                    let segs = [];
+                    const results = [];
                     let count = 0;
                     let offset = (sidx.offset || info.range.start) + sidx.size;
-                    const tmpCallback = function (result) {
-                        if (result) {
-                            segs = segs.concat(result);
-                            count++;
-
-                            if (count >= len) {
-                                // http requests can be processed in a wrong order, so, we have to reorder segments with an ascending start Time order
-                                segs.sort(function (a, b) {
-                                    return a.startTime - b.startTime < 0 ? -1 : 0;
-                                });
-                                callback(segs, representation, resolve);
-                            }
-                        } else {
+                    const tmpCallback = function (index, result) {
+                        if (!result) {
                             callback(null, representation, resolve);
+                            return;
+                        }
+                        // Child requests can complete in any order; the parent references define the segment order.
+                        results[index] = result;
+                        count++;
+                        if (count >= ref.length) {
+                            callback(results.flat(), representation, resolve);
                         }
                     };
 
-                    for (j = 0, len = ref.length; j < len; j++) {
-                        ss = offset;
-                        se = offset + ref[j].referenced_size - 1;
-                        offset = offset + ref[j].referenced_size;
-                        r = { start: ss, end: se };
-                        _loadSegmentsRecursively(representation, mediaType, r, resolve, tmpCallback, info);
+                    for (let j = 0; j < ref.length; j++) {
+                        const r = { start: offset, end: offset + ref[j].referenced_size - 1 };
+                        offset += ref[j].referenced_size;
+                        _loadSegmentsRecursively(representation, mediaType, r, resolve, tmpCallback.bind(null, j), info);
                     }
 
                 } else {
