@@ -199,7 +199,8 @@ function SegmentBaseLoader() {
 
             if (!sidx || !sidx.isComplete) {
                 if (sidx) {
-                    info.range.start = sidx.offset || info.range.start;
+                    // Box offsets are relative to the loaded chunk, not to the file.
+                    info.range.start += sidx.offset;
                     // HTTP byte ranges are inclusive, so the box ends at start + size - 1.
                     info.range.end = info.range.start + (sidx.size ? sidx.size - 1 : extraBytes);
                 } else if (loadedLength < info.bytesLoaded) {
@@ -210,7 +211,7 @@ function SegmentBaseLoader() {
                     const lastBox = isoFile.getLastBox();
 
                     if (lastBox && lastBox.size) {
-                        info.range.start = lastBox.offset + lastBox.size;
+                        info.range.start += lastBox.offset + lastBox.size;
                         info.range.end = info.range.start + extraBytes;
                     } else {
                         info.range.end += extraBytes;
@@ -231,7 +232,7 @@ function SegmentBaseLoader() {
 
                     const results = [];
                     let count = 0;
-                    let offset = (sidx.offset || info.range.start) + sidx.size;
+                    let offset = info.range.start + sidx.offset + sidx.first_offset + sidx.size;
                     const tmpCallback = function (index, result) {
                         if (!result) {
                             callback(null, representation, resolve);
