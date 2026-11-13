@@ -959,8 +959,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @typedef {Object} AbandonRequestsRule
  * @property {boolean} [active=true]
  * Enable or disable the rule
- * @property {object} [parameters={abandonDurationMultiplier=1.8, minSegmentDownloadTimeThresholdInMs=500,
- * minThroughputSamplesThreshold=6}]
+ * @property {object} [parameters={abandonDurationMultiplier=1.8, minSegmentDownloadTimeThresholdInMs=500, minThroughputSamplesThreshold=6}]
  * Configures the rule specific parameters.
  *
  * - `abandonDurationMultiplier`: Factor to multiply with the segment duration to compare against the estimated
@@ -1012,9 +1011,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Standard ABR throughput rules multiply the throughput by this value.
  *
  * It should be between 0 and 1, with lower values giving less rebuffering (but also lower quality)
- * @property {object} [sampleSettings =
- * {live=3,vod=4,enableSampleSizeAdjustment=true,decreaseScale=0.7,increaseScale=1.3,maxMeasurementsToKeep=20,
- * averageLatencySampleAmount=4}]
+ * @property {object} [sampleSettings={live=3,vod=4,enableSampleSizeAdjustment=true,decreaseScale=0.7,increaseScale=1.3,maxMeasurementsToKeep=20,averageLatencySampleAmount=4}]
  * When deriving the throughput based on the arithmetic or harmonic mean these settings define:
  * - `live`: Number of throughput samples to use (sample size) for live streams
  * - `vod`: Number of throughput samples to use (sample size) for VoD streams
@@ -1025,10 +1022,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * value
  * - `maxMeasurementsToKeep`: Number of samples to keep before sliding samples out of the window
  * - `averageLatencySampleAmount`: Number of latency samples to use (sample size)
- * @property {object}
- * [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,
- * latencyFastHalfLifeCount=1,
- * weightDownloadTimeMultiplicationFactor=0.0015}]
+ * @property {object} [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,latencyFastHalfLifeCount=1,weightDownloadTimeMultiplicationFactor=0.0015}]
  * When deriving the throughput based on the exponential weighted moving average these settings define:
  * - `throughputSlowHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see
  * ThroughputModel._updateEwmaValues

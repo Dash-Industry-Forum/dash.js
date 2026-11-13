@@ -67,6 +67,8 @@ export default [{
             ignoreStrings: true,
             ignoreTemplateLiterals: true,
             ignoreRegExpLiterals: true,
+            // JSDoc cannot parse [name=default] split across lines
+            ignorePattern: '^\\s*\\* @property ',
         }],
     },
 }];
