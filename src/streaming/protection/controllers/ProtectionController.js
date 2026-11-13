@@ -301,7 +301,7 @@ function ProtectionController(config) {
     }
 
     /**
-     * Attempt to acquire and set a server certificate using Certurl entries from the manifest
+     * Attempt to acquire and set a server certificate using Certurl entries from the manifest<br>
      * Only runs if no certificate already applied via protData
      * @private
      */
@@ -700,7 +700,7 @@ function ProtectionController(config) {
 
     /**
      * Create a new key session associated with the given initialization data from the MPD or from the PSSH box in the
-     * media
+     * media<br>
      * For the latest version of the EME a request is generated. Once this request is ready we get notified via the
      * INTERNAL_KEY_MESSAGE event
      * @param {ArrayBuffer} initData the initialization data

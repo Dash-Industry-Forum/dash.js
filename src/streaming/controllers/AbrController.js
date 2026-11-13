@@ -102,7 +102,7 @@ function AbrController() {
     }
 
     /**
-     * Whenever a StreamProcessor is created it is added to the list of streamProcessorDict
+     * Whenever a StreamProcessor is created it is added to the list of streamProcessorDict<br>
      * In addition, the corresponding objects for this object and its stream id are created
      * @param {object} type
      * @param {object} streamProcessor

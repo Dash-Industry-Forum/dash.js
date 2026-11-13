@@ -54,7 +54,7 @@ function FetchLoader() {
     }
 
     /**
-     * Load request
+     * Load request<br>
      * With HTTP responses that use chunked transfer encoding, the promise returned by fetch will resolve as soon as the
      * response's headers are received.
      * @param {CommonMediaRequest} commonMediaRequest
@@ -224,7 +224,7 @@ function FetchLoader() {
         }
 
         /**
-         * Make the data that we received available for playback
+         * Make the data that we received available for playback<br>
          * If we are going to pass full buffer, avoid copying it and pass
          * complete buffer. Otherwise, clone the part of the buffer that is completed
          * and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array

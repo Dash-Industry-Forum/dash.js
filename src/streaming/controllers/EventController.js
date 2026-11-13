@@ -266,7 +266,7 @@ function EventController() {
     }
 
     /**
-     * Add EMSG events to the list of events
+     * Add EMSG events to the list of events<br>
      * Messages with the same id within the scope of the same scheme_id_uri and value pair are equivalent , i.e.
      * processing of any one event message box with the same id is sufficient.
      * @param {Array.<Object>} values

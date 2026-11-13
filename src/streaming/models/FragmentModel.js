@@ -129,7 +129,7 @@ function FragmentModel(config) {
      *
      * @param {Object} filter The object with properties by which the method filters the requests to be returned.
      *  the only mandatory property is state, which must be a value from
-     *  other properties should match the properties of {@link FragmentRequest}. E.g.:
+     *  other properties should match the properties of {@link FragmentRequest}. E.g.:<br>
      *  getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, quality: 0})
      *
      * @returns {Array}

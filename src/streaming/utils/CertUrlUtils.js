@@ -39,7 +39,7 @@
  *  - Pre-normalized object: { url: 'https://example.com/cert', certType: 'primary' }
  *  - Array of any of the above
  *
- * The normalization returns an array of objects: { url: string, certType: string|null }
+ * The normalization returns an array of objects: { url: string, certType: string|null }<br>
  * Empty or invalid entries are filtered out. Whitespace is trimmed.
  */
 function normalizeCertUrls(raw) {

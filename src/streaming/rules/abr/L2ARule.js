@@ -250,8 +250,8 @@ function L2ARule(config) {
     }
 
     /**
-     * Project an n-dim vector y to the simplex Dn
-     * Dn = { x : x n-dim, 1 >= x >= 0, sum(x) = 1}
+     * Project an n-dim vector y to the simplex Dn<br>
+     * Dn = { x : x n-dim, 1 >= x >= 0, sum(x) = 1}<br>
      * Algorithm is explained at http://arxiv.org/abs/1101.6081
      * @param {array} arr
      * @return {array}

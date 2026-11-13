@@ -109,7 +109,7 @@ function ManifestApi() {
     }
 
     /**
-     * Sets the source to a new manifest URL or object without reloading
+     * Sets the source to a new manifest URL or object without reloading<br>
      * Useful for updating CDN tokens
      * @param {string | object} urlOrManifest
      */

@@ -331,7 +331,7 @@ function ProtectionKeyController() {
 
     /**
      * Extract the defaultKID from the tenc box inside a sinf initData.
-     * Safari sends sinf initData as JSON: {"sinf": ["<base64-encoded sinf box>"]}
+     * Safari sends sinf initData as JSON: {"sinf": ["<base64-encoded sinf box>"]}<br>
      * The sinf box contains: sinf > schi > tenc, where the KID is 12 bytes after the 'tenc' fourcc.
      * @param {ArrayBuffer} initData
      * @return {string|null} key ID as UUID string, or null if not found

@@ -45,7 +45,7 @@ function TextApi() {
     }
 
     /**
-     * Enable/disable text
+     * Enable/disable text<br>
      * When enabling text, dash will choose the previous selected text track
      *
      * @param {boolean} enable - true to enable text, false otherwise (same as setTextTrack(-1))
@@ -63,7 +63,7 @@ function TextApi() {
     }
 
     /**
-     * Enable/disable text
+     * Enable/disable text<br>
      * When enabling dash will keep downloading and process fragmented text tracks even if all tracks are in mode
      * "hidden"
      *

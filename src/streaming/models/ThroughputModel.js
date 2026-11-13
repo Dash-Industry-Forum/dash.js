@@ -37,7 +37,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import EventBus from '../../core/EventBus.js';
 
 /**
- * Throughput generally stored in kbit/s
+ * Throughput generally stored in kbit/s<br>
  * Latency generally stored in ms
  * @param {object} config
  * @ignore

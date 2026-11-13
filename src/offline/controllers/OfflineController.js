@@ -203,7 +203,7 @@ function OfflineController(config) {
     */
 
     /**
-     * Loads records from storage
+     * Loads records from storage<br>
      * This methods has to be called first, to be sure that all downloads have been loaded
      *
      * @return {Promise} asynchronously resolved

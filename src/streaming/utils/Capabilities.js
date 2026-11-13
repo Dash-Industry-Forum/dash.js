@@ -367,7 +367,7 @@ function Capabilities() {
     }
 
     /**
-     * Check if codec is an enhancement layer codec, e.g. LCEVC
+     * Check if codec is an enhancement layer codec, e.g. LCEVC<br>
      * Enhancement layer codecs can be configured via settings.
      * @param {string} codec
      * @return {boolean} true if enhancement codec

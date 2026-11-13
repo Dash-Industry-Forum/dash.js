@@ -45,7 +45,7 @@ function CustomParametersApi() {
     }
 
     /**
-     * Add a custom ABR Rule
+     * Add a custom ABR Rule<br>
      * Rule will be apply on next stream if a stream is being played
      *
      * @param {string} type - rule type (one of ['qualitySwitchRules','abandonFragmentRules'])
@@ -304,7 +304,7 @@ function CustomParametersApi() {
     }
 
     /**
-     * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
+     * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data<br>
      * The provided callback function shall return a promise with updated response that shall be resolved once the
      * process of the response is completed.
      * The interceptors are applied in the order they are added.
@@ -341,7 +341,7 @@ function CustomParametersApi() {
     }
 
     /**
-     * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
+     * Registers a certificate response filter. This enables application to manipulate/overwrite the response data<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
      * completed.
      * The filters are applied in the order they are registered.
@@ -388,7 +388,7 @@ function CustomParametersApi() {
     }
 
     /**
-     * Registers a license response filter. This enables application to manipulate/overwrite the response data
+     * Registers a license response filter. This enables application to manipulate/overwrite the response data<br>
      * The provided callback function shall return a promise that shall be resolved once the filter process is
      * completed.
      * The filters are applied in the order they are registered.

@@ -550,23 +550,23 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * Possible values.
  *
- * - dashjs.Debug.LOG_LEVEL_NONE
+ * - dashjs.Debug.LOG_LEVEL_NONE<br>
  * No message is written in the browser console.
  *
- * - dashjs.Debug.LOG_LEVEL_FATAL
+ * - dashjs.Debug.LOG_LEVEL_FATAL<br>
  * Log fatal errors.
  * An error is considered fatal when it causes playback to fail completely.
  *
- * - dashjs.Debug.LOG_LEVEL_ERROR
+ * - dashjs.Debug.LOG_LEVEL_ERROR<br>
  * Log error messages.
  *
- * - dashjs.Debug.LOG_LEVEL_WARNING
+ * - dashjs.Debug.LOG_LEVEL_WARNING<br>
  * Log warning messages.
  *
- * - dashjs.Debug.LOG_LEVEL_INFO
+ * - dashjs.Debug.LOG_LEVEL_INFO<br>
  * Log info messages.
  *
- * - dashjs.Debug.LOG_LEVEL_DEBUG
+ * - dashjs.Debug.LOG_LEVEL_DEBUG<br>
  * Log debug messages.
  * @property {boolean} [dispatchEvent=false]
  * Enable to trigger a Events.LOG event whenever log output is generated.
@@ -1248,10 +1248,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * Possible values
  *
- * - Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE
+ * - Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE<br>
  * Replace existing segments in the buffer
  *
- * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
+ * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE<br>
  * Do not replace existing segments in the buffer
  *
  * @property {} [includePreselectionsInMediainfoArray: true]
@@ -1276,16 +1276,16 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * Possible values
  *
- * - Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
+ * - Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE<br>
  * This mode makes the player select the track with a highest bitrate.
  *
- * - Constants.TRACK_SELECTION_MODE_FIRST_TRACK
+ * - Constants.TRACK_SELECTION_MODE_FIRST_TRACK<br>
  * This mode makes the player select the first track found in the manifest.
  *
- * - Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY
+ * - Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY<br>
  * This mode makes the player select the track with the lowest bitrate per pixel average.
  *
- * - Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
+ * - Constants.TRACK_SELECTION_MODE_WIDEST_RANGE<br>
  * This mode makes the player select the track with a widest range of bitrates.
  *
  * @property {number} [blacklistExpiryTime=-1]
@@ -1322,7 +1322,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {module:Settings~EnhancementSettings} enhancement
  * Settings related to scalable enhancement playback (e.g. LCEVC).
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
- * Default schemeIdUri for descriptor type elements
+ * Default schemeIdUri for descriptor type elements<br>
  * These strings are used when not provided with setInitialMediaSettingsFor()
  * @property {module:Settings~DvbReportingSettings} dvbReporting
  * Settings related to DVB metrics reporting.
