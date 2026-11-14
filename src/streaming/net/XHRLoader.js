@@ -79,6 +79,8 @@ function XHRLoader() {
             xhr.onprogress = commonMediaRequest.customData.onprogress;
             xhr.onabort = commonMediaRequest.customData.onabort;
             xhr.ontimeout = commonMediaRequest.customData.ontimeout;
+            // Expose the live xhr so callers can suppress onabort before a deliberate abort (e.g. progress timeout)
+            commonMediaRequest.customData.xhr = xhr;
         }
         let body = commonMediaRequest.body || null;
         xhr.send(body);

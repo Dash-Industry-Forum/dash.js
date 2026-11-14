@@ -61,6 +61,7 @@ function FetchLoader() {
      * @param {CommonMediaResponse} commonMediaResponse
      */
     function load(commonMediaRequest, commonMediaResponse) {
+        commonMediaRequest.customData.cancelled = false;
         const headers = _getHeaders(commonMediaRequest);
         const abortController = _setupAbortMechanism(commonMediaRequest);
         const fetchResourceRequestObject = _getFetchResourceRequestObject(commonMediaRequest, headers, abortController);
@@ -69,8 +70,13 @@ function FetchLoader() {
             .then((fetchResponse) => {
                 _handleFetchResponse(fetchResponse, commonMediaRequest, commonMediaResponse);
             })
-            .catch(() => {
-                _handleFetchError(commonMediaRequest);
+            .catch((e) => {
+                // A deliberate abort() rejects fetch() with an AbortError; that is not a load failure
+                if (e.name === 'AbortError') {
+                    logger.warn('fetch() caught AbortError: Request ' + commonMediaRequest.url + ' aborted', e);
+                } else {
+                    _handleFetchError(commonMediaRequest);
+                }
             })
     }
 
@@ -96,6 +102,9 @@ function FetchLoader() {
          * @param done - true if the stream has already given you all its data.
          */
         const _processResult = ({ value, done }) => {
+            if (commonMediaRequest.customData.cancelled) {
+                return;
+            }
 
             if (done) {
                 _handleRequestComplete()
@@ -274,8 +283,13 @@ function FetchLoader() {
     function _readResponseBody(commonMediaRequest, commonMediaResponse, processResult) {
         commonMediaRequest.customData.reader.read()
             .then(processResult)
-            .catch(function () {
-                _handleFetchError(commonMediaRequest);
+            .catch(function (e) {
+                // A deliberate abort() rejects reader.read() with an AbortError; that is not a load failure
+                if (e.name === 'AbortError') {
+                    logger.warn('Reader caught AbortError: Request ' + commonMediaRequest.url + ' aborted', e);
+                } else {
+                    _handleFetchError(commonMediaRequest);
+                }
             });
     }
 
@@ -371,14 +385,18 @@ function FetchLoader() {
      */
     function abort() {
         // this = httpRequest (CommonMediaRequest)
+        this.customData.cancelled = true;
         if (this.customData.abortController) {
-            // For firefox and edge
+            // For devices supporting AbortController
             this.customData.abortController.abort();
         } else if (this.customData.reader) {
-            // For Chrome
+            // For those devices that do not support AbortController but have implemented the Streams API
+            // E.g Chrome-v65 and earlier
             try {
                 this.customData.reader.cancel();
-                this.onabort();
+                if (this.customData.onabort) {
+                    this.customData.onabort();
+                }
             } catch (e) {
                 // throw exceptions (TypeError) when reader was previously closed,
                 // for example, because a network issue
