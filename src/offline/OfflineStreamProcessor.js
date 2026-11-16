@@ -252,7 +252,8 @@ function OfflineStreamProcessor(config) {
             }
             isStopped = false;
 
-            offlineStoreController.getRepresentationCurrentState(manifestId, representationController.getCurrentRepresentation().id)
+            offlineStoreController
+                .getRepresentationCurrentState(manifestId, representationController.getCurrentRepresentation().id)
                 .then((state) => {
                     if (state) {
                         indexHandler.setCurrentIndex(state.index);
@@ -284,7 +285,8 @@ function OfflineStreamProcessor(config) {
             } else {
                 request = getNextRequest();
 
-                // update progression : done here because availableSegmentsNumber is done in getNextRequest from dash handler
+                // update progression : done here because availableSegmentsNumber is done in getNextRequest from dash
+                // handler
                 updateProgression();
             }
 

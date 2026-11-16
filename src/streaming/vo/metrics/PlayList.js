@@ -88,7 +88,7 @@ class PlayListTrace {
          */
         this.representationid = null;
         /**
-         * If not present, this metrics concerns the Representation as a whole.
+         * If not present, this metrics concerns the Representation as a whole.<br>
          * If present, subreplevel indicates the greatest value of any
          * Subrepresentation@level being rendered.
          * @type {number}
@@ -108,7 +108,10 @@ class PlayListTrace {
          */
         this.mstart = null;
         /**
-         * The duration of the continuously presented samples (which is the same in real time and media time). "Continuously presented" means that the media clock continued to advance at the playout speed throughout the interval. NOTE: the spec does not call out the units, but all other durations etc are in ms, and we use ms too.
+         * The duration of the continuously presented samples (which is the same in real time and media time).
+         * "Continuously presented" means that the media clock continued to advance at the playout speed throughout the
+         * interval. NOTE: the spec does not call out the units, but all other durations etc are in ms, and we use ms
+         * too.
          * @type {number}
          * @public
          */
@@ -120,7 +123,7 @@ class PlayListTrace {
          */
         this.playbackspeed = null;
         /**
-         * The reason why continuous presentation of this Representation was stopped.
+         * The reason why continuous presentation of this Representation was stopped.<br>
          * representation switch
          * rebuffering
          * user request

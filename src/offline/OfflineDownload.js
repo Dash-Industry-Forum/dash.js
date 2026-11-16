@@ -496,7 +496,7 @@ function OfflineDownload(config) {
     }
 
     /**
-     * Create the parser used to convert original manifest in offline manifest
+     * Create the parser used to convert original manifest in offline manifest<br>
      * Creates a JSON object that will be stored in database
      * @param {Object[]} selectedRepresentations
      * @instance

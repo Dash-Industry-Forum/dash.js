@@ -33,7 +33,8 @@ describe('AbrController', function () {
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(Constants.VIDEO);
     const enhancementMediaInfo = voHelper.getDummyMediaInfo(Constants.ENHANCEMENT);
-    const dummyRepresentations = [voHelper.getDummyRepresentation(Constants.VIDEO, 0), voHelper.getDummyRepresentation(Constants.VIDEO, 1),
+    const dummyRepresentations = [voHelper.getDummyRepresentation(Constants.VIDEO, 0),
+        voHelper.getDummyRepresentation(Constants.VIDEO, 1),
         voHelper.getDummyRepresentation(Constants.ENHANCEMENT, 2)];
 
     // Representation 2 has a dependentRepresentation with id 0
@@ -440,7 +441,10 @@ describe('AbrController', function () {
             mediaInfo.streamInfo = streamProcessor.getStreamInfo();
             mediaInfo.type = Constants.VIDEO;
 
-            let optimalRepresentationForBitrate = abrCtrl.getOptimalRepresentationForBitrate(mediaInfo, bitrateList[2].bandwidth / 1000);
+            let optimalRepresentationForBitrate = abrCtrl.getOptimalRepresentationForBitrate(
+                mediaInfo,
+                bitrateList[2].bandwidth / 1000
+            );
             expect(optimalRepresentationForBitrate.id).to.be.equal(3);
         });
     })
@@ -457,7 +461,9 @@ describe('AbrController', function () {
             ];
             adapterMock.getVoRepresentations = () => representations;
             adapterMock.areMediaInfosEqual = () => true;
-            streamProcessor.getRepresentationController = () => ({ getCurrentCompositeRepresentation: () => representations[0] });
+            streamProcessor.getRepresentationController = () => ({
+                getCurrentCompositeRepresentation: () => representations[0]
+            });
 
             const requested = [];
             const onQualityChangeRequested = (e) => requested.push(e.newRepresentation.id);
@@ -543,7 +549,8 @@ describe('AbrController', function () {
                 { bitrateInKbit: 2, bandwidth: 2000, mediaInfo: audioMediaInfo, id: '1' },
                 { bitrateInKbit: 1, bandwidth: 1000, mediaInfo: audioMediaInfo, id: '2' }
             ];
-            adapterMock.getVoRepresentations = (info) => info === audioMediaInfo ? audioRepresentations : videoRepresentations;
+            adapterMock.getVoRepresentations = (info) => info === audioMediaInfo ?
+                audioRepresentations : videoRepresentations;
             adapterMock.areMediaInfosEqual = () => true;
 
             abrCtrl.excludeRepresentation(videoRepresentations[0]);
@@ -564,7 +571,9 @@ describe('AbrController', function () {
             adapterMock.getVoRepresentations = () => representations;
             adapterMock.areMediaInfosEqual = () => true;
             // B's segment list load failed after we already switched to C
-            streamProcessor.getRepresentationController = () => ({ getCurrentCompositeRepresentation: () => representations[0] });
+            streamProcessor.getRepresentationController = () => ({
+                getCurrentCompositeRepresentation: () => representations[0]
+            });
 
             const requested = [];
             const onQualityChangeRequested = (e) => requested.push(e.newRepresentation.id);
@@ -588,7 +597,9 @@ describe('AbrController', function () {
             adapterMock.getVoRepresentations = () => representations;
             adapterMock.areMediaInfosEqual = () => true;
             const enhancement = { id: 'enhancement', dependentRepresentation: representations[0] };
-            streamProcessor.getRepresentationController = () => ({ getCurrentCompositeRepresentation: () => enhancement });
+            streamProcessor.getRepresentationController = () => ({
+                getCurrentCompositeRepresentation: () => enhancement
+            });
 
             const requested = [];
             const onQualityChangeRequested = (e) => requested.push(e.newRepresentation.id);
@@ -847,7 +858,8 @@ describe('AbrController', function () {
                 totalNumberOfPartialSegments: 4,
                 replacementSubNumber: 3 // end of sequence -> allows switch
             });
-            // Provide segmentSequenceProperties so canPerformQualitySwitch returns true; but because replacementSubNumber === totalNumber-1 it already allows
+            // Provide segmentSequenceProperties so canPerformQualitySwitch returns true; but because
+            // replacementSubNumber === totalNumber-1 it already allows
             rep0.segmentSequenceProperties = [new SegmentSequenceProperties()];
 
             const onQualityChange = (e) => {

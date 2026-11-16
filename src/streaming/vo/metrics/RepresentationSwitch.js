@@ -57,7 +57,7 @@ class RepresentationSwitch {
          */
         this.to = null;
         /**
-         * If not present, this metrics concerns the Representation as a whole.
+         * If not present, this metrics concerns the Representation as a whole.<br>
          * If present, lto indicates the value of SubRepresentation@level within
          * Representation identifying the switch-to level of the Representation.
          *

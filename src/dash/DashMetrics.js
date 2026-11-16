@@ -318,7 +318,8 @@ function DashMetrics(config) {
     function addManifestUpdateStreamInfo(streamInfo) {
         if (streamInfo) {
             const manifestUpdate = this.getCurrentManifestUpdate();
-            metricsModel.addManifestUpdateStreamInfo(manifestUpdate, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
+            metricsModel.addManifestUpdateStreamInfo(manifestUpdate, streamInfo.id, streamInfo.index, streamInfo.start,
+                streamInfo.duration);
         }
     }
 
@@ -509,7 +510,8 @@ function DashMetrics(config) {
      * @ignore
      */
     function pushPlayListTraceMetrics(endTime, reason) {
-        if (playListTraceMetricsClosed === false && playListMetrics && playListTraceMetrics && playListTraceMetrics.start) {
+        if (playListTraceMetricsClosed === false && playListMetrics && playListTraceMetrics &&
+            playListTraceMetrics.start) {
             const startTime = playListTraceMetrics.start;
             playListTraceMetrics.duration = endTime.getTime() - startTime.getTime();
             playListTraceMetrics.stopreason = reason;

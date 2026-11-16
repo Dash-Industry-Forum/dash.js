@@ -60,7 +60,7 @@ function TTMLParser() {
     }
 
     /**
-     * Parse the raw data and process it to return the HTML element representing the cue.
+     * Parse the raw data and process it to return the HTML element representing the cue.<br>
      * Return the region to be processed and controlled (hide/show) by the caption controller.
      * @param {string} data - raw data received from the TextSourceBuffer
      * @param {number} offsetTime - offset time to apply to cue time

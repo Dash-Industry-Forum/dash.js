@@ -286,7 +286,8 @@ describe('ScheduleController', function () {
             expect(fragmentNeededSpy.notCalled).to.be.true;
 
             // The scheduler is still running and requests again once the media behind the gap no longer counts.
-            // Makes sure the assertion above is not caused by an exception, which _shouldScheduleNextRequest would swallow.
+            // Makes sure the assertion above is not caused by an exception, which _shouldScheduleNextRequest would
+            // swallow.
             currentBufferingTime = 16;
             clock.tick(mediaPlayerModel.getScheduleTimeout());
 
@@ -294,7 +295,8 @@ describe('ScheduleController', function () {
         });
 
         it('should request more segments if the media behind the gap does not overlap with the other track yet and the other track is further ahead', () => {
-            // E.g. video gap 16-24 and audio gap 16-48: the video element has no range behind the gap, so the GapController can not jump yet
+            // E.g. video gap 16-24 and audio gap 16-48: the video element has no range behind the gap, so the
+            // GapController can not jump yet
             createScheduleController(40);
             playbackControllerStub.getBufferedRanges = () => toRanges([[0, 16]]);
             bufferedEnds.audio = 56;
@@ -322,7 +324,8 @@ describe('ScheduleController', function () {
         });
 
         it('should not count buffered media without a playback time, e.g. while preloading', () => {
-            // Counting from 0 would include [0, 16] and [24, 40], i.e. 32s, and stop scheduling. The buffer level (7) is below the target (18)
+            // Counting from 0 would include [0, 16] and [24, 40], i.e. 32s, and stop scheduling. The buffer level (7)
+            // is below the target (18)
             createScheduleController(40);
             playbackControllerStub.getTime = () => null;
             scheduleController.startScheduleTimer(0);
@@ -340,7 +343,8 @@ describe('ScheduleController', function () {
         });
 
         it('should not change the scheduling decision without a gap in the buffer', () => {
-            // Contiguous buffer from 0 to 16 and currentTime 9: the buffered time until the next request equals the buffer level (7)
+            // Contiguous buffer from 0 to 16 and currentTime 9: the buffered time until the next request equals the
+            // buffer level (7)
             createScheduleController(16);
             ownRanges = [[0, 16]];
             playbackControllerStub.getBufferedRanges = () => toRanges([[0, 16]]);
@@ -352,7 +356,8 @@ describe('ScheduleController', function () {
         });
 
         it('should not change the audio buffer target without a gap in the video buffer', () => {
-            // Video is appended contiguously until 16: the time until the end of the appended video equals the video buffer level (7)
+            // Video is appended contiguously until 16: the time until the end of the appended video equals the video
+            // buffer level (7)
             createScheduleController(20, Constants.AUDIO, 16);
 
             expect(scheduleController.getBufferTarget()).to.equal(7 + 1);

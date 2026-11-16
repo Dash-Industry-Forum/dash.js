@@ -45,7 +45,7 @@ class DVRInfo {
          */
         this.time = null;
         /**
-         * The current Segment Availability Range as an object with start and end properties.
+         * The current Segment Availability Range as an object with start and end properties.<br>
          * It's delta defined by the timeShiftBufferDepth MPD attribute.
          * @public
          */

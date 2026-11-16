@@ -80,7 +80,8 @@ function Capabilities() {
     }
 
     function areKeyIdsUsable(mediaInfo) {
-        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds || mediaInfo.normalizedKeyIds.size === 0) {
+        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds ||
+            mediaInfo.normalizedKeyIds.size === 0) {
             return true
         }
 
@@ -88,7 +89,8 @@ function Capabilities() {
     }
 
     function areKeyIdsExpired(mediaInfo) {
-        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds || mediaInfo.normalizedKeyIds.size === 0) {
+        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds ||
+            mediaInfo.normalizedKeyIds.size === 0) {
             return false
         }
 
@@ -140,7 +142,8 @@ function Capabilities() {
         }
 
         if (settings.get().streaming.enhancement.enabled && _isEnhancementCodec(basicConfiguration.codec)) {
-            // Remove enhancement codecs from tested configurations so that they can be re-tested if the enhancement settings change
+            // Remove enhancement codecs from tested configurations so that they can be re-tested if the enhancement
+            // settings change
             testedCodecConfigurations = testedCodecConfigurations.filter((configuration) => {
                 return !_isEnhancementCodec(configuration.mediaSourceCodecString);
             });
@@ -158,8 +161,8 @@ function Capabilities() {
     }
 
     /**
-     * Checks whether a codec is supported according to the previously tested configurations.
-     * Note that you need to call runCodecSupportCheck() first to populate the testedCodecConfigurations array.
+     * Checks whether a codec is supported according to the previously tested configurations.<br>
+     * Note that you need to call runCodecSupportCheck() first to populate the testedCodecConfigurations array.<br>
      * This function only validates codec support based on previously tested configurations.
      * @param basicConfiguration
      * @param type
@@ -188,16 +191,21 @@ function Capabilities() {
     }
 
     /**
-     * MediaCapabilitiesAPI throws an error if one of the attribute is missing. We only use it if we have all required information.
+     * MediaCapabilitiesAPI throws an error if one of the attribute is missing. We only use it if we have all required
+     * information.
      * @return {boolean}
      * @private
      */
     function _canUseMediaCapabilitiesApi(basicConfiguration, type) {
-        return _isMediaCapabilitiesApiSupported() && ((basicConfiguration.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && basicConfiguration.codec && basicConfiguration.width && basicConfiguration.height && basicConfiguration.bitrate && basicConfiguration.framerate));
+        return _isMediaCapabilitiesApiSupported() &&
+            ((basicConfiguration.codec && type === Constants.AUDIO) ||
+                (type === Constants.VIDEO && basicConfiguration.codec && basicConfiguration.width &&
+                    basicConfiguration.height && basicConfiguration.bitrate && basicConfiguration.framerate));
     }
 
     function _isMediaCapabilitiesApiSupported() {
-        return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo
+        return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities &&
+            navigator.mediaCapabilities.decodingInfo
     }
 
 
@@ -300,7 +308,7 @@ function Capabilities() {
                 configurations.push({ ...genericConfiguration });
                 return;
             }
-                
+
             const systemStringsToApply = KeySystemMetadata.getSystemStringsToApply(
                 keySystemMetadata.ks, keySystemMetadata.protData);
 
@@ -316,8 +324,12 @@ function Capabilities() {
                     robustnessLevel = ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO;
                 }
                 const protData = keySystemMetadata.protData;
-                const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
-                const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+                const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0)
+                    ? protData.audioRobustness
+                    : robustnessLevel;
+                const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0)
+                    ? protData.videoRobustness
+                    : robustnessLevel;
 
                 if (type === Constants.AUDIO) {
                     curr.keySystemConfiguration[type] = { robustness: audioRobustness }
@@ -355,7 +367,7 @@ function Capabilities() {
     }
 
     /**
-     * Check if codec is an enhancement layer codec, e.g. LCEVC
+     * Check if codec is an enhancement layer codec, e.g. LCEVC<br>
      * Enhancement layer codecs can be configured via settings.
      * @param {string} codec
      * @return {boolean} true if enhancement codec
@@ -473,7 +485,8 @@ function Capabilities() {
 
         // we already took care of these descriptors with the codecs check
         // let's bypass them here
-        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
+        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi &&
+            settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
             supportedEssentialProps = _addProperties(supportedEssentialProps,
                 [
                     { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI },
@@ -482,8 +495,12 @@ function Capabilities() {
                 ]
             );
         }
-        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi && settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
-            supportedEssentialProps = _addProperties(supportedEssentialProps, [{ schemeIdUri: Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI }]);
+        if (settings.get().streaming.capabilities.useMediaCapabilitiesApi &&
+            settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
+            supportedEssentialProps = _addProperties(
+                supportedEssentialProps,
+                [{ schemeIdUri: Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI }]
+            );
         }
 
         try {

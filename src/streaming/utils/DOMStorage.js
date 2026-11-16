@@ -87,7 +87,8 @@ function DOMStorage(config) {
             return supported;
         }
 
-        /* When Safari (OS X or iOS) is in private browsing mode, it appears as though localStorage is available, but trying to call setItem throws an exception.
+        /* When Safari (OS X or iOS) is in private browsing mode, it appears as though localStorage is available,
+         but trying to call setItem throws an exception.
          http://stackoverflow.com/questions/14555347/html5-localstorage-error-with-safari-quota-exceeded-err-dom-exception-22-an
 
          Check if the storage can be used
@@ -151,7 +152,8 @@ function DOMStorage(config) {
             const key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
             try {
                 const obj = JSON.parse(localStorage.getItem(key)) || {};
-                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= settings.get().streaming.lastMediaSettingsCachingInfo.ttl || false;
+                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >=
+                    settings.get().streaming.lastMediaSettingsCachingInfo.ttl || false;
                 mediaSettings = obj.settings;
 
                 if (isExpired) {
@@ -180,7 +182,8 @@ function DOMStorage(config) {
             const key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             try {
                 const obj = JSON.parse(localStorage.getItem(key)) || {};
-                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= settings.get().streaming.lastBitrateCachingInfo.ttl || false;
+                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >=
+                    settings.get().streaming.lastBitrateCachingInfo.ttl || false;
                 const bitrate = parseFloat(obj.bitrate);
 
                 if (!isNaN(bitrate) && !isExpired) {

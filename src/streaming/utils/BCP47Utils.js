@@ -49,7 +49,7 @@
 
 /**
  * ISO 639-2 (3-letter) to ISO 639-1 (2-letter) mappings for languages
- * commonly found in broadcast/streaming content (DASH, HLS, DVB).
+ * commonly found in broadcast/streaming content (DASH, HLS, DVB).<br>
  * Covers both 639-2/B (bibliographic) and 639-2/T (terminological) codes.
  */
 export const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescriptors({
@@ -90,7 +90,7 @@ export const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescripto
 }));
 
 /**
- * IANA Language Subtag Registry: grandfathered and redundant tags that have a Preferred-Value.
+ * IANA Language Subtag Registry: grandfathered and redundant tags that have a Preferred-Value.<br>
  * Grandfathered tags without a Preferred-Value (e.g. i-default, zh-min) are kept as they are.
  */
 const TAG_PREFERRED_VALUES = Object.create(null, Object.getOwnPropertyDescriptors({
@@ -105,7 +105,7 @@ const TAG_PREFERRED_VALUES = Object.create(null, Object.getOwnPropertyDescriptor
 }));
 
 /**
- * IANA Language Subtag Registry: deprecated language subtags with a Preferred-Value.
+ * IANA Language Subtag Registry: deprecated language subtags with a Preferred-Value.<br>
  * ponytail: only the 2-letter ones; add deprecated 3-letter codes if they show up in content
  */
 const DEPRECATED_LANGUAGES = Object.create(null, Object.getOwnPropertyDescriptors({
@@ -120,8 +120,9 @@ const DEPRECATED_REGIONS = Object.create(null, Object.getOwnPropertyDescriptors(
 }));
 
 /**
- * IANA Language Subtag Registry: extlang subtags and their Prefix, used to produce the extlang form.
- * ponytail: Chinese, Arabic, Malay, Swahili and sign language families only; add other extlangs from the registry if needed
+ * IANA Language Subtag Registry: extlang subtags and their Prefix, used to produce the extlang form.<br>
+ * ponytail: Chinese, Arabic, Malay, Swahili and sign language families only; add other extlangs from the registry
+ * if needed
  */
 const EXTLANG_PREFIXES = Object.create(null);
 [

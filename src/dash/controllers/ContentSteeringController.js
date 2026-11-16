@@ -246,8 +246,10 @@ function ContentSteeringController() {
                     },
                     complete: () => {
                         // Clear everything except for the current entry
-                        serviceLocationList.baseUrl.all = _getClearedServiceLocationListAfterSteeringRequest(serviceLocationList.baseUrl);
-                        serviceLocationList.location.all = _getClearedServiceLocationListAfterSteeringRequest(serviceLocationList.location);
+                        serviceLocationList.baseUrl.all =
+                            _getClearedServiceLocationListAfterSteeringRequest(serviceLocationList.baseUrl);
+                        serviceLocationList.location.all =
+                            _getClearedServiceLocationListAfterSteeringRequest(serviceLocationList.location);
                     }
                 });
             } catch (e) {
@@ -338,7 +340,11 @@ function ContentSteeringController() {
         if (!serviceLocation || !throughputList[serviceLocation] || throughputList[serviceLocation].length === 0) {
             return -1;
         }
-        const throughput = throughputController.getArithmeticMean(throughputList[serviceLocation], throughputList[serviceLocation].length, true);
+        const throughput = throughputController.getArithmeticMean(
+            throughputList[serviceLocation],
+            throughputList[serviceLocation].length,
+            true
+        );
 
         return parseInt(throughput * 1000);
     }
@@ -350,7 +356,8 @@ function ContentSteeringController() {
      * @private
      */
     function _handleSteeringResponse(data) {
-        if (!data || !data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] || parseInt(data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION]) !== 1) {
+        if (!data || !data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] ||
+            parseInt(data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION]) !== 1) {
             return;
         }
 
@@ -358,7 +365,8 @@ function ContentSteeringController() {
         currentSteeringResponseData = new ContentSteeringResponse();
         currentSteeringResponseData.version = data[DashConstants.CONTENT_STEERING_RESPONSE.VERSION];
 
-        if (data[DashConstants.CONTENT_STEERING_RESPONSE.TTL] && !isNaN(data[DashConstants.CONTENT_STEERING_RESPONSE.TTL])) {
+        if (data[DashConstants.CONTENT_STEERING_RESPONSE.TTL] &&
+            !isNaN(data[DashConstants.CONTENT_STEERING_RESPONSE.TTL])) {
             currentSteeringResponseData.ttl = data[DashConstants.CONTENT_STEERING_RESPONSE.TTL];
         }
         if (data[DashConstants.CONTENT_STEERING_RESPONSE.RELOAD_URI]) {
@@ -369,9 +377,10 @@ function ContentSteeringController() {
         }
         if (data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES]) {
             currentSteeringResponseData.pathwayClones = data[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES]
-            currentSteeringResponseData.pathwayClones = currentSteeringResponseData.pathwayClones.filter((pathwayClone) => {
-                return _isValidPathwayClone(pathwayClone);
-            })
+            currentSteeringResponseData.pathwayClones = currentSteeringResponseData.pathwayClones
+                .filter((pathwayClone) => {
+                    return _isValidPathwayClone(pathwayClone);
+                })
         }
 
         _startSteeringRequestTimer();
@@ -387,7 +396,9 @@ function ContentSteeringController() {
         return pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID]
             && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID]
             && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT]
-            && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST]
+            && pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][
+                DashConstants.CONTENT_STEERING_RESPONSE.HOST
+            ]
     }
 
     /**
@@ -448,7 +459,8 @@ function ContentSteeringController() {
         try {
             const synthesizedElements = [];
 
-            if (!referenceElements || referenceElements.length === 0 || !currentSteeringResponseData || !currentSteeringResponseData.pathwayClones || currentSteeringResponseData.pathwayClones.length === 0) {
+            if (!referenceElements || referenceElements.length === 0 || !currentSteeringResponseData ||
+                !currentSteeringResponseData.pathwayClones || currentSteeringResponseData.pathwayClones.length === 0) {
                 return synthesizedElements;
             }
 
@@ -462,13 +474,17 @@ function ContentSteeringController() {
                 }
                 if (reference) {
                     const referenceUrl = new URL(reference.url);
-                    let host = pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.HOST];
+                    let host = pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][
+                        DashConstants.CONTENT_STEERING_RESPONSE.HOST
+                    ];
                     host = Utils.stringHasProtocol(host) ? host : `${referenceUrl.protocol}//${host}`;
                     const synthesizedElement =
                         {
                             synthesizedUrl: `${host}${referenceUrl.pathname}`,
                             serviceLocation: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.ID],
-                            queryParams: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][DashConstants.CONTENT_STEERING_RESPONSE.PARAMS],
+                            queryParams: pathwayClone[DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT][
+                                DashConstants.CONTENT_STEERING_RESPONSE.PARAMS
+                            ],
                             reference
                         };
 

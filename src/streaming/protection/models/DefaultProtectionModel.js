@@ -184,7 +184,8 @@ function DefaultProtectionModel(config) {
     }
 
     /**
-     * For a specific key system: Iterate over the possible system strings and resolve once a valid configuration was found
+     * For a specific key system: Iterate over the possible system strings and resolve once a valid configuration was
+     * found
      * @param {array} systemStringsToApply
      * @param {object} configs
      * @return {Promise}
@@ -197,7 +198,8 @@ function DefaultProtectionModel(config) {
     }
 
     /**
-     * Recursively iterate over the possible system strings until a supported configuration is found or we ran out of options
+     * Recursively iterate over the possible system strings until a supported configuration is found or we ran out of
+     * options
      * @param {array} systemStringsToApply
      * @param {object} configs
      * @param {number} idx
@@ -283,7 +285,12 @@ function DefaultProtectionModel(config) {
                 })
                 .catch((error) => {
                     reject(error);
-                    eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, { error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name) });
+                    eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, {
+                        error: new DashJSError(
+                            ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE,
+                            ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name
+                        )
+                    });
                 });
         })
     }
@@ -305,7 +312,8 @@ function DefaultProtectionModel(config) {
         // - FairPlay: use 'sinf'
         // - All others: use 'cenc'
         let dataType;
-        if (keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || (keySystemMetadata.protData && keySystemMetadata.protData.clearkeys))) {
+        if (keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING &&
+            (keySystemMetadata.initData || (keySystemMetadata.protData && keySystemMetadata.protData.clearkeys))) {
             dataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS;
         } else if (keySystem.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
             dataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF;
@@ -493,7 +501,9 @@ function DefaultProtectionModel(config) {
 
             _onKeyMessage: function (event) {
                 let message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, undefined, event.messageType) });
+                eventBus.trigger(events.INTERNAL_KEY_MESSAGE, {
+                    data: new KeyMessage(this, message, undefined, event.messageType)
+                });
 
             },
 

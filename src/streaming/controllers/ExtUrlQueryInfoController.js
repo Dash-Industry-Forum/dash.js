@@ -94,7 +94,8 @@ function ExtUrlQueryInfoController() {
         dst.initialQueryString = initialQueryString;
     }
 
-    // The logic for supporting templates with queryTemplate=$query:<param>$ is not in place yet, this only support queryTemplate="$querypart$".
+    // The logic for supporting templates with queryTemplate=$query:<param>$ is not in place yet, this only support
+    // queryTemplate="$querypart$".
     function _generateFinalQueryString(property, resultObject, parentQueryString) {
         if (!property) {
             resultObject.finalQueryString = parentQueryString;
@@ -137,11 +138,23 @@ function ExtUrlQueryInfoController() {
                 const adaptationObject = {
                     representation: []
                 };
-                _generateQueryParams(adaptationObject, adaptationSet, mpdUrlQuery, periodObject, DashConstants.ADAPTATION_SET);
+                _generateQueryParams(
+                    adaptationObject,
+                    adaptationSet,
+                    mpdUrlQuery,
+                    periodObject,
+                    DashConstants.ADAPTATION_SET
+                );
 
                 adaptationSet.Representation.forEach((representation) => {
                     const representationObject = {};
-                    _generateQueryParams(representationObject, representation, mpdUrlQuery, adaptationObject, DashConstants.REPRESENTATION);
+                    _generateQueryParams(
+                        representationObject,
+                        representation,
+                        mpdUrlQuery,
+                        adaptationObject,
+                        DashConstants.REPRESENTATION
+                    );
 
                     adaptationObject.representation.push(representationObject);
                 });
@@ -169,13 +182,15 @@ function ExtUrlQueryInfoController() {
                     .adaptation[adaptation.index]
                     .representation[representation.index];
                 const requestUrl = new URL(request.url);
-                const canSendToOrigin = !queryInfo.sameOriginOnly || mpdQueryStringInformation.origin === requestUrl.origin;
+                const canSendToOrigin = !queryInfo.sameOriginOnly ||
+                    mpdQueryStringInformation.origin === requestUrl.origin;
                 const inRequest = queryInfo.includeInRequests.includes(DashConstants.SEGMENT_TYPE);
                 if (inRequest && canSendToOrigin) {
                     return queryInfo.queryParams;
                 }
             } else if (request.type === HTTPRequest.MPD_TYPE) {
-                const inRequest = [DashConstants.MPD_TYPE, DashConstants.MPD_PATCH_TYPE].some(r => mpdQueryStringInformation.includeInRequests.includes(r));
+                const inRequest = [DashConstants.MPD_TYPE, DashConstants.MPD_PATCH_TYPE]
+                    .some(r => mpdQueryStringInformation.includeInRequests.includes(r));
                 if (inRequest) {
                     return mpdQueryStringInformation.queryParams;
                 }

@@ -37,7 +37,8 @@ function isValidTargetTime(time) {
 }
 
 /**
- * Returns the end of the buffered range that contains targetTime, i.e. the time until which the buffer is continuous.
+ * Returns the end of the buffered range that contains targetTime, i.e. the time until which the buffer is
+ * continuous.<br>
  * Returns NaN if targetTime is not buffered.
  */
 function getContinuousBufferTime(ranges, targetTime) {
@@ -226,7 +227,8 @@ function getRangeAt(ranges, time, tolerance) {
 }
 
 /**
- * Returns the buffered time within the interval [start, end]. In contrast to getContinuousBufferTime this includes ranges behind a gap.
+ * Returns the buffered time within the interval [start, end]. In contrast to getContinuousBufferTime this includes
+ * ranges behind a gap.
  */
 function getBufferedTimeInInterval(ranges, start, end) {
     let bufferedTime = 0;
@@ -243,7 +245,8 @@ function getBufferedTimeInInterval(ranges, start, end) {
 }
 
 /**
- * Returns the end of the buffered data in front of time, limited to time. Ranges starting at or after time are ignored.
+ * Returns the end of the buffered data in front of time, limited to time. Ranges starting at or after time are
+ * ignored.<br>
  * Returns NaN if nothing is buffered in front of time.
  */
 function getBufferedEndBefore(ranges, time) {

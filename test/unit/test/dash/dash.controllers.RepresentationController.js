@@ -30,7 +30,12 @@ describe('RepresentationController', function () {
     const enhancementType = 'enhancement';
     const specHelper = new SpecHelper();
     const voRepresentations = [];
-    voRepresentations.push(voHelper.getDummyRepresentation(testType, 0), voHelper.getDummyRepresentation(testType, 1), voHelper.getDummyRepresentation(testType, 2), voHelper.getDummyRepresentation(enhancementType, 3));
+    voRepresentations.push(
+        voHelper.getDummyRepresentation(testType, 0),
+        voHelper.getDummyRepresentation(testType, 1),
+        voHelper.getDummyRepresentation(testType, 2),
+        voHelper.getDummyRepresentation(enhancementType, 3)
+    );
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const eventBus = EventBus(context).getInstance();
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
@@ -155,7 +160,8 @@ describe('RepresentationController', function () {
 
         beforeEach(function () {
             segmentDataLoadedFor = [];
-            segmentBaseRepresentations = [0, 1, 2].map((index) => voHelper.createSegmentBaseRepresentation(testType, index));
+            segmentBaseRepresentations = [0, 1, 2]
+                .map((index) => voHelper.createSegmentBaseRepresentation(testType, index));
             lazyRepresentationController = RepresentationController(context).create({
                 streamInfo: streamProcessor.getStreamInfo(),
                 abrController: abrControllerMock,

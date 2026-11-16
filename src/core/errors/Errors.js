@@ -155,7 +155,8 @@ class Errors extends ErrorsBase {
         this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 35;
 
         /**
-         * Error code returned when the available Adaptation Sets can not be selected because the corresponding key ids have an invalid key status
+         * Error code returned when the available Adaptation Sets can not be selected because the corresponding key ids
+         * have an invalid key status
          * @type {number}
          */
         this.NO_SUPPORTED_KEY_IDS = 36;

@@ -57,8 +57,10 @@ function CapabilitiesFilter() {
             const mediaTypesToCheck = [Constants.VIDEO, Constants.AUDIO];
             const promises = [];
 
-            // We determine all the configurations we need to check. Each unique configuration should only be checked once.
-            // This is important especially for large multiperiod MPDs. A redundant configuration check can lead to increased processing time.
+            // We determine all the configurations we need to check. Each unique configuration should only be checked
+            // once.
+            // This is important especially for large multiperiod MPDs. A redundant configuration check can lead to
+            // increased processing time.
             mediaTypesToCheck.forEach(mediaType => {
                 const configurationsToCheck = _getConfigurationsToCheck(manifest, mediaType);
                 configurationsToCheck.forEach(basicConfiguration => {
@@ -146,8 +148,9 @@ function CapabilitiesFilter() {
         period.Preselection = period.Preselection.filter((prsl) => {
             if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
                 const prslCodec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
-                const isPrslCodecSupported = !prslCodec || _getRepresentationsForPreselection(prsl, period.AdaptationSet)
-                    .every((representation) => _isCodecSupported(type, prsl, prslCodec, representation));
+                const isPrslCodecSupported = !prslCodec ||
+                    _getRepresentationsForPreselection(prsl, period.AdaptationSet)
+                        .every((representation) => _isCodecSupported(type, prsl, prslCodec, representation));
 
                 if (!isPrslCodecSupported) {
                     logger.warn(`[CapabilitiesFilter] Preselection@codecs ${prslCodec} not supported. Removing Preselection with ID ${prsl.id}`);
@@ -238,7 +241,14 @@ function CapabilitiesFilter() {
                         const representations = _getRepresentationsForPreselection(prsl, period.AdaptationSet);
 
                         representations.forEach((representation) => {
-                            _processCodecToCheck(type, prsl, prslCodec, configurationsSet, configurations, representation);
+                            _processCodecToCheck(
+                                type,
+                                prsl,
+                                prslCodec,
+                                configurationsSet,
+                                configurations,
+                                representation
+                            );
                         });
                     }
                 });
@@ -248,7 +258,14 @@ function CapabilitiesFilter() {
         return configurations;
     }
 
-    function _processCodecToCheck(type, element, codec, configurationsSet, configurations, prslCommonRepresentation = undefined) {
+    function _processCodecToCheck(
+        type,
+        element,
+        codec,
+        configurationsSet,
+        configurations,
+        prslCommonRepresentation = undefined
+    ) {
         /* el is either a Representation or Preselection element */
         const config = _createConfiguration(type, element, codec, prslCommonRepresentation);
         const configString = JSON.stringify(config);
@@ -259,9 +276,11 @@ function CapabilitiesFilter() {
         }
     }
 
-    /* Build the configuration object for capability requests based on primary element (Representation or Preselection) */
+    /* Build the configuration object for capability requests based on primary element (Representation or
+     * Preselection) */
 
-    /* In case Preselection elements are present, attributes of this element override their counterparts from the Representation element */
+    /* In case Preselection elements are present, attributes of this element override their counterparts from the
+     * Representation element */
     function _createConfiguration(type, primaryElement, codec, prslCommonRepresentation) {
         let config = null;
         switch (type) {
@@ -322,7 +341,8 @@ function CapabilitiesFilter() {
             if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
                 let prslCommonRepresentationHDRColorimetryConfig = _convertHDRColorimetryToConfig(prslCommonRep);
 
-                // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
+                // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't
+                // mark the config as supported.
                 let isCommonRepCfgSupported = prslCommonRepresentationHDRColorimetryConfig.isSupported;
                 delete prslCommonRepresentationHDRColorimetryConfig.isSupported;
                 config.isSupported = config.isSupported && isCommonRepCfgSupported;
@@ -339,7 +359,8 @@ function CapabilitiesFilter() {
             if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
                 let prslCommonRepresentationHDRMetadataFormatConfig = _convertHDRMetadataFormatToConfig(prslCommonRep);
 
-                // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
+                // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't
+                // mark the config as supported.
                 let isCommonRepCfgSupported = prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
                 delete prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
                 config.isSupported = config.isSupported && isCommonRepCfgSupported;
@@ -372,7 +393,8 @@ function CapabilitiesFilter() {
             // translate ColourPrimaries signaling into capability queries
             if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && [1, 5, 6, 7].includes(numericValue)) {
                 cfg.colorGamut = Constants.MEDIA_CAPABILITIES_API.COLORGAMUT.SRGB;
-            } else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && [11, 12].includes(numericValue)) {
+            } else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI &&
+                [11, 12].includes(numericValue)) {
                 cfg.colorGamut = Constants.MEDIA_CAPABILITIES_API.COLORGAMUT.P3;
             } else if (prop.schemeIdUri === Constants.COLOUR_PRIMARIES_SCHEME_ID_URI && [9].includes(numericValue)) {
                 cfg.colorGamut = Constants.MEDIA_CAPABILITIES_API.COLORGAMUT.REC2020;
@@ -383,13 +405,17 @@ function CapabilitiesFilter() {
             }
 
             // translate TransferCharacteristics signaling into capability queries
-            if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [1, 6, 13, 14, 15].includes(numericValue)) {
+            if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI &&
+                [1, 6, 13, 14, 15].includes(numericValue)) {
                 cfg.transferFunction = Constants.MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.SRGB;
-            } else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [16].includes(numericValue)) {
+            } else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI &&
+                [16].includes(numericValue)) {
                 cfg.transferFunction = Constants.MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.PQ;
-            } else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [18].includes(numericValue)) {
+            } else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI &&
+                [18].includes(numericValue)) {
                 cfg.transferFunction = Constants.MEDIA_CAPABILITIES_API.TRANSFERFUNCTION.HLG;
-            } else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI && [2].includes(numericValue)) {
+            } else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI &&
+                [2].includes(numericValue)) {
                 cfg.transferFunction = null;
             } else if (prop.schemeIdUri === Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI) {
                 cfg.isSupported = false;
@@ -407,11 +433,15 @@ function CapabilitiesFilter() {
 
         for (const prop of representation.EssentialProperty || []) {
             // translate hdrMetadataType signaling into capability queries
-            if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value === Constants.HDR_METADATA_FORMAT_VALUES.ST2094_10) {
+            if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI &&
+                prop.value === Constants.HDR_METADATA_FORMAT_VALUES.ST2094_10) {
                 cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SMPTE_ST_2094_10;
-            } else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value === Constants.HDR_METADATA_FORMAT_VALUES.SL_HDR2) {
-                cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SLHDR2; // Note: This is not specified by W3C
-            } else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI && prop.value === Constants.HDR_METADATA_FORMAT_VALUES.ST2094_40) {
+            } else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI &&
+                prop.value === Constants.HDR_METADATA_FORMAT_VALUES.SL_HDR2) {
+                // Note: This is not specified by W3C
+                cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SLHDR2;
+            } else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI &&
+                prop.value === Constants.HDR_METADATA_FORMAT_VALUES.ST2094_40) {
                 cfg.hdrMetadataType = Constants.MEDIA_CAPABILITIES_API.HDR_METADATATYPE.SMPTE_ST_2094_40;
             } else if (prop.schemeIdUri === Constants.HDR_METADATA_FORMAT_SCHEME_ID_URI) {
                 cfg.isSupported = false;
@@ -454,7 +484,8 @@ function CapabilitiesFilter() {
             audioChannelConfigs = prslCommonRep[DashConstants.AUDIO_CHANNEL_CONFIGURATION] || []
         }
 
-        const channelCounts = audioChannelConfigs.map(channelConfig => getNChanFromAudioChannelConfig(channelConfig, true));
+        const channelCounts = audioChannelConfigs
+            .map(channelConfig => getNChanFromAudioChannelConfig(channelConfig, true));
 
         // ensure that all AudioChannelConfiguration elements are the same value, otherwise ignore
         if (channelCounts.every(e => e == channelCounts[0])) {
@@ -467,8 +498,10 @@ function CapabilitiesFilter() {
     }
 
     function _addGenericAttributesToConfig(rep, config) {
-        if (protectionController && rep && rep[DashConstants.CONTENT_PROTECTION] && rep[DashConstants.CONTENT_PROTECTION].length > 0) {
-            config.keySystemsMetadata = protectionController.getSupportedKeySystemMetadataFromContentProtection(rep[DashConstants.CONTENT_PROTECTION])
+        if (protectionController && rep && rep[DashConstants.CONTENT_PROTECTION] &&
+            rep[DashConstants.CONTENT_PROTECTION].length > 0) {
+            config.keySystemsMetadata = protectionController
+                .getSupportedKeySystemMetadataFromContentProtection(rep[DashConstants.CONTENT_PROTECTION])
         }
         return config
     }
@@ -487,7 +520,8 @@ function CapabilitiesFilter() {
                 }
 
                 const adaptationSetEssentialProperties = adapter.getEssentialProperties(as);
-                const doesSupportEssentialProperties = _doesSupportEssentialProperties(adaptationSetEssentialProperties);
+                const doesSupportEssentialProperties =
+                    _doesSupportEssentialProperties(adaptationSetEssentialProperties);
 
                 if (!doesSupportEssentialProperties) {
                     logger.warn(`[CapabilitiesFilter] removed AdaptationSet (id: ${as.id}) with unsupported EssentialProperty`);
@@ -509,7 +543,8 @@ function CapabilitiesFilter() {
             if (period.Preselection && period.Preselection.length) {
                 period.Preselection = period.Preselection.filter(prsl => {
                     const preselectionEssentialProperties = adapter.getEssentialProperties(prsl);
-                    const doesSupportEssentialProperties = _doesSupportEssentialProperties(preselectionEssentialProperties);
+                    const doesSupportEssentialProperties =
+                        _doesSupportEssentialProperties(preselectionEssentialProperties);
 
                     if (!doesSupportEssentialProperties) {
                         logger.warn(`[CapabilitiesFilter] removed Preselection (id: ${prsl.id}) with unsupported EssentialProperty`);

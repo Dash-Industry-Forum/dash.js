@@ -37,7 +37,8 @@ class PatchLocation {
         this.url = url || '';
         this.serviceLocation = serviceLocation || null;
         this.ttl = ttl || NaN;
-        this.queryParams = {}; // This is an attribute that might be set when synthesizing Locations with content steering
+        // This is an attribute that might be set when synthesizing Locations with content steering
+        this.queryParams = {};
     }
 }
 

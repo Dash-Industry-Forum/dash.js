@@ -72,7 +72,8 @@ function ThroughputRule(config) {
 
             if (abrController.getAbandonmentStateFor(streamId, mediaType) === MetricsConstants.ALLOW_LOAD) {
                 if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
-                    switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, throughput, true);
+                    switchRequest.representation = abrController
+                        .getOptimalRepresentationForBitrate(mediaInfo, throughput, true);
                     switchRequest.priority = settings.get().streaming.abr.rules.throughputRule.priority;
                     switchRequest.reason = {
                         throughput,

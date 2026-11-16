@@ -39,7 +39,7 @@ class RequestsQueue {
     constructor() {
 
         /**
-         * Array of all of the requests that have begun to load
+         * Array of all of the requests that have begun to load<br>
          * This request may not make it into the executed queue if it is abandon due to ABR rules for example.
          * @public
          */
