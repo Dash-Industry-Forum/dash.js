@@ -18,6 +18,9 @@ function ProtectionModelMock (config) {
     this.setMediaElement = function () {
     };
 
+    this.stop = function () {
+    };
+
     this.reset = function () {
         sessions = []; 
         nextId = 0;
