@@ -4280,7 +4280,7 @@ interface ProtectionController {
 
     handleKeySystemFromManifest(): void;
 
-    hasUsableKeySession(): boolean;
+    hasLicenseBeenApplied(): boolean;
 
     initializeForMedia(mediaInfo: MediaInfo): void;
 

@@ -89,6 +89,7 @@ function ProtectionController(config) {
         instance,
         keyStatusMap,
         keySystemSelectionInProgress,
+        licenseApplied,
         licenseRequestRetryTimeout,
         licenseXhrRequest,
         logger,
@@ -110,7 +111,9 @@ function ProtectionController(config) {
         keyStatusMap = new Map();
         certificateCache = new Map();
         pendingCertificatePromise = null;
+        licenseApplied = false;
         eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
+        eventBus.on(events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
     }
 
     function _checkConfig() {
@@ -1039,6 +1042,7 @@ function ProtectionController(config) {
      */
     function reset() {
         eventBus.off(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
+        eventBus.off(events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
 
         _checkConfig();
 
@@ -1048,6 +1052,7 @@ function ProtectionController(config) {
 
         selectedKeySystem = null;
         keySystemSelectionInProgress = false;
+        licenseApplied = false;
 
         keyStatusMap = new Map();
         certificateCache = new Map();
@@ -1633,22 +1638,25 @@ function ProtectionController(config) {
     }
 
     /**
-     * Checks if at least one of the existing key sessions holds a usable key.
-     * This is the case after a license was applied in the current playback session, but also when key sessions were
-     * kept from a previous playback session (keepProtectionMediaKeys) and are reused without a new license exchange.
+     * A license was applied to a key session
+     * @private
+     */
+    function _onKeySessionUpdated() {
+        licenseApplied = true;
+    }
+
+    /**
+     * Returns whether a license has been applied to a key session since this ProtectionController was created or
+     * reset. The state is kept when playback is stopped: if the MediaKeys and the key sessions are kept for the next
+     * playback session (keepProtectionMediaKeys), they are reused without a new license exchange.
+     * Once set, the state does not change until reset() is called. It is no statement about the usability of specific
+     * keys.
      * @return {boolean}
      * @memberof module:ProtectionController
      * @instance
      */
-    function hasUsableKeySession() {
-        if (!protectionModel) {
-            return false;
-        }
-
-        // The session tokens of the legacy protection models do not report the usability of their keys
-        return protectionModel.getSessionTokens().some((sessionToken) => {
-            return typeof sessionToken.getUsable === 'function' && sessionToken.getUsable();
-        });
+    function hasLicenseBeenApplied() {
+        return licenseApplied;
     }
 
     function _shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap) {
@@ -1693,7 +1701,7 @@ function ProtectionController(config) {
         getProtectionData,
         getSupportedKeySystemMetadataFromContentProtection,
         handleKeySystemFromManifest,
-        hasUsableKeySession,
+        hasLicenseBeenApplied,
         initializeForMedia,
         loadKeySession,
         removeKeySession,

@@ -222,35 +222,55 @@ describe('ProtectionController', function () {
             expect(protectionModelMock.getSessionTokens().map(s => s.keyId)).to.deep.equal(['session-1', 'session-2', 'session-3']);
         });
 
-        describe('hasUsableKeySession', function () {
-            beforeEach(function () {
-                CommonEncryption.getPSSHForKeySystem = (selectedKeySystem, initData) => initData;
+        describe('hasLicenseBeenApplied', function () {
+
+            it('should return false if no license has been applied', function () {
+                expect(protectionController.hasLicenseBeenApplied()).to.be.false;
             });
 
-            it('should return false if no key session exists', function () {
-                expect(protectionController.hasUsableKeySession()).to.be.false;
+            it('should return true once a license has been applied to a key session', function () {
+                eventBus.trigger(ProtectionEvents.KEY_SESSION_UPDATED);
+
+                expect(protectionController.hasLicenseBeenApplied()).to.be.true;
             });
 
-            it('should return false if the existing key sessions hold no usable key', function () {
-                protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'session-1' });
-                protectionModelMock.getSessionTokens()[0].getUsable = () => false;
+            it('should keep the state when playback is stopped', function () {
+                eventBus.trigger(ProtectionEvents.KEY_SESSION_UPDATED);
+                protectionController.stop();
 
-                expect(protectionController.hasUsableKeySession()).to.be.false;
+                expect(protectionController.hasLicenseBeenApplied()).to.be.true;
             });
 
-            it('should return false if the key session can not report its usability', function () {
-                protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'session-1' });
+            describe('reset', function () {
+                let controller;
 
-                expect(protectionController.hasUsableKeySession()).to.be.false;
-            });
+                // reset() can only be called once per instance, the shared instance is reset after each test
+                beforeEach(function () {
+                    controller = ProtectionController(context).create({
+                        protectionKeyController: new ProtectionKeyControllerMock(),
+                        events: ProtectionEvents,
+                        debug: new DebugMock(),
+                        protectionModel: new ProtectionModelMock({ events: ProtectionEvents, eventBus: eventBus }),
+                        eventBus: eventBus,
+                        constants: Constants,
+                        settings: settingsMock
+                    });
+                });
 
-            it('should return true if at least one key session holds a usable key', function () {
-                protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'session-1' });
-                protectionController.createKeySession({ initData: new ArrayBuffer(16), keyId: 'session-2' });
-                protectionModelMock.getSessionTokens()[0].getUsable = () => false;
-                protectionModelMock.getSessionTokens()[1].getUsable = () => true;
+                it('should clear the state on reset', function () {
+                    eventBus.trigger(ProtectionEvents.KEY_SESSION_UPDATED);
+                    expect(controller.hasLicenseBeenApplied()).to.be.true;
+                    controller.reset();
 
-                expect(protectionController.hasUsableKeySession()).to.be.true;
+                    expect(controller.hasLicenseBeenApplied()).to.be.false;
+                });
+
+                it('should ignore a license that is applied after reset', function () {
+                    controller.reset();
+                    eventBus.trigger(ProtectionEvents.KEY_SESSION_UPDATED);
+
+                    expect(controller.hasLicenseBeenApplied()).to.be.false;
+                });
             });
         });
 

@@ -65,7 +65,7 @@ function StreamController() {
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
-        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
+        waitForPlaybackStartTimeout, providedStartTime, errorInformation,
         pendingDynamicToStaticUpdate;
 
     function setup() {
@@ -138,9 +138,6 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
 
 
-        if (Events.KEY_SESSION_UPDATED) {
-            eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
-        }
 
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
@@ -166,9 +163,6 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
         eventBus.off(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
 
-        if (Events.KEY_SESSION_UPDATED) {
-            eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
-        }
 
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
@@ -220,14 +214,6 @@ function StreamController() {
      */
     function _onTimeSyncCompleted( /*e*/) {
         _composePeriods();
-    }
-
-    /**
-     *
-     * @private
-     */
-    function _onKeySessionUpdated() {
-        firstLicenseIsFetched = true;
     }
 
     /**
@@ -828,17 +814,18 @@ function StreamController() {
         try {
             // Seamless period switch allowed only if:
             // - the protection of the periods is compatible (no switch from unencrypted to encrypted)
-            //   OR MediaKeys with a working license are already in place: a license was fetched in this session, or
-            //   a key session kept from a previous session (keepProtectionMediaKeys) holds a usable key, in which
-            //   case no new license exchange happens.
-            //   This is deliberately not a check for the keys of the next period: any fetched license or usable key
-            //   session counts, also one that belongs to different content (e.g. the previous channel).
+            //   OR a license has already been applied. The ProtectionController keeps this state across playback
+            //   sessions if the MediaKeys are kept (keepProtectionMediaKeys), as the kept key sessions are then
+            //   reused without a new license exchange.
+            //   This is deliberately not a check for the keys of the next period: any applied license counts, also
+            //   one that belongs to different content (e.g. the previous channel). The state never changes back, so
+            //   the decision is the same when preloading the next period and when switching to it.
             // - AND changeType method is implemented
             // TODO: If the codec family is the same or if there is period connectivity we can also use the same
             // SourceBuffer
             return (settings.get().streaming.buffer.reuseExistingSourceBuffers
                 && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo())
-                    || firstLicenseIsFetched || _hasUsableKeySession())
+                    || _hasLicenseBeenApplied())
                 && (capabilities.supportsChangeType() && settings.get().streaming.buffer.useChangeType));
         } catch (e) {
             return false;
@@ -846,14 +833,14 @@ function StreamController() {
     }
 
     /**
-     * Checks if a key session with a usable key exists, e.g. kept from a previous playback session
+     * Checks if a license has been applied, in this or in a previous playback session with kept MediaKeys
      * @return {boolean}
      * @private
      */
-    function _hasUsableKeySession() {
-        // A custom ProtectionController provided via extend() might not implement hasUsableKeySession()
-        return !!protectionController && typeof protectionController.hasUsableKeySession === 'function'
-            && protectionController.hasUsableKeySession();
+    function _hasLicenseBeenApplied() {
+        // A custom ProtectionController provided via extend() might not implement hasLicenseBeenApplied()
+        return !!protectionController && typeof protectionController.hasLicenseBeenApplied === 'function'
+            && protectionController.hasLicenseBeenApplied();
     }
 
     /**
@@ -1824,7 +1811,6 @@ function StreamController() {
         autoPlay = true;
         playbackEndedTimerInterval = null;
         pendingDynamicToStaticUpdate = false;
-        firstLicenseIsFetched = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
         errorInformation = {

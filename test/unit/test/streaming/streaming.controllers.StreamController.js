@@ -594,7 +594,7 @@ describe('StreamController', function () {
             settings.reset();
             videoModelMock.time = -1;
             dashMetricsMock.addDVRInfo('video', Date.now(), null, { start: 0, end: 20 });
-            delete protectionControllerMock.hasUsableKeySession;
+            delete protectionControllerMock.hasLicenseBeenApplied;
             streamController.setConfig({
                 adapter: adapterMock,
                 manifestLoader: manifestLoaderMock,
@@ -623,29 +623,22 @@ describe('StreamController', function () {
             streamController.reset();
             getStreamsInfoStub.restore();
             getIsDynamicStub.restore();
-            delete protectionControllerMock.hasUsableKeySession;
+            delete protectionControllerMock.hasLicenseBeenApplied;
             uriFragmentModelMock.reset();
         });
 
-        it('should not keep the SourceBuffers if no license was fetched and no usable key session exists', async function () {
-            protectionControllerMock.hasUsableKeySession = () => false;
+        it('should not keep the SourceBuffers if no license has been applied', async function () {
+            protectionControllerMock.hasLicenseBeenApplied = () => false;
 
             expect(await _areSourceBuffersKeptForEncryptedPeriod()).to.be.false;
         });
 
-        it('should not keep the SourceBuffers if the ProtectionController can not report usable key sessions', async function () {
+        it('should not keep the SourceBuffers if the ProtectionController can not report an applied license', async function () {
             expect(await _areSourceBuffersKeptForEncryptedPeriod()).to.be.false;
         });
 
-        it('should keep the SourceBuffers if a kept key session is usable although no license was fetched', async function () {
-            protectionControllerMock.hasUsableKeySession = () => true;
-
-            expect(await _areSourceBuffersKeptForEncryptedPeriod()).to.be.true;
-        });
-
-        it('should keep the SourceBuffers if a license was fetched in the current session', async function () {
-            protectionControllerMock.hasUsableKeySession = () => false;
-            eventBus.trigger(Events.KEY_SESSION_UPDATED);
+        it('should keep the SourceBuffers if a license has been applied', async function () {
+            protectionControllerMock.hasLicenseBeenApplied = () => true;
 
             expect(await _areSourceBuffersKeptForEncryptedPeriod()).to.be.true;
         });
