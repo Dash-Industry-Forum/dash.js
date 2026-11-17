@@ -550,6 +550,107 @@ describe('StreamController', function () {
         });
     });
 
+    describe('period switch from an unencrypted to an encrypted period', function () {
+
+        const clearStreamInfo = {
+            manifestInfo: { isDynamic: false }, start: 0, duration: 10, id: 'clear', isEncrypted: false
+        };
+        const encryptedStreamInfo = {
+            manifestInfo: { isDynamic: false }, start: 10, duration: 10, id: 'encrypted', isEncrypted: true
+        };
+        const capabilitiesStub = {
+            isProtectionCompatible: (previousStreamInfo, newStreamInfo) => {
+                return !(!previousStreamInfo.isEncrypted && newStreamInfo.isEncrypted);
+            },
+            supportsChangeType: () => true
+        };
+        let getStreamsInfoStub;
+        let getIsDynamicStub;
+
+        /**
+         * Starts playback in the unencrypted period and reports it as completely buffered. The encrypted period is
+         * only preloaded into the existing SourceBuffers if the period switch can be seamless.
+         * @return {Promise<boolean>} true if the SourceBuffers are kept for the encrypted period
+         */
+        function _areSourceBuffersKeptForEncryptedPeriod() {
+            return new Promise((resolve) => {
+                const onStreamsComposed = () => {
+                    eventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed);
+                    const [clearStream, encryptedStream] = streamController.getStreams();
+                    const startPreloadingStub = sinon.stub(encryptedStream, 'startPreloading').resolves();
+                    sinon.stub(clearStream, 'getHasFinishedBuffering').returns(true);
+
+                    // The StreamController checks if prebuffering can start right after triggering STREAMS_COMPOSED
+                    setTimeout(() => {
+                        resolve(startPreloadingStub.called);
+                    }, 0);
+                };
+                eventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed);
+                eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+            });
+        }
+
+        beforeEach(function () {
+            settings.reset();
+            videoModelMock.time = -1;
+            dashMetricsMock.addDVRInfo('video', Date.now(), null, { start: 0, end: 20 });
+            delete protectionControllerMock.hasUsableKeySession;
+            streamController.setConfig({
+                adapter: adapterMock,
+                manifestLoader: manifestLoaderMock,
+                timelineConverter: timelineConverterMock,
+                manifestModel: manifestModelMock,
+                errHandler: errHandlerMock,
+                dashMetrics: dashMetricsMock,
+                protectionController: protectionControllerMock,
+                videoModel: videoModelMock,
+                playbackController: playbackControllerMock,
+                baseURLController: baseUrlControllerMock,
+                capabilities: capabilitiesStub,
+                capabilitiesFilter: capabilitiesFilterMock,
+                textController: textControllerMock,
+                contentSteeringController: contentSteeringControllerMock,
+                settings: settings,
+                uriFragmentModel: uriFragmentModelMock,
+                serviceDescriptionController: ServiceDescriptionController(context).getInstance()
+            });
+            streamController.initialize(false);
+            getStreamsInfoStub = sinon.stub(adapterMock, 'getStreamsInfo').returns([clearStreamInfo, encryptedStreamInfo]);
+            getIsDynamicStub = sinon.stub(adapterMock, 'getIsDynamic').returns(false);
+        });
+
+        afterEach(function () {
+            streamController.reset();
+            getStreamsInfoStub.restore();
+            getIsDynamicStub.restore();
+            delete protectionControllerMock.hasUsableKeySession;
+            uriFragmentModelMock.reset();
+        });
+
+        it('should not keep the SourceBuffers if no license was fetched and no usable key session exists', async function () {
+            protectionControllerMock.hasUsableKeySession = () => false;
+
+            expect(await _areSourceBuffersKeptForEncryptedPeriod()).to.be.false;
+        });
+
+        it('should not keep the SourceBuffers if the ProtectionController can not report usable key sessions', async function () {
+            expect(await _areSourceBuffersKeptForEncryptedPeriod()).to.be.false;
+        });
+
+        it('should keep the SourceBuffers if a kept key session is usable although no license was fetched', async function () {
+            protectionControllerMock.hasUsableKeySession = () => true;
+
+            expect(await _areSourceBuffersKeptForEncryptedPeriod()).to.be.true;
+        });
+
+        it('should keep the SourceBuffers if a license was fetched in the current session', async function () {
+            protectionControllerMock.hasUsableKeySession = () => false;
+            eventBus.trigger(Events.KEY_SESSION_UPDATED);
+
+            expect(await _areSourceBuffersKeptForEncryptedPeriod()).to.be.true;
+        });
+    });
+
     describe('refreshManifest', function () {
         beforeEach(function () {
             streamController.setConfig({

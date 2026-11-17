@@ -35,7 +35,7 @@ import ManifestUpdater from '../ManifestUpdater.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-import {PlayList, PlayListTrace} from '../vo/metrics/PlayList.js';
+import { PlayList, PlayListTrace } from '../vo/metrics/PlayList.js';
 import Debug from '../../core/Debug.js';
 import InitCache from '../utils/InitCache.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
@@ -828,8 +828,11 @@ function StreamController() {
         try {
             // Seamless period switch allowed only if:
             // - the protection of the periods is compatible (no switch from unencrypted to encrypted)
-            //   OR a usable license is already in place: either fetched in this session or kept from a previous
-            //   session (keepProtectionMediaKeys), in which case no new license exchange happens
+            //   OR MediaKeys with a working license are already in place: a license was fetched in this session, or
+            //   a key session kept from a previous session (keepProtectionMediaKeys) holds a usable key, in which
+            //   case no new license exchange happens.
+            //   This is deliberately not a check for the keys of the next period: any fetched license or usable key
+            //   session counts, also one that belongs to different content (e.g. the previous channel).
             // - AND changeType method is implemented
             // TODO: If the codec family is the same or if there is period connectivity we can also use the same
             // SourceBuffer
@@ -848,7 +851,9 @@ function StreamController() {
      * @private
      */
     function _hasUsableKeySession() {
-        return !!protectionController && typeof protectionController.hasUsableKeySession === 'function' && protectionController.hasUsableKeySession();
+        // A custom ProtectionController provided via extend() might not implement hasUsableKeySession()
+        return !!protectionController && typeof protectionController.hasUsableKeySession === 'function'
+            && protectionController.hasUsableKeySession();
     }
 
     /**

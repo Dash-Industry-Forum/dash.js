@@ -1641,19 +1641,14 @@ function ProtectionController(config) {
      * @instance
      */
     function hasUsableKeySession() {
-        try {
-            if (!protectionModel || typeof protectionModel.getSessionTokens !== 'function') {
-                return false;
-            }
-            const sessionTokens = protectionModel.getSessionTokens() || [];
-
-            return sessionTokens.some((sessionToken) => {
-                return sessionToken && typeof sessionToken.getUsable === 'function' && sessionToken.getUsable();
-            });
-        } catch (error) {
-            logger.error(error);
+        if (!protectionModel) {
             return false;
         }
+
+        // The session tokens of the legacy protection models do not report the usability of their keys
+        return protectionModel.getSessionTokens().some((sessionToken) => {
+            return typeof sessionToken.getUsable === 'function' && sessionToken.getUsable();
+        });
     }
 
     function _shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap) {
