@@ -16,6 +16,10 @@ const umdDevConfig = merge(umdConfig, {
         static: {
             directory: path.join(__dirname, '../../../'),
         },
+        // Serve the in-memory bundles where the samples load them from.
+        devMiddleware: {
+            publicPath: '/dist/modern/umd/'
+        },
         open: ['samples/index.html'],
         hot: true,
         compress: true,
