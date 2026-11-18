@@ -206,7 +206,15 @@ function HTTPLoader(cfg) {
                 progressTimeout = setTimeout(function () {
                     // No more progress => abort request and treat as an error
                     logger.warn('Abort request ' + commonMediaRequest.url + ' due to progress timeout');
-                    loader.abort(commonMediaRequest);
+                    // Suppress onabort on all loader paths first so abort() below doesn't also trigger _onRequestEnd via _onabort
+                    if (commonMediaRequest.customData.xhr) {
+                        commonMediaRequest.customData.xhr.onabort = null;
+                    }
+                    if (commonMediaRequest.customData.abortController) {
+                        commonMediaRequest.customData.abortController.signal.onabort = null;
+                    }
+                    commonMediaRequest.customData.onabort = null;
+                    commonMediaRequest.customData.abort();
                     _onloadend();
                 }, settings.get().streaming.fragmentRequestProgressTimeout);
             }
@@ -329,7 +337,15 @@ function HTTPLoader(cfg) {
         const _loadRequest = function (loader, httpRequest, httpResponse) {
             return new Promise((resolve) => {
                 _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
+                    // Interceptors may return a replacement request (e.g. CMCD copies customData).
+                    // The loader installs abort/xhr on the replacement, so ensure these are
+                    // set on the commonMediaRequest so they are available elsewhere.
+                    const index = httpRequests.indexOf(httpRequest);
                     httpRequest = _httpRequest;
+                    commonMediaRequest = httpRequest;
+                    if (index !== -1) {
+                        httpRequests[index] = httpRequest;
+                    }
                     httpResponse.request = httpRequest;
                     httpRequest.customData.onloadend = _onloadend;
                     httpRequest.customData.onprogress = _onprogress;
