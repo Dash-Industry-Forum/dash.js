@@ -3,12 +3,12 @@ Fortunately, most of the big changes coming in dash.js v3 are internal and are n
 
 We took advantage of this new major version to refactor Dash.js source code and simplified API's exposed by Dash.js. In this document we will cover the major changes to consider when migrating your player from Dash.js version 2.x to 3.0. Here are some high level points:
 * We have refactored the classes of Dash.js responsible of managing metrics.
-* We have homogeneized error raised and their parameters.
+* We have homogenized error raised and their parameters.
 * We have changed how to apply settings to ```MediaPlayer```.
 
 
 ## New way of accessing Dash.js metrics
-In Dash.js v2.x, metris related methods were shared across the classes ```DashMetrics``` and ```MetricsModel```. In Dash.js v3 we have introduced two main changes related with this:
+In Dash.js v2.x, metrics related methods were shared across the classes ```DashMetrics``` and ```MetricsModel```. In Dash.js v3 we have introduced two main changes related with this:
 * All metrics related methods have been moved to ```DashMetrics```. Besides other things, this implies ```getMetricsFor``` method of ```MediaPlayer``` has been removed.
 * All methods exposed by ```DashMetrics``` related with getting information of the manifest have been moved to ```DashAdapter```. These are:
    * getBandwidthForRepresentation

@@ -14,7 +14,7 @@ We track work in our [Issue tracker](https://github.com/Dash-Industry-Forum/dash
 
 To add an issue simply visit the issue tracker and click the "New Issue" button. However, before adding an issue please search to see if there is an existing issue and consider adding more information to that entry rather than creating a new one.
 
-Once an issue has been submitted it will be examined by a member of the developer team and labeled to indicate the likelihood of the issue being addressed in the near future. This is done by assigning a priority labels of either "Pri-Critical", "Pri-High", "Pri-Medium" or "Pri-Low". The meaning of each of these labels is described below. Occasionally an issue will be marked as "wontfix". These issues are invalid in some way, for example, they may be a duplicate of an existing issue, they may not be reproducable or they may not relevant to this project. When an issue is marked as "wontfix" the developer should indicate why this is the case in a comment on the issue.
+Once an issue has been submitted it will be examined by a member of the developer team and labeled to indicate the likelihood of the issue being addressed in the near future. This is done by assigning a priority labels of either "Pri-Critical", "Pri-High", "Pri-Medium" or "Pri-Low". The meaning of each of these labels is described below. Occasionally an issue will be marked as "wontfix". These issues are invalid in some way, for example, they may be a duplicate of an existing issue, they may not be reproducible or they may not relevant to this project. When an issue is marked as "wontfix" the developer should indicate why this is the case in a comment on the issue.
 
 ### Pri-Critical Issues
 
