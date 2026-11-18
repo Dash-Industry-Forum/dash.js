@@ -6,6 +6,7 @@
     "bs_chrome_mac_sonoma"
   ],
   "concurrency": 4,
+  "useIframe": true,
   "customLaunchers": {
     "bs_chrome_win_11": {
       "base": "BrowserStack",
