@@ -1,0 +1,46 @@
+{
+  "testfiles": {
+    "included": [
+      "playback/startup-delay"
+    ],
+    "excluded": []
+  },
+  "testvectors": [
+    {
+      "name": "Segment Template VOD",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+      "startupDelay": {
+        "maxMs": 1500,
+        "maxFragmentRequests": 10
+      }
+    },
+    {
+      "name": "Segment Base VOD",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+      "startupDelay": {
+        "maxMs": 1500,
+        "maxFragmentRequests": 10
+      }
+    },
+    {
+      "name": "DASH-IF Live Sim - Segment Template",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "startupDelay": {
+        "maxMs": 1500,
+        "maxFragmentRequests": 10
+      }
+    },
+    {
+      "name": "AWS Multiperiod unencrypted",
+      "type": "live",
+      "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/4577dca5f8a44756875ab5cc913cd1f1/index.mpd",
+      "startupDelay": {
+        "maxMs": 6000,
+        "maxFragmentRequests": 10
+      }
+    }
+  ]
+}
