@@ -688,6 +688,7 @@ function PlaybackController() {
     function _onPlaybackSeeking() {
         // Check if internal seeking to be ignored
         if (internalSeek) {
+            internalSeek = false;
             return;
         }
 
