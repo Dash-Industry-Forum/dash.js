@@ -2897,7 +2897,7 @@ export interface AdaptationSetRemovedNoCapabilitiesEvent extends MediaPlayerEven
 export interface MediaSettings {
     accessibility?: { schemeIdUri?: string, value?: string } | string;
     audioChannelConfiguration?: { schemeIdUri?: string, value?: string } | string;
-    codec?: string;
+    codec?: string | RegExp;
     id?: string | number,
     index?: number;
     lang?: string | string[] | RegExp;
