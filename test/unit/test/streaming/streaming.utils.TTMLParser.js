@@ -1,6 +1,7 @@
 import TTMLParser from '../../../../src/streaming/utils/TTMLParser.js';
 import FileLoader from '../../helpers/FileLoader.js';
 import {expect} from 'chai';
+import {renderHTML} from 'imsc';
 
 const context = {};
 const ttmlParser = TTMLParser(context).getInstance();
@@ -26,6 +27,23 @@ describe('TTMLParser', function () {
             expect(captionsArray).to.have.lengthOf(2);
             expect(captionsArray[0].start).to.equal(0);
             expect(captionsArray[0].end).to.equal(5);
+        });
+
+        it('should parse and render Unicode and XML entities without Node streams', () => {
+            const xml = '<tt xmlns="http://www.w3.org/ns/ttml"><body><div>' +
+                '<p begin="0s" end="5s">Café &amp; &#x1F3AC;</p>' +
+                '</div></body></tt>';
+            const captions = ttmlParser.parse(xml, 0, 0, 10, []);
+            expect(captions).to.have.lengthOf(1);
+
+            const container = document.createElement('div');
+            document.body.appendChild(container);
+            try {
+                renderHTML(captions[0].isd, container, null, 180, 320);
+                expect(container.textContent).to.equal('Café & 🎬');
+            } finally {
+                container.remove();
+            }
         });
 
         it('should use endTimeSegment as fallback for the last cue end time', () => {
