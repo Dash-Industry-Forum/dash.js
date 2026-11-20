@@ -27,10 +27,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "concurrently \"npm run webpack-build-modern\" \"npm run webpack-build-legacy\"",
+    "build": "npm run ci:verify && concurrently \"npm run webpack-build-modern\" \"npm run webpack-build-legacy\"",
     "build:dist": "rimraf dist && tsc && npm run webpack-build-modern && npm run webpack-build-legacy",
-    "build-legacy": "npm run prebuild && npm run webpack-build-legacy",
-    "build-modern": "npm run prebuild && npm run webpack-build-modern",
+    "build-legacy": "npm run ci:verify && npm run webpack-build-legacy",
+    "build-modern": "npm run ci:verify && npm run webpack-build-modern",
     "ci:verify": "rimraf dist && tsc && npm run test && npm run lint",
     "dev": "tsc && webpack --config build/webpack/modern/webpack.modern.dev.cjs --mode development --watch --progress",
     "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
@@ -38,7 +38,6 @@
     "docs:build": "vitepress build docs/site",
     "docs:preview": "vitepress preview docs/site",
     "lint": "eslint \"src/**/*.js\" \"test/unit/mocks/*.js\" \"test/unit/test/**/*.js\"",
-    "prebuild": "npm run ci:verify",
     "prepack": "npm run build",
     "prepare": "node githook.cjs",
     "start": "webpack serve --config build/webpack/modern/webpack.modern.dev.cjs",
