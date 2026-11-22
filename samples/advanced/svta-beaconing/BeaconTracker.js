@@ -99,33 +99,42 @@ export function createBeaconTracker(config) {
     // Public API
     // ---------------------------------------------------------------------------------------------------------------
 
+    // dash.js calls listeners without try/catch, so an exception here would also stop the player's own handlers
+    // for the same dispatch. Every listener is therefore guarded.
+    const listeners = [];
+    [SVTA_SCHEME_ID_URI, SVTA_EXAMPLE_SCHEME_ID_URI].forEach(function (scheme) {
+        listeners.push([scheme, _guard(_onEventReceived), { mode: events.EVENT_MODE_ON_RECEIVE }]);
+        listeners.push([scheme, _guard(_onEventStarted), { mode: events.EVENT_MODE_ON_START }]);
+    });
+    listeners.push([events.PLAYBACK_TIME_UPDATED, _guard(_onTimeUpdated)]);
+    listeners.push([events.PLAYBACK_SEEKING, _guard(_onSeeking)]);
+    listeners.push([events.PLAYBACK_PAUSED, _guard(_onPaused)]);
+    listeners.push([events.PLAYBACK_PLAYING, _guard(_onPlaying)]);
+    listeners.push([events.PLAYBACK_ENDED, _guard(_onEnded)]);
+    listeners.push([events.PLAYBACK_VOLUME_CHANGED, _guard(_onVolumeChanged)]);
+    listeners.push([events.ERROR, _guard(_onError)]);
+
     function attach() {
-        [SVTA_SCHEME_ID_URI, SVTA_EXAMPLE_SCHEME_ID_URI].forEach(function (scheme) {
-            player.on(scheme, _onEventReceived, null, { mode: events.EVENT_MODE_ON_RECEIVE });
-            player.on(scheme, _onEventStarted, null, { mode: events.EVENT_MODE_ON_START });
+        listeners.forEach(function (l) {
+            player.on(l[0], l[1], null, l[2]);
         });
-        player.on(events.PLAYBACK_TIME_UPDATED, _onTimeUpdated);
-        player.on(events.PLAYBACK_SEEKING, _onSeeking);
-        player.on(events.PLAYBACK_PAUSED, _onPaused);
-        player.on(events.PLAYBACK_PLAYING, _onPlaying);
-        player.on(events.PLAYBACK_ENDED, _onEnded);
-        player.on(events.PLAYBACK_VOLUME_CHANGED, _onVolumeChanged);
-        player.on(events.ERROR, _onError);
     }
 
     function detach() {
-        [SVTA_SCHEME_ID_URI, SVTA_EXAMPLE_SCHEME_ID_URI].forEach(function (scheme) {
-            player.off(scheme, _onEventReceived);
-            player.off(scheme, _onEventStarted);
+        listeners.forEach(function (l) {
+            player.off(l[0], l[1]);
         });
-        player.off(events.PLAYBACK_TIME_UPDATED, _onTimeUpdated);
-        player.off(events.PLAYBACK_SEEKING, _onSeeking);
-        player.off(events.PLAYBACK_PAUSED, _onPaused);
-        player.off(events.PLAYBACK_PLAYING, _onPlaying);
-        player.off(events.PLAYBACK_ENDED, _onEnded);
-        player.off(events.PLAYBACK_VOLUME_CHANGED, _onVolumeChanged);
-        player.off(events.ERROR, _onError);
         reset();
+    }
+
+    function _guard(handler) {
+        return function (e) {
+            try {
+                handler(e);
+            } catch (err) {
+                onLog('error', `Unexpected error in ${handler.name}: ${err.message}`);
+            }
+        };
     }
 
     function reset() {
@@ -191,7 +200,11 @@ export function createBeaconTracker(config) {
         lastTime = target;
     }
 
-    function _onPaused() {
+    function _onPaused(e) {
+        // The browser fires pause before ended when playback reaches the end; that is not a user pause.
+        if (e && e.ended) {
+            return;
+        }
         paused = true;
         _fireAction('pause');
     }
@@ -268,6 +281,10 @@ export function createBeaconTracker(config) {
             onLog('error', `${label}: payload is not valid JSON (${e.message})`);
             return null;
         }
+        if (!_isObject(envelope)) {
+            onLog('error', `${label}: payload is not a JSON object`);
+            return null;
+        }
 
         const start = event.calculatedPresentationTime;
         const duration = isNaN(event.duration) ? 0 : event.duration;
@@ -311,20 +328,24 @@ export function createBeaconTracker(config) {
         entry.envelopeType = envelope.type;
 
         if (envelope.type === 'slot') {
-            envelope.payload.forEach(function (slot, i) {
+            _objects(envelope.payload, `${label}: payload`).forEach(function (slot, i, slots) {
                 const slotStart = start + _num(slot.start, 0);
                 entry.containers.push(_createContainer(entry, 'slot', slot, slotStart, _num(slot.duration, duration), i,
-                    envelope.payload.length));
+                    slots.length));
             });
         } else if (envelope.type === 'pod') {
             if (envelope.payload.length > 1) {
                 onLog('warn', `${label}: ${envelope.payload.length} pods in one event, only the first is used`);
             }
             const pod = envelope.payload[0];
+            if (!_isObject(pod)) {
+                onLog('error', `${label}: pod is not an object`);
+                return null;
+            }
             // In DASH carriage the Event@presentationTime anchors the creative asset (Table 18); Pod.start is ignored.
             const podDuration = _num(pod.duration, duration);
             entry.containers.push(_createContainer(entry, 'pod', pod, start, podDuration, 0, 1));
-            const slots = Array.isArray(pod.slots) ? pod.slots : [];
+            const slots = _objects(pod.slots, `${label}: pod slots`);
             slots.forEach(function (slot, i) {
                 entry.containers.push(_createContainer(entry, 'slot', slot, start + _num(slot.start, 0),
                     _num(slot.duration, 0), i, slots.length));
@@ -362,9 +383,15 @@ export function createBeaconTracker(config) {
 
     function _buildSchedule(container, tracking) {
         container.schedule = [];
-        tracking.forEach(function (trackingEvent) {
+        _objects(tracking, `${container.label}: tracking`).forEach(function (trackingEvent) {
             const type = trackingEvent.type;
-            const urls = Array.isArray(trackingEvent.urls) ? trackingEvent.urls : [];
+            const urls = (Array.isArray(trackingEvent.urls) ? trackingEvent.urls : []).filter(function (url) {
+                if (typeof url !== 'string') {
+                    onLog('warn', `${container.label}: ${type} tracking URL ${JSON.stringify(url)} is not a string, ignored`);
+                    return false;
+                }
+                return true;
+            });
             // Table 8 names the field "offset", Table 11 "start"; both are accepted, "offset" wins.
             const offset = _num(trackingEvent.offset, _num(trackingEvent.start, null));
             const item = { type, urls, time: null, trigger: null, fired: false, skipped: false };
@@ -453,7 +480,8 @@ export function createBeaconTracker(config) {
                     return;
                 }
                 container.schedule.forEach(function (item) {
-                    if (item.trigger === 'action' && item.type === type && !item.fired) {
+                    // Unlike the time-based events, user actions are reported each time they occur
+                    if (item.trigger === 'action' && item.type === type) {
                         _fire(container, item, now);
                     }
                 });
@@ -569,6 +597,24 @@ export function createBeaconTracker(config) {
         } catch (e) {
             return lastTime;
         }
+    }
+
+    function _isObject(value) {
+        return value !== null && typeof value === 'object' && !Array.isArray(value);
+    }
+
+    // Returns the object entries of an array; other entries are reported and dropped
+    function _objects(list, what) {
+        if (!Array.isArray(list)) {
+            return [];
+        }
+        return list.filter(function (item, i) {
+            if (!_isObject(item)) {
+                onLog('warn', `${what}[${i}] is not an object, ignored`);
+                return false;
+            }
+            return true;
+        });
     }
 
     function _num(value, fallback) {
