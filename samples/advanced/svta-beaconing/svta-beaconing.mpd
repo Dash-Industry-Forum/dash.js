@@ -2,7 +2,7 @@
 <!--
   Test content for the SVTA 2053-1 beaconing sample: main content, mid-roll ad, main content.
   Main content: Big Buck Bunny (dash.akamaized.net/akamai/bbb_30fps), 0-12 s, then resumed at 12 s.
-  Mid-roll: 20 s ad generated with create-midroll.py, hosted at dash.akamaized.net/dsi/sample_midroll. Its SVTA Event
+  Mid-roll: 20 s generated test ad, hosted at dash.akamaized.net/dsi/sample_midroll. Its SVTA Event
   carries the tracking events inline; the beacon URLs point to httpbin.org.
 -->
 <MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="static" mediaPresentationDuration="PT52S" minBufferTime="PT2S" profiles="urn:mpeg:dash:profile:isoff-live:2011">
