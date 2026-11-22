@@ -831,6 +831,19 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "SVTA 2053-1 ad tracking beacons",
+                "description": "Shows how an application listens to SVTA 2053-1 ad creative signaling events and dispatches the tracking beacons.",
+                "href": "advanced/svta-beaconing.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Events",
+                    "Multiperiod",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
