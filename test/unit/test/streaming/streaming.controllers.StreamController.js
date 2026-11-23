@@ -4,6 +4,7 @@ import ProtectionEvents from '../../../../src/streaming/protection/ProtectionEve
 import EventBus from '../../../../src/core/EventBus.js';
 import Settings from '../../../../src/core/Settings.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
+import Errors from '../../../../src/core/errors/Errors.js';
 import ObjectsHelper from '../../helpers/ObjectsHelper.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import BaseURLControllerMock from '../../mocks/BaseURLControllerMock.js';
@@ -148,12 +149,14 @@ describe('StreamController', function () {
         });
 
         describe('event management', () => {
-            it('should trigger MANIFEST_UPDATED event when loadWithManifest is called', function () {
+            it('should trigger MANIFEST_UPDATED event when loadWithManifest is called', async function () {
                 let spy = chai.spy();
                 eventBus.on(Events.MANIFEST_UPDATED, spy);
                 streamController.loadWithManifest({ loadedTime: new Date() });
                 expect(spy).to.have.been.called.exactly(1);
                 eventBus.off(Events.MANIFEST_UPDATED, spy);
+                // The incomplete manifest fails asynchronously and resets the controller, let that happen in this test
+                await new Promise((resolve) => setTimeout(resolve, 0));
             });
 
             it('should correctly call load function of ManifestLoader when load is called', function () {
@@ -422,6 +425,142 @@ describe('StreamController', function () {
 
                     getStreamsInfoStub.returns([dynamicStreamInfo]);
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                describe('content pending', function () {
+                    const pendingManifest = { type: 'dynamic' };
+                    let getIsContentPendingStub;
+                    let filterSpy;
+                    let contentPendingSpy;
+                    let initialStreamSwitchSpy;
+                    let clock;
+
+                    beforeEach(function () {
+                        clock = sinon.useFakeTimers({ now: Date.now(), toFake: ['setTimeout', 'clearTimeout'] });
+                        errHandlerMock.reset();
+                        getStreamsInfoStub.returns([dynamicStreamInfo]);
+                        getIsContentPendingStub = sinon.stub(adapterMock, 'getIsContentPending').returns(true);
+                        filterSpy = sinon.spy(capabilitiesFilterMock, 'filterUnsupportedFeatures');
+                        contentPendingSpy = sinon.spy();
+                        initialStreamSwitchSpy = sinon.spy();
+                        eventBus.on(Events.MANIFEST_CONTENT_PENDING, contentPendingSpy);
+                        eventBus.on(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                    });
+
+                    afterEach(function () {
+                        getIsContentPendingStub.restore();
+                        filterSpy.restore();
+                        eventBus.off(Events.MANIFEST_CONTENT_PENDING, contentPendingSpy);
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                        clock.restore();
+                        settings.reset();
+                    });
+
+                    it('should report the content as pending before reading the AdaptationSets', function () {
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+
+                        expect(getIsContentPendingStub.calledWith(pendingManifest)).to.be.true;
+                        expect(contentPendingSpy.calledOnce).to.be.true;
+                        expect(filterSpy.called).to.be.false;
+                        expect(streamController.getStreams()).to.be.empty;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should keep waiting while the timeout has not expired', function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        clock.tick(9000);
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+
+                        expect(contentPendingSpy.calledTwice).to.be.true;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should raise an error once the timeout expired, also without further MPD updates', function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        clock.tick(10000);
+
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                        expect(errHandlerMock.errorValue).to.include('10 seconds');
+                    });
+
+                    it('should wait without limit if the timeout is set to Infinity', function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: Infinity } });
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        clock.tick(24 * 3600 * 1000);
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+
+                        expect(contentPendingSpy.calledTwice).to.be.true;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should not raise the timeout error once the streams are composed', function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        getIsContentPendingStub.returns(false);
+                        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                        clock.tick(10000);
+
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should start the stream once the content is no longer pending', function (done) {
+                        clock.restore();
+                        doneFn = done;
+                        expectedStartTime = liveStartTime;
+
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        expect(contentPendingSpy.calledOnce).to.be.true;
+
+                        getIsContentPendingStub.returns(false);
+                        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                    });
+
+                    it('should not check for pending content once a stream is active', function (done) {
+                        clock.restore();
+                        doneFn = (err) => {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            // INITIAL_STREAM_SWITCH fires before the stream is set active
+                            setTimeout(() => {
+                                getIsContentPendingStub.resetHistory();
+                                eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                                try {
+                                    expect(getIsContentPendingStub.called).to.be.false;
+                                    expect(contentPendingSpy.called).to.be.false;
+                                    expect(filterSpy.calledOnce).to.be.true;
+                                    done();
+                                } catch (e) {
+                                    done(e);
+                                }
+                            }, 0);
+                        };
+                        expectedStartTime = liveStartTime;
+                        getIsContentPendingStub.returns(false);
+                        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                    });
+                });
+
+                it('should raise an error event instead of rejecting if the first stream can not be initialized', function (done) {
+                    errHandlerMock.reset();
+                    const dvrInfoStub = sinon.stub(dashMetricsMock, 'getCurrentDVRInfo').returns(null);
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+
+                    setTimeout(() => {
+                        dvrInfoStub.restore();
+                        try {
+                            expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
                 });
 
                 it('should not clamp a seek time beyond the announced end of a dynamic stream with finite duration', function (done) {

@@ -65,6 +65,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            seekDurationBackoff: 0.5,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
+ *            liveContentPendingTimeoutInSeconds: 60,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
  *            cacheInitSegmentsLimit: 50,
@@ -1183,6 +1184,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is
  * still processed before downloading the next manifest once the minimumUpdatePeriod time has.
+ * @property {number} [liveContentPendingTimeoutInSeconds=60]
+ * For live streams whose MPD does not list any content yet (no AdaptationSet, or a SegmentTimeline without S element),
+ * the maximum time in seconds dash.js keeps refreshing the MPD at its minimumUpdatePeriod before playback starts.
+ *
+ * Playback starts as soon as an MPD update lists content. If none does within this time, an error with code
+ * MANIFEST_ERROR_ID_NOSTREAMS_CODE (32) is raised. Set to Infinity to wait without limit.
  * @property {number} [liveUpdateTimeThresholdInMilliseconds=0]
  * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during
  * live streams on low end devices.
@@ -1372,6 +1379,7 @@ function Settings() {
             seekDurationBackoff: 0.5,
             wallclockTimeUpdateInterval: 100,
             manifestUpdateRetryInterval: 100,
+            liveContentPendingTimeoutInSeconds: 60,
             liveUpdateTimeThresholdInMilliseconds: 0,
             cacheInitSegments: false,
             cacheInitSegmentsLimit: 50,

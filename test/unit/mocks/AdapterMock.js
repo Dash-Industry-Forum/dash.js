@@ -135,6 +135,10 @@ function AdapterMock() {
         return false;
     };
 
+    this.getIsContentPending = function () {
+        return false;
+    };
+
     this.getIsDVB = function () {
         return false;
     };

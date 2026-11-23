@@ -327,4 +327,103 @@ describe('ManifestUpdater', function () {
             expect(loadStub.calledWith(location[0].url)).to.be.true;
         });
     });
+
+    describe('content pending before playback started', function () {
+        const REFRESH_DELAY_S = 2;
+        let clock, loadStub, updatePeriodStub, locationStub;
+
+        beforeEach(function () {
+            clock = sinon.useFakeTimers();
+            manifestUpdater.reset();
+            manifestUpdater.initialize();
+            loadStub = sinon.stub(manifestLoaderMock, 'load');
+            locationStub = sinon.stub(adapterMock, 'getLocation').returns([]);
+            updatePeriodStub = sinon.stub(adapterMock, 'getManifestUpdatePeriod').returns(REFRESH_DELAY_S);
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: { type: DashConstants.DYNAMIC, url: 'http://example.com/manifest.mpd', loadedTime: new Date() }
+            });
+        });
+
+        afterEach(function () {
+            manifestUpdater.reset();
+            manifestUpdater.initialize();
+            loadStub.restore();
+            locationStub.restore();
+            updatePeriodStub.restore();
+            manifestModelMock.setValue(null);
+            clock.restore();
+        });
+
+        it('should not refresh the manifest before playback started if content is not pending', function () {
+            clock.tick(REFRESH_DELAY_S * 1000 * 3);
+
+            expect(loadStub.called).to.be.false;
+        });
+
+        it('should refresh the manifest after the update period while content is pending', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+
+            clock.tick(REFRESH_DELAY_S * 1000 - 1);
+            expect(loadStub.called).to.be.false;
+
+            clock.tick(1);
+            expect(loadStub.calledOnce).to.be.true;
+            expect(loadStub.firstCall.args[0]).to.equal('http://example.com/manifest.mpd');
+        });
+
+        it('should no longer be updating once content is reported as pending', function () {
+            manifestUpdater.refreshManifest();
+            expect(manifestUpdater.getIsUpdating()).to.be.true;
+
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+
+            expect(manifestUpdater.getIsUpdating()).to.be.false;
+        });
+
+        it('should keep refreshing while content stays pending', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: { type: DashConstants.DYNAMIC, url: 'http://example.com/manifest.mpd', loadedTime: new Date() }
+            });
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+
+            expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should keep refreshing while content is pending if an MPD refresh failed', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(manifestUpdater.getIsUpdating()).to.be.true;
+
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE }
+            });
+            expect(manifestUpdater.getIsUpdating()).to.be.false;
+
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should not refresh before playback started after a failed MPD refresh if content is not pending', function () {
+            manifestUpdater.refreshManifest();
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE }
+            });
+
+            clock.tick(REFRESH_DELAY_S * 1000 * 3);
+
+            expect(loadStub.calledOnce).to.be.true;
+        });
+
+        it('should stop refreshing before playback started once the streams have been composed', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            eventBus.trigger(Events.STREAMS_COMPOSED);
+
+            clock.tick(REFRESH_DELAY_S * 1000 * 3);
+
+            expect(loadStub.called).to.be.false;
+        });
+    });
 });

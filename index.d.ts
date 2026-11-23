@@ -1681,6 +1681,7 @@ export class MediaPlayerSettingClass {
         seekDurationBackoff?: number,
         wallclockTimeUpdateInterval?: number,
         manifestUpdateRetryInterval?: number,
+        liveContentPendingTimeoutInSeconds?: number,
         liveUpdateTimeThresholdInMilliseconds?: number,
         cacheInitSegments?: boolean,
         cacheInitSegmentsLimit?: number,

@@ -622,6 +622,14 @@
             }
         },
         {
+            "name": "Live SegmentTimeline with LiveSim2, MPD published before its first segment",
+            "type": "live",
+            "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/testpic_2s/Manifest.mpd",
+            "includedTestfiles": [
+                "feature-support/live-content-pending"
+            ]
+        },
+        {
             "name": "BBB 30fps VoD CMCD v2",
             "type": "vod",
             "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",

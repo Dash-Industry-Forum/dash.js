@@ -538,6 +538,41 @@ function DashManifestModel() {
         return isDynamic;
     }
 
+    /**
+     * Checks if a dynamic MPD does not list any content yet, e.g. a live presentation whose packager has not written
+     * its first segment. This is the case if no Period has a Representation with content: a Period may have no
+     * AdaptationSet, an AdaptationSet no Representation, and a SegmentTimeline no S element.
+     * An MPD that lists content in any Period is not pending, even if other Periods or AdaptationSets are still empty.
+     * @param {object} manifest
+     * @returns {boolean}
+     */
+    function getIsContentPending(manifest) {
+        if (!getIsDynamic(manifest)) {
+            return false;
+        }
+        const periods = manifest[DashConstants.PERIOD] || [];
+        return !periods.some(_hasContent);
+    }
+
+    function _hasContent(period) {
+        const adaptationSets = period[DashConstants.ADAPTATION_SET] || [];
+        return adaptationSets.some((adaptationSet) => {
+            const representations = adaptationSet[DashConstants.REPRESENTATION] || [];
+            return representations.some((representation) => !_hasEmptySegmentTimeline(representation));
+        });
+    }
+
+    function _hasEmptySegmentTimeline(representation) {
+        const segmentInfo = representation[DashConstants.SEGMENT_TEMPLATE] ||
+            representation[DashConstants.SEGMENT_LIST];
+        const segmentTimeline = segmentInfo ? segmentInfo[DashConstants.SEGMENT_TIMELINE] : null;
+        if (!segmentTimeline) {
+            return false;
+        }
+        const segments = segmentTimeline[DashConstants.S];
+        return !segments || segments.length === 0;
+    }
+
     function getId(manifest) {
         return (manifest && manifest[DashConstants.ID]) || null;
     }
@@ -1823,6 +1858,7 @@ function DashManifestModel() {
         getFramerate,
         getId,
         getIndexForAdaptation,
+        getIsContentPending,
         getIsDynamic,
         getIsFragmented,
         getIsText,

@@ -700,6 +700,19 @@ function DashAdapter() {
     }
 
     /**
+     * Checks if a dynamic MPD does not list any content yet. See DashManifestModel.getIsContentPending.
+     * @param {object} externalManifest Optional manifest, the current one is used if omitted
+     * @returns {boolean}
+     * @memberOf module:DashAdapter
+     * @instance
+     * @ignore
+     */
+    function getIsContentPending(externalManifest) {
+        const manifest = getManifest(externalManifest);
+        return dashManifestModel.getIsContentPending(manifest);
+    }
+
+    /**
      * Returns the duration of the MPD
      * @param {object} externalManifest Omit this value if no external manifest should be used
      * @returns {number} duration
@@ -1453,6 +1466,7 @@ function DashAdapter() {
         getFramerate,
         getIndexForRepresentation,
         getIsDVB,
+        getIsContentPending,
         getIsDynamic,
         getIsPatch,
         getIsTextTrack,
