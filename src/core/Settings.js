@@ -65,7 +65,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            seekDurationBackoff: 0.5,
  *            wallclockTimeUpdateInterval: 100,
  *            manifestUpdateRetryInterval: 100,
- *            liveContentPendingTimeoutInSeconds: 60,
+ *            liveContentPendingTimeoutInSeconds: Infinity,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
  *            cacheInitSegmentsLimit: 50,
@@ -1184,13 +1184,15 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is
  * still processed before downloading the next manifest once the minimumUpdatePeriod time has.
- * @property {number} [liveContentPendingTimeoutInSeconds=60]
- * For live streams whose MPD does not list any content yet (no AdaptationSet, or a SegmentTimeline without S element),
- * the maximum time in seconds dash.js keeps refreshing the MPD at its minimumUpdatePeriod before playback starts.
+ * @property {number} [liveContentPendingTimeoutInSeconds=Infinity]
+ * For live streams whose MPD does not list all of its content yet, the maximum time in seconds dash.js keeps refreshing
+ * the MPD at its minimumUpdatePeriod before playback starts. The content is pending if the last Period has no
+ * AdaptationSet, or one of its video or audio AdaptationSets has no Representation or a SegmentTimeline without S
+ * element.
  *
- * Playback starts as soon as an MPD update lists content. If none does within this time, an error with code
- * MANIFEST_ERROR_ID_NOSTREAMS_CODE (32) is raised. Any value other than a finite number >= 0, e.g. Infinity, waits
- * without limit. An MPD without minimumUpdatePeriod is never updated, so the error is raised at once.
+ * Playback starts as soon as an MPD update lists all content. If none does within this time, an error with code
+ * MANIFEST_ERROR_ID_NOSTREAMS_CODE (32) is raised. By default, and for any value other than a finite number >= 0,
+ * dash.js waits without limit. An MPD without minimumUpdatePeriod is never updated, so the error is raised at once.
  * @property {number} [liveUpdateTimeThresholdInMilliseconds=0]
  * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during
  * live streams on low end devices.
@@ -1380,7 +1382,7 @@ function Settings() {
             seekDurationBackoff: 0.5,
             wallclockTimeUpdateInterval: 100,
             manifestUpdateRetryInterval: 100,
-            liveContentPendingTimeoutInSeconds: 60,
+            liveContentPendingTimeoutInSeconds: Infinity,
             liveUpdateTimeThresholdInMilliseconds: 0,
             cacheInitSegments: false,
             cacheInitSegmentsLimit: 50,

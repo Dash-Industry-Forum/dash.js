@@ -257,6 +257,10 @@ function StreamController() {
 
             Promise.all(promises)
                 .then(() => {
+                    // A reset while the streams were initialized ends this session, do not start it anymore
+                    if (compositionSessionId !== sessionId) {
+                        return;
+                    }
                     return new Promise((resolve, reject) => {
                         if (!activeStream) {
                             _initializeForFirstStream(streamsInfo, resolve, reject);
@@ -266,6 +270,10 @@ function StreamController() {
                     });
                 })
                 .then(() => {
+                    if (compositionSessionId !== sessionId) {
+                        logger.debug('Ignoring the composition of a session that has been reset');
+                        return;
+                    }
                     eventBus.trigger(Events.STREAMS_COMPOSED);
                     _handlePendingDynamicToStaticUpdate();
                     // Additional periods might have been added after an MPD update. Check again if we can start
@@ -460,21 +468,20 @@ function StreamController() {
                 playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
             }
 
-            // Apply content steering
-            // A failed content steering request does not stop the start. A failure of the start itself rejects.
+            // Apply content steering. If it or the start fails, try the start once more. If that fails, too, reject.
             _applyContentSteeringBeforeStart()
-                .catch((e) => {
-                    logger.error(e);
-                })
                 .then(() => {
                     const manifest = manifestModel.getValue();
                     if (manifest) {
                         baseURLController.update(manifest)
                     }
                     _calculateStartTimeAndSwitchStream()
-                    resolve();
                 })
-                .catch(reject)
+                .catch((e) => {
+                    logger.error(e);
+                    _calculateStartTimeAndSwitchStream();
+                })
+                .then(() => resolve(), reject)
         } catch (e) {
             reject(e);
         }
@@ -1551,6 +1558,10 @@ function StreamController() {
             // references in case we remove AdaptationSets.
             capabilitiesFilter.filterUnsupportedFeatures(manifest)
                 .then(() => {
+                    // A reset while filtering ends this session, do not compose its streams anymore
+                    if (updateSessionId !== sessionId) {
+                        return;
+                    }
                     baseURLController.initialize(manifest);
 
                     let manifestUTCTimingSources = adapter.getUTCTimingSources();

@@ -601,7 +601,7 @@ describe('StreamController', function () {
                     }, 0);
                 });
 
-                it('should raise an error event if the switch to the first stream fails', function (done) {
+                it('should raise an error event if the switch to the first stream fails twice', function (done) {
                     errHandlerMock.reset();
                     let switchAttempts = 0;
                     const throwingListener = () => {
@@ -617,8 +617,65 @@ describe('StreamController', function () {
                     setTimeout(() => {
                         eventBus.off(Events.INITIAL_STREAM_SWITCH, throwingListener);
                         try {
-                            expect(switchAttempts).to.equal(1);
+                            expect(switchAttempts).to.equal(2);
                             expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
+                });
+
+                it('should start the first stream if only the first switch to it fails', function (done) {
+                    errHandlerMock.reset();
+                    let switchAttempts = 0;
+                    const failingOnceListener = () => {
+                        switchAttempts++;
+                        if (switchAttempts === 1) {
+                            throw new Error('initial stream switch failed');
+                        }
+                    };
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                    eventBus.on(Events.INITIAL_STREAM_SWITCH, failingOnceListener);
+                    const streamsComposedSpy = sinon.spy();
+                    eventBus.on(Events.STREAMS_COMPOSED, streamsComposedSpy);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+
+                    setTimeout(() => {
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, failingOnceListener);
+                        eventBus.off(Events.STREAMS_COMPOSED, streamsComposedSpy);
+                        try {
+                            expect(switchAttempts).to.equal(2);
+                            expect(streamsComposedSpy.calledOnce).to.be.true;
+                            expect(errHandlerMock.errorCode).to.be.undefined;
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
+                });
+
+                it('should not start the first stream of a session that has been reset while its streams were initialized', function (done) {
+                    const initialStreamSwitchSpy = sinon.spy();
+                    const streamsComposedSpy = sinon.spy();
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                    eventBus.on(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                    eventBus.on(Events.STREAMS_COMPOSED, streamsComposedSpy);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                    streamController.reset();
+                    errHandlerMock.reset();
+
+                    setTimeout(() => {
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                        eventBus.off(Events.STREAMS_COMPOSED, streamsComposedSpy);
+                        try {
+                            expect(initialStreamSwitchSpy.called).to.be.false;
+                            expect(streamsComposedSpy.called).to.be.false;
+                            expect(errHandlerMock.errorCode).to.be.undefined;
                             done();
                         } catch (e) {
                             done(e);

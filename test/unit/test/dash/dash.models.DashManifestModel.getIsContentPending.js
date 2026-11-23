@@ -49,16 +49,16 @@ describe('DashManifestModel - getIsContentPending', function () {
         expect(dashManifestModel.getIsContentPending(parse(videoAdaptationSet('<SegmentTimeline/>')))).to.be.true;
     });
 
-    it('should return false if one AdaptationSet has segments and another has an empty SegmentTimeline', function () {
+    it('should return true if one AdaptationSet has segments and another has an empty SegmentTimeline', function () {
         const manifest = parse(
             videoAdaptationSet('<SegmentTimeline><S t="0" d="30720"/></SegmentTimeline>', '1') +
             videoAdaptationSet('<SegmentTimeline/>', '2')
         );
 
-        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
     });
 
-    it('should return false for a multi-period MPD whose newest Period has no content yet', function () {
+    it('should return true for a multi-period MPD whose newest Period has no content yet', function () {
         const manifest = dashParser.parse(`${MPD_OPEN}
             <Period id="0" start="PT0S">
                 ${videoAdaptationSet('<SegmentTimeline><S t="0" d="30720"/></SegmentTimeline>')}
@@ -66,7 +66,7 @@ describe('DashManifestModel - getIsContentPending', function () {
             <Period id="1" start="PT2S"/>
         </MPD>`);
 
-        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
     });
 
     it('should return true for a multi-period MPD in which no Period has content yet', function () {
@@ -76,6 +76,54 @@ describe('DashManifestModel - getIsContentPending', function () {
         </MPD>`);
 
         expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
+    });
+
+    it('should return true if audio has segments and the video SegmentTimeline is still empty', function () {
+        const manifest = parse(videoAdaptationSet('<SegmentTimeline/>') +
+            `<AdaptationSet id="2" contentType="audio" mimeType="audio/mp4" codecs="mp4a.40.2">
+                <SegmentTemplate timescale="48000" media="$RepresentationID$/$Time$.m4s">
+                    <SegmentTimeline><S t="0" d="96000"/></SegmentTimeline>
+                </SegmentTemplate>
+                <Representation id="a1" bandwidth="128000"/>
+            </AdaptationSet>`);
+
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
+    });
+
+    it('should return true if one Representation of an AdaptationSet has an empty SegmentTimeline', function () {
+        const manifest = parse(`<AdaptationSet id="1" contentType="video" mimeType="video/mp4">
+                <Representation id="v1" bandwidth="500000">
+                    <SegmentTemplate timescale="1000" media="$RepresentationID$/$Time$.m4s">
+                        <SegmentTimeline><S t="0" d="2000"/></SegmentTimeline>
+                    </SegmentTemplate>
+                </Representation>
+                <Representation id="v2" bandwidth="1000000">
+                    <SegmentTemplate timescale="1000" media="$RepresentationID$/$Time$.m4s"><SegmentTimeline/></SegmentTemplate>
+                </Representation>
+            </AdaptationSet>`);
+
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
+    });
+
+    it('should return false if the newest Period lists all content and an older one does not', function () {
+        const manifest = dashParser.parse(`${MPD_OPEN}
+            <Period id="0" start="PT0S"/>
+            <Period id="1" start="PT2S">
+                ${videoAdaptationSet('<SegmentTimeline><S t="0" d="30720"/></SegmentTimeline>')}
+            </Period>
+        </MPD>`);
+
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
+    });
+
+    it('should return false if a subtitle SegmentTimeline is still empty', function () {
+        const manifest = parse(videoAdaptationSet('<SegmentTimeline><S t="0" d="30720"/></SegmentTimeline>') +
+            `<AdaptationSet id="2" contentType="text" mimeType="application/mp4" codecs="stpp">
+                <SegmentTemplate timescale="1000" media="$RepresentationID$/$Time$.m4s"><SegmentTimeline/></SegmentTemplate>
+                <Representation id="t1" bandwidth="256"/>
+            </AdaptationSet>`);
+
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
     });
 
     it('should return false for a SegmentTimeline with segments', function () {

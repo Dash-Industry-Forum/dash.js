@@ -539,10 +539,10 @@ function DashManifestModel() {
     }
 
     /**
-     * Checks if a dynamic MPD does not list any content yet, e.g. a live presentation whose packager has not written
-     * its first segment. This is the case if no Period has a Representation with content: a Period may have no
-     * AdaptationSet, an AdaptationSet no Representation, and a SegmentTimeline no S element.
-     * An MPD that lists content in any Period is not pending, even if other Periods or AdaptationSets are still empty.
+     * Checks if a dynamic MPD does not list all of its content yet, e.g. a live presentation whose packager has not
+     * written the first segment of each media type. Playback starts at the live edge in the last Period, so only that
+     * Period is checked: it has no AdaptationSet, or one of its AdaptationSets has no Representation or a
+     * Representation whose SegmentTimeline has no S element.
      * @param {object} manifest
      * @returns {boolean}
      */
@@ -551,20 +551,21 @@ function DashManifestModel() {
             return false;
         }
         const periods = manifest[DashConstants.PERIOD] || [];
-        return !periods.some(_hasContent);
+        return periods.length === 0 || !_hasAllContent(periods[periods.length - 1]);
     }
 
-    function _hasContent(period) {
+    function _hasAllContent(period) {
         const adaptationSets = period[DashConstants.ADAPTATION_SET] || [];
-        // Subtitles and thumbnails do not start playback on their own, and a subtitle without SegmentTimeline (e.g. a
-        // sidecar file added by addExternalSubtitle) always looks available. Count them only if there is nothing else.
+        // Subtitles and thumbnails do not start playback on their own and may be published later. Check them only if
+        // the Period has nothing else.
         const mediaAdaptationSets = adaptationSets.filter((adaptationSet) => {
             return !getIsText(adaptationSet) && !getIsImage(adaptationSet);
         });
         const adaptationSetsToCheck = mediaAdaptationSets.length > 0 ? mediaAdaptationSets : adaptationSets;
-        return adaptationSetsToCheck.some((adaptationSet) => {
+        return adaptationSetsToCheck.length > 0 && adaptationSetsToCheck.every((adaptationSet) => {
             const representations = adaptationSet[DashConstants.REPRESENTATION] || [];
-            return representations.some((representation) => !_hasEmptySegmentTimeline(representation));
+            return representations.length > 0 &&
+                representations.every((representation) => !_hasEmptySegmentTimeline(representation));
         });
     }
 
