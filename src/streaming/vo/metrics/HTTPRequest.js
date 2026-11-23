@@ -45,7 +45,8 @@ class HTTPRequest {
          */
         this.tcpid = null;
         /**
-         * This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
+         * This is an optional parameter and should not be included in HTTP request/response transactions for
+         * progressive download.<br>
          * The type of the request:
          * - MPD
          * - XLink expansion
@@ -133,7 +134,7 @@ class HTTPRequest {
          */
         this._resourceTimingValues = null;
         /**
-         * The CMSD static and dynamic values retrieved from CMSD response headers.
+         * The CMSD static and dynamic values retrieved from CMSD response headers.<br>
          * Not part of the HttpList metric defined in ISO/IEC 23009-1 Annex D.4.3, hence private.
          * @public
          */

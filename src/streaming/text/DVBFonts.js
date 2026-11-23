@@ -135,7 +135,8 @@ function DVBFonts(config) {
         return !!((attrs.value && parseInt(attrs.value) === 1) &&
             (attrs.dvbUrl && attrs.dvbUrl.length > 0) &&
             (attrs.dvbFontFamily && attrs.dvbFontFamily.length > 0) &&
-            (attrs.dvbMimeType && (attrs.dvbMimeType === Constants.OFF_MIMETYPE || attrs.dvbMimeType === Constants.WOFF_MIMETYPE)));
+            (attrs.dvbMimeType &&
+                (attrs.dvbMimeType === Constants.OFF_MIMETYPE || attrs.dvbMimeType === Constants.WOFF_MIMETYPE)));
     }
 
     /**
@@ -186,7 +187,7 @@ function DVBFonts(config) {
     }
 
     /**
-     * Initiate the download of a dvb custom font.
+     * Initiate the download of a dvb custom font.<br>
      * The browser will neatly handle duplicate fonts
      */
     function downloadFonts() {

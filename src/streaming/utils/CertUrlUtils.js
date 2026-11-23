@@ -30,7 +30,7 @@
  */
 
 /**
- * Utility functions for DASH Certurl normalization.
+ * Utility functions for DASH Certurl normalization.<br>
  * Shared by ContentProtection parsing and protData handling.
  *
  * A Certurl entry may appear as:
@@ -39,7 +39,7 @@
  *  - Pre-normalized object: { url: 'https://example.com/cert', certType: 'primary' }
  *  - Array of any of the above
  *
- * The normalization returns an array of objects: { url: string, certType: string|null }
+ * The normalization returns an array of objects: { url: string, certType: string|null }<br>
  * Empty or invalid entries are filtered out. Whitespace is trimmed.
  */
 function normalizeCertUrls(raw) {
@@ -70,7 +70,7 @@ function normalizeCertUrls(raw) {
 }
 
 /**
- * Deduplicates an array of Certurl descriptor objects by URL + certType combination.
+ * Deduplicates an array of Certurl descriptor objects by URL + certType combination.<br>
  * Keeps first occurrence order stable.
  * @param {Array<{url: string, certType: (string|null)}>} list
  * @returns {Array<{url: string, certType: (string|null)}>}
@@ -91,7 +91,7 @@ function dedupeCertUrls(list) {
 }
 
 /**
- * Iterates over a ProtectionDataSet object and normalizes & deduplicates any certUrls arrays in-place.
+ * Iterates over a ProtectionDataSet object and normalizes & deduplicates any certUrls arrays in-place.<br>
  * Returns the same object reference for convenience.
  * @param {Object} protData - keySystem -> config object
  * @returns {Object} protData

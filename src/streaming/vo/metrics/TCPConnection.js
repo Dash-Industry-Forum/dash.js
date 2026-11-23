@@ -50,17 +50,20 @@ class TCPConnection {
          */
         this.dest = null;
         /**
-         * Real-Time | The time at which the connection was opened (sending time of the initial SYN or connect socket operation).
+         * Real-Time | The time at which the connection was opened (sending time of the initial SYN or connect socket
+         * operation).
          * @public
          */
         this.topen = null;
         /**
-         * Real-Time | The time at which the connection was closed (sending or reception time of FIN or RST or close socket operation).
+         * Real-Time | The time at which the connection was closed (sending or reception time of FIN or RST or close
+         * socket operation).
          * @public
          */
         this.tclose = null;
         /**
-         * Connect time in ms (time from sending the initial SYN to receiving the ACK or completion of the connect socket operation).
+         * Connect time in ms (time from sending the initial SYN to receiving the ACK or completion of the connect
+         * socket operation).
          * @public
          */
         this.tconnect = null;

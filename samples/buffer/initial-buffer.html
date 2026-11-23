@@ -15,19 +15,55 @@
 <body>
 
 <script class="code">
-    async function init(video, wrapper) {
+    async function init(video, wrapper, panel) {
         var player,
             url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
 
         player = dashjs.MediaPlayer().create();
 
+        function seconds(value, digits) {
+            return isNaN(value) ? '-' : value.toFixed(digits) + ' s';
+        }
+
+        // Initial value comes from the settings panel, e.g. { initialBufferLevel: 12 }
         player.updateSettings({
             streaming: {
-                buffer: {
-                    initialBufferLevel: 12,
-                }
+                buffer: panel.getValues()
             }
         });
+
+        var loadTime = Date.now();
+        var startupTime = NaN;
+        var bufferAtStart = NaN;
+
+        // The initial buffer level only applies at playback start, so reload the stream to see its effect
+        panel.onApply(function (buffer) {
+            player.updateSettings({
+                streaming: {
+                    buffer: buffer
+                }
+            });
+            loadTime = Date.now();
+            startupTime = NaN;
+            bufferAtStart = NaN;
+            player.attachSource(url);
+        });
+
+        player.on(dashjs.MediaPlayer.events.PLAYBACK_PLAYING, function () {
+            if (isNaN(startupTime)) {
+                startupTime = Date.now() - loadTime;
+                bufferAtStart = player.getBufferLength('video');
+            }
+        });
+
+        setInterval(function () {
+            var initialBufferLevel = player.getSettings().streaming.buffer.initialBufferLevel;
+            panel.setMetric('initialBufferLevel', isNaN(initialBufferLevel) ? 'disabled' : seconds(initialBufferLevel, 0));
+            panel.setMetric('state', isNaN(startupTime) ? 'waiting for initial buffer' : 'playing');
+            panel.setMetric('startupTime', seconds(startupTime / 1000, 2));
+            panel.setMetric('bufferAtStart', seconds(bufferAtStart, 2));
+            panel.setMetric('videoBuffer', seconds(player.getBufferLength('video'), 2));
+        }, 250);
 
         player.initialize(video, url, true);
         await createControlBar(player, video, wrapper);
@@ -35,14 +71,29 @@
 </script>
 
 <script type="module">
-    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    import { initSamplePage, createControlBar, createSamplePanel } from '../lib/sample-template.js';
+
+    var panel = createSamplePanel({
+        settings: [
+            { key: 'initialBufferLevel', label: 'initialBufferLevel (s, empty to disable)', value: 12 }
+        ],
+        applyLabel: 'Apply and reload',
+        metrics: [
+            { key: 'initialBufferLevel', label: 'Initial buffer level' },
+            { key: 'state', label: 'Startup state' },
+            { key: 'startupTime', label: 'Time until playback started' },
+            { key: 'bufferAtStart', label: 'Video buffer at playback start' },
+            { key: 'videoBuffer', label: 'Video buffer level' }
+        ]
+    });
 
     initSamplePage({
         title: 'Initial buffer target',
-        description: 'Shows how to define the initial buffer target at playback start in dash.js.',
+        description: 'Shows how to define the initial buffer target at playback start in dash.js. Setting used: <b>initialBufferLevel</b> (buffer level in seconds required before playback starts). Change the value in the settings panel and click apply to reload the stream with the new value. The debug panel shows how long the startup took and how much video was buffered when playback started. On a fast connection the buffer fills up almost instantly, use the network throttling of the browser developer tools to see the effect.',
         category: 'Buffer',
         codeExpanded: true,
-        onInit: (video, container, wrapper) => init(video, wrapper)
+        sidePanel: panel.element,
+        onInit: (video, container, wrapper) => init(video, wrapper, panel)
     });
 </script>
 </body>

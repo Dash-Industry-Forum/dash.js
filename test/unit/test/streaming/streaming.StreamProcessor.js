@@ -59,6 +59,11 @@ describe('StreamProcessor', function () {
             expect(streamProcessor.setEnhancementStreamProcessor.bind(streamProcessor, {})).to.not.throw();
         });
 
+        it('selectMediaInfo should resolve when the representation controller is not initialized', async function () {
+            const result = await streamProcessor.selectMediaInfo({});
+            expect(result).to.be.undefined;
+        });
+
     });
 
     describe('SegmentBase segment lists', function () {
@@ -230,7 +235,8 @@ describe('StreamProcessor', function () {
             switchQuality(representations[1], representations[0]);
 
             // Not awaited, the segment list loads in parallel to the init segment
-            expect(streamProcessor.getRepresentationController().getCurrentRepresentation()).to.equal(representations[1]);
+            expect(streamProcessor.getRepresentationController().getCurrentRepresentation())
+                .to.equal(representations[1]);
             expect(segmentListRequestedFor).to.deep.equal([representations[0].id, representations[1].id]);
         });
 

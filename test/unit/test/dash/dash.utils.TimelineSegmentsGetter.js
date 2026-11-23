@@ -100,7 +100,8 @@ describe('TimelineSegmentsGetter', () => {
             representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
 
             const info = timelineSegmentsGetter.getMediaFinishedInformation(representation);
-            // From 0 to <50s with 1s duration -> 50 segments (first S produces 50 segments), plus the final S element yields 1 more
+            // From 0 to <50s with 1s duration -> 50 segments (first S produces 50 segments), plus the final S element
+            // yields 1 more
             expect(info.numberOfSegments).to.equal(51);
             // mediaTimeOfLastSignaledSegment should be 51 seconds (since last S adds another second)
             expect(info.mediaTimeOfLastSignaledSegment).to.equal(51);

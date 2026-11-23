@@ -52,14 +52,18 @@ function ClientDataReportingController() {
             return true;
         }
 
-        const { serviceLocationsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
-        const isIncluded = serviceLocationsArray ? (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(serviceLocation)) : true;
+        const { serviceLocationsArray } =
+            serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
+        const isIncluded = serviceLocationsArray ?
+            (serviceLocationsArray?.length === 0 || serviceLocationsArray.includes(serviceLocation)) : true;
         return isIncluded;
     }
 
     function isAdaptationsIncluded(adaptationSet) {
-        const { adaptationSetsArray } = serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
-        const isIncluded = adaptationSetsArray ? (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(adaptationSet)) : true;
+        const { adaptationSetsArray } =
+            serviceDescriptionController?.getServiceDescriptionSettings()?.clientDataReporting ?? {};
+        const isIncluded = adaptationSetsArray ?
+            (adaptationSetsArray?.length === 0 || adaptationSetsArray.includes(adaptationSet)) : true;
         return isIncluded;
     }
 

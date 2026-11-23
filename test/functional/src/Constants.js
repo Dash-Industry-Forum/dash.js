@@ -102,7 +102,9 @@ const TEST_INPUTS = {
     },
     LIVE_DELAY: {
         VALUE: 10,
-        TOLERANCE: 2
+        TOLERANCE: 2,
+        // Catch-up in low latency mode oscillates around the target, so the live delay can be slightly below it
+        LOWER_TOLERANCE: 0.5
     },
     LATENCY_CATCHUP: {
         DELAY: 12,
@@ -119,8 +121,9 @@ const TEST_INPUTS = {
         TESTRUNS_PER_TYPE: 3
     },
     FAST_SWITCH_QUALITY_VIDEO: {
-        TARGET_BUFFER: 10,
-        TARGET_BUFFER_TOLERANCE: 10,
+        // Fast switching replaces the buffer only from currentTime + 1.5 * fragment duration onwards, so the forward buffer must cover that margin
+        TARGET_BUFFER: 20,
+        TARGET_BUFFER_TOLERANCE: 2,
         LIVE_DELAY: 12,
         MAX_NUMBER_OF_SEGMENT_DOWNLOADS_TO_WAIT: 5
     }
@@ -166,6 +169,7 @@ const exportedObject = {
 };
 
 TESTCASES.ADVANCED.NO_RELOAD_AFTER_SEEK = TESTCASES.CATEGORIES.ADVANCED + 'no-reload-after-seek';
+TESTCASES.ADVANCED.PLAY_INTO_GAP = TESTCASES.CATEGORIES.ADVANCED + 'play-into-gap';
 TESTCASES.ADVANCED.SEEK_IN_GAPS = TESTCASES.CATEGORIES.ADVANCED + 'seek-in-gaps';
 
 TESTCASES.AUDIO.INITIAL = TESTCASES.CATEGORIES.AUDIO + 'initial-audio';
@@ -177,6 +181,7 @@ TESTCASES.BUFFER.TARGET = TESTCASES.CATEGORIES.BUFFER + 'buffer-target';
 TESTCASES.BUFFER.TO_KEEP_SEEK = TESTCASES.CATEGORIES.BUFFER + 'buffer-to-keep-seek';
 
 TESTCASES.DRM.KEEP_MEDIA_KEY_SESSIONS = TESTCASES.CATEGORIES.DRM + 'keep-media-key-sessions';
+TESTCASES.DRM.KEEP_MEDIA_KEY_SESSIONS_MULTIPERIOD = TESTCASES.CATEGORIES.DRM + 'keep-media-key-sessions-multiperiod';
 
 TESTCASES.FEATURE_SUPPORT.EMSG_TRIGGERED = TESTCASES.CATEGORIES.FEATURE_SUPPORT + 'emsg-triggered';
 TESTCASES.FEATURE_SUPPORT.MPD_PATCHING = TESTCASES.CATEGORIES.FEATURE_SUPPORT + 'mpd-patching';

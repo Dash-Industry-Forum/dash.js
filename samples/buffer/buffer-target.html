@@ -15,21 +15,52 @@
 <body>
 
 <script class="code">
-    async function init(video, wrapper) {
+    async function init(video, wrapper, panel) {
         var player,
             url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
 
         player = dashjs.MediaPlayer().create();
 
+        function seconds(value, digits) {
+            return isNaN(value) ? '-' : value.toFixed(digits) + ' s';
+        }
+
+        // Initial values come from the settings panel, e.g. { bufferTimeAtTopQuality: 30, ... }
         player.updateSettings({
             streaming: {
-                buffer: {
-                    bufferTimeAtTopQuality: 30,
-                    bufferTimeAtTopQualityLongForm: 60,
-                    bufferTimeDefault: 12,
-                    longFormContentDurationThreshold: 600,
-                }
+                buffer: panel.getValues()
             }
+        });
+
+        // Buffer targets can be changed at runtime
+        panel.onApply(function (buffer) {
+            player.updateSettings({
+                streaming: {
+                    buffer: buffer
+                }
+            });
+        });
+
+        player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function () {
+            setInterval(function () {
+                var buffer = player.getSettings().streaming.buffer;
+                var currentRepresentation = player.getCurrentRepresentationForType('video');
+                var representations = player.getRepresentationsByType('video');
+                var topRepresentation = representations.reduce(function (a, b) {
+                    return a.bandwidth >= b.bandwidth ? a : b;
+                });
+                var isTopQuality = !!currentRepresentation && currentRepresentation.id === topRepresentation.id;
+                var isLongForm = player.duration() >= buffer.longFormContentDurationThreshold;
+                // The target dash.js uses for video, audio follows the video buffer level
+                var target = isTopQuality ? (isLongForm ? buffer.bufferTimeAtTopQualityLongForm : buffer.bufferTimeAtTopQuality) : buffer.bufferTimeDefault;
+
+                panel.setMetric('videoBuffer', seconds(player.getBufferLength('video'), 2));
+                panel.setMetric('audioBuffer', seconds(player.getBufferLength('audio'), 2));
+                panel.setMetric('quality', isTopQuality ? 'top (' + representations.length + ' available)' : 'below top');
+                panel.setMetric('duration', seconds(player.duration(), 0));
+                panel.setMetric('longForm', isLongForm ? 'yes' : 'no');
+                panel.setMetric('target', target + ' s');
+            }, 500);
         });
 
         player.initialize(video, url, true);
@@ -38,14 +69,32 @@
 </script>
 
 <script type="module">
-    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    import { initSamplePage, createControlBar, createSamplePanel } from '../lib/sample-template.js';
+
+    var panel = createSamplePanel({
+        settings: [
+            { key: 'bufferTimeDefault', label: 'bufferTimeDefault (s)', value: 12 },
+            { key: 'bufferTimeAtTopQuality', label: 'bufferTimeAtTopQuality (s)', value: 30 },
+            { key: 'bufferTimeAtTopQualityLongForm', label: 'bufferTimeAtTopQualityLongForm (s)', value: 60 },
+            { key: 'longFormContentDurationThreshold', label: 'longFormContentDurationThreshold (s)', value: 600 }
+        ],
+        metrics: [
+            { key: 'videoBuffer', label: 'Video buffer level' },
+            { key: 'audioBuffer', label: 'Audio buffer level' },
+            { key: 'quality', label: 'Video quality' },
+            { key: 'duration', label: 'Content duration' },
+            { key: 'longForm', label: 'Long form content' },
+            { key: 'target', label: 'Active video buffer target' }
+        ]
+    });
 
     initSamplePage({
         title: 'Buffer target',
-        description: 'Shows how to define the buffer targets in dash.js. Settings used: <b>bufferTimeDefault</b> (post startup/seeks target), <b>bufferTimeAtTopQuality</b> (target at top quality), <b>bufferTimeAtTopQualityLongForm</b> (target for long form content), <b>longFormContentDurationThreshold</b> (threshold for long form content).',
+        description: 'Shows how to define the buffer targets in dash.js. Settings used: <b>bufferTimeDefault</b> (post startup/seeks target), <b>bufferTimeAtTopQuality</b> (target at top quality), <b>bufferTimeAtTopQualityLongForm</b> (target for long form content), <b>longFormContentDurationThreshold</b> (threshold for long form content). Change the values in the settings panel and click apply to update them at runtime. The debug panel shows which target is currently active.',
         category: 'Buffer',
         codeExpanded: true,
-        onInit: (video, container, wrapper) => init(video, wrapper)
+        sidePanel: panel.element,
+        onInit: (video, container, wrapper) => init(video, wrapper, panel)
     });
 </script>
 </body>

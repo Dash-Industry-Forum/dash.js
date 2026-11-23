@@ -65,7 +65,9 @@ function DVBReporting(config) {
 
     function doGetRequest(url, successCB, failureCB) {
         let req = new XMLHttpRequest();
-        req.withCredentials = customParametersModel.getXHRWithCredentialsForType(metricsConstants.HTTP_REQUEST_DVB_REPORTING_TYPE);
+        req.withCredentials = customParametersModel.getXHRWithCredentialsForType(
+            metricsConstants.HTTP_REQUEST_DVB_REPORTING_TYPE
+        );
         const oncomplete = function () {
             let reqIndex = pendingRequests.indexOf(req);
 

@@ -352,6 +352,374 @@ describe('TextTracks', function () {
         });
     });
 
+    // With dispatchForManualRendering the cues of every track are added to their native
+    // TextTrack (all of them hidden, none disabled), so the native enter/exit events keep
+    // firing for tracks that are not selected anymore.
+    describe('Cue events with streaming.text.dispatchForManualRendering', function () {
+        const enterEvents = [];
+        const exitEvents = [];
+
+        const onCueEnter = (cue) => enterEvents.push(cue.cueID);
+        const onCueExit = (e) => exitEvents.push(e.cueID);
+
+        beforeEach(function () {
+            enterEvents.length = 0;
+            exitEvents.length = 0;
+            eventBus.on(MediaPlayerEvents.CUE_ENTER, onCueEnter);
+            eventBus.on(MediaPlayerEvents.CUE_EXIT, onCueExit);
+
+            settings.update({ streaming: { text: { dispatchForManualRendering: true } } });
+        });
+
+        afterEach(function () {
+            eventBus.off(MediaPlayerEvents.CUE_ENTER, onCueEnter);
+            eventBus.off(MediaPlayerEvents.CUE_EXIT, onCueExit);
+        });
+
+        // Returns the native TextTracks of a selected English and a non selected German track
+        const addTwoTracks = () => {
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+            textTracks.addTextTrackInfo({
+                index: 1,
+                kind: 'subtitles',
+                id: 'deu',
+                defaultTrack: false,
+                isTTML: true}, 1);
+            textTracks.createTracks();
+
+            return [
+                videoModelMock.getTextTrack('subtitles', 'eng'),
+                videoModelMock.getTextTrack('subtitles', 'deu')
+            ];
+        };
+
+        it('should dispatch CUE_ENTER and CUE_EXIT for cues of the selected track', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+            cue.onexit();
+
+            expect(enterEvents.length).to.equal(1);
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should not dispatch CUE_ENTER for cues of a track that is not selected', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            deuTrack.cues[0].onenter();
+
+            expect(enterEvents.length).to.equal(0);
+        });
+
+        it('should not dispatch CUE_EXIT for cues of a track that is not selected', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = deuTrack.cues[0];
+            cue.onenter();
+            // The application never received the enter event of this cue
+            cue.onexit();
+
+            expect(exitEvents.length).to.equal(0);
+        });
+
+        it('should stop dispatching cue events for a track once another track has been selected', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            textTracks.setCurrentTrackIdx(1);
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+            cue.onexit();
+
+            expect(enterEvents.length).to.equal(0);
+            expect(exitEvents.length).to.equal(0);
+        });
+
+        it('should dispatch CUE_EXIT only once per dispatched CUE_ENTER', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+            cue.onexit();
+            cue.onexit();
+
+            expect(exitEvents.length).to.equal(1);
+        });
+
+        // The rendered content of an HTML cue lives in its isd, which is what the cue
+        // equality check compares. Without distinct content the adjacent cues below would
+        // be merged into a single one.
+        const makeHtmlItem = (cueID, text, start, end) => ({
+            type: 'html',
+            cueID,
+            start,
+            end,
+            isd: { contents: [{ kind: 'text', text }] }
+        });
+
+        it('should keep track of the current HTML cue when a stale cue exits', function () {
+            const [engTrack] = addTwoTracks();
+
+            // HTML tracks don't trigger the exit event of the previous cue when a new cue is
+            // entered, so entering a cue exits the one currently dispatched. The late native
+            // exit event of that already exited cue must not clear the cue that is displayed
+            // now, otherwise the following cue never exits it.
+            textTracks.addCaptions(0, 0, [
+                makeHtmlItem('cue-1', 'First cue', 0, 2),
+                makeHtmlItem('cue-2', 'Second cue', 2, 4),
+                makeHtmlItem('cue-3', 'Third cue', 4, 6)
+            ]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const [firstCue, secondCue, thirdCue] = engTrack.cues;
+            firstCue.onenter();
+            secondCue.onenter();
+            firstCue.onexit();
+            thirdCue.onenter();
+
+            expect(enterEvents).to.deep.equal(['cue-1', 'cue-2', 'cue-3']);
+            // The late native exit event of cue-1 must not dispatch a second CUE_EXIT for it
+            expect(exitEvents).to.deep.equal(['cue-1', 'cue-2']);
+        });
+
+        it('should dispatch CUE_EXIT for the cue on screen when another track is selected', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            textTracks.setCurrentTrackIdx(1);
+
+            const cue = deuTrack.cues[0];
+            cue.onenter();
+
+            // The application only renders the cues of the selected track, so it has to remove
+            // this cue right away and not when the cue ends
+            textTracks.setCurrentTrackIdx(0);
+
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+
+            // The native exit event of the cue follows later and must not be dispatched again
+            cue.onexit();
+
+            expect(enterEvents.length).to.equal(1);
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should dispatch CUE_EXIT for the cue on screen when subtitles are turned off', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+
+            textTracks.setCurrentTrackIdx(-1);
+
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should exit the HTML cue of the previous track when a cue of the newly selected track enters', function () {
+            const [engTrack, deuTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [makeHtmlItem('eng-cue', 'English subtitle', 2, 4)]);
+            textTracks.addCaptions(1, 0, [makeHtmlItem('deu-cue', 'German subtitle', 0, 2)]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            textTracks.setCurrentTrackIdx(1);
+            deuTrack.cues[0].onenter();
+
+            textTracks.setCurrentTrackIdx(0);
+            expect(exitEvents).to.deep.equal(['deu-cue']);
+
+            // The cue of the previous track is not exited a second time
+            engTrack.cues[0].onenter();
+
+            expect(enterEvents).to.deep.equal(['deu-cue', 'eng-cue']);
+            expect(exitEvents).to.deep.equal(['deu-cue']);
+        });
+
+        it('should dispatch CUE_ENTER for the active cue of a track that is selected mid-cue', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 4}]);
+            textTracks.updateTextTrackWindow(0, true);
+            videoModelMock.time = 1;
+
+            // The cue enters while the track is not selected and does not enter again once it is
+            const cue = deuTrack.cues[0];
+            cue.onenter();
+            expect(enterEvents.length).to.equal(0);
+
+            textTracks.setCurrentTrackIdx(1);
+
+            expect(enterEvents).to.deep.equal([cue.cueID]);
+
+            cue.onexit();
+
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should dispatch CUE_ENTER for an active cue that is not in the cue window of the selected track yet', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            // While paused the cue window is not refreshed, so the cue is not added to the native TextTrack
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 4}]);
+            videoModelMock.time = 1;
+            expect(deuTrack.cues.length).to.equal(0);
+
+            textTracks.setCurrentTrackIdx(1);
+
+            expect(enterEvents.length).to.equal(1);
+        });
+
+        it('should not dispatch CUE_ENTER when a track is selected at the end time of its cue', function () {
+            addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 2}]);
+            videoModelMock.time = 2;
+
+            textTracks.setCurrentTrackIdx(1);
+
+            expect(enterEvents.length).to.equal(0);
+        });
+
+        it('should dispatch CUE_ENTER for the active cue when subtitles are enabled again mid-cue', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 4}]);
+            textTracks.updateTextTrackWindow(0, true);
+            videoModelMock.time = 1;
+
+            textTracks.setCurrentTrackIdx(-1);
+            const cue = engTrack.cues[0];
+            cue.onenter();
+
+            textTracks.setCurrentTrackIdx(0);
+
+            expect(enterEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should not dispatch CUE_ENTER when a track is selected for cues that are not active', function () {
+            addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [
+                {type: 'noHtml', data: 'Past German subtitle', start: 0, end: 2},
+                {type: 'noHtml', data: 'Future German subtitle', start: 6, end: 8}
+            ]);
+            textTracks.updateTextTrackWindow(0, true);
+            videoModelMock.time = 4;
+
+            textTracks.setCurrentTrackIdx(1);
+
+            expect(enterEvents.length).to.equal(0);
+        });
+
+        it('should not dispatch CUE_ENTER again when the cue window refresh re-adds an active cue', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 4}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+
+            // The refresh removes all cues from the native TextTrack and adds them again, which
+            // fires the enter event of the active cue another time
+            textTracks.updateTextTrackWindow(1, true);
+            expect(engTrack.cues[0]).to.equal(cue);
+            cue.onenter();
+
+            expect(enterEvents).to.deep.equal([cue.cueID]);
+            expect(exitEvents.length).to.equal(0);
+        });
+
+        it('should dispatch the active cue again when its track is selected again', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 4}]);
+            textTracks.updateTextTrackWindow(0, true);
+            videoModelMock.time = 1;
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+
+            textTracks.setCurrentTrackIdx(1);
+            textTracks.setCurrentTrackIdx(0);
+
+            expect(enterEvents).to.deep.equal([cue.cueID, cue.cueID]);
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should not dispatch CUE_ENTER twice when the native enter event follows the replay', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 4}]);
+            textTracks.updateTextTrackWindow(0, true);
+            videoModelMock.time = 1;
+
+            // The native TextTrack has not fired the enter event of the cue yet when the track is selected
+            textTracks.setCurrentTrackIdx(1);
+            const cue = deuTrack.cues[0];
+            cue.onenter();
+
+            expect(enterEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should dispatch CUE_EXIT for the cue on screen when the text tracks are deleted', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+
+            textTracks.deleteAllTextTracks();
+            cue.onexit();
+
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should not dispatch cue events for cues that outlive their text track', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = engTrack.cues[0];
+            textTracks.deleteAllTextTracks();
+
+            cue.onenter();
+            cue.onexit();
+
+            expect(enterEvents.length).to.equal(0);
+            expect(exitEvents.length).to.equal(0);
+        });
+    });
+
     describe('Method updateTextTrackWindow', function () {
         it('should only add to the TextTrack cues within a window around current time', function () {
             textTracks.addTextTrackInfo({
@@ -433,7 +801,8 @@ describe('TextTracks', function () {
 
             clearTrack();
 
-            // Calling updateTextTrackWindow again doesn't affect a TextTrack that has been updated in the last 10 seconds
+            // Calling updateTextTrackWindow again doesn't affect a TextTrack that has been updated in the last 10
+            // seconds
             textTracks.updateTextTrackWindow(5);
             expect(track.cues.length).to.equal(0);
 

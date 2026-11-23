@@ -669,7 +669,8 @@ function CmcdModel() {
 
             // Calculate RTP
             let segmentSize = (bandwidth * duration) / 1000; // Calculate file size in kilobits
-            let timeToLoad = (currentBufferLevel / playbackRate) / 1000; // Calculate time available to load file in seconds
+            // Calculate time available to load file in seconds
+            let timeToLoad = (currentBufferLevel / playbackRate) / 1000;
             let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
             const rtpSafetyFactor = cmcdConfigAccessor.get('rtpSafetyFactor', { defaultValue: RTP_SAFETY_FACTOR });
             let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
@@ -795,7 +796,9 @@ function CmcdModel() {
     }
 
     function _calculateCmcdDataForRequestForSteering(request) {
-        const data = !_lastMediaTypeRequest ? getGenericCmcdData() : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
+        const data = !_lastMediaTypeRequest
+            ? getGenericCmcdData()
+            : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
 
         data.ot = CmcdObjectType.OTHER;
 
@@ -857,8 +860,12 @@ function CmcdModel() {
         }
 
         // Calculate lowest aggregated bitrate
-        const lowestVideoBitrate = allVideoReps.length > 0 ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit)) : 0;
-        const lowestAudioBitrate = allAudioReps.length > 0 ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit)) : 0;
+        const lowestVideoBitrate = allVideoReps.length > 0
+            ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit))
+            : 0;
+        const lowestAudioBitrate = allAudioReps.length > 0
+            ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit))
+            : 0;
         const labValues = _toInnerList(
             lowestVideoBitrate > 0 ? Math.round(lowestVideoBitrate) : null,
             lowestAudioBitrate > 0 ? Math.round(lowestAudioBitrate) : null

@@ -4307,6 +4307,8 @@ interface ProtectionController {
 
     handleKeySystemFromManifest(): void;
 
+    hasLicenseBeenApplied(): boolean;
+
     initializeForMedia(mediaInfo: MediaInfo): void;
 
     loadKeySession(keySystemInfo: KeySystemInfo): void;

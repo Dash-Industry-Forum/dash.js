@@ -197,7 +197,12 @@ describe('ThroughputModel', () => {
         })
 
         it('Should apply CMSD etp weight ratio on throughput values', () => {
-            settings.update({ streaming: { abr: { throughput: { useResourceTimingApi: true } }, cmsd: { abr: { etpWeightRatio: 0.5 } } } })
+            settings.update({
+                streaming: {
+                    abr: { throughput: { useResourceTimingApi: true } },
+                    cmsd: { abr: { etpWeightRatio: 0.5 } }
+                }
+            })
             dummyHttpRequest._cmsd = { dynamic: { etp: 2000 } };
             throughputModel.addEntry('video', dummyHttpRequest);
             const values = throughputModel.getThroughputDict('video');
@@ -211,7 +216,9 @@ describe('ThroughputModel', () => {
             let tValues = throughputModel.getEwmaThroughputDict('video');
             let lValues = throughputModel.getEwmaLatencyDict('video');
 
-            expect(tValues.totalWeight).to.be.equal(2 * (settings.get().streaming.abr.throughput.ewma.weightDownloadTimeMultiplicationFactor / 0.001));
+            expect(tValues.totalWeight).to.be.equal(
+                2 * (settings.get().streaming.abr.throughput.ewma.weightDownloadTimeMultiplicationFactor / 0.001)
+            );
             expect(lValues.totalWeight).to.be.equal(1);
         })
     })

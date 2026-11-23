@@ -144,42 +144,45 @@ function VideoModel() {
     //TODO Move the DVR window calculations from MediaPlayer to Here.
     function setCurrentTime(currentTime, stickToBuffered) {
         if (element) {
-            if (setCurrentTimeReadyStateFunction && setCurrentTimeReadyStateFunction.func && setCurrentTimeReadyStateFunction.event) {
+            if (setCurrentTimeReadyStateFunction && setCurrentTimeReadyStateFunction.func &&
+                setCurrentTimeReadyStateFunction.event) {
                 removeEventListener(setCurrentTimeReadyStateFunction.event, setCurrentTimeReadyStateFunction.func);
             }
             _currentTime = currentTime;
-            setCurrentTimeReadyStateFunction = waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
-                if (!element) {
-                    return;
-                }
-
-                // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
-                // providing playbackRate property equals to zero.
-                if (element.currentTime === _currentTime) {
-                    _currentTime = NaN;
-                    return;
-                }
-
-                // TODO Despite the fact that MediaSource 'open' event has been fired IE11 cannot set videoElement.currentTime
-                // immediately (it throws InvalidStateError). It seems that this is related to videoElement.readyState property
-                // Initially it is 0, but soon after 'open' event it goes to 1 and setting currentTime is allowed. Chrome allows to
-                // set currentTime even if readyState = 0.
-                // setTimeout is used to workaround InvalidStateError in IE11
-                try {
-                    _currentTime = stickToBuffered ? stickTimeToBuffered(_currentTime) : _currentTime;
-                    if (!isNaN(_currentTime)) {
-                        element.currentTime = _currentTime;
+            setCurrentTimeReadyStateFunction = waitForReadyState(
+                Constants.VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
+                    if (!element) {
+                        return;
                     }
-                    _currentTime = NaN;
-                } catch (e) {
-                    if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
-                        timeout = setTimeout(function () {
+
+                    // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
+                    // providing playbackRate property equals to zero.
+                    if (element.currentTime === _currentTime) {
+                        _currentTime = NaN;
+                        return;
+                    }
+
+                    // TODO Despite the fact that MediaSource 'open' event has been fired IE11 cannot set
+                    // videoElement.currentTime immediately (it throws InvalidStateError). It seems that this is
+                    // related to videoElement.readyState property Initially it is 0, but soon after 'open' event it
+                    // goes to 1 and setting currentTime is allowed. Chrome allows to set currentTime even if
+                    // readyState = 0.
+                    // setTimeout is used to workaround InvalidStateError in IE11
+                    try {
+                        _currentTime = stickToBuffered ? stickTimeToBuffered(_currentTime) : _currentTime;
+                        if (!isNaN(_currentTime)) {
                             element.currentTime = _currentTime;
-                            _currentTime = NaN;
-                        }, 400);
+                        }
+                        _currentTime = NaN;
+                    } catch (e) {
+                        if (element.readyState === 0 && e.code === e.INVALID_STATE_ERR) {
+                            timeout = setTimeout(function () {
+                                element.currentTime = _currentTime;
+                                _currentTime = NaN;
+                            }, 400);
+                        }
                     }
-                }
-            });
+                });
         }
     }
 
@@ -317,7 +320,9 @@ function VideoModel() {
 
         stalledStreams.push(type);
 
-        if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && stalledStreams.length === 1 && (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState || getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA)) {
+        if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && stalledStreams.length === 1 &&
+            (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState ||
+                getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA)) {
             // Halt playback until nothing is stalled
             previousPlaybackRate = element.playbackRate;
             setPlaybackRate(0, true);
@@ -340,7 +345,10 @@ function VideoModel() {
 
         if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && !isStalled()) {
             const resume = () => {
-                setPlaybackRate(previousPlaybackRate || 1, settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState);
+                setPlaybackRate(
+                    previousPlaybackRate || 1,
+                    settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState
+                );
 
                 if (!element.paused) {
                     const event = document.createEvent('Event');
@@ -355,7 +363,10 @@ function VideoModel() {
                 if (resumeReadyStateFunction && resumeReadyStateFunction.func && resumeReadyStateFunction.event) {
                     removeEventListener(resumeReadyStateFunction.event, resumeReadyStateFunction.func);
                 }
-                resumeReadyStateFunction = waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, resume);
+                resumeReadyStateFunction = waitForReadyState(
+                    Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA,
+                    resume
+                );
             }
         }
     }
@@ -368,7 +379,8 @@ function VideoModel() {
         }
     }
 
-    //Calling play on the element will emit playing - even if the stream is stalled. If the stream is stalled, emit a waiting event.
+    //Calling play on the element will emit playing - even if the stream is stalled. If the stream is stalled, emit a
+    //waiting event.
     function onPlaying() {
         if (element && isStalled() && element.playbackRate === 0) {
             const event = document.createEvent('Event');
@@ -483,7 +495,9 @@ function VideoModel() {
     function getVideoRelativeOffsetTop() {
         if (element) {
             const parentElement = element.parentNode.host || element.parentNode;
-            return parentElement ? element.getBoundingClientRect().top - parentElement.getBoundingClientRect().top : NaN;
+            return parentElement
+                ? element.getBoundingClientRect().top - parentElement.getBoundingClientRect().top
+                : NaN;
         }
         return NaN;
     }
@@ -491,7 +505,9 @@ function VideoModel() {
     function getVideoRelativeOffsetLeft() {
         if (element) {
             const parentElement = element.parentNode.host || element.parentNode;
-            return parentElement ? element.getBoundingClientRect().left - parentElement.getBoundingClientRect().left : NaN;
+            return parentElement
+                ? element.getBoundingClientRect().left - parentElement.getBoundingClientRect().left
+                : NaN;
         }
         return NaN;
     }
@@ -503,10 +519,12 @@ function VideoModel() {
     function getTextTrack(kind, label, lang, isTTML, isEmbedded) {
         if (element) {
             for (let i = 0; i < element.textTracks.length; i++) {
-                //label parameter could be a number (due to adaptationSet), but label, the attribute of textTrack, is a string => to modify...
+                //label parameter could be a number (due to adaptationSet), but label, the attribute of textTrack, is a
+                //string => to modify...
                 //label could also be undefined (due to adaptationSet)
                 if (element.textTracks[i].kind === kind && (label ? element.textTracks[i].label == label : true) &&
-                    element.textTracks[i].language === lang && element.textTracks[i].isTTML === isTTML && element.textTracks[i].isEmbedded === isEmbedded) {
+                    element.textTracks[i].language === lang && element.textTracks[i].isTTML === isTTML &&
+                    element.textTracks[i].isEmbedded === isEmbedded) {
                     return element.textTracks[i];
                 }
             }
@@ -533,7 +551,8 @@ function VideoModel() {
     function appendChild(childElement) {
         if (element) {
             element.appendChild(childElement);
-            //in Chrome, we need to differenciate textTrack with same lang, kind and label but different format (vtt, ttml, etc...)
+            //in Chrome, we need to differenciate textTrack with same lang, kind and label but different format (vtt,
+            //ttml, etc...)
             if (childElement.isTTML !== undefined) {
                 element.textTracks[element.textTracks.length - 1].isTTML = childElement.isTTML;
                 element.textTracks[element.textTracks.length - 1].isEmbedded = childElement.isEmbedded;

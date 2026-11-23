@@ -32,7 +32,7 @@
 /**
  * Static methods for rounding decimals
  *
- * Modified version of the CC0-licenced example at:
+ * Modified version of the CC0-licenced example at:<br>
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/round
  *
  * @export

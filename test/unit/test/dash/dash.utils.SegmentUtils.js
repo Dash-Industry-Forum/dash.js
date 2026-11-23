@@ -10,7 +10,8 @@ import TimelineConverter from '../../../../src/dash/utils/TimelineConverter.js';
 // Real timeline converter instance with stubbed dashManifestModel
 const context = {};
 const timelineConverter = TimelineConverter(context).getInstance();
-// Inject stub for dashManifestModel (not used by tested methods but required by interface when other internal funcs might rely on it)
+// Inject stub for dashManifestModel (not used by tested methods but required by interface when other internal funcs
+// might rely on it)
 timelineConverter.setConfig({
     dashManifestModel: {
         // Minimal stub: only method referenced in some TimelineConverter internals we are not exercising directly
@@ -80,7 +81,8 @@ describe('SegmentsUtils', function () {
                 });
                 expect(segment).to.exist;
                 expect(segment.availabilityEndTime).to.be.undefined;
-                expect(segment.availabilityStartTime).to.be.equal(representation.adaptation.period.mpd.availabilityStartTime);
+                expect(segment.availabilityStartTime)
+                    .to.be.equal(representation.adaptation.period.mpd.availabilityStartTime);
                 expect(segment.duration).to.be.equal(representation.segmentDuration);
                 expect(segment.index).to.be.equal(2);
                 expect(segment.isPartialSegment).to.be.false;
@@ -184,7 +186,9 @@ describe('SegmentsUtils', function () {
                 // timeShiftBufferDepth (30) + segmentDuration (4) = 34s tolerance 20ms
                 expect(Math.abs(diff - 34000)).to.be.lessThan(25);
                 // wallStartTime = availabilityStartTime + (presentationStartTime + suggestedPresentationDelay)*1000
-                const expectedWall = segment.availabilityStartTime.getTime() + (segment.presentationStartTime + representation.adaptation.period.mpd.suggestedPresentationDelay) * 1000;
+                const expectedWall = segment.availabilityStartTime.getTime() +
+                    (segment.presentationStartTime +
+                        representation.adaptation.period.mpd.suggestedPresentationDelay) * 1000;
                 expect(Math.abs(segment.wallStartTime.getTime() - expectedWall)).to.be.lessThan(20);
             });
 

@@ -215,11 +215,13 @@ function ProtectionModel_3Feb2014(config) {
         // If player is trying to playback Audio only stream - don't error out.
         let capabilities = null;
 
-        if (keySystemAccess.ksConfiguration.videoCapabilities && keySystemAccess.ksConfiguration.videoCapabilities.length > 0) {
+        if (keySystemAccess.ksConfiguration.videoCapabilities &&
+            keySystemAccess.ksConfiguration.videoCapabilities.length > 0) {
             capabilities = keySystemAccess.ksConfiguration.videoCapabilities[0];
         }
 
-        if (capabilities === null && keySystemAccess.ksConfiguration.audioCapabilities && keySystemAccess.ksConfiguration.audioCapabilities.length > 0) {
+        if (capabilities === null && keySystemAccess.ksConfiguration.audioCapabilities &&
+            keySystemAccess.ksConfiguration.audioCapabilities.length > 0) {
             capabilities = keySystemAccess.ksConfiguration.audioCapabilities[0];
         }
 
@@ -228,7 +230,11 @@ function ProtectionModel_3Feb2014(config) {
         }
 
         const contentType = capabilities.contentType;
-        const session = mediaKeys.createSession(contentType, new Uint8Array(ksInfo.initData), ksInfo.cdmData ? new Uint8Array(ksInfo.cdmData) : null);
+        const session = mediaKeys.createSession(
+            contentType,
+            new Uint8Array(ksInfo.initData),
+            ksInfo.cdmData ? new Uint8Array(ksInfo.cdmData) : null
+        );
         const sessionToken = createSessionToken(session, ksInfo);
 
         // Add all event listeners
@@ -301,8 +307,12 @@ function ProtectionModel_3Feb2014(config) {
 
                     case api.needkey:
                         if (event.initData) {
-                            const initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) });
+                            const initData = ArrayBuffer.isView(event.initData)
+                                ? event.initData.buffer
+                                : event.initData;
+                            eventBus.trigger(events.NEED_KEY, {
+                                key: new NeedKey(initData, ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC)
+                            });
                         }
                         break;
                 }
@@ -376,11 +386,15 @@ function ProtectionModel_3Feb2014(config) {
                 switch (event.type) {
                     case api.error:
                         let errorStr = 'KeyError'; // TODO: Make better string from event
-                        eventBus.trigger(events.KEY_ERROR, { error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, errorStr, this) });
+                        eventBus.trigger(events.KEY_ERROR, {
+                            error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, errorStr, this)
+                        });
                         break;
                     case api.message:
                         let message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                        eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, event.destinationURL) });
+                        eventBus.trigger(events.INTERNAL_KEY_MESSAGE, {
+                            data: new KeyMessage(this, message, event.destinationURL)
+                        });
                         break;
                     case api.ready:
                         logger.debug('DRM: Key added.');

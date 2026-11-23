@@ -409,7 +409,10 @@
                 "playback/seek",
                 "playback/seek-to-presentation-time",
                 "feature-support/cmcd",
-                "playback-advanced/preload"
+                "playback-advanced/preload",
+                "buffer/buffer-cleanup",
+                "buffer/initial-buffer-target",
+                "live/*"
             ]
         },
         {
@@ -527,7 +530,8 @@
             "provider": "dashif",
             "type": "live",
             "includedTestfiles": [
-                "playback/*"
+                "playback/*",
+                "live/*"
             ]
         },
         {
@@ -539,6 +543,30 @@
                 "playback-advanced/switch-quality",
                 "playback-advanced/segment-base-lazy-sidx",
                 "video/*"
+            ]
+        },
+        {
+            "name": "Segment Base, hierarchical SIDX, child SIDX boxes after the parent",
+            "type": "vod",
+            "url": "https://dash.akamaized.net/dashjs/multi-sidx/upfront/manifest.mpd",
+            "includedTestfiles": [
+                "playback/play",
+                "playback/pause",
+                "playback/seek",
+                "playback/seek-ended",
+                "playback-advanced/switch-quality"
+            ]
+        },
+        {
+            "name": "Segment Base, hierarchical SIDX, each child SIDX before its media",
+            "type": "vod",
+            "url": "https://dash.akamaized.net/dashjs/multi-sidx/interleaved/manifest.mpd",
+            "includedTestfiles": [
+                "playback/play",
+                "playback/pause",
+                "playback/seek",
+                "playback/seek-ended",
+                "playback-advanced/switch-quality"
             ]
         },
         {
@@ -600,6 +628,79 @@
             "includedTestfiles": [
                 "feature-support/cmcd-v2"
             ]
+        },
+        {
+            "name": "BBB 30fps VoD - Buffer",
+            "type": "vod",
+            "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+            "includedTestfiles": [
+                "buffer/*"
+            ]
+        },
+        {
+            "name": "Segment Timeline with missing audio segment in MPD for time 0",
+            "type": "vod",
+            "url": "/base/test/functional/content/gap/audio_gap_at_start_timeline.mpd",
+            "includedTestfiles": [
+                "advanced/seek-in-gaps"
+            ],
+            "testdata": {
+                "gaps": [
+                    {
+                        "start": 0,
+                        "end": 5.97
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Segment Timeline with missing video segment in MPD for time 0",
+            "type": "vod",
+            "url": "/base/test/functional/content/gap/video_gap_at_start_timeline.mpd",
+            "includedTestfiles": [
+                "advanced/seek-in-gaps"
+            ],
+            "testdata": {
+                "gaps": [
+                    {
+                        "start": 0,
+                        "end": 6
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Video segments without samples in the middle of the period",
+            "type": "vod",
+            "url": "/base/test/functional/content/gap/video_gap_mid_period.mpd",
+            "includedTestfiles": [
+                "advanced/play-into-gap"
+            ],
+            "testdata": {
+                "gaps": [
+                    {
+                        "start": 16,
+                        "end": 24
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Audio and video segments without samples in the middle of the period, gaps ending at different times",
+            "type": "vod",
+            "url": "/base/test/functional/content/gap/video_audio_gap_mid_period.mpd",
+            "includedTestfiles": [
+                "advanced/play-into-gap"
+            ],
+            "testdata": {
+                "gaps": [
+                    {
+                        "start": 16,
+                        "end": 32.09,
+                        "bufferTarget": 8
+                    }
+                ]
+            }
         }
     ]
 }
