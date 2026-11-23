@@ -262,6 +262,13 @@ describe('Reference Player - SettingsSchema', function () {
             expect(getValueAtPath(obj, 'streaming.missing.key')).to.be.undefined;
         });
 
+        it('should not write through a path that reaches a prototype', function () {
+            for (const path of ['__proto__.polluted', 'constructor.prototype.polluted', 'streaming.__proto__.polluted']) {
+                expect(setValueAtPath({}, path, true)).to.deep.equal({});
+            }
+            expect({}.polluted).to.be.undefined;
+        });
+
         it('should diff only the leaves that changed', function () {
             const current = cloneValue(defaults);
             current.streaming.buffer.stallThreshold = 0.5;

@@ -426,6 +426,16 @@ describe('Reference Player - SettingsController', function () {
             return settingsController.applyFromUrl();
         }
 
+        // ---- Unknown and unsafe parameters ----
+
+        it('should ignore parameters that do not name a setting', function () {
+            const before = JSON.stringify(player.getSettings());
+            setUrlAndApply('streaming.notASetting=1&__proto__.polluted=1&constructor.prototype.polluted=1');
+
+            expect(JSON.stringify(player.getSettings())).to.equal(before);
+            expect({}.polluted).to.be.undefined;
+        });
+
         // ---- Stream URL ----
 
         it('should set stream-url input from URL parameter', function () {

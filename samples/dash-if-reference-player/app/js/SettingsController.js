@@ -402,7 +402,8 @@ export class SettingsController {
         // Handle dash.js settings
         const settingsObj = {};
         for (const [key, value] of params.entries()) {
-            if (PAGE_URL_PARAMS.includes(key) || key in initialMediaParams) {
+            // Only parameters that name a known, editable setting are applied
+            if (PAGE_URL_PARAMS.includes(key) || key in initialMediaParams || !this._isEditable(key)) {
                 continue;
             }
             const parsed = this._fromUrlValue(key, value);

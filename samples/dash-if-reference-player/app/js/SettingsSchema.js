@@ -72,8 +72,18 @@ export function getValueAtPath(obj, path) {
     return current;
 }
 
+// Path segments that would reach an object's prototype instead of a setting
+const UNSAFE_PATH_SEGMENTS = ['__proto__', 'constructor', 'prototype'];
+
+/**
+ * Writes a value at a dotted path, creating the objects in between. Paths come from URLs and
+ * imported files, so a path with a prototype segment is ignored and `obj` is returned unchanged.
+ */
 export function setValueAtPath(obj, path, value) {
     const keys = path.split('.');
+    if (keys.some((key) => UNSAFE_PATH_SEGMENTS.includes(key))) {
+        return obj;
+    }
     let current = obj;
     for (let i = 0; i < keys.length - 1; i++) {
         if (!isPlainObject(current[keys[i]])) {
