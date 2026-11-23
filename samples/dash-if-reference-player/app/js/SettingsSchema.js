@@ -428,6 +428,15 @@ export function matchesQuery(descriptor, query) {
 }
 
 /**
+ * A single-quoted JavaScript string literal. JSON.stringify does the escaping (newlines, control
+ * characters, backslashes); only the quote style is changed afterwards.
+ */
+function toJsString(text) {
+    const escaped = JSON.stringify(text).slice(1, -1).replace(/\\"/g, '"').replace(/'/g, '\\\'');
+    return `'${escaped}'`;
+}
+
+/**
  * Formats a value as a JavaScript literal for the "Copy as code" snippet.
  */
 export function toJsLiteral(value, indent = '') {
@@ -442,13 +451,13 @@ export function toJsLiteral(value, indent = '') {
             return '{}';
         }
         const lines = keys.map((key) => {
-            const name = /^[A-Za-z_$][\w$]*$/.test(key) ? key : `'${key}'`;
+            const name = /^[A-Za-z_$][\w$]*$/.test(key) ? key : toJsString(key);
             return `${inner}${name}: ${toJsLiteral(value[key], inner)}`;
         });
         return `{\n${lines.join(',\n')}\n${indent}}`;
     }
     if (typeof value === 'string') {
-        return `'${value.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'`;
+        return toJsString(value);
     }
     return String(value);
 }

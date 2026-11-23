@@ -121,26 +121,26 @@ const SETTINGS_DESCRIPTIONS = {
     "streaming.protection.ignoreKeyStatuses":
         "If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.",
 
-    "streaming.protection.filterUnsupportedEssentialProperties":
-        "Enable to filter all the AdaptationSets and Representations which contain an unsupported <EssentialProperty> element.",
-
-    "streaming.protection.supportedEssentialProperties":
-        "List of supported <EssentialProperty> elements",
-
-    "streaming.protection.useMediaCapabilitiesApi":
-        "Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.",
-
-    "streaming.protection.filterVideoColorimetryEssentialProperties":
-        "Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').\nIf disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').",
-
-    "streaming.protection.filterHDRMetadataFormatEssentialProperties":
-        "Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').",
-
-    "streaming.protection.filterAudioChannelConfiguration":
-        "Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.",
-
     "streaming.capabilities":
         "Capability related settings",
+
+    "streaming.capabilities.filterUnsupportedEssentialProperties":
+        "Enable to filter all the AdaptationSets and Representations which contain an unsupported <EssentialProperty> element.",
+
+    "streaming.capabilities.supportedEssentialProperties":
+        "List of supported <EssentialProperty> elements",
+
+    "streaming.capabilities.useMediaCapabilitiesApi":
+        "Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.",
+
+    "streaming.capabilities.filterVideoColorimetryEssentialProperties":
+        "Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').\nIf disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').",
+
+    "streaming.capabilities.filterHDRMetadataFormatEssentialProperties":
+        "Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').",
+
+    "streaming.capabilities.filterAudioChannelConfiguration":
+        "Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.",
 
     "streaming.buffer":
         "Buffer related settings",
@@ -275,22 +275,22 @@ const SETTINGS_DESCRIPTIONS = {
         "The default timing source to be used. The timing sources in the MPD take precedence over this one.",
 
     "streaming.utcSynchronization.artificialTimeOffsetToApply":
-        "The offset defined in milliseconds that is applied on top of the offset that was derived after the time synchronization.\n\n/",
-
-    "streaming.utcSynchronization.defaultTimeout":
-        "Default timeout between two consecutive segment scheduling attempts",
-
-    "streaming.utcSynchronization.lowLatencyTimeout":
-        "Default timeout between two consecutive low-latency segment scheduling attempts",
-
-    "streaming.utcSynchronization.scheduleWhilePaused":
-        "Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.",
-
-    "streaming.utcSynchronization.segmentListRetryDelay":
-        "SegmentBase: Time in milliseconds after which the segment list (sidx) of a Representation is requested again once loading it failed.\nIn the meantime the Representation is excluded from ABR decisions. The delay doubles with every failure in a row, up to eight times this value.",
+        "The offset defined in milliseconds that is applied on top of the offset that was derived after the time synchronization.",
 
     "streaming.scheduling":
         "Settings related to segment scheduling",
+
+    "streaming.scheduling.defaultTimeout":
+        "Default timeout between two consecutive segment scheduling attempts",
+
+    "streaming.scheduling.lowLatencyTimeout":
+        "Default timeout between two consecutive low-latency segment scheduling attempts",
+
+    "streaming.scheduling.scheduleWhilePaused":
+        "Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.",
+
+    "streaming.scheduling.segmentListRetryDelay":
+        "SegmentBase: Time in milliseconds after which the segment list (sidx) of a Representation is requested again once loading it failed.\nIn the meantime the Representation is excluded from ABR decisions. The delay doubles with every failure in a row, up to eight times this value.",
 
     "streaming.text":
         "Settings related to Subtitles and captions",
@@ -376,19 +376,19 @@ const SETTINGS_DESCRIPTIONS = {
     "streaming.trackSwitchMode.video":
         "For a given media type defines if existing segments in the buffer should be overwritten once the track is switched. For instance if the user switches the audio language the existing segments in the audio buffer will be replaced when setting this value to \"alwaysReplace\".\n\nPossible values\n\n- Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE\nReplace existing segments in the buffer\n\n- Constants.TRACK_SWITCH_MODE_NEVER_REPLACE\nDo not replace existing segments in the buffer\n\nvideo: Configuration for video media type of tracks.",
 
-    "streaming.includePreselectionsInMediainfoArray: true":
+    "streaming.includePreselectionsInMediainfoArray":
         "provides the option to include Preselections in the MediaInfo object",
 
-    "streaming.includePreselectionsForInitialTrackSelection: false":
+    "streaming.includePreselectionsForInitialTrackSelection":
         "provides the option to include Preselections for initial track selection",
 
-    "streaming.ignoreSelectionPriority: false":
+    "streaming.ignoreSelectionPriority":
         "provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.",
 
-    "streaming.prioritizeRoleMain: true":
+    "streaming.prioritizeRoleMain":
         "provides the option to disable prioritization of AdaptationSets with their Role set to Main",
 
-    "streaming.assumeDefaultRoleAsMain: true":
+    "streaming.assumeDefaultRoleAsMain":
         "when no Role descriptor is present, assume main per default",
 
     "streaming.selectionModeForInitialTrack":
@@ -436,9 +436,6 @@ const SETTINGS_DESCRIPTIONS = {
     "streaming.retryIntervals.lowLatencyReductionFactor":
         "Time in milliseconds of which to reload a failed file load attempt.\n\nFor low latency mode these values are divided by lowLatencyReductionFactor.\n\nlowLatencyReductionFactor: For low latency mode, values of type of request are divided by lowLatencyReductionFactor.\n\nNote: It's not type of request.",
 
-    "streaming.retryIntervals.lowLatencyMultiplyFactor":
-        "Time in milliseconds of which to reload a failed file load attempt.\n\nFor low latency mode these values are divided by lowLatencyReductionFactor.\n\nlowLatencyMultiplyFactor: For low latency mode, values of type of request are multiplied by lowLatencyMultiplyFactor.\n\nNote: It's not type of request.",
-
     "streaming.retryAttempts":
         "Total number of retry attempts that will occur on a file load before it fails.\n\nFor low latency mode these values are multiplied by lowLatencyMultiplyFactor.",
 
@@ -465,9 +462,6 @@ const SETTINGS_DESCRIPTIONS = {
 
     "streaming.retryAttempts.other":
         "Total number of retry attempts that will occur on a file load before it fails.\n\nFor low latency mode these values are multiplied by lowLatencyMultiplyFactor.\n\nother: Other type of request.",
-
-    "streaming.retryAttempts.lowLatencyReductionFactor":
-        "Total number of retry attempts that will occur on a file load before it fails.\n\nFor low latency mode these values are multiplied by lowLatencyMultiplyFactor.\n\nlowLatencyReductionFactor: For low latency mode, values of type of request are divided by lowLatencyReductionFactor.\n\nNote: It's not type of request.",
 
     "streaming.retryAttempts.lowLatencyMultiplyFactor":
         "Total number of retry attempts that will occur on a file load before it fails.\n\nFor low latency mode these values are multiplied by lowLatencyMultiplyFactor.\n\nlowLatencyMultiplyFactor: For low latency mode, values of type of request are multiplied by lowLatencyMultiplyFactor.\n\nNote: It's not type of request.",
@@ -619,7 +613,7 @@ const SETTINGS_DESCRIPTIONS = {
     "streaming.cmcd.applyParametersFromMpd":
         "Set to true if dash.js should use the CMCD parameters defined in the MPD.",
 
-    "streaming.cmcd.enable":
+    "streaming.cmcd.enabled":
         "Enable or disable the CMCD reporting.",
 
     "streaming.cmcd.sid":

@@ -546,6 +546,47 @@ describe('Reference Player - SettingsPanel', function () {
 
     describe('presets and reset all', function () {
 
+        function leaveInvalid(path) {
+            selectFilter('all');
+            categoryHeader('buffer').click();
+            change(path, '25');
+            change(path, '');
+            expect(row(path).classList.contains('has-error')).to.be.true;
+        }
+
+        function expectInSync(path, text) {
+            expect(input(path).value).to.equal(text);
+            expect(row(path).classList.contains('has-error')).to.be.false;
+            expect(row(path).querySelector('.setting-error').textContent).to.equal('');
+            expect(input(path).hasAttribute('aria-invalid')).to.be.false;
+        }
+
+        it('should show the default again in a field that held invalid text when all is reset', function () {
+            const path = 'streaming.buffer.bufferTimeDefault';
+            leaveInvalid(path);
+            document.getElementById('settings-reset-all').click();
+
+            expect(player.getSettings().streaming.buffer.bufferTimeDefault).to.equal(18);
+            expectInSync(path, '18');
+            expect(row(path).classList.contains('is-modified')).to.be.false;
+        });
+
+        it('should clear invalid text when a preset is applied', function () {
+            const path = 'streaming.buffer.bufferTimeDefault';
+            leaveInvalid(path);
+            testContainer.querySelector('[data-preset="low-latency-live"]').click();
+
+            expectInSync(path, '18');
+        });
+
+        it('should clear invalid text when a file is imported', function () {
+            const path = 'streaming.buffer.bufferTimeDefault';
+            leaveInvalid(path);
+            settingsPanel._import('{"streaming":{"buffer":{"bufferTimeDefault":30}}}');
+
+            expectInSync(path, '30');
+        });
+
         it('should list the presets and apply one', function () {
             const item = testContainer.querySelector('[data-preset="low-latency-live"]');
             expect(item.textContent).to.contain('Low latency live');

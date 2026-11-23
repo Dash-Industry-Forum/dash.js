@@ -23,6 +23,13 @@ const ROOT_TYPEDEF = 'PlayerSettings';
 // description of the setting that uses the typedef is put in front.
 const SHARED_TYPEDEFS = new Set(['AudioVideoSettings', 'RequestTypeSettings', 'CachingInfoSettings']);
 
+// RequestTypeSettings documents both low latency factors, but each of the two settings that use
+// the typedef holds only one of them.
+const NOT_A_SETTING = new Set([
+    'streaming.retryIntervals.lowLatencyMultiplyFactor',
+    'streaming.retryAttempts.lowLatencyReductionFactor'
+]);
+
 function stripPrefix(name) {
     return name.replace(/^module:Settings~/, '');
 }
@@ -124,6 +131,9 @@ function parseTypedefs(source) {
 function collect(typedefs, typedefName, prefix, ownerDescription, out) {
     for (const property of typedefs.get(typedefName) || []) {
         const path = `${prefix}${property.name}`;
+        if (NOT_A_SETTING.has(path)) {
+            continue;
+        }
         const description = ownerDescription && property.description
             ? `${ownerDescription}\n\n${property.name}: ${property.description}`
             : property.description || ownerDescription;

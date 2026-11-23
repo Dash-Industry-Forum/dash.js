@@ -8,6 +8,7 @@
 
 import Settings from '../../../../src/core/Settings.js';
 import SETTINGS_OVERRIDES from '../../../../samples/dash-if-reference-player/app/data/settingsOverrides.js';
+import SETTINGS_DESCRIPTIONS from '../../../../samples/dash-if-reference-player/app/data/settingsDescriptions.js';
 import SETTINGS_PRESETS from '../../../../samples/dash-if-reference-player/app/data/settingsPresets.js';
 import {
     buildCategories,
@@ -95,6 +96,24 @@ describe('Reference Player - SettingsSchema', function () {
         it('should flag the common settings', function () {
             const common = schema.filter((descriptor) => descriptor.common).map((descriptor) => descriptor.path);
             expect(common).to.have.members(SETTINGS_OVERRIDES.common);
+        });
+
+        it('should file every description under a setting or a parent of one', function () {
+            const paths = schema.map((descriptor) => descriptor.path);
+            const misplaced = Object.keys(SETTINGS_DESCRIPTIONS)
+                .filter((key) => !paths.some((path) => path === key || path.startsWith(`${key}.`)));
+
+            expect(misplaced.join(', ')).to.equal('');
+        });
+
+        it('should describe capabilities and scheduling settings with their own text', function () {
+            const described = new Map(buildSchema(defaults, SETTINGS_OVERRIDES, SETTINGS_DESCRIPTIONS)
+                .map((descriptor) => [descriptor.path, descriptor.description]));
+
+            expect(described.get('streaming.capabilities.useMediaCapabilitiesApi')).to.contain('MediaCapabilities');
+            expect(described.get('streaming.scheduling.scheduleWhilePaused')).to.contain('paused');
+            expect(described.get('streaming.capabilities.useMediaCapabilitiesApi'))
+                .to.not.equal(SETTINGS_DESCRIPTIONS['streaming.capabilities']);
         });
 
         it('should fall back to the description of the nearest documented parent', function () {
@@ -344,6 +363,16 @@ describe('Reference Player - SettingsSchema', function () {
             expect(matchesQuery(descriptor, 'GAPS seeks')).to.be.true;
             expect(matchesQuery(descriptor, 'stall buffer')).to.be.false;
             expect(matchesQuery(descriptor, '  ')).to.be.true;
+        });
+
+        it('should write strings that parse back to the same value', function () {
+            const value = {
+                'needs-quotes': 'first\nsecond',
+                tricky: ['it\'s', 'say "hi"', 'back\\slash', 'tab\there', 'quote after backslash \\"', '\u2028']
+            };
+            const literal = toJsLiteral(value);
+
+            expect(new Function(`return ${literal};`)()).to.deep.equal(value);
         });
 
         it('should format a settings object as a JavaScript literal', function () {

@@ -186,6 +186,7 @@ export class SettingsPanel {
         $('#settings-reset-all').addEventListener('click', () => {
             if (this._confirmDiscard('Reset all settings to their defaults?')) {
                 this.controller.resetAll();
+                this._discardEdits();
             }
         });
 
@@ -214,6 +215,7 @@ export class SettingsPanel {
             button.addEventListener('click', () => {
                 if (this._confirmDiscard(`Apply the preset "${preset.name}"?`)) {
                     this.controller.applyPreset(preset.id);
+                    this._discardEdits();
                     this.controller.showNotification('Preset applied');
                 }
             });
@@ -267,6 +269,7 @@ export class SettingsPanel {
             this._setStatus(`Import failed. ${result.error}`, true);
             return;
         }
+        this._discardEdits();
         const ignored = [];
         if (result.unknown.length > 0) {
             ignored.push(`Ignored unknown: ${result.unknown.join(', ')}.`);
@@ -676,6 +679,17 @@ export class SettingsPanel {
             input.checked = !!value;
         } else {
             input.value = formatValue(descriptor, value);
+        }
+    }
+
+    /**
+     * After "Reset all", a preset or an import every control shows the player's value again,
+     * including the ones that still held rejected text.
+     */
+    _discardEdits() {
+        for (const entry of this._rows.values()) {
+            this._clearError(entry);
+            this._syncRow(entry, true);
         }
     }
 
