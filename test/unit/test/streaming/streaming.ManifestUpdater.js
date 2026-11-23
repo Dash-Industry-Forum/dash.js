@@ -400,6 +400,7 @@ describe('ManifestUpdater', function () {
             expect(manifestUpdater.getIsUpdating()).to.be.true;
 
             eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: manifestLoaderMock,
                 error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE }
             });
             expect(manifestUpdater.getIsUpdating()).to.be.false;
@@ -414,6 +415,7 @@ describe('ManifestUpdater', function () {
             clock.tick(REFRESH_DELAY_S * 1000);
 
             eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: manifestLoaderMock,
                 error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE }
             });
             expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE);
@@ -423,9 +425,26 @@ describe('ManifestUpdater', function () {
             expect(loadStub.calledTwice).to.be.true;
         });
 
+        it('should not restart refreshing while content is pending if an MPD request of another loader failed', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(manifestUpdater.getIsUpdating()).to.be.true;
+
+            // e.g. player.retrieveManifest(), which uses its own ManifestLoader
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: {},
+                error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE }
+            });
+
+            expect(manifestUpdater.getIsUpdating()).to.be.true;
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(loadStub.calledOnce).to.be.true;
+        });
+
         it('should not refresh before playback started after a parsing failure if content is not pending', function () {
             manifestUpdater.refreshManifest();
             eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: manifestLoaderMock,
                 error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE }
             });
 
@@ -437,6 +456,7 @@ describe('ManifestUpdater', function () {
         it('should not refresh before playback started after a failed MPD refresh if content is not pending', function () {
             manifestUpdater.refreshManifest();
             eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: manifestLoaderMock,
                 error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE }
             });
 

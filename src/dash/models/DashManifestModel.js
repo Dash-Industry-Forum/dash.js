@@ -549,11 +549,17 @@ function DashManifestModel() {
      * @returns {boolean}
      */
     function getIsContentPending(manifest) {
-        if (!getIsDynamic(manifest)) {
-            return false;
-        }
-        const periods = manifest[DashConstants.PERIOD] || [];
-        return !periods.some(_hasContentForEachMediaType);
+        return getIsDynamic(manifest) && !getListsContent(manifest);
+    }
+
+    /**
+     * Checks if an MPD, dynamic or static, lists content. See getIsContentPending for the rule.
+     * @param {object} manifest
+     * @returns {boolean}
+     */
+    function getListsContent(manifest) {
+        const periods = (manifest && manifest[DashConstants.PERIOD]) || [];
+        return periods.some(_hasContentForEachMediaType);
     }
 
     function _hasContentForEachMediaType(period) {
@@ -1880,6 +1886,7 @@ function DashManifestModel() {
         getIndexForAdaptation,
         getIsContentPending,
         getIsDynamic,
+        getListsContent,
         getIsFragmented,
         getIsText,
         getIsTypeOf,

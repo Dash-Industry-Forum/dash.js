@@ -308,8 +308,9 @@ function ManifestUpdater() {
             }
             // Before playback of a stream whose content was pending started, a failed download or an MPD that can not
             // be parsed, e.g. because the packager is still writing it, must not end the refreshes. While no content is
-            // listed, StreamController limits the retries with liveContentPendingTimeoutInSeconds.
-            if (isRefreshingBeforePlaybackStart) {
+            // listed, StreamController limits the retries with liveContentPendingTimeoutInSeconds. Only for refreshes
+            // of this ManifestUpdater, not for MPD requests of others like retrieveManifest.
+            if (isRefreshingBeforePlaybackStart && e.sender === manifestLoader) {
                 isUpdating = false;
                 startManifestRefreshTimer();
             }

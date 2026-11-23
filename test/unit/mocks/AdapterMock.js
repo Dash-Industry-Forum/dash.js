@@ -139,6 +139,10 @@ function AdapterMock() {
         return false;
     };
 
+    this.getListsContent = function () {
+        return true;
+    };
+
     this.getIsDVB = function () {
         return false;
     };

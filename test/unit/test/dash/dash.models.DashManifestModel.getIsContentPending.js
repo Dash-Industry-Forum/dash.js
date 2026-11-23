@@ -204,6 +204,16 @@ describe('DashManifestModel - getIsContentPending', function () {
         expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
     });
 
+    it('should report whether a static MPD lists content', function () {
+        const empty = dashParser.parse('<MPD type="static"><Period id="0"/></MPD>');
+        const withContent = dashParser.parse(`<MPD type="static"><Period id="0">
+            ${videoAdaptationSet('<SegmentTimeline><S t="0" d="30720"/></SegmentTimeline>')}
+        </Period></MPD>`);
+
+        expect(dashManifestModel.getListsContent(empty)).to.be.false;
+        expect(dashManifestModel.getListsContent(withContent)).to.be.true;
+    });
+
     it('should return false for a static MPD without AdaptationSet', function () {
         const manifest = dashParser.parse('<MPD type="static"><Period id="0"/></MPD>');
 

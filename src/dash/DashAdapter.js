@@ -713,6 +713,19 @@ function DashAdapter() {
     }
 
     /**
+     * Checks if an MPD, dynamic or static, lists content. See DashManifestModel.getListsContent.
+     * @param {object} externalManifest Optional manifest, the current one is used if omitted
+     * @returns {boolean}
+     * @memberOf module:DashAdapter
+     * @instance
+     * @ignore
+     */
+    function getListsContent(externalManifest) {
+        const manifest = getManifest(externalManifest);
+        return dashManifestModel.getListsContent(manifest);
+    }
+
+    /**
      * Returns the duration of the MPD
      * @param {object} externalManifest Omit this value if no external manifest should be used
      * @returns {number} duration
@@ -1468,6 +1481,7 @@ function DashAdapter() {
         getIsDVB,
         getIsContentPending,
         getIsDynamic,
+        getListsContent,
         getIsPatch,
         getIsTextTrack,
         getIsTypeOf,

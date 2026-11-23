@@ -331,6 +331,12 @@ function StreamController() {
             _raiseNoStreamsError(new Error('The MPD does not list all content and has no minimumUpdatePeriod'));
             return;
         }
+        // e.g. a manifest object passed to attachSource without URL and without Location
+        if (!manifest.url && adapter.getLocation(manifest).length === 0 &&
+            adapter.getPatchLocation(manifest).length === 0) {
+            _raiseNoStreamsError(new Error('The MPD does not list all content and has no URL to update it from'));
+            return;
+        }
         if (!isWaitingForContent) {
             isWaitingForContent = true;
             logger.info('The MPD does not list all content yet. Waiting for an MPD update before starting playback.');
@@ -1583,6 +1589,11 @@ function StreamController() {
                     // do not keep it waiting.
                     if (!activeStream && adapter.getIsContentPending(manifest)) {
                         _handleContentPending(manifest);
+                        return;
+                    }
+                    // The presentation ended, its final static MPD does not list content either
+                    if (!activeStream && isWaitingForContent && !adapter.getListsContent(manifest)) {
+                        _raiseNoStreamsError(new Error('The presentation ended before its MPD listed content'));
                         return;
                     }
                     _stopWaitingForContent();

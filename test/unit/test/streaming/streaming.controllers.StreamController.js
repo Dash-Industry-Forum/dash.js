@@ -428,7 +428,7 @@ describe('StreamController', function () {
                 });
 
                 describe('content pending', function () {
-                    const pendingManifest = { type: 'dynamic' };
+                    const pendingManifest = { type: 'dynamic', url: 'https://example.com/live.mpd' };
                     let getIsContentPendingStub;
                     let filterSpy;
                     let contentPendingSpy;
@@ -607,6 +607,34 @@ describe('StreamController', function () {
                         expect(contentPendingSpy.called).to.be.false;
                         expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
                         expect(errHandlerMock.errorValue).to.include('minimumUpdatePeriod');
+                    });
+
+                    it('should raise an error at once if the MPD has no URL to update it from', async function () {
+                        await updateManifest({ type: 'dynamic' });
+
+                        expect(contentPendingSpy.called).to.be.false;
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                        expect(errHandlerMock.errorValue).to.include('no URL');
+                    });
+
+                    it('should wait for an MPD without URL that has a Location', async function () {
+                        const locationStub = sinon.stub(adapterMock, 'getLocation').returns([{ url: 'https://example.com/live.mpd' }]);
+                        await updateManifest({ type: 'dynamic' });
+                        locationStub.restore();
+
+                        expect(contentPendingSpy.calledOnce).to.be.true;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should raise an error if the presentation ended before its MPD listed content', async function () {
+                        await updateManifest(pendingManifest);
+                        getIsContentPendingStub.returns(false);
+                        const listsContentStub = sinon.stub(adapterMock, 'getListsContent').returns(false);
+                        await updateManifest({ type: 'static', url: pendingManifest.url });
+                        listsContentStub.restore();
+
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                        expect(errHandlerMock.errorValue).to.include('ended');
                     });
 
                     it('should start the stream once the content is no longer pending', function (done) {
