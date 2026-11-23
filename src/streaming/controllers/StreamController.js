@@ -66,7 +66,7 @@ function StreamController() {
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         waitForPlaybackStartTimeout, providedStartTime, errorInformation,
-        pendingDynamicToStaticUpdate, isWaitingForContent, contentPendingTimer;
+        pendingDynamicToStaticUpdate, isWaitingForContent, contentPendingTimer, sessionId = 0;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -224,6 +224,7 @@ function StreamController() {
     function _composePeriods() {
         // Errors of the first composition stop playback start. Later ones keep the behavior during playback.
         const isInitialComposition = !activeStream;
+        const compositionSessionId = sessionId;
         _stopWaitingForContent();
 
         try {
@@ -270,17 +271,33 @@ function StreamController() {
                     // Additional periods might have been added after an MPD update. Check again if we can start
                     // prebuffering.
                     _checkIfPrebufferingCanStart();
-                })
-                .catch((e) => {
-                    if (!isInitialComposition) {
-                        throw e;
-                    }
-                    _raiseNoStreamsError(e);
+                }, (e) => {
+                    // Only failures up to the start of the first stream. Errors once it is active are not caught here.
+                    _handleCompositionFailure(e, isInitialComposition, compositionSessionId);
                 })
 
         } catch (e) {
             _raiseNoStreamsError(e);
         }
+    }
+
+    /**
+     * Raises the error of a failed startup. Failures during playback are rethrown as before, failures of a session
+     * that has been reset since are ignored.
+     * @param {Error} e
+     * @param {boolean} isStartup
+     * @param {number} startSessionId
+     * @private
+     */
+    function _handleCompositionFailure(e, isStartup, startSessionId) {
+        if (startSessionId !== sessionId) {
+            logger.debug('Ignoring a failure of a session that has been reset', e);
+            return;
+        }
+        if (!isStartup) {
+            throw e;
+        }
+        _raiseNoStreamsError(e);
     }
 
     /**
@@ -301,12 +318,17 @@ function StreamController() {
      * error if no MPD update lists content within streaming.liveContentPendingTimeoutInSeconds.
      * @private
      */
-    function _handleContentPending() {
+    function _handleContentPending(manifest) {
+        if (isNaN(adapter.getManifestUpdatePeriod(manifest))) {
+            _raiseNoStreamsError(new Error('The MPD does not list any content and has no minimumUpdatePeriod'));
+            return;
+        }
         if (!isWaitingForContent) {
             isWaitingForContent = true;
             logger.info('The MPD does not list any content yet. Waiting for an MPD update before starting playback.');
+            // Any other value than a finite number >= 0, e.g. Infinity (null after JSON serialization), waits forever
             const timeoutInSeconds = settings.get().streaming.liveContentPendingTimeoutInSeconds;
-            if (isFinite(timeoutInSeconds)) {
+            if (Number.isFinite(timeoutInSeconds) && timeoutInSeconds >= 0) {
                 contentPendingTimer = setTimeout(() => {
                     contentPendingTimer = null;
                     _raiseNoStreamsError(new Error(`The MPD did not list any content within ${timeoutInSeconds} seconds`));
@@ -1515,13 +1537,14 @@ function StreamController() {
 
             // Check before anything reads the AdaptationSets, a Period may have none yet. Only before playback started.
             if (!activeStream && adapter.getIsContentPending(manifest)) {
-                _handleContentPending();
+                _handleContentPending(manifest);
                 return;
             }
             // The MPD lists content. Startup may take longer than the remaining timeout, so stop it already here.
             _stopWaitingForContent();
 
             const isInitialUpdate = !activeStream;
+            const updateSessionId = sessionId;
             adapter.updatePeriods(manifest);
 
             // It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong
@@ -1546,10 +1569,7 @@ function StreamController() {
                     extUrlQueryInfoController.createFinalQueryStrings(manifest);
                 })
                 .catch((e) => {
-                    if (!isInitialUpdate) {
-                        throw e;
-                    }
-                    _raiseNoStreamsError(e);
+                    _handleCompositionFailure(e, isInitialUpdate && !activeStream, updateSessionId);
                 });
         } else {
             hasInitialisationError = true;
@@ -1876,7 +1896,11 @@ function StreamController() {
         playbackEndedTimerInterval = null;
         pendingDynamicToStaticUpdate = false;
         preloadingStreams = [];
+        if (waitForPlaybackStartTimeout) {
+            clearTimeout(waitForPlaybackStartTimeout);
+        }
         waitForPlaybackStartTimeout = null;
+        sessionId++;
         errorInformation = {
             counts: {
                 mediaErrorDecode: 0

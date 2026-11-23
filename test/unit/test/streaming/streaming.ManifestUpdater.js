@@ -406,6 +406,18 @@ describe('ManifestUpdater', function () {
             expect(loadStub.calledTwice).to.be.true;
         });
 
+        it('should stop refreshing while content is pending if the MPD could not be parsed', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE }
+            });
+            clock.tick(REFRESH_DELAY_S * 1000 * 3);
+
+            expect(loadStub.calledOnce).to.be.true;
+        });
+
         it('should not refresh before playback started after a failed MPD refresh if content is not pending', function () {
             manifestUpdater.refreshManifest();
             eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {

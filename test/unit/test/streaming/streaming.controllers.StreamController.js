@@ -523,6 +523,26 @@ describe('StreamController', function () {
                         expect(errHandlerMock.errorCode).to.be.undefined;
                     });
 
+                    [null, -1].forEach((timeoutInSeconds) => {
+                        it(`should wait without limit if the timeout is set to ${timeoutInSeconds}`, function () {
+                            settings.update({ streaming: { liveContentPendingTimeoutInSeconds: timeoutInSeconds } });
+                            eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                            clock.tick(3600 * 1000);
+
+                            expect(errHandlerMock.errorCode).to.be.undefined;
+                        });
+                    });
+
+                    it('should raise an error at once if the MPD has no minimumUpdatePeriod', function () {
+                        const updatePeriodStub = sinon.stub(adapterMock, 'getManifestUpdatePeriod').returns(NaN);
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        updatePeriodStub.restore();
+
+                        expect(contentPendingSpy.called).to.be.false;
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                        expect(errHandlerMock.errorValue).to.include('minimumUpdatePeriod');
+                    });
+
                     it('should start the stream once the content is no longer pending', function (done) {
                         clock.restore();
                         doneFn = done;
@@ -579,6 +599,88 @@ describe('StreamController', function () {
                             done(e);
                         }
                     }, 0);
+                });
+
+                it('should not raise an error for the first composition once the stream is active', function (done) {
+                    errHandlerMock.reset();
+                    const onUnhandledRejection = (event) => event.preventDefault();
+                    const throwingListener = () => {
+                        throw new Error('STREAMS_COMPOSED listener failed');
+                    };
+                    window.addEventListener('unhandledrejection', onUnhandledRejection);
+                    eventBus.on(Events.STREAMS_COMPOSED, throwingListener);
+                    doneFn = (err) => {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        setTimeout(() => {
+                            eventBus.off(Events.STREAMS_COMPOSED, throwingListener);
+                            window.removeEventListener('unhandledrejection', onUnhandledRejection);
+                            try {
+                                expect(errHandlerMock.errorCode).to.be.undefined;
+                                done();
+                            } catch (e) {
+                                done(e);
+                            }
+                        }, 10);
+                    };
+                    expectedStartTime = liveStartTime;
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should ignore a failed first composition of a session that has been reset', function (done) {
+                    const dvrInfoStub = sinon.stub(dashMetricsMock, 'getCurrentDVRInfo').returns(null);
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                    streamController.reset();
+                    errHandlerMock.reset();
+
+                    setTimeout(() => {
+                        dvrInfoStub.restore();
+                        try {
+                            expect(errHandlerMock.errorCode).to.be.undefined;
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
+                });
+
+                it('should not start a reset session once the waiting time of a start time in the future expired', function () {
+                    const clock = sinon.useFakeTimers({ now: Date.now(), toFake: ['setTimeout', 'clearTimeout'] });
+                    const dvrInfoStub = sinon.stub(dashMetricsMock, 'getCurrentDVRInfo')
+                        .returns({ range: { start: 0, end: -10 } });
+                    const initialStreamSwitchSpy = sinon.spy();
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                    eventBus.on(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+
+                    return new Promise((resolve) => {
+                        eventBus.on(Events.AST_IN_FUTURE, function onAstInFuture() {
+                            eventBus.off(Events.AST_IN_FUTURE, onAstInFuture);
+                            resolve();
+                        });
+                        getStreamsInfoStub.returns([dynamicStreamInfo]);
+                        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                        clock.runToLast();
+                    }).then(() => {
+                        streamController.reset();
+                        errHandlerMock.reset();
+                        dvrInfoStub.returns({ range: dvrWindowRange });
+                        clock.tick(3600 * 1000);
+                        return Promise.resolve();
+                    }).then(() => {
+                        expect(initialStreamSwitchSpy.called).to.be.false;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                        expect(clock.countTimers()).to.equal(0);
+                    }).finally(() => {
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                        dvrInfoStub.restore();
+                        clock.restore();
+                    });
                 });
 
                 it('should not clamp a seek time beyond the announced end of a dynamic stream with finite duration', function (done) {

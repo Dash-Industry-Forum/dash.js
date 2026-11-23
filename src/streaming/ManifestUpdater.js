@@ -302,8 +302,9 @@ function ManifestUpdater() {
         } else {
             if (e.error.code === Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE) {
                 errHandler.error(e.error);
+                return;
             }
-            // While waiting for content, a failed refresh must not end the refreshes before playback started.
+            // While waiting for content, a failed download must not end the refreshes before playback started.
             if (isContentPending) {
                 isUpdating = false;
                 startManifestRefreshTimer();

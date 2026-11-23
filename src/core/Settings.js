@@ -1189,7 +1189,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * the maximum time in seconds dash.js keeps refreshing the MPD at its minimumUpdatePeriod before playback starts.
  *
  * Playback starts as soon as an MPD update lists content. If none does within this time, an error with code
- * MANIFEST_ERROR_ID_NOSTREAMS_CODE (32) is raised. Set to Infinity to wait without limit.
+ * MANIFEST_ERROR_ID_NOSTREAMS_CODE (32) is raised. Any value other than a finite number >= 0, e.g. Infinity, waits
+ * without limit. An MPD without minimumUpdatePeriod is never updated, so the error is raised at once.
  * @property {number} [liveUpdateTimeThresholdInMilliseconds=0]
  * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during
  * live streams on low end devices.
