@@ -586,7 +586,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 
 /**
  * @typedef {Object} CachingInfoSettings
- * @property {boolean} [enable]
+ * @property {boolean} [enabled]
  * Enable or disable the caching feature.
  * @property {number} [ttl]
  * Time to live.
@@ -669,7 +669,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The offset defined in milliseconds that is applied on top of the offset that was derived after the time
  * synchronization.
  *
- * /
+ */
 
 /**
  * @typedef {Object} Scheduling
@@ -822,7 +822,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether
  * the key is usable or not.
- *
+ */
 
 /**
  * @typedef {Object} Capabilities
@@ -1040,7 +1040,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @typedef {Object} CmcdSettings
  * @property {boolean} [applyParametersFromMpd=true]
  * Set to true if dash.js should use the CMCD parameters defined in the MPD.
- * @property {boolean} [enable=false]
+ * @property {boolean} [enabled=false]
  * Enable or disable the CMCD reporting.
  * @property {string} [sid]
  * GUID identifying the current playback session.
@@ -1159,7 +1159,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 
 /**
  * @typedef {Object} Metrics
- * @property {number} [metricsMaxListDepth=100]
+ * @property {number} [maxListDepth=100]
  * Maximum number of metrics that are persisted per type.
  */
 
@@ -1255,20 +1255,20 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE<br>
  * Do not replace existing segments in the buffer
  *
- * @property {} [includePreselectionsInMediainfoArray: true]
+ * @property {boolean} [includePreselectionsInMediainfoArray=true]
  * provides the option to include Preselections in the MediaInfo object
  *
- * @property {} [includePreselectionsForInitialTrackSelection: false]
+ * @property {boolean} [includePreselectionsForInitialTrackSelection=false]
  * provides the option to include Preselections for initial track selection
  *
- * @property {} [ignoreSelectionPriority: false]
+ * @property {boolean} [ignoreSelectionPriority=false]
  * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media
  * settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
  *
- * @property {} [prioritizeRoleMain: true]
+ * @property {boolean} [prioritizeRoleMain=true]
  * provides the option to disable prioritization of AdaptationSets with their Role set to Main
  *
- * @property {} [assumeDefaultRoleAsMain: true]
+ * @property {boolean} [assumeDefaultRoleAsMain=true]
  * when no Role descriptor is present, assume main per default
  *
  * @property {string} [selectionModeForInitialTrack="lowestStartupDelay"]
