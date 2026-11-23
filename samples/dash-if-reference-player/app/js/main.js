@@ -9,16 +9,21 @@ import {PlayerController} from './PlayerController.js';
 import {ControlBar} from '../../../../contrib/controlbar/ControlBar.js';
 import {StreamCatalog} from './StreamCatalog.js';
 import {SettingsController} from './SettingsController.js';
+import {SettingsPanel} from './SettingsPanel.js';
+import {cloneValue} from './SettingsSchema.js';
 import {DrmController} from './DrmController.js';
 import {MetricsDisplay} from './MetricsDisplay.js';
 import {ChartController} from './ChartController.js';
 import {NotificationPanel} from './NotificationPanel.js';
 
 // ---- State ----
+const SETTINGS_SYNC_INTERVAL_MS = 1000;
+
 let playerController;
 let controlBar;
 let streamCatalog;
 let settingsController;
+let settingsPanel;
 let drmController;
 let metricsDisplay;
 let chartController;
@@ -48,7 +53,8 @@ async function init() {
     // Attach TTML rendering div
     playerController.attachTTMLRenderingDiv($('#video-caption'));
 
-    // 2. Load default config
+    // 2. Remember the dash.js defaults, then load the reference player's default config
+    const libraryDefaults = cloneValue(playerController.getSettings());
     await loadDefaultConfig();
 
     // 3. Display version + build commit
@@ -68,8 +74,13 @@ async function init() {
     controlBar.init($('#video-wrapper'));
     controlBar.disable();
 
-    settingsController = new SettingsController(playerController);
+    settingsController = new SettingsController(playerController, { libraryDefaults });
     settingsController.init();
+
+    settingsPanel = new SettingsPanel(settingsController);
+    settingsPanel.init();
+    // The control bar and dash.js itself change settings too, see syncWithPlayer()
+    setInterval(() => settingsController.syncWithPlayer(), SETTINGS_SYNC_INTERVAL_MS);
 
     drmController = new DrmController();
     drmController.init();
@@ -116,7 +127,7 @@ async function init() {
     });
     playerController.on('manifestLoaded', (data) => {
         // Show/hide CMSD metrics if enabled
-        const cmsdEnabled = $('#opt-cmsd-enabled')?.checked || false;
+        const cmsdEnabled = !!playerController.getSettings().streaming?.cmsd?.enabled;
         metricsDisplay.setCmsdEnabled(cmsdEnabled);
     });
 
@@ -188,9 +199,7 @@ function doLoad() {
         return;
     }
 
-    // Build config from settings UI
-    const config = settingsController.buildConfig();
-    playerController.updateSettings(config);
+    // dash.js settings need no step here: the settings drawer applies each change immediately
 
     // Set auto-play
     playerController.player.setAutoPlay(settingsController.autoPlay);

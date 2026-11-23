@@ -65,7 +65,7 @@ function StreamController() {
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
-        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
+        waitForPlaybackStartTimeout, providedStartTime, errorInformation,
         pendingDynamicToStaticUpdate;
 
     function setup() {
@@ -138,9 +138,6 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
 
 
-        if (Events.KEY_SESSION_UPDATED) {
-            eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
-        }
 
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
@@ -166,9 +163,6 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
         eventBus.off(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
 
-        if (Events.KEY_SESSION_UPDATED) {
-            eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
-        }
 
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
@@ -220,14 +214,6 @@ function StreamController() {
      */
     function _onTimeSyncCompleted( /*e*/) {
         _composePeriods();
-    }
-
-    /**
-     *
-     * @private
-     */
-    function _onKeySessionUpdated() {
-        firstLicenseIsFetched = true;
     }
 
     /**
@@ -827,17 +813,34 @@ function StreamController() {
     function _canSourceBuffersBeKept(nextStream, previousStream) {
         try {
             // Seamless period switch allowed only if:
-            // - none of the periods uses contentProtection.
+            // - the protection of the periods is compatible (no switch from unencrypted to encrypted)
+            //   OR a license has already been applied. The ProtectionController keeps this state across playback
+            //   sessions if the MediaKeys are kept (keepProtectionMediaKeys), as the kept key sessions are then
+            //   reused without a new license exchange.
+            //   This is deliberately not a check for the keys of the next period: any applied license counts, also
+            //   one that belongs to different content (e.g. the previous channel). The state never changes back, so
+            //   the decision is the same when preloading the next period and when switching to it.
             // - AND changeType method is implemented
             // TODO: If the codec family is the same or if there is period connectivity we can also use the same
             // SourceBuffer
             return (settings.get().streaming.buffer.reuseExistingSourceBuffers
                 && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo())
-                    || firstLicenseIsFetched)
+                    || _hasLicenseBeenApplied())
                 && (capabilities.supportsChangeType() && settings.get().streaming.buffer.useChangeType));
         } catch (e) {
             return false;
         }
+    }
+
+    /**
+     * Checks if a license has been applied, in this or in a previous playback session with kept MediaKeys
+     * @return {boolean}
+     * @private
+     */
+    function _hasLicenseBeenApplied() {
+        // A custom ProtectionController provided via extend() might not implement hasLicenseBeenApplied()
+        return !!protectionController && typeof protectionController.hasLicenseBeenApplied === 'function'
+            && protectionController.hasLicenseBeenApplied();
     }
 
     /**
@@ -1808,7 +1811,6 @@ function StreamController() {
         autoPlay = true;
         playbackEndedTimerInterval = null;
         pendingDynamicToStaticUpdate = false;
-        firstLicenseIsFetched = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
         errorInformation = {

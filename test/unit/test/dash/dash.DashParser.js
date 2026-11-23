@@ -108,6 +108,21 @@ describe('DashParser', function () {
         expect(representation.height).to.equal(1080);
     });
 
+    it('should expose CDATA content of an Event as __cdata', () => {
+        const payload = '{"version":2,"type":"slot","payload":[{"type":"linear","start":0,"duration":15.015}]}';
+        const manifest = `<MPD>
+    <Period>
+        <EventStream schemeIdUri="urn:svta:advertising-wg:ad-creative-signaling" timescale="90000">
+            <Event id="1" presentationTime="0" duration="1351350"><![CDATA[${payload}]]>
+            </Event>
+        </EventStream>
+    </Period>
+</MPD>`;
+        const event = dashParser.parse(manifest).Period[0].EventStream[0].Event[0];
+
+        expect(event.__cdata).to.equal(payload);
+    });
+
     it('should return a parsed Patch object when parse is called with valid patch data', () => {
         const patchManifest = `<?xml version="1.0" encoding="UTF-8"?>
 <Patch mpdId="foobar"
