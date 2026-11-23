@@ -1518,6 +1518,8 @@ function StreamController() {
                 _handleContentPending();
                 return;
             }
+            // The MPD lists content. Startup may take longer than the remaining timeout, so stop it already here.
+            _stopWaitingForContent();
 
             const isInitialUpdate = !activeStream;
             adapter.updatePeriods(manifest);

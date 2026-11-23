@@ -505,6 +505,24 @@ describe('StreamController', function () {
                         expect(errHandlerMock.errorCode).to.be.undefined;
                     });
 
+                    it('should not raise the timeout error if content arrived before the deadline and startup takes longer', function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 60 } });
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        clock.tick(59000);
+
+                        // Content arrives, but capability filtering and UTC synchronization are still pending at 60 s
+                        getIsContentPendingStub.returns(false);
+                        filterSpy.restore();
+                        const filterStub = sinon.stub(capabilitiesFilterMock, 'filterUnsupportedFeatures')
+                            .returns(new Promise(() => {}));
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: { type: 'dynamic' } });
+                        clock.tick(2000);
+                        filterStub.restore();
+                        filterSpy = sinon.spy(capabilitiesFilterMock, 'filterUnsupportedFeatures');
+
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
                     it('should start the stream once the content is no longer pending', function (done) {
                         clock.restore();
                         doneFn = done;
