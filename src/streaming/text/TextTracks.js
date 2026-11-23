@@ -86,6 +86,13 @@ function TextTracks(config) {
         currentCaptionEventCue;
 
     /**
+     * Cues whose CUE_ENTER was dispatched and whose CUE_EXIT was not, i.e. the cues the application renders
+     * when streaming.text.dispatchForManualRendering is enabled.
+     * @type {Set<TextTrackCue>}
+     */
+    const dispatchedCues = new Set();
+
+    /**
      * Data about cues for each track.
      * @type {Map<TextTrack, TrackCueData>}
      */
@@ -716,9 +723,6 @@ function TextTracks(config) {
 
     function _handleCaptionEvents(currentItem, timeOffset, trackIdx) {
         let cue = _getCueInformation(currentItem, timeOffset)
-        // Whether the enter event of this cue was dispatched, so that the exit event is only
-        // dispatched for cues the application knows about
-        let isDispatched = false;
 
         cue.onenter = function () {
             // The cues of every track that is not disabled are added to their native TextTrack,
@@ -731,39 +735,47 @@ function TextTracks(config) {
             }
 
             // Selecting a track replays the enter event of its active cues, see _dispatchActiveCues
-            if (isDispatched) {
+            if (dispatchedCues.has(cue)) {
                 return;
             }
 
             // HTML Tracks don't trigger the onexit event when a new cue is entered,
             // we need to manually trigger it
             if (_isHTMLCue(currentItem) && currentCaptionEventCue && currentCaptionEventCue.cueID !== cue.cueID) {
-                _triggerCueExit(currentCaptionEventCue);
+                _exitDispatchedCue(currentCaptionEventCue);
             }
             // We need to delete the type attribute to be able to dispatch via th event bus
             delete cue.type;
 
             currentCaptionEventCue = cue;
-            isDispatched = true;
+            dispatchedCues.add(cue);
             _triggerCueEnter(cue);
         }
 
         cue.onexit = function () {
-            // Cue ids are only unique within a track, so dispatching the exit event for a cue of
-            // another track would remove a cue of the selected track in the application
-            if (!isDispatched) {
-                return;
-            }
-
-            isDispatched = false;
-            _triggerCueExit(cue);
-
-            if (currentCaptionEventCue === cue) {
-                currentCaptionEventCue = null;
-            }
+            _exitDispatchedCue(cue);
         }
 
         return cue;
+    }
+
+    /*
+     * Only dispatches CUE_EXIT for cues the application received a CUE_ENTER for, and only once per CUE_ENTER.
+     * A cue can end after it was already exited, e.g. because a cue of another track was selected in between.
+     */
+    function _exitDispatchedCue(cue) {
+        if (!dispatchedCues.delete(cue)) {
+            return;
+        }
+
+        if (currentCaptionEventCue === cue) {
+            currentCaptionEventCue = null;
+        }
+        _triggerCueExit(cue);
+    }
+
+    function _exitAllDispatchedCues() {
+        Array.from(dispatchedCues).forEach(_exitDispatchedCue);
     }
 
     function _triggerCueEnter(cue) {
@@ -1048,6 +1060,8 @@ function TextTracks(config) {
         }
 
         if (settings.get().streaming.text.dispatchForManualRendering) {
+            // The application only renders the cues of the selected track
+            _exitAllDispatchedCues();
             _dispatchActiveCues(track);
         }
     }
@@ -1158,6 +1172,7 @@ function TextTracks(config) {
         }
         currentTrackIdx = -1;
         clearCaptionContainer.call(this);
+        _exitAllDispatchedCues();
 
         // Clear all track data
         tracksCueData.clear();

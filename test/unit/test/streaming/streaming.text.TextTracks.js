@@ -431,8 +431,7 @@ describe('TextTracks', function () {
 
             const cue = deuTrack.cues[0];
             cue.onenter();
-            // Cue ids are only unique within a track, so an exit event here would remove a cue
-            // of the selected track in the application
+            // The application never received the enter event of this cue
             cue.onexit();
 
             expect(exitEvents.length).to.equal(0);
@@ -500,10 +499,11 @@ describe('TextTracks', function () {
             thirdCue.onenter();
 
             expect(enterEvents).to.deep.equal(['cue-1', 'cue-2', 'cue-3']);
-            expect(exitEvents[exitEvents.length - 1]).to.equal('cue-2');
+            // The late native exit event of cue-1 must not dispatch a second CUE_EXIT for it
+            expect(exitEvents).to.deep.equal(['cue-1', 'cue-2']);
         });
 
-        it('should still dispatch CUE_EXIT for a cue that entered before another track was selected', function () {
+        it('should dispatch CUE_EXIT for the cue on screen when another track is selected', function () {
             const [, deuTrack] = addTwoTracks();
 
             textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 2}]);
@@ -514,13 +514,30 @@ describe('TextTracks', function () {
             const cue = deuTrack.cues[0];
             cue.onenter();
 
+            // The application only renders the cues of the selected track, so it has to remove
+            // this cue right away and not when the cue ends
             textTracks.setCurrentTrackIdx(0);
 
-            // The application is rendering this cue, so it has to be told to remove it even
-            // though its track is not selected anymore
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+
+            // The native exit event of the cue follows later and must not be dispatched again
             cue.onexit();
 
             expect(enterEvents.length).to.equal(1);
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should dispatch CUE_EXIT for the cue on screen when subtitles are turned off', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+
+            textTracks.setCurrentTrackIdx(-1);
+
             expect(exitEvents).to.deep.equal([cue.cueID]);
         });
 
@@ -534,11 +551,10 @@ describe('TextTracks', function () {
             textTracks.setCurrentTrackIdx(1);
             deuTrack.cues[0].onenter();
 
-            // Switching the track does not exit the cue that is on screen, the cue of the
-            // newly selected track replaces it
             textTracks.setCurrentTrackIdx(0);
-            expect(exitEvents.length).to.equal(0);
+            expect(exitEvents).to.deep.equal(['deu-cue']);
 
+            // The cue of the previous track is not exited a second time
             engTrack.cues[0].onenter();
 
             expect(enterEvents).to.deep.equal(['deu-cue', 'eng-cue']);
@@ -597,7 +613,26 @@ describe('TextTracks', function () {
             expect(enterEvents.length).to.equal(0);
         });
 
-        it('should not dispatch CUE_ENTER twice for a cue when its track is selected again', function () {
+        it('should not dispatch CUE_ENTER again when the cue window refresh re-adds an active cue', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 4}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+
+            // The refresh removes all cues from the native TextTrack and adds them again, which
+            // fires the enter event of the active cue another time
+            textTracks.updateTextTrackWindow(1, true);
+            expect(engTrack.cues[0]).to.equal(cue);
+            cue.onenter();
+
+            expect(enterEvents).to.deep.equal([cue.cueID]);
+            expect(exitEvents.length).to.equal(0);
+        });
+
+        it('should dispatch the active cue again when its track is selected again', function () {
             const [engTrack] = addTwoTracks();
 
             textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 4}]);
@@ -610,7 +645,38 @@ describe('TextTracks', function () {
             textTracks.setCurrentTrackIdx(1);
             textTracks.setCurrentTrackIdx(0);
 
+            expect(enterEvents).to.deep.equal([cue.cueID, cue.cueID]);
+            expect(exitEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should not dispatch CUE_ENTER twice when the native enter event follows the replay', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 4}]);
+            textTracks.updateTextTrackWindow(0, true);
+            videoModelMock.time = 1;
+
+            // The native TextTrack has not fired the enter event of the cue yet when the track is selected
+            textTracks.setCurrentTrackIdx(1);
+            const cue = deuTrack.cues[0];
+            cue.onenter();
+
             expect(enterEvents).to.deep.equal([cue.cueID]);
+        });
+
+        it('should dispatch CUE_EXIT for the cue on screen when the text tracks are deleted', function () {
+            const [engTrack] = addTwoTracks();
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.updateTextTrackWindow(0, true);
+
+            const cue = engTrack.cues[0];
+            cue.onenter();
+
+            textTracks.deleteAllTextTracks();
+            cue.onexit();
+
+            expect(exitEvents).to.deep.equal([cue.cueID]);
         });
 
         it('should not dispatch cue events for cues that outlive their text track', function () {
