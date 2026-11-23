@@ -419,6 +419,36 @@ describe('Reference Player - SettingsController', function () {
     // Load options
     // ---------------------------------------------------------------
 
+    describe('copying to the clipboard', function () {
+
+        afterEach(function () {
+            delete navigator.clipboard;
+            document.querySelector('.copy-notification')?.remove();
+        });
+
+        it('should fall back to a text field where navigator.clipboard does not exist', async function () {
+            // As on a page served over plain HTTP
+            Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
+            const originalExecCommand = document.execCommand;
+            let copied = null;
+            document.execCommand = (command) => {
+                copied = `${command}: ${document.activeElement.value}`;
+                return true;
+            };
+
+            try {
+                settingsController.setValue('streaming.gaps.jumpGaps', false);
+                settingsController.copyCodeSnippet();
+                await new Promise((resolve) => setTimeout(resolve, 0));
+            } finally {
+                document.execCommand = originalExecCommand;
+            }
+
+            expect(copied).to.equal(`copy: ${settingsController.buildCodeSnippet()}`);
+            expect(document.querySelector('.copy-notification').textContent).to.contain('Code copied!');
+        });
+    });
+
     describe('load options', function () {
 
         it('should follow the auto play and loop checkboxes', function () {

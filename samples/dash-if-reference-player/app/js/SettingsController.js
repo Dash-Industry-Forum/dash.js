@@ -531,7 +531,9 @@ export class SettingsController {
     }
 
     _copyText(text, message) {
-        navigator.clipboard.writeText(text).then(() => {
+        // navigator.clipboard exists in secure contexts only: over plain HTTP the fallback copies
+        const written = navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject();
+        written.then(() => {
             this.showNotification(message);
         }).catch(() => {
             // Fallback
