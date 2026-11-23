@@ -10,9 +10,8 @@ import ManifestLoaderMock from '../../mocks/ManifestLoaderMock.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import ContentSteeringControllerMock from '../../mocks/ContentSteeringControllerMock.js';
 
-import chai from 'chai';
+import { expect, vi } from 'vite-plus/test';
 import sinon from 'sinon';
-const expect = chai.expect;
 
 describe('ManifestUpdater', function () {
     const context = {};
@@ -42,14 +41,14 @@ describe('ManifestUpdater', function () {
     manifestUpdater.initialize();
 
     it('should not call MANIFEST_UPDATED if a loading error occurs, no error should be sent', function () {
-        const spy = chai.spy();
+        const spy = vi.fn();
         eventBus.on(Events.MANIFEST_UPDATED, spy);
 
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
             error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE, message: manifestErrorMockText }
         });
 
-        expect(spy).to.have.not.been.called();
+        expect(spy).not.toHaveBeenCalled();
 
         eventBus.off(Events.MANIFEST_UPDATED, spy);
 
@@ -57,14 +56,14 @@ describe('ManifestUpdater', function () {
     });
 
     it('should not call MANIFEST_UPDATED if a parsing error occurs, errorHandler should send an error', function () {
-        const spy = chai.spy();
+        const spy = vi.fn();
         eventBus.on(Events.MANIFEST_UPDATED, spy);
 
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
             error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE, message: manifestErrorMockText }
         });
 
-        expect(spy).to.have.not.been.called();
+        expect(spy).not.toHaveBeenCalled();
 
         eventBus.off(Events.MANIFEST_UPDATED, spy);
 

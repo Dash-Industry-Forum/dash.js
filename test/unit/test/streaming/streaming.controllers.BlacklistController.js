@@ -2,13 +2,10 @@ import BlacklistController from '../../../../src/streaming/controllers/Blacklist
 import ContentSteeringController from '../../../../src/dash/controllers/ContentSteeringController.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Settings from '../../../../src/core/Settings.js';
-import chai from 'chai';
-import spies from 'chai-spies';
+import { expect, vi } from 'vite-plus/test';
 import sinon from 'sinon';
 
-const expect = chai.expect;
 
-chai.use(spies);
 
 describe('BlacklistController', function () {
     const context = {};
@@ -23,11 +20,11 @@ describe('BlacklistController', function () {
     let clock;
     let contentSteeringResponseStub;
 
-    this.beforeEach(() => {
+    beforeEach(() => {
         clock = sinon.useFakeTimers();
     });
 
-    this.afterEach(() => {
+    afterEach(() => {
         if (contentSteeringResponseStub) {
             contentSteeringResponseStub.restore();
             contentSteeringResponseStub = null;
@@ -74,7 +71,7 @@ describe('BlacklistController', function () {
     });
 
     it('should trigger an update event after calling add', () => {
-        const spy = chai.spy();
+        const spy = vi.fn();
         const config = { updateEventName: EVENT_NAME };
         const blacklistController = BlacklistController(context).create(config);
 
@@ -82,7 +79,7 @@ describe('BlacklistController', function () {
 
         blacklistController.add(SERVICE_LOCATION);
 
-        expect(spy).to.have.been.called.once; // jshint ignore:line
+        expect(spy).toHaveBeenCalledOnce();
 
         eventBus.off(EVENT_NAME, spy);
     });
@@ -134,7 +131,7 @@ describe('BlacklistController', function () {
     });
 
     it('should not trigger an update event if a duplicate entry is added', () => {
-        const spy = chai.spy();
+        const spy = vi.fn();
         const config = { updateEventName: EVENT_NAME };
         const blacklistController = BlacklistController(context).create(config);
 
@@ -143,7 +140,7 @@ describe('BlacklistController', function () {
         blacklistController.add(SERVICE_LOCATION);
         blacklistController.add(SERVICE_LOCATION);
 
-        expect(spy).to.have.been.called.once; // jshint ignore:line
+        expect(spy).toHaveBeenCalledOnce();
 
         eventBus.off(EVENT_NAME, spy);
     });

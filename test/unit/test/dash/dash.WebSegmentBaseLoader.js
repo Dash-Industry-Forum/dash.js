@@ -17,14 +17,15 @@ let webmSegmentBaseLoader;
 const eventBus = EventBus(context).getInstance();
 
 describe('WebmSegmentBaseLoader', function () {
+    let requests;
     beforeEach(function () {
 
         XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest();
 
-        this.requests = [];
+        requests = [];
         XMLHttpRequest.onCreate = function (xhr) {
-            this.requests.push(xhr);
-        }.bind(this);
+            requests.push(xhr);
+        };
     });
 
     afterEach(function () {
@@ -67,7 +68,6 @@ describe('WebmSegmentBaseLoader', function () {
         });
 
         it('should trigger INITIALIZATION_LOADED event when loadInitialization function is called without representation parameter', function (done) {
-            const self = this.test.ctx;
             webmSegmentBaseLoader.loadInitialization()
                 .then(() => {
                     done();
@@ -75,11 +75,10 @@ describe('WebmSegmentBaseLoader', function () {
                 .catch((e) => {
                     done(e);
                 });
-            setTimeout(() => self.requests[0].respond(200), 1)
+            setTimeout(() => requests[0].respond(200), 1)
         });
 
         it('should trigger SEGMENTS_LOADED event with an error when loadSegments function is called without representation parameter', function (done) {
-            const self = this.test.ctx;
 
             webmSegmentBaseLoader.loadSegments()
                 .then((e) => {
@@ -92,7 +91,7 @@ describe('WebmSegmentBaseLoader', function () {
                     done(e);
                 });
 
-            setTimeout(() => self.requests[0].respond(200), 1)
+            setTimeout(() => requests[0].respond(200), 1)
         });
     });
 
@@ -213,7 +212,6 @@ describe('WebmSegmentBaseLoader', function () {
         });
 
         it('should turn the cue points into index records carrying the fields their consumers read', function (done) {
-            const self = this.test.ctx;
             const file = buildWebmFile();
 
             const headers = { 'Content-Type': 'application/octet-stream' };
@@ -246,8 +244,8 @@ describe('WebmSegmentBaseLoader', function () {
             // The loader reads the header first, then comes back for the cues once that response
             // has been handled. The cues response carries only the requested range, which is what
             // parseCues() expects to find at offset zero.
-            setTimeout(() => self.requests[0].respond(200, headers, file.buffer), 1);
-            setTimeout(() => self.requests[1].respond(200, headers, file.slice(cuesStart, cuesEnd + 1).buffer), 20);
+            setTimeout(() => requests[0].respond(200, headers, file.buffer), 1);
+            setTimeout(() => requests[1].respond(200, headers, file.slice(cuesStart, cuesEnd + 1).buffer), 20);
         });
     });
 });

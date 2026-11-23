@@ -199,19 +199,6 @@ describe('TimelineConverter', function () {
 
 
             });
-
-            describe('with SegmentTimeline and shouldCalculateFromTimeline is true', function () {
-
-                before(() => {
-                    settings.update({
-                        streaming: {
-                            timeShiftBuffer: {
-                                calcFromSegmentTimeline: true
-                            }
-                        }
-                    });
-                });
-            });
         });
     });
 
@@ -375,19 +362,6 @@ describe('TimelineConverter', function () {
                 });
 
 
-            });
-
-            describe('with SegmentTimeline and shouldCalculateFromTimeline is true', function () {
-
-                before(() => {
-                    settings.update({
-                        streaming: {
-                            timeShiftBuffer: {
-                                calcFromSegmentTimeline: true
-                            }
-                        }
-                    });
-                });
             });
         });
     });

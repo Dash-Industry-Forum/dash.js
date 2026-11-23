@@ -13,13 +13,10 @@ import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import SegmentsControllerMock from '../../mocks/SegmentsControllerMock.js';
 
-import chai from 'chai';
-import spies from 'chai-spies';
+import { expect } from 'vite-plus/test';
 import sinon from 'sinon';
 
-chai.use(spies);
 
-const expect = chai.expect;
 const voHelper = new VoHelper();
 const objectsHelper = new ObjectsHelper();
 

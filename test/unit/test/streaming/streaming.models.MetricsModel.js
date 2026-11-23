@@ -5,8 +5,7 @@ import Settings from '../../../../src/core/Settings.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
 import MetricsConstants from '../../../../src/streaming/constants/MetricsConstants.js';
 
-import chai from 'chai';
-const expect = chai.expect;
+import { expect, vi } from 'vite-plus/test';
 
 describe('MetricsModel', function () {
     const context = {};
@@ -38,31 +37,31 @@ describe('MetricsModel', function () {
     });
 
     it('should not trigger METRIC_ADDED event when addDroppedFrames is called and quality is undefined', function () {
-        let spy = chai.spy();
+        let spy = vi.fn();
         eventBus.on(Events.METRIC_ADDED, spy);
 
         metricsModel.addDroppedFrames(Constants.VIDEO);
-        expect(spy).to.have.not.been.called;
+        expect(spy).not.toHaveBeenCalled();
 
         eventBus.off(Events.METRIC_ADDED, spy);
     });
 
     it('should trigger METRIC_ADDED event when addDroppedFrames is called and quality is defined', function () {
-        let spy = chai.spy();
+        let spy = vi.fn();
         eventBus.on(Events.METRIC_ADDED, spy);
 
         metricsModel.addDroppedFrames(Constants.VIDEO, {});
-        expect(spy).to.have.been.called.exactly(1);
+        expect(spy).toHaveBeenCalledTimes(1);
 
         eventBus.off(Events.METRIC_ADDED, spy);
     });
 
     it('should trigger METRIC_CHANGED event when clearCurrentMetricsForType is called and type is undefined', function () {
-        let spy = chai.spy();
+        let spy = vi.fn();
         eventBus.on(Events.METRIC_CHANGED, spy);
 
         metricsModel.clearCurrentMetricsForType();
-        expect(spy).to.have.been.called.exactly(1);
+        expect(spy).toHaveBeenCalledTimes(1);
 
         eventBus.off(Events.METRIC_CHANGED, spy);
     });

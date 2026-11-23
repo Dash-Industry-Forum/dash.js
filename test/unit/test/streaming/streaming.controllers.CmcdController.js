@@ -45,19 +45,6 @@ describe('CmcdController', function () {
         serviceDescriptionControllerMock.reset();
     });
 
-    describe('if configured', function () {
-        beforeEach(function () {
-            cmcdController.setConfig({
-                abrController: abrControllerMock,
-                dashMetrics: dashMetricsMock,
-                playbackController: playbackControllerMock,
-                throughputController: throughputControllerMock,
-                serviceDescriptionController: serviceDescriptionControllerMock
-            });
-        });
-    });
-
-
     describe('Event Mode', () => {
         let urlLoaderMock;
 
