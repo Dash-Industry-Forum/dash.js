@@ -191,8 +191,9 @@ build/typings/
 # Vim
 .vimrc
 
-# Karma Unit Tets
+# Unit tests (Vitest)
 test/unit/results
+.vitest
 # Screenshot artifacts created by IDE visual testing tools
 test/unit/test/**/__screenshots__
 # Karma Functional tests
