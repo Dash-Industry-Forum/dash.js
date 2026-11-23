@@ -730,6 +730,11 @@ function TextTracks(config) {
                 return;
             }
 
+            // Selecting a track replays the enter event of its active cues, see _dispatchActiveCues
+            if (isDispatched) {
+                return;
+            }
+
             // HTML Tracks don't trigger the onexit event when a new cue is entered,
             // we need to manually trigger it
             if (_isHTMLCue(currentItem) && currentCaptionEventCue && currentCaptionEventCue.cueID !== cue.cueID) {
@@ -1039,6 +1044,29 @@ function TextTracks(config) {
                 resizeObserver.observe(videoModel.getElement());
             } else {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
+            }
+        }
+
+        if (settings.get().streaming.text.dispatchForManualRendering) {
+            _dispatchActiveCues(track);
+        }
+    }
+
+    /*
+     * The enter event of a cue that became active while its track was not selected was not
+     * dispatched, and the native TextTrack does not fire it again once the track is selected.
+     * Dispatch it now, otherwise the application shows nothing until the next cue enters.
+     */
+    function _dispatchActiveCues(track) {
+        if (!track || !track.cues) {
+            return;
+        }
+
+        const time = videoModel.getTime();
+        for (let i = 0; i < track.cues.length; i++) {
+            const cue = track.cues[i];
+            if (cue.startTime <= time && time < cue.endTime && typeof cue.onenter === 'function') {
+                cue.onenter();
             }
         }
     }
