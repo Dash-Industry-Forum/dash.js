@@ -118,23 +118,25 @@ function ExtUrlQueryInfoController() {
     }
 
     function createFinalQueryStrings(manifest) {
+        // A manifest object passed to attachSource may have no URL
         mpdQueryStringInformation = {
-            origin: new URL(manifest.url).origin,
+            origin: manifest.url ? new URL(manifest.url).origin : null,
             period: []
         };
 
-        const mpdUrlQuery = manifest.url.split('?')[1];
+        const mpdUrlQuery = manifest.url ? manifest.url.split('?')[1] : undefined;
         const initialMpdObject = { initialQueryString: '', includeInRequests: [] };
 
         _generateQueryParams(mpdQueryStringInformation, manifest, mpdUrlQuery, initialMpdObject, DashConstants.MPD);
 
-        manifest.Period.forEach((period) => {
+        // A pending live MPD may have no Period yet
+        (manifest.Period || []).forEach((period) => {
             const periodObject = {
                 adaptation: []
             };
             _generateQueryParams(periodObject, period, mpdUrlQuery, mpdQueryStringInformation, DashConstants.PERIOD);
 
-            period.AdaptationSet.forEach((adaptationSet) => {
+            (period.AdaptationSet || []).forEach((adaptationSet) => {
                 const adaptationObject = {
                     representation: []
                 };
@@ -146,7 +148,7 @@ function ExtUrlQueryInfoController() {
                     DashConstants.ADAPTATION_SET
                 );
 
-                adaptationSet.Representation.forEach((representation) => {
+                (adaptationSet.Representation || []).forEach((representation) => {
                     const representationObject = {};
                     _generateQueryParams(
                         representationObject,

@@ -1,6 +1,7 @@
 import ManifestUpdater from './../../../../src/streaming/ManifestUpdater.js';
 import Events from '../../../../src/core/events/Events.js';
 import EventBus from '../../../../src/core/EventBus.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import Errors from '../../../../src/core/errors/Errors.js';
 import Settings from '../../../../src/core/Settings.js';
 import DashConstants from '../../../../src/dash/constants/DashConstants.js';
@@ -9,6 +10,7 @@ import ManifestModelMock from '../../mocks/ManifestModelMock.js';
 import ManifestLoaderMock from '../../mocks/ManifestLoaderMock.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import ContentSteeringControllerMock from '../../mocks/ContentSteeringControllerMock.js';
+import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 
 import chai from 'chai';
 import sinon from 'sinon';
@@ -325,6 +327,197 @@ describe('ManifestUpdater', function () {
             manifestUpdater.refreshManifest();
 
             expect(loadStub.calledWith(location[0].url)).to.be.true;
+        });
+    });
+
+    describe('content pending before playback started', function () {
+        const REFRESH_DELAY_S = 2;
+        let clock, loadStub, updatePeriodStub, locationStub;
+
+        beforeEach(function () {
+            clock = sinon.useFakeTimers();
+            manifestUpdater.reset();
+            manifestUpdater.initialize();
+            loadStub = sinon.stub(manifestLoaderMock, 'load');
+            locationStub = sinon.stub(adapterMock, 'getLocation').returns([]);
+            updatePeriodStub = sinon.stub(adapterMock, 'getManifestUpdatePeriod').returns(REFRESH_DELAY_S);
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: { type: DashConstants.DYNAMIC, url: 'http://example.com/manifest.mpd', loadedTime: new Date() }
+            });
+        });
+
+        afterEach(function () {
+            manifestUpdater.reset();
+            manifestUpdater.initialize();
+            loadStub.restore();
+            locationStub.restore();
+            updatePeriodStub.restore();
+            manifestModelMock.setValue(null);
+            clock.restore();
+        });
+
+        it('should not refresh the manifest before playback started if content is not pending', function () {
+            clock.tick(REFRESH_DELAY_S * 1000 * 3);
+
+            expect(loadStub.called).to.be.false;
+        });
+
+        it('should refresh the manifest after the update period while content is pending', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+
+            clock.tick(REFRESH_DELAY_S * 1000 - 1);
+            expect(loadStub.called).to.be.false;
+
+            clock.tick(1);
+            expect(loadStub.calledOnce).to.be.true;
+            expect(loadStub.firstCall.args[0]).to.equal('http://example.com/manifest.mpd');
+        });
+
+        it('should no longer be updating once content is reported as pending', function () {
+            manifestUpdater.refreshManifest();
+            expect(manifestUpdater.getIsUpdating()).to.be.true;
+
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+
+            expect(manifestUpdater.getIsUpdating()).to.be.false;
+        });
+
+        it('should keep refreshing while content stays pending', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: { type: DashConstants.DYNAMIC, url: 'http://example.com/manifest.mpd', loadedTime: new Date() }
+            });
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+
+            expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should keep refreshing while content is pending if an MPD refresh failed', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(manifestUpdater.getIsUpdating()).to.be.true;
+
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: manifestLoaderMock,
+                error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE }
+            });
+            expect(manifestUpdater.getIsUpdating()).to.be.false;
+
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should report a parsing failure and keep refreshing while content is pending', function () {
+            errHandlerMock.reset();
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: manifestLoaderMock,
+                error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE }
+            });
+            expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE);
+            expect(manifestUpdater.getIsUpdating()).to.be.false;
+
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should not restart refreshing while content is pending if an MPD request of another loader failed', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(manifestUpdater.getIsUpdating()).to.be.true;
+
+            // e.g. player.retrieveManifest(), which uses its own ManifestLoader
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: {},
+                error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE }
+            });
+
+            expect(manifestUpdater.getIsUpdating()).to.be.true;
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(loadStub.calledOnce).to.be.true;
+        });
+
+        it('should not refresh before playback started after a parsing failure if content is not pending', function () {
+            manifestUpdater.refreshManifest();
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: manifestLoaderMock,
+                error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE }
+            });
+
+            clock.tick(REFRESH_DELAY_S * 1000 * 3);
+
+            expect(loadStub.calledOnce).to.be.true;
+        });
+
+        it('should not refresh before playback started after a failed MPD refresh if content is not pending', function () {
+            manifestUpdater.refreshManifest();
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                sender: manifestLoaderMock,
+                error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE }
+            });
+
+            clock.tick(REFRESH_DELAY_S * 1000 * 3);
+
+            expect(loadStub.calledOnce).to.be.true;
+        });
+
+        it('should keep refreshing before playback started once the streams have been composed', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: { type: DashConstants.DYNAMIC, url: 'http://example.com/manifest.mpd', loadedTime: new Date() }
+            });
+            eventBus.trigger(Events.STREAMS_COMPOSED);
+
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should keep refreshing on a pause before playback of a stream whose content was pending started', function () {
+            settings.update({ streaming: { scheduling: { scheduleWhilePaused: false } } });
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
+
+            clock.tick(REFRESH_DELAY_S * 1000);
+
+            expect(loadStub.calledOnce).to.be.true;
+            settings.reset();
+        });
+
+        it('should keep the current MPD on a response without content if external subtitles are added', function () {
+            const updatedSpy = sinon.spy();
+            eventBus.on(Events.MANIFEST_UPDATED, updatedSpy);
+            manifestUpdater.setConfig({
+                customParametersModel: { getExternalSubtitles: () => [{ id: 'sub', periodId: null }] }
+            });
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+
+            try {
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: null });
+
+                expect(updatedSpy.calledOnce).to.be.true;
+            } finally {
+                eventBus.off(Events.MANIFEST_UPDATED, updatedSpy);
+                manifestUpdater.setConfig({ customParametersModel: CustomParametersModel(context).getInstance() });
+            }
+        });
+
+        it('should stop refreshing on pause once playback of a stream whose content was pending started', function () {
+            settings.update({ streaming: { scheduling: { scheduleWhilePaused: false } } });
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            eventBus.trigger(Events.STREAMS_COMPOSED);
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
+
+            clock.tick(REFRESH_DELAY_S * 1000 * 3);
+
+            expect(loadStub.called).to.be.false;
+            settings.reset();
         });
     });
 });

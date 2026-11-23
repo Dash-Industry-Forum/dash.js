@@ -84,8 +84,18 @@ function ManifestLoader(config) {
         parser = null;
     }
 
+    /**
+     * Other components, e.g. retrieveManifest of the MediaPlayer, load an MPD with their own ManifestLoader. The sender
+     * lets a listener tell its own requests from theirs.
+     * @param {object} payload
+     * @private
+     */
+    function _triggerManifestLoaded(payload) {
+        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, Object.assign({ sender: instance }, payload));
+    }
+
     function onXlinkReady(event) {
-        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: event.manifest });
+        _triggerManifestLoaded({ manifest: event.manifest });
     }
 
     function createParser(data) {
@@ -159,11 +169,9 @@ function ManifestLoader(config) {
 
                 // A response of no content implies in-memory is properly up to date
                 if (textStatus == 'No Content') {
-                    eventBus.trigger(
-                        Events.INTERNAL_MANIFEST_LOADED, {
-                            manifest: null
-                        }
-                    );
+                    _triggerManifestLoaded({
+                        manifest: null
+                    });
                     return;
                 }
 
@@ -173,7 +181,7 @@ function ManifestLoader(config) {
                 }
 
                 if (parser === null) {
-                    eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                    _triggerManifestLoaded({
                         manifest: null,
                         error: new DashJSError(
                             Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
@@ -189,7 +197,7 @@ function ManifestLoader(config) {
                 try {
                     manifest = parser.parse(data);
                 } catch (e) {
-                    eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                    _triggerManifestLoaded({
                         manifest: null,
                         error: new DashJSError(
                             Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
@@ -231,7 +239,7 @@ function ManifestLoader(config) {
 
                     eventBus.trigger(Events.ORIGINAL_MANIFEST_LOADED, { originalManifest: data });
                 } else {
-                    eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                    _triggerManifestLoaded({
                         manifest: null,
                         error: new DashJSError(
                             Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
@@ -241,7 +249,7 @@ function ManifestLoader(config) {
                 }
             },
             error: function (request, statusText, errorText) {
-                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                _triggerManifestLoaded({
                     manifest: null,
                     error: new DashJSError(
                         Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE,

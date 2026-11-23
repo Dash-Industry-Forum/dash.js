@@ -4,6 +4,7 @@ import ProtectionEvents from '../../../../src/streaming/protection/ProtectionEve
 import EventBus from '../../../../src/core/EventBus.js';
 import Settings from '../../../../src/core/Settings.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
+import Errors from '../../../../src/core/errors/Errors.js';
 import ObjectsHelper from '../../helpers/ObjectsHelper.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import BaseURLControllerMock from '../../mocks/BaseURLControllerMock.js';
@@ -148,12 +149,14 @@ describe('StreamController', function () {
         });
 
         describe('event management', () => {
-            it('should trigger MANIFEST_UPDATED event when loadWithManifest is called', function () {
+            it('should trigger MANIFEST_UPDATED event when loadWithManifest is called', async function () {
                 let spy = chai.spy();
                 eventBus.on(Events.MANIFEST_UPDATED, spy);
                 streamController.loadWithManifest({ loadedTime: new Date() });
                 expect(spy).to.have.been.called.exactly(1);
                 eventBus.off(Events.MANIFEST_UPDATED, spy);
+                // The incomplete manifest fails asynchronously and resets the controller, let that happen in this test
+                await new Promise((resolve) => setTimeout(resolve, 0));
             });
 
             it('should correctly call load function of ManifestLoader when load is called', function () {
@@ -422,6 +425,438 @@ describe('StreamController', function () {
 
                     getStreamsInfoStub.returns([dynamicStreamInfo]);
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                describe('content pending', function () {
+                    const pendingManifest = { type: 'dynamic', url: 'https://example.com/live.mpd' };
+                    let getIsContentPendingStub;
+                    let filterSpy;
+                    let contentPendingSpy;
+                    let initialStreamSwitchSpy;
+                    let clock;
+
+                    // The content is checked once the capabilities have been filtered, which resolves asynchronously
+                    async function updateManifest(manifest) {
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest });
+                        for (let i = 0; i < 10; i++) {
+                            await Promise.resolve();
+                        }
+                    }
+
+                    beforeEach(function () {
+                        clock = sinon.useFakeTimers({ now: Date.now(), toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+                        errHandlerMock.reset();
+                        getStreamsInfoStub.returns([dynamicStreamInfo]);
+                        getIsContentPendingStub = sinon.stub(adapterMock, 'getIsContentPending').returns(true);
+                        // An MPD update that lists content reaches the UTC timing sources
+                        streamController.setConfig({ customParametersModel: { getUTCTimingSources: () => [] } });
+                        filterSpy = sinon.spy(capabilitiesFilterMock, 'filterUnsupportedFeatures');
+                        contentPendingSpy = sinon.spy();
+                        initialStreamSwitchSpy = sinon.spy();
+                        eventBus.on(Events.MANIFEST_CONTENT_PENDING, contentPendingSpy);
+                        eventBus.on(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                    });
+
+                    afterEach(function () {
+                        getIsContentPendingStub.restore();
+                        filterSpy.restore();
+                        eventBus.off(Events.MANIFEST_CONTENT_PENDING, contentPendingSpy);
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                        clock.restore();
+                        settings.reset();
+                    });
+
+                    it('should report the content as pending after filtering and without composing streams', async function () {
+                        await updateManifest(pendingManifest);
+
+                        expect(filterSpy.calledBefore(getIsContentPendingStub)).to.be.true;
+                        expect(getIsContentPendingStub.calledWith(pendingManifest)).to.be.true;
+                        expect(contentPendingSpy.calledOnce).to.be.true;
+                        expect(streamController.getStreams()).to.be.empty;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should keep waiting while the timeout has not expired', async function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        await updateManifest(pendingManifest);
+                        clock.tick(9000);
+                        await updateManifest(pendingManifest);
+
+                        expect(contentPendingSpy.calledTwice).to.be.true;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should raise an error once the timeout expired, also without further MPD updates', async function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        await updateManifest(pendingManifest);
+                        clock.tick(9999);
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+
+                        clock.tick(1);
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                        expect(errHandlerMock.errorValue).to.include('10 seconds');
+                    });
+
+                    it('should count the timeout from the first pending MPD', async function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        await updateManifest(pendingManifest);
+                        clock.tick(8000);
+                        await updateManifest(pendingManifest);
+                        clock.tick(2000);
+
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                    });
+
+                    it('should not raise the error before a timeout longer than the maximum timer delay expired', async function () {
+                        const timeoutInSeconds = 30 * 24 * 3600;
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: timeoutInSeconds } });
+                        await updateManifest(pendingManifest);
+                        clock.tick(1000);
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+
+                        clock.tick(timeoutInSeconds * 1000 - 2000);
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+
+                        clock.tick(1000);
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                    });
+
+                    it('should wait without limit by default', async function () {
+                        await updateManifest(pendingManifest);
+                        clock.tick(24 * 3600 * 1000);
+                        await updateManifest(pendingManifest);
+
+                        expect(contentPendingSpy.calledTwice).to.be.true;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should not raise the timeout error once the streams are composed', async function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        await updateManifest(pendingManifest);
+                        getIsContentPendingStub.returns(false);
+                        // Starts the time synchronization and with it the composition of the streams
+                        await updateManifest(pendingManifest);
+                        clock.tick(10000);
+
+                        // Without UTC timing sources the time synchronization reports TIME_SYNC_FAILED_ERROR_CODE
+                        expect(errHandlerMock.errorCode).to.not.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                    });
+
+                    it('should not raise the timeout error while an MPD update is still filtered at the deadline', async function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 60 } });
+                        await updateManifest(pendingManifest);
+                        clock.tick(59000);
+
+                        // Content arrives, but capability filtering is still running at 60 s
+                        let resolveFilter;
+                        filterSpy.restore();
+                        const filterStub = sinon.stub(capabilitiesFilterMock, 'filterUnsupportedFeatures')
+                            .returns(new Promise((resolve) => {
+                                resolveFilter = resolve;
+                            }));
+                        getIsContentPendingStub.returns(false);
+                        await updateManifest(pendingManifest);
+                        clock.tick(2000);
+                        resolveFilter();
+                        await updateManifest(pendingManifest);
+                        filterStub.restore();
+                        filterSpy = sinon.spy(capabilitiesFilterMock, 'filterUnsupportedFeatures');
+
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should raise the timeout error at once if the MPD is still pending once filtered after the deadline', async function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        await updateManifest(pendingManifest);
+                        clock.tick(9000);
+
+                        let resolveFilter;
+                        filterSpy.restore();
+                        const filterStub = sinon.stub(capabilitiesFilterMock, 'filterUnsupportedFeatures')
+                            .returns(new Promise((resolve) => {
+                                resolveFilter = resolve;
+                            }));
+                        await updateManifest(pendingManifest);
+                        clock.tick(2000);
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+
+                        resolveFilter();
+                        await updateManifest(pendingManifest);
+                        filterStub.restore();
+                        filterSpy = sinon.spy(capabilitiesFilterMock, 'filterUnsupportedFeatures');
+                        clock.tick(0);
+
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                    });
+
+                    [null, -1].forEach((timeoutInSeconds) => {
+                        it(`should wait without limit if the timeout is set to ${timeoutInSeconds}`, async function () {
+                            settings.update({ streaming: { liveContentPendingTimeoutInSeconds: timeoutInSeconds } });
+                            await updateManifest(pendingManifest);
+                            clock.tick(3600 * 1000);
+
+                            expect(errHandlerMock.errorCode).to.be.undefined;
+                        });
+                    });
+
+                    it('should raise an error at once if the MPD has no minimumUpdatePeriod', async function () {
+                        const updatePeriodStub = sinon.stub(adapterMock, 'getManifestUpdatePeriod').returns(NaN);
+                        await updateManifest(pendingManifest);
+                        updatePeriodStub.restore();
+
+                        expect(contentPendingSpy.called).to.be.false;
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                        expect(errHandlerMock.errorValue).to.include('minimumUpdatePeriod');
+                    });
+
+                    it('should raise an error at once if the MPD has no URL to update it from', async function () {
+                        await updateManifest({ type: 'dynamic' });
+
+                        expect(contentPendingSpy.called).to.be.false;
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                        expect(errHandlerMock.errorValue).to.include('no URL');
+                    });
+
+                    it('should wait for an MPD without URL that has a Location', async function () {
+                        const locationStub = sinon.stub(adapterMock, 'getLocation').returns([{ url: 'https://example.com/live.mpd' }]);
+                        await updateManifest({ type: 'dynamic' });
+                        locationStub.restore();
+
+                        expect(contentPendingSpy.calledOnce).to.be.true;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                    });
+
+                    it('should raise an error if the presentation ended before its MPD listed content', async function () {
+                        await updateManifest(pendingManifest);
+                        getIsContentPendingStub.returns(false);
+                        const listsContentStub = sinon.stub(adapterMock, 'getListsContent').returns(false);
+                        await updateManifest({ type: 'static', url: pendingManifest.url });
+                        listsContentStub.restore();
+
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                        expect(errHandlerMock.errorValue).to.include('ended');
+                    });
+
+                    it('should start the stream once the content is no longer pending', function (done) {
+                        clock.restore();
+                        doneFn = done;
+                        expectedStartTime = liveStartTime;
+
+                        updateManifest(pendingManifest).then(() => {
+                            expect(contentPendingSpy.calledOnce).to.be.true;
+
+                            getIsContentPendingStub.returns(false);
+                            eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                        }).catch(done);
+                    });
+
+                    it('should not check for pending content once a stream is active', function (done) {
+                        clock.restore();
+                        doneFn = (err) => {
+                            if (err) {
+                                done(err);
+                                return;
+                            }
+                            // INITIAL_STREAM_SWITCH fires before the stream is set active
+                            setTimeout(() => {
+                                getIsContentPendingStub.resetHistory();
+                                filterSpy.resetHistory();
+                                getIsContentPendingStub.returns(true);
+                                updateManifest(pendingManifest).then(() => {
+                                    expect(filterSpy.calledOnce).to.be.true;
+                                    expect(getIsContentPendingStub.called).to.be.false;
+                                    expect(contentPendingSpy.called).to.be.false;
+                                    done();
+                                }).catch(done);
+                            }, 0);
+                        };
+                        expectedStartTime = liveStartTime;
+                        getIsContentPendingStub.returns(false);
+                        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                    });
+                });
+
+                it('should raise an error event instead of rejecting if the first stream can not be initialized', function (done) {
+                    errHandlerMock.reset();
+                    const dvrInfoStub = sinon.stub(dashMetricsMock, 'getCurrentDVRInfo').returns(null);
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+
+                    setTimeout(() => {
+                        dvrInfoStub.restore();
+                        try {
+                            expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
+                });
+
+                it('should raise an error event if the switch to the first stream fails twice', function (done) {
+                    errHandlerMock.reset();
+                    let switchAttempts = 0;
+                    const throwingListener = () => {
+                        switchAttempts++;
+                        throw new Error('initial stream switch failed');
+                    };
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                    eventBus.on(Events.INITIAL_STREAM_SWITCH, throwingListener);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+
+                    setTimeout(() => {
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, throwingListener);
+                        try {
+                            expect(switchAttempts).to.equal(2);
+                            expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
+                });
+
+                it('should start the first stream if only the first switch to it fails', function (done) {
+                    errHandlerMock.reset();
+                    let switchAttempts = 0;
+                    const failingOnceListener = () => {
+                        switchAttempts++;
+                        if (switchAttempts === 1) {
+                            throw new Error('initial stream switch failed');
+                        }
+                    };
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                    eventBus.on(Events.INITIAL_STREAM_SWITCH, failingOnceListener);
+                    const streamsComposedSpy = sinon.spy();
+                    eventBus.on(Events.STREAMS_COMPOSED, streamsComposedSpy);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+
+                    setTimeout(() => {
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, failingOnceListener);
+                        eventBus.off(Events.STREAMS_COMPOSED, streamsComposedSpy);
+                        try {
+                            expect(switchAttempts).to.equal(2);
+                            expect(streamsComposedSpy.calledOnce).to.be.true;
+                            expect(errHandlerMock.errorCode).to.be.undefined;
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
+                });
+
+                it('should not start the first stream of a session that has been reset while its streams were initialized', function (done) {
+                    const initialStreamSwitchSpy = sinon.spy();
+                    const streamsComposedSpy = sinon.spy();
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                    eventBus.on(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                    eventBus.on(Events.STREAMS_COMPOSED, streamsComposedSpy);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                    streamController.reset();
+                    errHandlerMock.reset();
+
+                    setTimeout(() => {
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                        eventBus.off(Events.STREAMS_COMPOSED, streamsComposedSpy);
+                        try {
+                            expect(initialStreamSwitchSpy.called).to.be.false;
+                            expect(streamsComposedSpy.called).to.be.false;
+                            expect(errHandlerMock.errorCode).to.be.undefined;
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
+                });
+
+                it('should not raise an error for the first composition once the stream is active', function (done) {
+                    errHandlerMock.reset();
+                    const onUnhandledRejection = (event) => event.preventDefault();
+                    const throwingListener = () => {
+                        throw new Error('STREAMS_COMPOSED listener failed');
+                    };
+                    window.addEventListener('unhandledrejection', onUnhandledRejection);
+                    eventBus.on(Events.STREAMS_COMPOSED, throwingListener);
+                    doneFn = (err) => {
+                        if (err) {
+                            done(err);
+                            return;
+                        }
+                        setTimeout(() => {
+                            eventBus.off(Events.STREAMS_COMPOSED, throwingListener);
+                            window.removeEventListener('unhandledrejection', onUnhandledRejection);
+                            try {
+                                expect(errHandlerMock.errorCode).to.be.undefined;
+                                done();
+                            } catch (e) {
+                                done(e);
+                            }
+                        }, 10);
+                    };
+                    expectedStartTime = liveStartTime;
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should ignore a failed first composition of a session that has been reset', function (done) {
+                    const dvrInfoStub = sinon.stub(dashMetricsMock, 'getCurrentDVRInfo').returns(null);
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                    streamController.reset();
+                    errHandlerMock.reset();
+
+                    setTimeout(() => {
+                        dvrInfoStub.restore();
+                        try {
+                            expect(errHandlerMock.errorCode).to.be.undefined;
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
+                });
+
+                it('should not start a reset session once the waiting time of a start time in the future expired', function () {
+                    const clock = sinon.useFakeTimers({ now: Date.now(), toFake: ['setTimeout', 'clearTimeout'] });
+                    const dvrInfoStub = sinon.stub(dashMetricsMock, 'getCurrentDVRInfo')
+                        .returns({ range: { start: 0, end: -10 } });
+                    const initialStreamSwitchSpy = sinon.spy();
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                    eventBus.on(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+
+                    return new Promise((resolve) => {
+                        eventBus.on(Events.AST_IN_FUTURE, function onAstInFuture() {
+                            eventBus.off(Events.AST_IN_FUTURE, onAstInFuture);
+                            resolve();
+                        });
+                        getStreamsInfoStub.returns([dynamicStreamInfo]);
+                        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                        clock.runToLast();
+                    }).then(() => {
+                        streamController.reset();
+                        errHandlerMock.reset();
+                        dvrInfoStub.returns({ range: dvrWindowRange });
+                        clock.tick(3600 * 1000);
+                        return Promise.resolve();
+                    }).then(() => {
+                        expect(initialStreamSwitchSpy.called).to.be.false;
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+                        expect(clock.countTimers()).to.equal(0);
+                    }).finally(() => {
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, initialStreamSwitchSpy);
+                        dvrInfoStub.restore();
+                        clock.restore();
+                    });
                 });
 
                 it('should not clamp a seek time beyond the announced end of a dynamic stream with finite duration', function (done) {

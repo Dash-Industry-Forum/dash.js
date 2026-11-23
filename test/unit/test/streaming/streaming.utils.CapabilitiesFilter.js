@@ -56,6 +56,36 @@ describe('CapabilitiesFilter', function () {
 
     describe('filterUnsupportedFeatures', function () {
 
+        describe('Periods and AdaptationSets without children', function () {
+
+            [false, true].forEach((filterUnsupportedEssentialProperties) => {
+                it(`should keep Periods without AdaptationSet and AdaptationSets without Representation, filterUnsupportedEssentialProperties=${filterUnsupportedEssentialProperties}`, function () {
+                    settings.update({ streaming: { capabilities: { filterUnsupportedEssentialProperties } } });
+                    const manifest = {
+                        Period: [
+                            {
+                                AdaptationSet: [
+                                    {
+                                        mimeType: 'video/mp4',
+                                        Representation: [{ mimeType: 'video/mp4', codecs: 'avc1.64001f' }]
+                                    },
+                                    { mimeType: 'audio/mp4' }
+                                ]
+                            },
+                            {}
+                        ]
+                    };
+
+                    return capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                        .then(() => {
+                            expect(manifest.Period).to.have.lengthOf(2);
+                            expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
+                            expect(manifest.Period[1].AdaptationSet).to.be.undefined;
+                        });
+                });
+            });
+        });
+
         describe('filter codecs', function () {
 
             beforeEach(function () {

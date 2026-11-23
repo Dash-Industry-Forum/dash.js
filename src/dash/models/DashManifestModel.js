@@ -538,6 +538,67 @@ function DashManifestModel() {
         return isDynamic;
     }
 
+    /**
+     * Checks if a dynamic MPD does not list its content yet, e.g. a live presentation whose packager has not written
+     * the first segment of each media type. The content is listed if a Period has content for each of its media
+     * types: for video and for audio, if the Period has such AdaptationSets, at least one of them has a Representation
+     * with content. A Representation has no content if its SegmentTimeline has no S element. Alternative
+     * AdaptationSets and Representations that are still empty, and Periods without content, e.g. one announced for the
+     * future, are ignored. Call it after unsupported AdaptationSets and Representations have been filtered.
+     * @param {object} manifest
+     * @returns {boolean}
+     */
+    function getIsContentPending(manifest) {
+        return getIsDynamic(manifest) && !getListsContent(manifest);
+    }
+
+    /**
+     * Checks if an MPD, dynamic or static, lists content. See getIsContentPending for the rule.
+     * @param {object} manifest
+     * @returns {boolean}
+     */
+    function getListsContent(manifest) {
+        const periods = (manifest && manifest[DashConstants.PERIOD]) || [];
+        return periods.some(_hasContentForEachMediaType);
+    }
+
+    function _hasContentForEachMediaType(period) {
+        const adaptationSets = period[DashConstants.ADAPTATION_SET] || [];
+        const hasContent = (adaptationSet) => _adaptationSetHasContent(period, adaptationSet);
+        const adaptationSetsPerType = [Constants.VIDEO, Constants.AUDIO]
+            .map((type) => adaptationSets.filter((adaptationSet) => getIsTypeOf(adaptationSet, type)))
+            .filter((adaptationSetsOfType) => adaptationSetsOfType.length > 0);
+        if (adaptationSetsPerType.length > 0) {
+            return adaptationSetsPerType.every((adaptationSetsOfType) => adaptationSetsOfType.some(hasContent));
+        }
+        // No video or audio, e.g. muxed content. Subtitles and thumbnails count only if there is nothing else, a
+        // subtitle without SegmentTimeline (e.g. a sidecar file added by addExternalSubtitle) always looks available.
+        const mediaAdaptationSets = adaptationSets.filter((adaptationSet) => {
+            return !getIsText(adaptationSet) && !getIsImage(adaptationSet);
+        });
+        return (mediaAdaptationSets.length > 0 ? mediaAdaptationSets : adaptationSets).some(hasContent);
+    }
+
+    function _adaptationSetHasContent(period, adaptationSet) {
+        const representations = adaptationSet[DashConstants.REPRESENTATION] || [];
+        return representations.some((representation) => {
+            return !_hasEmptySegmentTimeline(period, adaptationSet, representation);
+        });
+    }
+
+    function _hasEmptySegmentTimeline(period, adaptationSet, representation) {
+        // The parser copies the SegmentTemplate of the parent elements to the Representation, but an MPD patch does not
+        const segmentInfo = [representation, adaptationSet, period]
+            .map((element) => element[DashConstants.SEGMENT_TEMPLATE] || element[DashConstants.SEGMENT_LIST])
+            .find((element) => !!element);
+        const segmentTimeline = segmentInfo ? segmentInfo[DashConstants.SEGMENT_TIMELINE] : null;
+        if (!segmentTimeline) {
+            return false;
+        }
+        const segments = segmentTimeline[DashConstants.S];
+        return !segments || segments.length === 0;
+    }
+
     function getId(manifest) {
         return (manifest && manifest[DashConstants.ID]) || null;
     }
@@ -1823,7 +1884,9 @@ function DashManifestModel() {
         getFramerate,
         getId,
         getIndexForAdaptation,
+        getIsContentPending,
         getIsDynamic,
+        getListsContent,
         getIsFragmented,
         getIsText,
         getIsTypeOf,
