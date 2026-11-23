@@ -10,9 +10,9 @@ dash.js ships with various unit tests for validating the correct behavior of the
 
 The unit tests are located in `test/unit` and divided into different folders:
 
-- `config`: Contains the configuration files to execute the unit tests. dash.js uses
-  the [Karma Testrunner](https://karma-runner.github.io/latest/index.html) to execute the unit tests directly in the
-  browsers.
+- `config`: Contains the setup file and helper scripts for the unit tests. dash.js uses
+  [Vitest](https://vitest.dev/) in browser mode, started through [Vite+](https://viteplus.dev/) (`vp test`), to execute
+  the unit tests directly in the browsers. The configuration lives in `vite.config.js` in the root folder.
 - `data`: Contains additional files like manifests, license responses and subtitle files to be used in the unit tests.
 - `helpers`: Contains helper classes that contain common functionality used by the testfiles.
 - `mocks`: Contains mock implementations of specific classes. When instantiating a class for a test, mock dependencies
@@ -23,10 +23,20 @@ The unit tests are located in `test/unit` and divided into different folders:
 
 ## Execution
 
-To execute the unit tests simply run `npm run test` in the root folder of dash.js. Per default, the tests are then
-executed in Chrome and Firefox (running in headless mode). The result for each test is printed in the terminal. The
-final result similar to this:
+To execute the unit tests simply run `npm run test` in the root folder of dash.js. The tests are then executed in
+Chromium and Firefox (headless, through Playwright). The result for each test file is printed in the terminal.
 
-![controlbar](/assets/images/unit-tests-result.png)
+Install the browsers once with `npx playwright install chromium firefox`. Developing dash.js requires Node.js 24.11 or
+newer.
+
+To run a single test file or filter tests by name:
+
+```sh
+npx vp test --run test/unit/test/core/core.EventBus.js
+npx vp test --run --project chromium -t "EventBus"
+```
+
+`npm run test:coverage` runs the tests in Chromium with coverage instrumentation and writes the report to
+`test/unit/results/coverage/`.
 
 
