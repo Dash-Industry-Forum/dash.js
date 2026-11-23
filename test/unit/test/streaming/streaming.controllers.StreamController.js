@@ -435,11 +435,21 @@ describe('StreamController', function () {
                     let initialStreamSwitchSpy;
                     let clock;
 
+                    // The content is checked once the capabilities have been filtered, which resolves asynchronously
+                    async function updateManifest(manifest) {
+                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest });
+                        for (let i = 0; i < 10; i++) {
+                            await Promise.resolve();
+                        }
+                    }
+
                     beforeEach(function () {
-                        clock = sinon.useFakeTimers({ now: Date.now(), toFake: ['setTimeout', 'clearTimeout'] });
+                        clock = sinon.useFakeTimers({ now: Date.now(), toFake: ['setTimeout', 'clearTimeout', 'Date'] });
                         errHandlerMock.reset();
                         getStreamsInfoStub.returns([dynamicStreamInfo]);
                         getIsContentPendingStub = sinon.stub(adapterMock, 'getIsContentPending').returns(true);
+                        // An MPD update that lists content reaches the UTC timing sources
+                        streamController.setConfig({ customParametersModel: { getUTCTimingSources: () => [] } });
                         filterSpy = sinon.spy(capabilitiesFilterMock, 'filterUnsupportedFeatures');
                         contentPendingSpy = sinon.spy();
                         initialStreamSwitchSpy = sinon.spy();
@@ -456,86 +466,142 @@ describe('StreamController', function () {
                         settings.reset();
                     });
 
-                    it('should report the content as pending before reading the AdaptationSets', function () {
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                    it('should report the content as pending after filtering and without composing streams', async function () {
+                        await updateManifest(pendingManifest);
 
+                        expect(filterSpy.calledBefore(getIsContentPendingStub)).to.be.true;
                         expect(getIsContentPendingStub.calledWith(pendingManifest)).to.be.true;
                         expect(contentPendingSpy.calledOnce).to.be.true;
-                        expect(filterSpy.called).to.be.false;
                         expect(streamController.getStreams()).to.be.empty;
                         expect(errHandlerMock.errorCode).to.be.undefined;
                     });
 
-                    it('should keep waiting while the timeout has not expired', function () {
+                    it('should keep waiting while the timeout has not expired', async function () {
                         settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        await updateManifest(pendingManifest);
                         clock.tick(9000);
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        await updateManifest(pendingManifest);
 
                         expect(contentPendingSpy.calledTwice).to.be.true;
                         expect(errHandlerMock.errorCode).to.be.undefined;
                     });
 
-                    it('should raise an error once the timeout expired, also without further MPD updates', function () {
+                    it('should raise an error once the timeout expired, also without further MPD updates', async function () {
                         settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
-                        clock.tick(10000);
+                        await updateManifest(pendingManifest);
+                        clock.tick(9999);
+                        expect(errHandlerMock.errorCode).to.be.undefined;
 
+                        clock.tick(1);
                         expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
                         expect(errHandlerMock.errorValue).to.include('10 seconds');
                     });
 
-                    it('should wait without limit if the timeout is set to Infinity', function () {
-                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: Infinity } });
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                    it('should count the timeout from the first pending MPD', async function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        await updateManifest(pendingManifest);
+                        clock.tick(8000);
+                        await updateManifest(pendingManifest);
+                        clock.tick(2000);
+
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                    });
+
+                    it('should not raise the error before a timeout longer than the maximum timer delay expired', async function () {
+                        const timeoutInSeconds = 30 * 24 * 3600;
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: timeoutInSeconds } });
+                        await updateManifest(pendingManifest);
+                        clock.tick(1000);
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+
+                        clock.tick(timeoutInSeconds * 1000 - 2000);
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+
+                        clock.tick(1000);
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                    });
+
+                    it('should wait without limit by default', async function () {
+                        await updateManifest(pendingManifest);
                         clock.tick(24 * 3600 * 1000);
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        await updateManifest(pendingManifest);
 
                         expect(contentPendingSpy.calledTwice).to.be.true;
                         expect(errHandlerMock.errorCode).to.be.undefined;
                     });
 
-                    it('should not raise the timeout error once the streams are composed', function () {
+                    it('should not raise the timeout error once the streams are composed', async function () {
                         settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        await updateManifest(pendingManifest);
                         getIsContentPendingStub.returns(false);
-                        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                        // Starts the time synchronization and with it the composition of the streams
+                        await updateManifest(pendingManifest);
                         clock.tick(10000);
 
-                        expect(errHandlerMock.errorCode).to.be.undefined;
+                        // Without UTC timing sources the time synchronization reports TIME_SYNC_FAILED_ERROR_CODE
+                        expect(errHandlerMock.errorCode).to.not.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
                     });
 
-                    it('should not raise the timeout error if content arrived before the deadline and startup takes longer', function () {
+                    it('should not raise the timeout error while an MPD update is still filtered at the deadline', async function () {
                         settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 60 } });
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        await updateManifest(pendingManifest);
                         clock.tick(59000);
 
-                        // Content arrives, but capability filtering and UTC synchronization are still pending at 60 s
-                        getIsContentPendingStub.returns(false);
+                        // Content arrives, but capability filtering is still running at 60 s
+                        let resolveFilter;
                         filterSpy.restore();
                         const filterStub = sinon.stub(capabilitiesFilterMock, 'filterUnsupportedFeatures')
-                            .returns(new Promise(() => {}));
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: { type: 'dynamic' } });
+                            .returns(new Promise((resolve) => {
+                                resolveFilter = resolve;
+                            }));
+                        getIsContentPendingStub.returns(false);
+                        await updateManifest(pendingManifest);
                         clock.tick(2000);
+                        resolveFilter();
+                        await updateManifest(pendingManifest);
                         filterStub.restore();
                         filterSpy = sinon.spy(capabilitiesFilterMock, 'filterUnsupportedFeatures');
 
                         expect(errHandlerMock.errorCode).to.be.undefined;
                     });
 
+                    it('should raise the timeout error at once if the MPD is still pending once filtered after the deadline', async function () {
+                        settings.update({ streaming: { liveContentPendingTimeoutInSeconds: 10 } });
+                        await updateManifest(pendingManifest);
+                        clock.tick(9000);
+
+                        let resolveFilter;
+                        filterSpy.restore();
+                        const filterStub = sinon.stub(capabilitiesFilterMock, 'filterUnsupportedFeatures')
+                            .returns(new Promise((resolve) => {
+                                resolveFilter = resolve;
+                            }));
+                        await updateManifest(pendingManifest);
+                        clock.tick(2000);
+                        expect(errHandlerMock.errorCode).to.be.undefined;
+
+                        resolveFilter();
+                        await updateManifest(pendingManifest);
+                        filterStub.restore();
+                        filterSpy = sinon.spy(capabilitiesFilterMock, 'filterUnsupportedFeatures');
+                        clock.tick(0);
+
+                        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                    });
+
                     [null, -1].forEach((timeoutInSeconds) => {
-                        it(`should wait without limit if the timeout is set to ${timeoutInSeconds}`, function () {
+                        it(`should wait without limit if the timeout is set to ${timeoutInSeconds}`, async function () {
                             settings.update({ streaming: { liveContentPendingTimeoutInSeconds: timeoutInSeconds } });
-                            eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                            await updateManifest(pendingManifest);
                             clock.tick(3600 * 1000);
 
                             expect(errHandlerMock.errorCode).to.be.undefined;
                         });
                     });
 
-                    it('should raise an error at once if the MPD has no minimumUpdatePeriod', function () {
+                    it('should raise an error at once if the MPD has no minimumUpdatePeriod', async function () {
                         const updatePeriodStub = sinon.stub(adapterMock, 'getManifestUpdatePeriod').returns(NaN);
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
+                        await updateManifest(pendingManifest);
                         updatePeriodStub.restore();
 
                         expect(contentPendingSpy.called).to.be.false;
@@ -548,11 +614,12 @@ describe('StreamController', function () {
                         doneFn = done;
                         expectedStartTime = liveStartTime;
 
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
-                        expect(contentPendingSpy.calledOnce).to.be.true;
+                        updateManifest(pendingManifest).then(() => {
+                            expect(contentPendingSpy.calledOnce).to.be.true;
 
-                        getIsContentPendingStub.returns(false);
-                        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                            getIsContentPendingStub.returns(false);
+                            eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                        }).catch(done);
                     });
 
                     it('should not check for pending content once a stream is active', function (done) {
@@ -565,15 +632,14 @@ describe('StreamController', function () {
                             // INITIAL_STREAM_SWITCH fires before the stream is set active
                             setTimeout(() => {
                                 getIsContentPendingStub.resetHistory();
-                                eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: pendingManifest });
-                                try {
+                                filterSpy.resetHistory();
+                                getIsContentPendingStub.returns(true);
+                                updateManifest(pendingManifest).then(() => {
+                                    expect(filterSpy.calledOnce).to.be.true;
                                     expect(getIsContentPendingStub.called).to.be.false;
                                     expect(contentPendingSpy.called).to.be.false;
-                                    expect(filterSpy.calledOnce).to.be.true;
                                     done();
-                                } catch (e) {
-                                    done(e);
-                                }
+                                }).catch(done);
                             }, 0);
                         };
                         expectedStartTime = liveStartTime;

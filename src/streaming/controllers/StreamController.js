@@ -66,7 +66,7 @@ function StreamController() {
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         waitForPlaybackStartTimeout, providedStartTime, errorInformation,
-        pendingDynamicToStaticUpdate, isWaitingForContent, contentPendingTimer, sessionId = 0;
+        pendingDynamicToStaticUpdate, isWaitingForContent, contentPendingTimer, contentPendingDeadline, sessionId = 0;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -321,38 +321,59 @@ function StreamController() {
     }
 
     /**
-     * Before playback started, the MPD of a live stream does not list any content yet, e.g. because the packager has
-     * not written the first segment. Do not create any stream and let the ManifestUpdater refresh the MPD. Raises an
-     * error if no MPD update lists content within streaming.liveContentPendingTimeoutInSeconds.
+     * Before playback started, the MPD of a live stream does not list all of its content yet, e.g. because the packager
+     * has not written the first segments. Do not create any stream and let the ManifestUpdater refresh the MPD. Raises
+     * an error if no MPD update lists the content within streaming.liveContentPendingTimeoutInSeconds.
      * @private
      */
     function _handleContentPending(manifest) {
         if (isNaN(adapter.getManifestUpdatePeriod(manifest))) {
-            _raiseNoStreamsError(new Error('The MPD does not list any content and has no minimumUpdatePeriod'));
+            _raiseNoStreamsError(new Error('The MPD does not list all content and has no minimumUpdatePeriod'));
             return;
         }
         if (!isWaitingForContent) {
             isWaitingForContent = true;
-            logger.info('The MPD does not list any content yet. Waiting for an MPD update before starting playback.');
+            logger.info('The MPD does not list all content yet. Waiting for an MPD update before starting playback.');
             // Any other value than a finite number >= 0, e.g. Infinity (null after JSON serialization), waits forever
             const timeoutInSeconds = settings.get().streaming.liveContentPendingTimeoutInSeconds;
-            if (Number.isFinite(timeoutInSeconds) && timeoutInSeconds >= 0) {
-                contentPendingTimer = setTimeout(() => {
-                    contentPendingTimer = null;
-                    _raiseNoStreamsError(new Error(`The MPD did not list any content within ${timeoutInSeconds} seconds`));
-                }, timeoutInSeconds * 1000);
-            }
+            contentPendingDeadline = Number.isFinite(timeoutInSeconds) && timeoutInSeconds >= 0
+                ? Date.now() + timeoutInSeconds * 1000
+                : NaN;
         }
+        _startContentPendingTimer();
 
         eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
     }
 
-    function _stopWaitingForContent() {
-        isWaitingForContent = false;
-        if (contentPendingTimer !== null) {
+    function _startContentPendingTimer() {
+        _clearContentPendingTimer();
+        if (isNaN(contentPendingDeadline)) {
+            return;
+        }
+        // setTimeout stores the delay as a 32 bit number, a larger one fires at once. Check the deadline again then.
+        const delay = Math.min(Math.max(contentPendingDeadline - Date.now(), 0), 0x7FFFFFFF);
+        contentPendingTimer = setTimeout(() => {
+            contentPendingTimer = null;
+            if (Date.now() < contentPendingDeadline) {
+                _startContentPendingTimer();
+                return;
+            }
+            const timeoutInSeconds = settings.get().streaming.liveContentPendingTimeoutInSeconds;
+            _raiseNoStreamsError(new Error(`The MPD did not list all content within ${timeoutInSeconds} seconds`));
+        }, delay);
+    }
+
+    function _clearContentPendingTimer() {
+        if (contentPendingTimer) {
             clearTimeout(contentPendingTimer);
             contentPendingTimer = null;
         }
+    }
+
+    function _stopWaitingForContent() {
+        isWaitingForContent = false;
+        contentPendingDeadline = NaN;
+        _clearContentPendingTimer();
     }
 
     /**
@@ -1541,27 +1562,31 @@ function StreamController() {
             //stream
             //is SegmentTimeline to avoid using time source
             const manifest = e.manifest;
-
-            // Check before anything reads the AdaptationSets, a Period may have none yet. Only before playback started.
-            if (!activeStream && adapter.getIsContentPending(manifest)) {
-                _handleContentPending(manifest);
-                return;
-            }
-            // The MPD lists content. Startup may take longer than the remaining timeout, so stop it already here.
-            _stopWaitingForContent();
-
             const isInitialUpdate = !activeStream;
             const updateSessionId = sessionId;
             adapter.updatePeriods(manifest);
 
             // It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong
             // references in case we remove AdaptationSets.
+            // While the MPD is checked, the content-pending deadline does not expire. It applies to a pending MPD only.
+            _clearContentPendingTimer();
             capabilitiesFilter.filterUnsupportedFeatures(manifest)
                 .then(() => {
                     // A reset while filtering ends this session, do not compose its streams anymore
                     if (updateSessionId !== sessionId) {
                         return;
                     }
+                    // Also the MPD requests of a pending MPD need the query parameters of ExtUrlQueryInfo
+                    extUrlQueryInfoController.createFinalQueryStrings(manifest);
+
+                    // Only before playback started, and after filtering, so that unsupported and empty AdaptationSets
+                    // do not keep it waiting.
+                    if (!activeStream && adapter.getIsContentPending(manifest)) {
+                        _handleContentPending(manifest);
+                        return;
+                    }
+                    _stopWaitingForContent();
+
                     baseURLController.initialize(manifest);
 
                     let manifestUTCTimingSources = adapter.getUTCTimingSources();
@@ -1577,7 +1602,6 @@ function StreamController() {
                         ? manifestUTCTimingSources
                         : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
                     timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
-                    extUrlQueryInfoController.createFinalQueryStrings(manifest);
                 })
                 .catch((e) => {
                     _handleCompositionFailure(e, isInitialUpdate && !activeStream, updateSessionId);

@@ -1185,12 +1185,13 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is
  * still processed before downloading the next manifest once the minimumUpdatePeriod time has.
  * @property {number} [liveContentPendingTimeoutInSeconds=Infinity]
- * For live streams whose MPD does not list all of its content yet, the maximum time in seconds dash.js keeps refreshing
- * the MPD at its minimumUpdatePeriod before playback starts. The content is pending if the last Period has no
- * AdaptationSet, or one of its video or audio AdaptationSets has no Representation or a SegmentTimeline without S
- * element.
+ * For live streams whose MPD does not list its content yet, the maximum time in seconds dash.js keeps refreshing the
+ * MPD at its minimumUpdatePeriod before playback starts. The content is listed once a Period has, for video and for
+ * audio if it has such AdaptationSets, at least one supported AdaptationSet with a Representation whose
+ * SegmentTimeline has an S element. Alternatives that are still empty, e.g. another audio language, do not delay the
+ * start.
  *
- * Playback starts as soon as an MPD update lists all content. If none does within this time, an error with code
+ * Playback starts as soon as an MPD update lists the content. If none does within this time, an error with code
  * MANIFEST_ERROR_ID_NOSTREAMS_CODE (32) is raised. By default, and for any value other than a finite number >= 0,
  * dash.js waits without limit. An MPD without minimumUpdatePeriod is never updated, so the error is raised at once.
  * @property {number} [liveUpdateTimeThresholdInMilliseconds=0]

@@ -49,16 +49,16 @@ describe('DashManifestModel - getIsContentPending', function () {
         expect(dashManifestModel.getIsContentPending(parse(videoAdaptationSet('<SegmentTimeline/>')))).to.be.true;
     });
 
-    it('should return true if one AdaptationSet has segments and another has an empty SegmentTimeline', function () {
+    it('should return false if one video AdaptationSet has segments and an alternative one is still empty', function () {
         const manifest = parse(
             videoAdaptationSet('<SegmentTimeline><S t="0" d="30720"/></SegmentTimeline>', '1') +
             videoAdaptationSet('<SegmentTimeline/>', '2')
         );
 
-        expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
     });
 
-    it('should return true for a multi-period MPD whose newest Period has no content yet', function () {
+    it('should return false for a multi-period MPD whose newest Period has no content yet', function () {
         const manifest = dashParser.parse(`${MPD_OPEN}
             <Period id="0" start="PT0S">
                 ${videoAdaptationSet('<SegmentTimeline><S t="0" d="30720"/></SegmentTimeline>')}
@@ -66,7 +66,7 @@ describe('DashManifestModel - getIsContentPending', function () {
             <Period id="1" start="PT2S"/>
         </MPD>`);
 
-        expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
     });
 
     it('should return true for a multi-period MPD in which no Period has content yet', function () {
@@ -90,7 +90,7 @@ describe('DashManifestModel - getIsContentPending', function () {
         expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
     });
 
-    it('should return true if one Representation of an AdaptationSet has an empty SegmentTimeline', function () {
+    it('should return false if only one Representation of an AdaptationSet has an empty SegmentTimeline', function () {
         const manifest = parse(`<AdaptationSet id="1" contentType="video" mimeType="video/mp4">
                 <Representation id="v1" bandwidth="500000">
                     <SegmentTemplate timescale="1000" media="$RepresentationID$/$Time$.m4s">
@@ -102,7 +102,7 @@ describe('DashManifestModel - getIsContentPending', function () {
                 </Representation>
             </AdaptationSet>`);
 
-        expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
     });
 
     it('should return false if the newest Period lists all content and an older one does not', function () {
@@ -124,6 +124,43 @@ describe('DashManifestModel - getIsContentPending', function () {
             </AdaptationSet>`);
 
         expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
+    });
+
+    it('should return false if one of two audio AdaptationSets and video have segments', function () {
+        const audio = (lang, segmentTimeline) => `<AdaptationSet contentType="audio" mimeType="audio/mp4" lang="${lang}">
+                <SegmentTemplate timescale="48000" media="$RepresentationID$/$Time$.m4s">${segmentTimeline}</SegmentTemplate>
+                <Representation id="a${lang}" bandwidth="128000"/>
+            </AdaptationSet>`;
+        const manifest = parse(videoAdaptationSet('<SegmentTimeline><S t="0" d="30720"/></SegmentTimeline>') +
+            audio('en', '<SegmentTimeline><S t="0" d="96000"/></SegmentTimeline>') +
+            audio('de', '<SegmentTimeline/>'));
+
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
+    });
+
+    it('should ignore an AdaptationSet without Representation that is neither video nor audio', function () {
+        const manifest = parse(videoAdaptationSet('<SegmentTimeline><S t="0" d="30720"/></SegmentTimeline>') +
+            '<AdaptationSet id="2" mimeType="application/x-metadata"/>');
+
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
+    });
+
+    it('should use the SegmentTimeline of the AdaptationSet if the Representation has none, e.g. after a patch', function () {
+        const patchedManifest = (sElements) => ({
+            type: 'dynamic',
+            Period: [{
+                id: '0',
+                AdaptationSet: [{
+                    contentType: 'video',
+                    mimeType: 'video/mp4',
+                    SegmentTemplate: { SegmentTimeline: { S: sElements } },
+                    Representation: [{ id: 'v1', bandwidth: 500000 }]
+                }]
+            }]
+        });
+
+        expect(dashManifestModel.getIsContentPending(patchedManifest([]))).to.be.true;
+        expect(dashManifestModel.getIsContentPending(patchedManifest([{ t: 0, d: 2 }]))).to.be.false;
     });
 
     it('should return false for a SegmentTimeline with segments', function () {

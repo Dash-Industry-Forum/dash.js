@@ -10,6 +10,7 @@ import ManifestModelMock from '../../mocks/ManifestModelMock.js';
 import ManifestLoaderMock from '../../mocks/ManifestLoaderMock.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import ContentSteeringControllerMock from '../../mocks/ContentSteeringControllerMock.js';
+import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 
 import chai from 'chai';
 import sinon from 'sinon';
@@ -454,6 +455,36 @@ describe('ManifestUpdater', function () {
 
             clock.tick(REFRESH_DELAY_S * 1000);
             expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should keep refreshing on a pause before playback of a stream whose content was pending started', function () {
+            settings.update({ streaming: { scheduling: { scheduleWhilePaused: false } } });
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
+
+            clock.tick(REFRESH_DELAY_S * 1000);
+
+            expect(loadStub.calledOnce).to.be.true;
+            settings.reset();
+        });
+
+        it('should keep the current MPD on a response without content if external subtitles are added', function () {
+            const updatedSpy = sinon.spy();
+            eventBus.on(Events.MANIFEST_UPDATED, updatedSpy);
+            manifestUpdater.setConfig({
+                customParametersModel: { getExternalSubtitles: () => [{ id: 'sub', periodId: null }] }
+            });
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+
+            try {
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: null });
+
+                expect(updatedSpy.calledOnce).to.be.true;
+            } finally {
+                eventBus.off(Events.MANIFEST_UPDATED, updatedSpy);
+                manifestUpdater.setConfig({ customParametersModel: CustomParametersModel(context).getInstance() });
+            }
         });
 
         it('should stop refreshing on pause once playback of a stream whose content was pending started', function () {

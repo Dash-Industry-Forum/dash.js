@@ -297,7 +297,10 @@ function ManifestUpdater() {
     function _onManifestLoaded(e) {
         if (!e.error) {
             const manifest = e.manifest;
-            _addExternalElements(manifest);
+            // A response without content (HTTP 204) has no manifest, the current one stays valid
+            if (manifest) {
+                _addExternalElements(manifest);
+            }
             _update(manifest);
         } else {
             if (e.error.code === Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE) {
@@ -357,7 +360,8 @@ function ManifestUpdater() {
     function _onPlaybackPaused(/*e*/) {
         isPaused = !settings.get().streaming.scheduling.scheduleWhilePaused;
 
-        if (isPaused) {
+        // Before playback started, e.g. if autoplay is blocked, keep refreshing an MPD whose content was pending
+        if (isPaused && !isRefreshingBeforePlaybackStart) {
             _stopManifestRefreshTimer();
         }
     }

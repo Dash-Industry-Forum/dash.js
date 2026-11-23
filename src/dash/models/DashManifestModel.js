@@ -539,10 +539,12 @@ function DashManifestModel() {
     }
 
     /**
-     * Checks if a dynamic MPD does not list all of its content yet, e.g. a live presentation whose packager has not
-     * written the first segment of each media type. Playback starts at the live edge in the last Period, so only that
-     * Period is checked: it has no AdaptationSet, or one of its AdaptationSets has no Representation or a
-     * Representation whose SegmentTimeline has no S element.
+     * Checks if a dynamic MPD does not list its content yet, e.g. a live presentation whose packager has not written
+     * the first segment of each media type. The content is listed if a Period has content for each of its media
+     * types: for video and for audio, if the Period has such AdaptationSets, at least one of them has a Representation
+     * with content. A Representation has no content if its SegmentTimeline has no S element. Alternative
+     * AdaptationSets and Representations that are still empty, and Periods without content, e.g. one announced for the
+     * future, are ignored. Call it after unsupported AdaptationSets and Representations have been filtered.
      * @param {object} manifest
      * @returns {boolean}
      */
@@ -551,27 +553,38 @@ function DashManifestModel() {
             return false;
         }
         const periods = manifest[DashConstants.PERIOD] || [];
-        return periods.length === 0 || !_hasAllContent(periods[periods.length - 1]);
+        return !periods.some(_hasContentForEachMediaType);
     }
 
-    function _hasAllContent(period) {
+    function _hasContentForEachMediaType(period) {
         const adaptationSets = period[DashConstants.ADAPTATION_SET] || [];
-        // Subtitles and thumbnails do not start playback on their own and may be published later. Check them only if
-        // the Period has nothing else.
+        const hasContent = (adaptationSet) => _adaptationSetHasContent(period, adaptationSet);
+        const adaptationSetsPerType = [Constants.VIDEO, Constants.AUDIO]
+            .map((type) => adaptationSets.filter((adaptationSet) => getIsTypeOf(adaptationSet, type)))
+            .filter((adaptationSetsOfType) => adaptationSetsOfType.length > 0);
+        if (adaptationSetsPerType.length > 0) {
+            return adaptationSetsPerType.every((adaptationSetsOfType) => adaptationSetsOfType.some(hasContent));
+        }
+        // No video or audio, e.g. muxed content. Subtitles and thumbnails count only if there is nothing else, a
+        // subtitle without SegmentTimeline (e.g. a sidecar file added by addExternalSubtitle) always looks available.
         const mediaAdaptationSets = adaptationSets.filter((adaptationSet) => {
             return !getIsText(adaptationSet) && !getIsImage(adaptationSet);
         });
-        const adaptationSetsToCheck = mediaAdaptationSets.length > 0 ? mediaAdaptationSets : adaptationSets;
-        return adaptationSetsToCheck.length > 0 && adaptationSetsToCheck.every((adaptationSet) => {
-            const representations = adaptationSet[DashConstants.REPRESENTATION] || [];
-            return representations.length > 0 &&
-                representations.every((representation) => !_hasEmptySegmentTimeline(representation));
+        return (mediaAdaptationSets.length > 0 ? mediaAdaptationSets : adaptationSets).some(hasContent);
+    }
+
+    function _adaptationSetHasContent(period, adaptationSet) {
+        const representations = adaptationSet[DashConstants.REPRESENTATION] || [];
+        return representations.some((representation) => {
+            return !_hasEmptySegmentTimeline(period, adaptationSet, representation);
         });
     }
 
-    function _hasEmptySegmentTimeline(representation) {
-        const segmentInfo = representation[DashConstants.SEGMENT_TEMPLATE] ||
-            representation[DashConstants.SEGMENT_LIST];
+    function _hasEmptySegmentTimeline(period, adaptationSet, representation) {
+        // The parser copies the SegmentTemplate of the parent elements to the Representation, but an MPD patch does not
+        const segmentInfo = [representation, adaptationSet, period]
+            .map((element) => element[DashConstants.SEGMENT_TEMPLATE] || element[DashConstants.SEGMENT_LIST])
+            .find((element) => !!element);
         const segmentTimeline = segmentInfo ? segmentInfo[DashConstants.SEGMENT_TIMELINE] : null;
         if (!segmentTimeline) {
             return false;

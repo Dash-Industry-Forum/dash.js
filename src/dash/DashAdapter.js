@@ -700,7 +700,7 @@ function DashAdapter() {
     }
 
     /**
-     * Checks if a dynamic MPD does not list any content yet. See DashManifestModel.getIsContentPending.
+     * Checks if a dynamic MPD does not list its content yet. See DashManifestModel.getIsContentPending.
      * @param {object} externalManifest Optional manifest, the current one is used if omitted
      * @returns {boolean}
      * @memberOf module:DashAdapter
