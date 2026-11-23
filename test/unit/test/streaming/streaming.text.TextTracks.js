@@ -582,6 +582,30 @@ describe('TextTracks', function () {
             expect(exitEvents).to.deep.equal([cue.cueID]);
         });
 
+        it('should dispatch CUE_ENTER for an active cue that is not in the cue window of the selected track yet', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            // While paused the cue window is not refreshed, so the cue is not added to the native TextTrack
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 4}]);
+            videoModelMock.time = 1;
+            expect(deuTrack.cues.length).to.equal(0);
+
+            textTracks.setCurrentTrackIdx(1);
+
+            expect(enterEvents.length).to.equal(1);
+        });
+
+        it('should not dispatch CUE_ENTER when a track is selected at the end time of its cue', function () {
+            addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 2}]);
+            videoModelMock.time = 2;
+
+            textTracks.setCurrentTrackIdx(1);
+
+            expect(enterEvents.length).to.equal(0);
+        });
+
         it('should dispatch CUE_ENTER for the active cue when subtitles are enabled again mid-cue', function () {
             const [engTrack] = addTwoTracks();
 

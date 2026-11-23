@@ -1072,17 +1072,20 @@ function TextTracks(config) {
      * Dispatch it now, otherwise the application shows nothing until the next cue enters.
      */
     function _dispatchActiveCues(track) {
-        if (!track || !track.cues) {
+        const cueData = tracksCueData.get(track);
+
+        if (!cueData) {
             return;
         }
 
+        // The native TextTrack only contains the cues of the last cue window update, which does not run while
+        // paused, and no cues at all while the track is disabled. All cues of the track are in allCues.
         const time = videoModel.getTime();
-        for (let i = 0; i < track.cues.length; i++) {
-            const cue = track.cues[i];
-            if (cue.startTime <= time && time < cue.endTime && typeof cue.onenter === 'function') {
+        cueData.allCues.findCuesAtTime(time).forEach((cue) => {
+            if (typeof cue.onenter === 'function') {
                 cue.onenter();
             }
-        }
+        });
     }
 
     function setCueStyleOnTrack(track) {
