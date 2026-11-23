@@ -95,28 +95,48 @@ function getBaseRef() {
 }
 
 /**
- * @return {Map<string, number[]>} repo relative file -> line numbers added or modified since base
+ * Heuristic for files without coverage data, where istanbul cannot tell which lines are executable.
+ */
+function isCodeLine(text) {
+    const trimmed = text.trim();
+    return trimmed !== '' && !/^(\/\/|\/\*|\*)/.test(trimmed);
+}
+
+/**
+ * Lines added or modified since the merge base of baseRef and HEAD, so changes that exist only on
+ * the base side are not reported.
+ *
+ * @return {Map<string, {lines: number[], codeLines: number[]}>} repo relative file -> all changed
+ * line numbers, and those that are neither blank nor comment-only
  */
 function getChangedLines(baseRef) {
+    const args = ['diff', '-U0', '--no-color', '--no-ext-diff', '--src-prefix=a/', '--dst-prefix=b/',
+        `${baseRef}...HEAD`, '--', SOURCE_DIR];
     const result = new Map();
-    let lines = null;
+    let inHeader = false;
+    let current = null;
+    let nextLine = 0;
 
-    git(['diff', '-U0', '--no-color', '--no-ext-diff', baseRef, 'HEAD', '--', SOURCE_DIR]).split('\n').forEach((row) => {
-        if (row.startsWith('+++ ')) {
-            lines = null;
+    git(args).split('\n').forEach((row) => {
+        if (row.startsWith('diff --git ')) {
+            inHeader = true;
+            current = null;
+        } else if (inHeader && row.startsWith('+++ ')) {
+            // Only a header line here; in a hunk, "+++ " is an added line that starts with "++ "
             if (row.startsWith('+++ b/') && row.endsWith('.js')) {
-                lines = [];
-                result.set(row.slice(6), lines);
+                current = { lines: [], codeLines: [] };
+                result.set(row.slice(6), current);
             }
-        } else if (row.startsWith('@@') && lines) {
-            const match = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/.exec(row);
-            if (match) {
-                const start = Number(match[1]);
-                const count = match[2] === undefined ? 1 : Number(match[2]);
-                for (let i = 0; i < count; i++) {
-                    lines.push(start + i);
-                }
+        } else if (row.startsWith('@@')) {
+            inHeader = false;
+            const match = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(row);
+            nextLine = match ? Number(match[1]) : 0;
+        } else if (!inHeader && current && row.startsWith('+')) {
+            current.lines.push(nextLine);
+            if (isCodeLine(row.slice(1))) {
+                current.codeLines.push(nextLine);
             }
+            nextLine++;
         }
     });
 
@@ -166,14 +186,21 @@ function renderPatch(baseRef, lcov) {
     const rows = [];
     let executableTotal = 0;
     let coveredTotal = 0;
+    let unloadedFiles = 0;
 
     [...changed.keys()].sort().forEach((file) => {
         const fileCoverage = lcov.get(file);
         if (!fileCoverage) {
-            rows.push(`| \`${file}\` | not loaded by any test | |`);
+            // No test loads the file, so every changed line of code is uncovered
+            const codeLines = changed.get(file).codeLines;
+            if (codeLines.length > 0) {
+                executableTotal += codeLines.length;
+                unloadedFiles++;
+                rows.push(`| \`${file}\` | 0 / ${codeLines.length} (not loaded by any test) | ${toRanges(codeLines)} |`);
+            }
             return;
         }
-        const executable = changed.get(file).filter((line) => fileCoverage.has(line));
+        const executable = changed.get(file).lines.filter((line) => fileCoverage.has(line));
         if (executable.length === 0) {
             // Only comments, whitespace or declarations changed
             return;
@@ -194,7 +221,8 @@ function renderPatch(baseRef, lcov) {
     out.push(
         '',
         `**${coveredTotal} of ${executableTotal}** changed executable lines are covered` +
-        ` (${formatPct(coveredTotal, executableTotal)}).`,
+        ` (${formatPct(coveredTotal, executableTotal)})` +
+        (unloadedFiles > 0 ? `, including ${unloadedFiles} changed file(s) no test loads.` : '.'),
         '',
         '| File | Changed lines covered | Uncovered changed lines |',
         '| --- | ---: | --- |',
