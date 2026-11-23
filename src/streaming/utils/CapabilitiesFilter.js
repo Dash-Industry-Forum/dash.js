@@ -221,9 +221,10 @@ function CapabilitiesFilter() {
         const configurations = [];
 
         manifest.Period.forEach((period) => {
-            period.AdaptationSet.forEach((as) => {
+            // A Period may have no AdaptationSet and an AdaptationSet no Representation, e.g. in a live MPD update
+            (period.AdaptationSet || []).forEach((as) => {
                 if (adapter.getIsTypeOf(as, type)) {
-                    as.Representation.forEach((rep, i) => {
+                    (as.Representation || []).forEach((rep, i) => {
                         const codec = adapter.getCodec(as, i, false);
                         _processCodecToCheck(type, rep, codec, configurationsSet, configurations);
 
@@ -513,6 +514,9 @@ function CapabilitiesFilter() {
         }
 
         manifest.Period.forEach((period) => {
+            if (!period.AdaptationSet) {
+                return;
+            }
             period.AdaptationSet = period.AdaptationSet.filter((as) => {
 
                 if (!as.Representation || as.Representation.length === 0) {
@@ -601,7 +605,7 @@ function CapabilitiesFilter() {
             if (period.Preselection) {
                 period.Preselection = period.Preselection.filter((prsl) => {
                     const prslComponents = String(prsl.preselectionComponents).split(' ');
-                    const adaptationSetIds = period.AdaptationSet.map(as => {
+                    const adaptationSetIds = (period.AdaptationSet || []).map(as => {
                         return as.id
                     });
                     return prslComponents.every(c => {

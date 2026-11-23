@@ -52,7 +52,7 @@ function ManifestUpdater() {
         customParametersModel,
         errHandler,
         instance,
-        isContentPending,
+        isRefreshingBeforePlaybackStart,
         isPaused,
         isStopped,
         isUpdating,
@@ -123,7 +123,7 @@ function ManifestUpdater() {
         isUpdating = false;
         isPaused = true;
         isStopped = false;
-        isContentPending = false;
+        isRefreshingBeforePlaybackStart = false;
         _stopManifestRefreshTimer();
     }
 
@@ -278,13 +278,13 @@ function ManifestUpdater() {
         eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
         logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
 
-        if (!isPaused) {
+        if (!isPaused || isRefreshingBeforePlaybackStart) {
             startManifestRefreshTimer();
         }
     }
 
     function _onRefreshTimer() {
-        if (isPaused && !isContentPending) {
+        if (isPaused && !isRefreshingBeforePlaybackStart) {
             return;
         }
         if (isUpdating) {
@@ -302,10 +302,11 @@ function ManifestUpdater() {
         } else {
             if (e.error.code === Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE) {
                 errHandler.error(e.error);
-                return;
             }
-            // While waiting for content, a failed download must not end the refreshes before playback started.
-            if (isContentPending) {
+            // Before playback of a stream whose content was pending started, a failed download or an MPD that can not
+            // be parsed, e.g. because the packager is still writing it, must not end the refreshes. While no content is
+            // listed, StreamController limits the retries with liveContentPendingTimeoutInSeconds.
+            if (isRefreshingBeforePlaybackStart) {
                 isUpdating = false;
                 startManifestRefreshTimer();
             }
@@ -349,6 +350,7 @@ function ManifestUpdater() {
 
     function _onPlaybackStarted(/*e*/) {
         isPaused = false;
+        isRefreshingBeforePlaybackStart = false;
         startManifestRefreshTimer();
     }
 
@@ -363,23 +365,16 @@ function ManifestUpdater() {
     function _onStreamsComposed(/*e*/) {
         // When streams are ready we can consider manifest update completed. Resolve the update promise.
         isUpdating = false;
-
-        // The MPD lists content now. Before playback started, refreshes wait for PLAYBACK_STARTED again.
-        if (isContentPending) {
-            isContentPending = false;
-            if (isPaused) {
-                _stopManifestRefreshTimer();
-            }
-        }
     }
 
     /**
      * The MPD of a live stream does not list any content yet, so no stream could be composed and playback can not
-     * start. Keep refreshing the MPD at its update period, also before playback started, until it lists content.
+     * start. Keep refreshing the MPD at its update period, also before playback started. Once it lists content, its
+     * first segments are just being published, so keep refreshing until playback started, e.g. if autoplay is blocked.
      * @private
      */
     function _onManifestContentPending() {
-        isContentPending = true;
+        isRefreshingBeforePlaybackStart = true;
         isUpdating = false;
         startManifestRefreshTimer();
     }

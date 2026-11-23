@@ -1,6 +1,7 @@
 import ManifestUpdater from './../../../../src/streaming/ManifestUpdater.js';
 import Events from '../../../../src/core/events/Events.js';
 import EventBus from '../../../../src/core/EventBus.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import Errors from '../../../../src/core/errors/Errors.js';
 import Settings from '../../../../src/core/Settings.js';
 import DashConstants from '../../../../src/dash/constants/DashConstants.js';
@@ -406,13 +407,27 @@ describe('ManifestUpdater', function () {
             expect(loadStub.calledTwice).to.be.true;
         });
 
-        it('should stop refreshing while content is pending if the MPD could not be parsed', function () {
+        it('should report a parsing failure and keep refreshing while content is pending', function () {
+            errHandlerMock.reset();
             eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
             clock.tick(REFRESH_DELAY_S * 1000);
 
             eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
                 error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE }
             });
+            expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE);
+            expect(manifestUpdater.getIsUpdating()).to.be.false;
+
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should not refresh before playback started after a parsing failure if content is not pending', function () {
+            manifestUpdater.refreshManifest();
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE }
+            });
+
             clock.tick(REFRESH_DELAY_S * 1000 * 3);
 
             expect(loadStub.calledOnce).to.be.true;
@@ -429,13 +444,29 @@ describe('ManifestUpdater', function () {
             expect(loadStub.calledOnce).to.be.true;
         });
 
-        it('should stop refreshing before playback started once the streams have been composed', function () {
+        it('should keep refreshing before playback started once the streams have been composed', function () {
+            eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
+            clock.tick(REFRESH_DELAY_S * 1000);
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                manifest: { type: DashConstants.DYNAMIC, url: 'http://example.com/manifest.mpd', loadedTime: new Date() }
+            });
+            eventBus.trigger(Events.STREAMS_COMPOSED);
+
+            clock.tick(REFRESH_DELAY_S * 1000);
+            expect(loadStub.calledTwice).to.be.true;
+        });
+
+        it('should stop refreshing on pause once playback of a stream whose content was pending started', function () {
+            settings.update({ streaming: { scheduling: { scheduleWhilePaused: false } } });
             eventBus.trigger(Events.MANIFEST_CONTENT_PENDING);
             eventBus.trigger(Events.STREAMS_COMPOSED);
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
 
             clock.tick(REFRESH_DELAY_S * 1000 * 3);
 
             expect(loadStub.called).to.be.false;
+            settings.reset();
         });
     });
 });

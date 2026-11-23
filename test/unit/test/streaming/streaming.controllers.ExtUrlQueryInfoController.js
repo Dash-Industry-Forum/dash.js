@@ -10,6 +10,18 @@ describe('ExtUrlQueryInfoController', () => {
         extUrlQueryInfoController = ExtUrlQueryInfoController({}).getInstance();
     });
 
+    describe('Periods and AdaptationSets without children', () => {
+
+        it('should not throw for a Period without AdaptationSet and an AdaptationSet without Representation', () => {
+            const manifest = {
+                url: 'http://manifesturl.com/Manifest.mpd',
+                Period: [{ AdaptationSet: [{}] }, {}]
+            };
+
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings(manifest)).to.not.throw();
+        });
+    });
+
     describe('complete manifest tests', () => {
 
         let manifest = {

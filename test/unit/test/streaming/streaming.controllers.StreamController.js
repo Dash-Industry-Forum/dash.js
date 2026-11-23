@@ -601,6 +601,31 @@ describe('StreamController', function () {
                     }, 0);
                 });
 
+                it('should raise an error event if the switch to the first stream fails', function (done) {
+                    errHandlerMock.reset();
+                    let switchAttempts = 0;
+                    const throwingListener = () => {
+                        switchAttempts++;
+                        throw new Error('initial stream switch failed');
+                    };
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                    eventBus.on(Events.INITIAL_STREAM_SWITCH, throwingListener);
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+
+                    setTimeout(() => {
+                        eventBus.off(Events.INITIAL_STREAM_SWITCH, throwingListener);
+                        try {
+                            expect(switchAttempts).to.equal(1);
+                            expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE);
+                            done();
+                        } catch (e) {
+                            done(e);
+                        }
+                    }, 0);
+                });
+
                 it('should not raise an error for the first composition once the stream is active', function (done) {
                     errHandlerMock.reset();
                     const onUnhandledRejection = (event) => event.preventDefault();

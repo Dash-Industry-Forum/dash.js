@@ -93,6 +93,32 @@ describe('DashManifestModel - getIsContentPending', function () {
         expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
     });
 
+    it('should return true for an empty video SegmentTimeline next to a sidecar subtitle', function () {
+        const manifest = parse(videoAdaptationSet('<SegmentTimeline/>') +
+            `<AdaptationSet id="2" contentType="text" mimeType="text/vtt" lang="en">
+                <Representation id="t1" bandwidth="256"><BaseURL>subs/en.vtt</BaseURL></Representation>
+            </AdaptationSet>`);
+
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
+    });
+
+    it('should return true for an empty video SegmentTimeline next to a SegmentBase subtitle', function () {
+        const manifest = parse(videoAdaptationSet('<SegmentTimeline/>') +
+            `<AdaptationSet id="2" contentType="text" mimeType="application/mp4" codecs="stpp">
+                <Representation id="t1" bandwidth="256"><BaseURL>subs.mp4</BaseURL><SegmentBase indexRange="0-100"/></Representation>
+            </AdaptationSet>`);
+
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.true;
+    });
+
+    it('should return false for a Period that only has a subtitle with content', function () {
+        const manifest = parse(`<AdaptationSet id="1" contentType="text" mimeType="text/vtt">
+                <Representation id="t1" bandwidth="256"><BaseURL>subs/en.vtt</BaseURL></Representation>
+            </AdaptationSet>`);
+
+        expect(dashManifestModel.getIsContentPending(manifest)).to.be.false;
+    });
+
     it('should return false for a static MPD without AdaptationSet', function () {
         const manifest = dashParser.parse('<MPD type="static"><Period id="0"/></MPD>');
 

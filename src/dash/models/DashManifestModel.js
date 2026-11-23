@@ -556,7 +556,13 @@ function DashManifestModel() {
 
     function _hasContent(period) {
         const adaptationSets = period[DashConstants.ADAPTATION_SET] || [];
-        return adaptationSets.some((adaptationSet) => {
+        // Subtitles and thumbnails do not start playback on their own, and a subtitle without SegmentTimeline (e.g. a
+        // sidecar file added by addExternalSubtitle) always looks available. Count them only if there is nothing else.
+        const mediaAdaptationSets = adaptationSets.filter((adaptationSet) => {
+            return !getIsText(adaptationSet) && !getIsImage(adaptationSet);
+        });
+        const adaptationSetsToCheck = mediaAdaptationSets.length > 0 ? mediaAdaptationSets : adaptationSets;
+        return adaptationSetsToCheck.some((adaptationSet) => {
             const representations = adaptationSet[DashConstants.REPRESENTATION] || [];
             return representations.some((representation) => !_hasEmptySegmentTimeline(representation));
         });

@@ -461,7 +461,11 @@ function StreamController() {
             }
 
             // Apply content steering
+            // A failed content steering request does not stop the start. A failure of the start itself rejects.
             _applyContentSteeringBeforeStart()
+                .catch((e) => {
+                    logger.error(e);
+                })
                 .then(() => {
                     const manifest = manifestModel.getValue();
                     if (manifest) {
@@ -470,11 +474,7 @@ function StreamController() {
                     _calculateStartTimeAndSwitchStream()
                     resolve();
                 })
-                .catch((e) => {
-                    logger.error(e);
-                    _calculateStartTimeAndSwitchStream();
-                    resolve();
-                })
+                .catch(reject)
         } catch (e) {
             reject(e);
         }

@@ -134,7 +134,7 @@ function ExtUrlQueryInfoController() {
             };
             _generateQueryParams(periodObject, period, mpdUrlQuery, mpdQueryStringInformation, DashConstants.PERIOD);
 
-            period.AdaptationSet.forEach((adaptationSet) => {
+            (period.AdaptationSet || []).forEach((adaptationSet) => {
                 const adaptationObject = {
                     representation: []
                 };
@@ -146,7 +146,7 @@ function ExtUrlQueryInfoController() {
                     DashConstants.ADAPTATION_SET
                 );
 
-                adaptationSet.Representation.forEach((representation) => {
+                (adaptationSet.Representation || []).forEach((representation) => {
                     const representationObject = {};
                     _generateQueryParams(
                         representationObject,
