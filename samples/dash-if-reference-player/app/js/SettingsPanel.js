@@ -54,6 +54,8 @@ export class SettingsPanel {
         this._openDetails = new Set();
         this._rows = new Map();
         this._categoryBadges = new Map();
+        // True while a row applies its own value, see _onSettingsChanged()
+        this._changingFromRow = false;
     }
 
     init() {
@@ -604,7 +606,7 @@ export class SettingsPanel {
             } else if (trigger.dataset.action === 'reset') {
                 const entry = this._rows.get(trigger.closest('.setting-row').dataset.path);
                 this._clearError(entry);
-                this.controller.resetSetting(entry.descriptor.path);
+                this._applyFromRow(() => this.controller.resetSetting(entry.descriptor.path));
             }
         });
     }
@@ -647,7 +649,8 @@ export class SettingsPanel {
     _commit(entry) {
         const { descriptor, input } = entry;
         const raw = input.type === 'checkbox' ? input.checked : input.value;
-        const result = parseInput(descriptor, raw);
+        // A number field reports text it cannot parse ("3e", "1-") as '', which would read as "use the default"
+        const result = input.validity?.badInput ? { ok: false, error: 'Enter a number.' } : parseInput(descriptor, raw);
 
         if (!result.ok) {
             entry.row.classList.add('has-error');
@@ -657,7 +660,16 @@ export class SettingsPanel {
         }
 
         this._clearError(entry);
-        this.controller.setValue(descriptor.path, result.value);
+        this._applyFromRow(() => this.controller.setValue(descriptor.path, result.value));
+    }
+
+    _applyFromRow(apply) {
+        this._changingFromRow = true;
+        try {
+            apply();
+        } finally {
+            this._changingFromRow = false;
+        }
     }
 
     _clearError(entry) {
@@ -694,8 +706,11 @@ export class SettingsPanel {
     }
 
     _onSettingsChanged() {
-        if (this._filter === FILTERS.MODIFIED && !this._query) {
-            // Which rows are listed depends on what is modified
+        // Which rows the Modified view lists depends on what is modified. A change made in a row
+        // updates the rows in place instead: rebuilding the list would destroy the focused control,
+        // and a row set back to its default would vanish while it is in use. The list catches up
+        // on the next render (filter, search, or a change from outside the rows).
+        if (this._filter === FILTERS.MODIFIED && !this._query && !this._changingFromRow) {
             this.render();
             return;
         }

@@ -291,6 +291,41 @@ describe('Reference Player - SettingsPanel', function () {
             expect(filterCount('modified')).to.equal('2');
         });
 
+        it('should keep the focused control when a row changes a setting in the Modified view', function () {
+            settingsController.setValue('streaming.buffer.stallThreshold', 0.5);
+            settingsController.setValue('streaming.gaps.jumpGaps', false);
+            selectFilter('modified');
+            settingsPanel.open();
+
+            const field = input('streaming.buffer.stallThreshold');
+            field.focus();
+            expect(document.activeElement).to.equal(field);
+            change('streaming.buffer.stallThreshold', '0.7');
+
+            expect(player.getSettings().streaming.buffer.stallThreshold).to.equal(0.7);
+            expect(input('streaming.buffer.stallThreshold')).to.equal(field);
+            expect(document.activeElement).to.equal(field);
+        });
+
+        it('should keep a row set back to its default listed until the next render', function () {
+            settingsController.setValue('streaming.gaps.jumpGaps', false);
+            selectFilter('modified');
+
+            change('streaming.gaps.jumpGaps', true);
+            expect(listedPaths()).to.deep.equal(['streaming.gaps.jumpGaps']);
+            expect(row('streaming.gaps.jumpGaps').classList.contains('is-modified')).to.be.false;
+            expect(filterCount('modified')).to.equal('0');
+
+            selectFilter('modified');
+            expect(listedPaths()).to.deep.equal([]);
+        });
+
+        it('should list settings changed outside the rows in the Modified view', function () {
+            selectFilter('modified');
+            settingsController.setValue('streaming.buffer.stallThreshold', 0.5);
+            expect(listedPaths()).to.deep.equal(['streaming.buffer.stallThreshold']);
+        });
+
         it('should say so when nothing is modified', function () {
             selectFilter('modified');
             expect(testContainer.querySelector('.settings-empty').textContent).to.contain('No setting differs');
@@ -343,6 +378,20 @@ describe('Reference Player - SettingsPanel', function () {
             change('streaming.delay.liveDelay', '');
             expect(player.getSettings().streaming.delay.liveDelay).to.be.NaN;
             expect(row('streaming.delay.liveDelay').classList.contains('is-modified')).to.be.false;
+        });
+
+        it('should not apply number text the browser cannot parse', function () {
+            change('streaming.delay.liveDelay', '5');
+            const field = input('streaming.delay.liveDelay');
+            // An <input type="number"> reports unparseable text such as "3e" as '' with validity.badInput set
+            field.value = '';
+            Object.defineProperty(field, 'validity', { value: { badInput: true } });
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+
+            expect(player.getSettings().streaming.delay.liveDelay).to.equal(5);
+            expect(row('streaming.delay.liveDelay').classList.contains('has-error')).to.be.true;
+            expect(row('streaming.delay.liveDelay').querySelector('.setting-error').textContent)
+                .to.contain('Enter a number.');
         });
 
         it('should mark a changed setting as modified and count it', function () {
