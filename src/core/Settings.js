@@ -586,7 +586,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 
 /**
  * @typedef {Object} CachingInfoSettings
- * @property {boolean} [enable]
+ * @property {boolean} [enabled]
  * Enable or disable the caching feature.
  * @property {number} [ttl]
  * Time to live.
@@ -1159,7 +1159,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 
 /**
  * @typedef {Object} Metrics
- * @property {number} [metricsMaxListDepth=100]
+ * @property {number} [maxListDepth=100]
  * Maximum number of metrics that are persisted per type.
  */
 
