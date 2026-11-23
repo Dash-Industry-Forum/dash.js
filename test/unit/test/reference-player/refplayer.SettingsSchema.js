@@ -22,9 +22,11 @@ import {
     listLeaves,
     matchesQuery,
     parseInput,
+    parseUrlValue,
     setValueAtPath,
     SETTING_TYPES,
-    toJsLiteral
+    toJsLiteral,
+    validateValue
 } from '../../../../samples/dash-if-reference-player/app/js/SettingsSchema.js';
 
 import { expect } from 'chai';
@@ -210,6 +212,63 @@ describe('Reference Player - SettingsSchema', function () {
             const descriptor = byPath.get('streaming.capabilities.supportedEssentialProperties');
             expect(descriptor.type).to.equal(SETTING_TYPES.READONLY);
             expect(parseInput(descriptor, '[]').ok).to.be.false;
+        });
+    });
+
+    describe('parseUrlValue()', function () {
+
+        it('should keep a string that looks like a number or boolean as a string', function () {
+            expect(parseUrlValue(byPath.get('streaming.cmcd.sid'), '12345')).to.deep.equal({ ok: true, value: '12345' });
+            expect(parseUrlValue(byPath.get('streaming.cmcd.sid'), 'true')).to.deep.equal({ ok: true, value: 'true' });
+        });
+
+        it('should only accept spelled-out booleans', function () {
+            const jumpGaps = byPath.get('streaming.gaps.jumpGaps');
+            expect(parseUrlValue(jumpGaps, 'false')).to.deep.equal({ ok: true, value: false });
+            expect(parseUrlValue(jumpGaps, 'yes').ok).to.be.false;
+            const fastSwitch = byPath.get('streaming.buffer.fastSwitchEnabled');
+            expect(parseUrlValue(fastSwitch, 'null')).to.deep.equal({ ok: true, value: null });
+            expect(parseUrlValue(fastSwitch, 'maybe').ok).to.be.false;
+        });
+
+        it('should parse numbers, enums, lists and JSON like parseInput()', function () {
+            expect(parseUrlValue(byPath.get('streaming.buffer.stallThreshold'), '0.5'))
+                .to.deep.equal({ ok: true, value: 0.5 });
+            expect(parseUrlValue(byPath.get('streaming.buffer.stallThreshold'), 'abc').ok).to.be.false;
+            expect(parseUrlValue(byPath.get('debug.logLevel'), '4')).to.deep.equal({ ok: true, value: 4 });
+            expect(parseUrlValue(byPath.get('streaming.cmcd.includeInRequests'), 'segment,mpd'))
+                .to.deep.equal({ ok: true, value: ['segment', 'mpd'] });
+            expect(parseUrlValue(byPath.get('streaming.cmcd.eventTargets'), '{"url":"x"}').ok).to.be.false;
+        });
+    });
+
+    describe('validateValue()', function () {
+
+        it('should accept values of the setting\'s type', function () {
+            expect(validateValue(byPath.get('streaming.gaps.jumpGaps'), false).ok).to.be.true;
+            expect(validateValue(byPath.get('streaming.buffer.fastSwitchEnabled'), null).ok).to.be.true;
+            expect(validateValue(byPath.get('streaming.buffer.stallThreshold'), 0.5).ok).to.be.true;
+            expect(validateValue(byPath.get('streaming.cmcd.sid'), '12345').ok).to.be.true;
+            expect(validateValue(byPath.get('debug.logLevel'), 4)).to.deep.equal({ ok: true, value: 4 });
+            expect(validateValue(byPath.get('streaming.cmcd.includeInRequests'), ['segment']).ok).to.be.true;
+            expect(validateValue(byPath.get('streaming.cmcd.eventTargets'), [{ url: 'x' }]).ok).to.be.true;
+        });
+
+        it('should reject values of another type', function () {
+            expect(validateValue(byPath.get('streaming.gaps.jumpGaps'), 'false').ok).to.be.false;
+            expect(validateValue(byPath.get('streaming.buffer.fastSwitchEnabled'), 1).ok).to.be.false;
+            expect(validateValue(byPath.get('streaming.buffer.stallThreshold'), '0.5').ok).to.be.false;
+            expect(validateValue(byPath.get('streaming.cmcd.sid'), 12345).ok).to.be.false;
+            expect(validateValue(byPath.get('debug.logLevel'), '4').ok).to.be.false;
+            expect(validateValue(byPath.get('streaming.cmcd.includeInRequests'), [1]).ok).to.be.false;
+            expect(validateValue(byPath.get('streaming.cmcd.eventTargets'), 'x').ok).to.be.false;
+            expect(validateValue(byPath.get('streaming.capabilities.supportedEssentialProperties'), []).ok).to.be.false;
+        });
+
+        it('should read null as the default when the default is null or NaN', function () {
+            expect(validateValue(byPath.get('streaming.delay.liveDelay'), null).value).to.be.NaN;
+            expect(validateValue(byPath.get('streaming.cmcd.sid'), null)).to.deep.equal({ ok: true, value: null });
+            expect(validateValue(byPath.get('streaming.buffer.stallThreshold'), null).ok).to.be.false;
         });
     });
 

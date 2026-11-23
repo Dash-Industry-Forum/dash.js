@@ -18,10 +18,11 @@ import {
     isPlainObject,
     isSameValue,
     listLeaves,
-    parseList,
+    parseUrlValue,
     setValueAtPath,
     SETTING_TYPES,
-    toJsLiteral
+    toJsLiteral,
+    validateValue
 } from './SettingsSchema.js';
 
 // URL parameters that are page options, not dash.js settings
@@ -150,27 +151,35 @@ export class SettingsController {
      * Reset everything to the defaults, then apply a partial settings object. Used by presets
      * and by JSON import, so the result never depends on what was set before.
      * @param {object} settingsObj
-     * @returns {{applied: number, unknown: string[]}}
+     * @returns {{applied: number, unknown: string[], invalid: string[]}} `unknown` lists the paths that
+     * name no editable setting, `invalid` the paths whose value does not have the setting's type.
+     * Neither is applied.
      */
     applySettings(settingsObj) {
         const accepted = {};
         const unknown = [];
+        const invalid = [];
         let applied = 0;
 
         for (const [path, value] of listLeaves(settingsObj)) {
-            if (this._isEditable(path)) {
-                setValueAtPath(accepted, path, cloneValue(value));
-                applied++;
-            } else {
+            if (!this._isEditable(path)) {
                 unknown.push(path);
+                continue;
             }
+            const result = validateValue(this._byPath.get(path), value);
+            if (!result.ok) {
+                invalid.push(path);
+                continue;
+            }
+            setValueAtPath(accepted, path, cloneValue(result.value));
+            applied++;
         }
 
         this._resetAllSilently();
         this.player.updateSettings(accepted);
         this._emitChange();
 
-        return { applied, unknown };
+        return { applied, unknown, invalid };
     }
 
     applyPreset(id) {
@@ -210,7 +219,7 @@ export class SettingsController {
 
     /**
      * @param {string} text - JSON as written by buildExportJson()
-     * @returns {{ok: true, applied: number, unknown: string[]}|{ok: false, error: string}}
+     * @returns {{ok: true, applied: number, unknown: string[], invalid: string[]}|{ok: false, error: string}}
      */
     importJson(text) {
         let parsed;
@@ -484,36 +493,8 @@ export class SettingsController {
     }
 
     _fromUrlValue(path, value) {
-        const descriptor = this._byPath.get(path);
-        if (descriptor && descriptor.type === SETTING_TYPES.LIST) {
-            return parseList(value);
-        }
-        if (descriptor && descriptor.type === SETTING_TYPES.JSON) {
-            try {
-                return JSON.parse(value);
-            } catch (e) {
-                // Not valid JSON — ignore this parameter
-                return undefined;
-            }
-        }
-        return this._coerceType(value);
-    }
-
-    _coerceType(value) {
-        if (value === 'true') {
-            return true;
-        }
-        if (value === 'false') {
-            return false;
-        }
-        if (value === 'null') {
-            return null;
-        }
-        const num = Number(value);
-        if (!isNaN(num) && value.trim() !== '') {
-            return num;
-        }
-        return value;
+        const result = parseUrlValue(this._byPath.get(path), value);
+        return result.ok ? result.value : undefined;
     }
 
     _copyText(text, message) {

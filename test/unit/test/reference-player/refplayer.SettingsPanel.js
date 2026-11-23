@@ -509,6 +509,41 @@ describe('Reference Player - SettingsPanel', function () {
         });
     });
 
+    describe('export', function () {
+
+        let downloads, originalClick;
+
+        beforeEach(function () {
+            downloads = [];
+            originalClick = HTMLAnchorElement.prototype.click;
+            HTMLAnchorElement.prototype.click = function () {
+                downloads.push({ name: this.download, href: this.href });
+            };
+        });
+
+        afterEach(function () {
+            HTMLAnchorElement.prototype.click = originalClick;
+        });
+
+        it('should not download a file while nothing is modified, and say why', function () {
+            document.getElementById('settings-export').click();
+
+            expect(downloads).to.deep.equal([]);
+            expect(document.querySelector('.copy-notification').textContent).to.contain('Nothing to export');
+        });
+
+        it('should download the modified settings as a JSON file', async function () {
+            settingsController.setValue('streaming.buffer.stallThreshold', 0.5);
+            document.getElementById('settings-export').click();
+
+            expect(downloads.length).to.equal(1);
+            expect(downloads[0].name).to.equal('dashjs-settings.json');
+            // The URL has to outlive the click, or the browser saves an empty file
+            const text = await (await fetch(downloads[0].href)).text();
+            expect(JSON.parse(text)).to.deep.equal({ streaming: { buffer: { stallThreshold: 0.5 } } });
+        });
+    });
+
     describe('presets and reset all', function () {
 
         it('should list the presets and apply one', function () {

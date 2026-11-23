@@ -21,6 +21,7 @@ const FILTERS = { COMMON: 'common', ALL: 'all', MODIFIED: 'modified' };
 const FILTER_LABELS = { [FILTERS.COMMON]: 'Common', [FILTERS.ALL]: 'All', [FILTERS.MODIFIED]: 'Modified' };
 const OVERLAY_QUERY = '(max-width: 1199.98px)';
 const EXPORT_FILE_NAME = 'dashjs-settings.json';
+const EXPORT_URL_LIFETIME_MS = 10000;
 const LAYOUTS = { DRAWER: 'drawer', CLASSIC: 'classic' };
 const LAYOUT_STORAGE_KEY = 'rp-settings-layout';
 const PAGE_CATEGORY_PREFIX = 'page-';
@@ -239,14 +240,22 @@ export class SettingsPanel {
     }
 
     _export() {
+        // The file holds the modified settings only: without any it would be an empty object
+        if (this.controller.getModifiedPaths().length === 0) {
+            this.controller.showNotification('Nothing to export: no setting is modified');
+            return;
+        }
+
         const blob = new Blob([this.controller.buildExportJson()], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
         const link = el('a');
-        link.href = URL.createObjectURL(blob);
+        link.href = url;
         link.download = EXPORT_FILE_NAME;
         document.body.append(link);
         link.click();
         link.remove();
-        URL.revokeObjectURL(link.href);
+        // Some browsers start the download after the click returns: keep the URL alive until then
+        setTimeout(() => URL.revokeObjectURL(url), EXPORT_URL_LIFETIME_MS);
     }
 
     _import(text) {
@@ -258,8 +267,15 @@ export class SettingsPanel {
             this._setStatus(`Import failed. ${result.error}`, true);
             return;
         }
+        const ignored = [];
         if (result.unknown.length > 0) {
-            this._setStatus(`Imported ${result.applied} settings. Ignored unknown: ${result.unknown.join(', ')}`, true);
+            ignored.push(`Ignored unknown: ${result.unknown.join(', ')}.`);
+        }
+        if (result.invalid.length > 0) {
+            ignored.push(`Ignored values of the wrong type: ${result.invalid.join(', ')}.`);
+        }
+        if (ignored.length > 0) {
+            this._setStatus(`Imported ${result.applied} settings. ${ignored.join(' ')}`, true);
         } else {
             this.controller.showNotification(`Imported ${result.applied} settings`);
         }

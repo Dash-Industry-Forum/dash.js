@@ -10,6 +10,7 @@ import MediaPlayer from '../../../../src/streaming/MediaPlayer.js';
 import Settings from '../../../../src/core/Settings.js';
 import { SettingsController } from '../../../../samples/dash-if-reference-player/app/js/SettingsController.js';
 import { cloneValue } from '../../../../samples/dash-if-reference-player/app/js/SettingsSchema.js';
+import SETTINGS_PRESETS from '../../../../samples/dash-if-reference-player/app/data/settingsPresets.js';
 
 import { expect } from 'chai';
 
@@ -244,7 +245,7 @@ describe('Reference Player - SettingsController', function () {
             settingsController.setValue('streaming.gaps.jumpGaps', false);
             const result = settingsController.applySettings({ streaming: { delay: { liveDelay: 3 } } });
 
-            expect(result).to.deep.equal({ applied: 1, unknown: [] });
+            expect(result).to.deep.equal({ applied: 1, unknown: [], invalid: [] });
             expect(player.getSettings().streaming.gaps.jumpGaps).to.be.true;
             expect(settingsController.getModifiedPaths()).to.deep.equal(['streaming.delay.liveDelay']);
         });
@@ -257,6 +258,44 @@ describe('Reference Player - SettingsController', function () {
 
             expect(result.applied).to.equal(1);
             expect(result.unknown).to.have.members(['streaming.notASetting', 'unknownRoot.value']);
+        });
+
+        it('should report values of the wrong type instead of applying them', function () {
+            const result = settingsController.applySettings({
+                streaming: {
+                    delay: { liveDelay: '3' },
+                    buffer: { stallThreshold: 'abc', fastSwitchEnabled: 1 },
+                    gaps: { jumpGaps: 'false' },
+                    cmcd: { sid: 12345, mode: 'nope', includeInRequests: [1], eventTargets: 'x' },
+                    abr: { maxBitrate: { video: 5000 } }
+                }
+            });
+
+            expect(result.applied).to.equal(1);
+            expect(result.unknown).to.deep.equal([]);
+            expect(result.invalid).to.have.members([
+                'streaming.delay.liveDelay', 'streaming.buffer.stallThreshold', 'streaming.buffer.fastSwitchEnabled',
+                'streaming.gaps.jumpGaps', 'streaming.cmcd.sid', 'streaming.cmcd.mode',
+                'streaming.cmcd.includeInRequests', 'streaming.cmcd.eventTargets'
+            ]);
+            expect(settingsController.getModifiedPaths()).to.deep.equal(['streaming.abr.maxBitrate.video']);
+        });
+
+        it('should read null as the default for settings whose default is null or NaN', function () {
+            const result = settingsController.applySettings({
+                streaming: { delay: { liveDelay: null }, cmcd: { sid: null, rtp: null } }
+            });
+
+            expect(result).to.deep.equal({ applied: 3, unknown: [], invalid: [] });
+            expect(settingsController.getModifiedPaths()).to.deep.equal([]);
+        });
+
+        it('should apply every preset without rejecting a value', function () {
+            for (const preset of SETTINGS_PRESETS) {
+                const result = settingsController.applyPreset(preset.id);
+                expect(result.unknown, preset.id).to.deep.equal([]);
+                expect(result.invalid, preset.id).to.deep.equal([]);
+            }
         });
 
         it('should apply the low latency preset', function () {
@@ -293,7 +332,7 @@ describe('Reference Player - SettingsController', function () {
             settingsController.setValue('streaming.gaps.jumpGaps', false);
             const result = settingsController.importJson(exported);
 
-            expect(result).to.deep.equal({ ok: true, applied: 2, unknown: [] });
+            expect(result).to.deep.equal({ ok: true, applied: 2, unknown: [], invalid: [] });
             expect(settingsController.getModifiedPaths())
                 .to.have.members(['streaming.buffer.stallThreshold', 'streaming.cmcd.includeInRequests']);
         });
@@ -652,6 +691,32 @@ describe('Reference Player - SettingsController', function () {
             expect(cmcd.cid).to.equal('test-content');
             expect(cmcd.rtp).to.equal(5000);
             expect(cmcd.rtpSafetyFactor).to.equal(10);
+        });
+
+        it('should keep string settings as strings when they look like numbers or booleans', function () {
+            setUrlAndApply('streaming.cmcd.sid=12345&streaming.cmcd.cid=true&streaming.defaultSchemeIdUri.viewpoint=1e3');
+            const s = player.getSettings().streaming;
+            expect(s.cmcd.sid).to.equal('12345');
+            expect(s.cmcd.cid).to.equal('true');
+            expect(s.defaultSchemeIdUri.viewpoint).to.equal('1e3');
+        });
+
+        it('should skip URL values that do not fit the setting', function () {
+            const before = JSON.stringify(player.getSettings());
+            setUrlAndApply('streaming.buffer.stallThreshold=abc&streaming.gaps.jumpGaps=yes' +
+                '&streaming.buffer.fastSwitchEnabled=maybe&debug.logLevel=9&streaming.cmcd.eventTargets={"url":"x"}');
+
+            expect(JSON.stringify(player.getSettings())).to.equal(before);
+        });
+
+        it('should restore a string setting from a URL built by buildSettingsUrl()', function () {
+            settingsController.setValue('streaming.cmcd.sid', '12345');
+            const query = new URL(settingsController.buildSettingsUrl()).search.slice(1);
+
+            settingsController.resetAll();
+            setUrlAndApply(query);
+
+            expect(player.getSettings().streaming.cmcd.sid).to.equal('12345');
         });
 
         it('should split list settings from URL', function () {

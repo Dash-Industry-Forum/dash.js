@@ -299,6 +299,70 @@ export function parseInput(descriptor, raw) {
 }
 
 /**
+ * Turns the text of a settings URL parameter into a settings value. Same as parseInput(), but
+ * booleans have to be spelled out, so a typo is skipped instead of being read as false or null.
+ * @returns {{ok: true, value: *}|{ok: false, error: string}}
+ */
+export function parseUrlValue(descriptor, text) {
+    if (descriptor.type === SETTING_TYPES.BOOLEAN && text !== 'true' && text !== 'false') {
+        return { ok: false, error: 'Expected true or false.' };
+    }
+    if (descriptor.type === SETTING_TYPES.NULLABLE_BOOLEAN && !['true', 'false', 'null'].includes(text)) {
+        return { ok: false, error: 'Expected true, false or null.' };
+    }
+    return parseInput(descriptor, text);
+}
+
+/**
+ * Checks that a value from an imported file or a preset has the type of its setting.
+ * A null for a number or string whose default is null or NaN stands for that default, because
+ * JSON cannot hold NaN.
+ * @returns {{ok: true, value: *}|{ok: false, error: string}}
+ */
+export function validateValue(descriptor, value) {
+    const ok = { ok: true, value };
+
+    switch (descriptor.type) {
+        case SETTING_TYPES.BOOLEAN:
+            return typeof value === 'boolean' ? ok : { ok: false, error: 'Expected a boolean.' };
+
+        case SETTING_TYPES.NULLABLE_BOOLEAN:
+            return typeof value === 'boolean' || value === null ? ok : { ok: false, error: 'Expected a boolean or null.' };
+
+        case SETTING_TYPES.NUMBER:
+            if (value === null && descriptor.emptyIsDefault) {
+                return { ok: true, value: cloneValue(descriptor.defaultValue) };
+            }
+            return typeof value === 'number' ? ok : { ok: false, error: 'Expected a number.' };
+
+        case SETTING_TYPES.STRING:
+            if (value === null && descriptor.emptyIsDefault) {
+                return { ok: true, value: cloneValue(descriptor.defaultValue) };
+            }
+            return typeof value === 'string' ? ok : { ok: false, error: 'Expected a string.' };
+
+        case SETTING_TYPES.ENUM: {
+            const option = (descriptor.options || []).find((candidate) => isSameValue(candidate.value, value));
+            return option ? { ok: true, value: option.value } : { ok: false, error: 'Expected one of the listed values.' };
+        }
+
+        case SETTING_TYPES.LIST:
+            return Array.isArray(value) && value.every((item) => typeof item === 'string')
+                ? ok
+                : { ok: false, error: 'Expected an array of strings.' };
+
+        case SETTING_TYPES.JSON:
+            if (Array.isArray(descriptor.defaultValue) && !Array.isArray(value)) {
+                return { ok: false, error: 'Expected an array.' };
+            }
+            return ok;
+
+        default:
+            return { ok: false, error: 'This setting cannot be edited here.' };
+    }
+}
+
+/**
  * Turns a settings value into the text shown in its control.
  */
 export function formatValue(descriptor, value) {
