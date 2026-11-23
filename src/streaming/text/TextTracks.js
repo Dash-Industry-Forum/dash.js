@@ -35,8 +35,8 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import Utils from '../../core/Utils.js';
-import {CueIntervalTree} from './CueIntervalTree.js';
-import {renderHTML} from 'imsc';
+import { CueIntervalTree } from './CueIntervalTree.js';
+import { renderHTML } from 'imsc';
 
 const CUE_PROPS_TO_COMPARE = [
     'text',
@@ -84,6 +84,13 @@ function TextTracks(config) {
         resizeObserver,
         hasRequestAnimationFrame,
         currentCaptionEventCue;
+
+    /**
+     * Cues whose CUE_ENTER was dispatched and whose CUE_EXIT was not, i.e. the cues the application renders
+     * when streaming.text.dispatchForManualRendering is enabled.
+     * @type {Set<TextTrackCue>}
+     */
+    const dispatchedCues = new Set();
 
     /**
      * Data about cues for each track.
@@ -681,7 +688,7 @@ function TextTracks(config) {
 
             if (!isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                 if (dispatchForManualRendering) {
-                    cue = _handleCaptionEvents(currentItem, timeOffset);
+                    cue = _handleCaptionEvents(currentItem, timeOffset, trackIdx);
                 } else if (_isHTMLCue(currentItem) && captionContainer) {
                     cue = _handleHtmlCaption(currentItem, timeOffset, track)
                 } else if (currentItem.data) {
@@ -714,28 +721,61 @@ function TextTracks(config) {
         invalidateCueWindow();
     }
 
-    function _handleCaptionEvents(currentItem, timeOffset) {
+    function _handleCaptionEvents(currentItem, timeOffset, trackIdx) {
         let cue = _getCueInformation(currentItem, timeOffset)
 
         cue.onenter = function () {
+            // The cues of every track that is not disabled are added to their native TextTrack,
+            // so they keep firing after another track has been selected. Only the cues of the
+            // selected track may be dispatched, otherwise the application renders the cues of
+            // all tracks that have been selected during playback at the same time. This is the
+            // equivalent of the mode check the tracks rendered by dash.js itself are doing.
+            if (trackIdx !== currentTrackIdx) {
+                return;
+            }
+
+            // Selecting a track replays the enter event of its active cues, see _dispatchActiveCues
+            if (dispatchedCues.has(cue)) {
+                return;
+            }
+
             // HTML Tracks don't trigger the onexit event when a new cue is entered,
             // we need to manually trigger it
             if (_isHTMLCue(currentItem) && currentCaptionEventCue && currentCaptionEventCue.cueID !== cue.cueID) {
-                _triggerCueExit(currentCaptionEventCue);
+                _exitDispatchedCue(currentCaptionEventCue);
             }
             // We need to delete the type attribute to be able to dispatch via th event bus
             delete cue.type;
 
             currentCaptionEventCue = cue;
+            dispatchedCues.add(cue);
             _triggerCueEnter(cue);
         }
 
         cue.onexit = function () {
-            _triggerCueExit(cue);
-            currentCaptionEventCue = null;
+            _exitDispatchedCue(cue);
         }
 
         return cue;
+    }
+
+    /*
+     * Only dispatches CUE_EXIT for cues the application received a CUE_ENTER for, and only once per CUE_ENTER.
+     * A cue can end after it was already exited, e.g. because a cue of another track was selected in between.
+     */
+    function _exitDispatchedCue(cue) {
+        if (!dispatchedCues.delete(cue)) {
+            return;
+        }
+
+        if (currentCaptionEventCue === cue) {
+            currentCaptionEventCue = null;
+        }
+        _triggerCueExit(cue);
+    }
+
+    function _exitAllDispatchedCues() {
+        Array.from(dispatchedCues).forEach(_exitDispatchedCue);
     }
 
     function _triggerCueEnter(cue) {
@@ -1018,6 +1058,34 @@ function TextTracks(config) {
                 videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
             }
         }
+
+        if (settings.get().streaming.text.dispatchForManualRendering) {
+            // The application only renders the cues of the selected track
+            _exitAllDispatchedCues();
+            _dispatchActiveCues(track);
+        }
+    }
+
+    /*
+     * The enter event of a cue that became active while its track was not selected was not
+     * dispatched, and the native TextTrack does not fire it again once the track is selected.
+     * Dispatch it now, otherwise the application shows nothing until the next cue enters.
+     */
+    function _dispatchActiveCues(track) {
+        const cueData = tracksCueData.get(track);
+
+        if (!cueData) {
+            return;
+        }
+
+        // The native TextTrack only contains the cues of the last cue window update, which does not run while
+        // paused, and no cues at all while the track is disabled. All cues of the track are in allCues.
+        const time = videoModel.getTime();
+        cueData.allCues.findCuesAtTime(time).forEach((cue) => {
+            if (typeof cue.onenter === 'function') {
+                cue.onenter();
+            }
+        });
     }
 
     function setCueStyleOnTrack(track) {
@@ -1107,6 +1175,7 @@ function TextTracks(config) {
         }
         currentTrackIdx = -1;
         clearCaptionContainer.call(this);
+        _exitAllDispatchedCues();
 
         // Clear all track data
         tracksCueData.clear();
