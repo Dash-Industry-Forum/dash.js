@@ -177,6 +177,29 @@ describe('Reference Player - SettingsController', function () {
     // Modified state and reset
     // ---------------------------------------------------------------
 
+    describe('syncWithPlayer()', function () {
+
+        it('should notify listeners about a setting changed on the player directly', function () {
+            let calls = 0;
+            settingsController.onChange(() => calls++);
+            player.updateSettings({ streaming: { abr: { autoSwitchBitrate: { video: false } } } });
+
+            expect(settingsController.syncWithPlayer()).to.be.true;
+            expect(calls).to.equal(1);
+            expect(settingsController.syncWithPlayer()).to.be.false;
+            expect(calls).to.equal(1);
+        });
+
+        it('should not notify again about a change made through the controller', function () {
+            settingsController.setValue('streaming.gaps.jumpGaps', false);
+            let calls = 0;
+            settingsController.onChange(() => calls++);
+
+            expect(settingsController.syncWithPlayer()).to.be.false;
+            expect(calls).to.equal(0);
+        });
+    });
+
     describe('modified settings', function () {
 
         it('should report nothing as modified initially', function () {
@@ -307,6 +330,26 @@ describe('Reference Player - SettingsController', function () {
             expect(s.liveCatchup.enabled).to.be.true;
             expect(s.liveCatchup.playbackRate).to.deep.equal({ min: -0.1, max: 0.1 });
             expect(s.gaps.jumpGaps).to.be.true;
+        });
+
+        it('should keep the settings when nothing in the object can be applied', function () {
+            settingsController.setValue('streaming.gaps.jumpGaps', false);
+            let calls = 0;
+            settingsController.onChange(() => calls++);
+            const result = settingsController.applySettings({
+                items: { name: 'not a settings file' },
+                streaming: { delay: { liveDelay: 'soon' } }
+            });
+
+            expect(result).to.deep.equal({ applied: 0, unknown: ['items.name'], invalid: ['streaming.delay.liveDelay'] });
+            expect(player.getSettings().streaming.gaps.jumpGaps).to.be.false;
+            expect(calls).to.equal(0);
+        });
+
+        it('should still reset everything for an empty settings object', function () {
+            settingsController.setValue('streaming.gaps.jumpGaps', false);
+            settingsController.applySettings({});
+            expect(settingsController.getModifiedPaths()).to.deep.equal([]);
         });
 
         it('should return null for an unknown preset', function () {
@@ -442,6 +485,15 @@ describe('Reference Player - SettingsController', function () {
             expect(params.get('initLangAudio')).to.equal('en');
             expect(JSON.parse(atob(params.get('protData')))).to.deep.equal(protData);
         });
+
+        it('should write auto play and loop when they are switched off', function () {
+            document.getElementById('opt-autoplay').checked = false;
+            document.getElementById('opt-loop').checked = false;
+            const params = paramsOf(settingsController.buildSettingsUrl());
+
+            expect(params.get('autoplay')).to.equal('false');
+            expect(params.get('loop')).to.equal('false');
+        });
     });
 
     describe('applyFromUrl() - URL parameters', function () {
@@ -494,6 +546,22 @@ describe('Reference Player - SettingsController', function () {
         it('should set opt-loop checked and _loop from URL', function () {
             document.getElementById('opt-loop').checked = false;
             setUrlAndApply('loop=true');
+            expect(document.getElementById('opt-loop').checked).to.be.true;
+            expect(settingsController.loop).to.be.true;
+        });
+
+        it('should switch auto play and loop off from URL', function () {
+            setUrlAndApply('autoplay=false&loop=false');
+            expect(document.getElementById('opt-autoplay').checked).to.be.false;
+            expect(settingsController.autoPlay).to.be.false;
+            expect(document.getElementById('opt-loop').checked).to.be.false;
+            expect(settingsController.loop).to.be.false;
+        });
+
+        it('should keep auto play and loop when the URL does not name them', function () {
+            setUrlAndApply('muted=true&loop=maybe');
+            expect(document.getElementById('opt-autoplay').checked).to.be.true;
+            expect(settingsController.autoPlay).to.be.true;
             expect(document.getElementById('opt-loop').checked).to.be.true;
             expect(settingsController.loop).to.be.true;
         });

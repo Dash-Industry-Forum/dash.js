@@ -116,9 +116,13 @@ describe('Reference Player - SettingsSchema', function () {
                 .to.not.equal(SETTINGS_DESCRIPTIONS['streaming.capabilities']);
         });
 
-        it('should fall back to the description of the nearest documented parent', function () {
-            expect(byPath.get('streaming.buffer.bufferToKeep').description).to.equal('Buffer related settings');
-            expect(byPath.get('streaming.gaps.jumpGaps').description).to.equal('');
+        it('should leave a setting without its own description empty instead of using its parent\'s', function () {
+            const described = buildSchema({ streaming: { buffer: { documented: 1, undocumented: 2 } } }, {}, {
+                'streaming.buffer': 'Buffer related settings',
+                'streaming.buffer.documented': 'Own text'
+            });
+
+            expect(described.map((descriptor) => descriptor.description)).to.deep.equal(['Own text', '']);
         });
 
         it('should only use settings that exist in every preset', function () {

@@ -172,6 +172,53 @@ describe('Reference Player - SettingsPanel', function () {
             expect(button.getAttribute('aria-expanded')).to.equal('false');
             expect(document.body.classList.contains('settings-open')).to.be.false;
         });
+
+        describe('Escape where the drawer covers the page', function () {
+
+            let originalMatchMedia;
+
+            function pressEscape(target) {
+                target.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+            }
+
+            beforeEach(function () {
+                originalMatchMedia = window.matchMedia;
+                window.matchMedia = () => ({ matches: true });
+                settingsPanel.open();
+            });
+
+            afterEach(function () {
+                window.matchMedia = originalMatchMedia;
+            });
+
+            it('should close the drawer', function () {
+                pressEscape(document.getElementById('settings-close'));
+                expect(document.getElementById('settings-drawer').hidden).to.be.true;
+            });
+
+            it('should leave the drawer open while a menu inside it is open', function () {
+                const menu = document.createElement('ul');
+                menu.className = 'dropdown-menu show';
+                const item = menu.appendChild(document.createElement('button'));
+                document.getElementById('settings-drawer').append(menu);
+
+                pressEscape(item);
+                expect(document.getElementById('settings-drawer').hidden).to.be.false;
+            });
+
+            it('should clear the search first and close the drawer on the next press', function () {
+                const field = document.getElementById('settings-search');
+                search('jumpGaps');
+
+                pressEscape(field);
+                expect(document.getElementById('settings-drawer').hidden).to.be.false;
+                expect(field.value).to.equal('');
+                expect(document.getElementById('settings-status').hidden).to.be.true;
+
+                pressEscape(field);
+                expect(document.getElementById('settings-drawer').hidden).to.be.true;
+            });
+        });
     });
 
     describe('layout', function () {
@@ -439,6 +486,15 @@ describe('Reference Player - SettingsPanel', function () {
             expect(row('streaming.buffer.bufferTimeDefault').classList.contains('has-error')).to.be.true;
         });
 
+        it('should follow settings that change on the player, without the controller', function () {
+            player.updateSettings({ streaming: { buffer: { bufferTimeDefault: 30 } } });
+            settingsController.syncWithPlayer();
+
+            expect(input('streaming.buffer.bufferTimeDefault').value).to.equal('30');
+            expect(row('streaming.buffer.bufferTimeDefault').classList.contains('is-modified')).to.be.true;
+            expect(document.getElementById('settings-modified-badge').textContent).to.equal('1');
+        });
+
         it('should follow settings that change outside the panel', function () {
             settingsController.setValue('streaming.buffer.bufferTimeDefault', 30);
             expect(input('streaming.buffer.bufferTimeDefault').value).to.equal('30');
@@ -626,6 +682,16 @@ describe('Reference Player - SettingsPanel', function () {
             testContainer.querySelector('[data-preset="low-latency-live"]').click();
 
             expectInSync(path, '18');
+        });
+
+        it('should keep the settings and say so when a file holds nothing that can be applied', function () {
+            settingsController.setValue('streaming.gaps.jumpGaps', false);
+            settingsPanel._import('{"items":[{"name":"A stream"}],"note":"not settings"}');
+
+            const status = document.getElementById('settings-status');
+            expect(player.getSettings().streaming.gaps.jumpGaps).to.be.false;
+            expect(status.textContent).to.contain('Import failed').and.to.contain('note');
+            expect(status.classList.contains('is-error')).to.be.true;
         });
 
         it('should clear invalid text when a file is imported', function () {

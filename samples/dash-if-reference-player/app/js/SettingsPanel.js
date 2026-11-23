@@ -109,10 +109,24 @@ export class SettingsPanel {
 
         // Escape closes the drawer only where it covers the page
         this._drawer.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this._layout === LAYOUTS.DRAWER && window.matchMedia(OVERLAY_QUERY).matches) {
-                this.close();
-                this._optionsButton.focus();
+            if (e.key !== 'Escape' || this._layout !== LAYOUTS.DRAWER || !window.matchMedia(OVERLAY_QUERY).matches) {
+                return;
             }
+            // Escape first belongs to what is open inside the drawer. An open menu closes itself:
+            // Bootstrap handles the key on the document, after this listener.
+            if ($('.dropdown-menu.show', this._drawer)) {
+                return;
+            }
+            // Not every browser clears a search field on Escape, so it is done here
+            if (e.target === this._search && this._search.value !== '') {
+                e.preventDefault();
+                this._search.value = '';
+                this._query = '';
+                this.render();
+                return;
+            }
+            this.close();
+            this._optionsButton.focus();
         });
     }
 
@@ -271,7 +285,6 @@ export class SettingsPanel {
             this._setStatus(`Import failed. ${result.error}`, true);
             return;
         }
-        this._discardEdits();
         const ignored = [];
         if (result.unknown.length > 0) {
             ignored.push(`Ignored unknown: ${result.unknown.join(', ')}.`);
@@ -279,6 +292,11 @@ export class SettingsPanel {
         if (result.invalid.length > 0) {
             ignored.push(`Ignored values of the wrong type: ${result.invalid.join(', ')}.`);
         }
+        if (result.applied === 0 && ignored.length > 0) {
+            this._setStatus(`Import failed. Nothing in the file could be applied, the settings are unchanged. ${ignored.join(' ')}`, true);
+            return;
+        }
+        this._discardEdits();
         if (ignored.length > 0) {
             this._setStatus(`Imported ${result.applied} settings. ${ignored.join(' ')}`, true);
         } else {

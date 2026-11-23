@@ -166,18 +166,6 @@ function _locate(path) {
     return { key, categoryId: segments[0], categoryPath: segments[0], group: segments.slice(1, -1).join('.') };
 }
 
-function _findDescription(path, descriptions) {
-    let current = path;
-    while (current) {
-        if (descriptions[current]) {
-            return descriptions[current];
-        }
-        const cut = current.lastIndexOf('.');
-        current = cut === -1 ? '' : current.slice(0, cut);
-    }
-    return '';
-}
-
 /**
  * @param {object} defaults - The settings object the page starts with
  * @param {object} [overrides] - { types, options, common, categoryLabels }
@@ -201,7 +189,7 @@ export function buildSchema(defaults, overrides = {}, descriptions = {}) {
             options: options[path] || null,
             defaultValue: cloneValue(value),
             emptyIsDefault,
-            description: _findDescription(path, descriptions),
+            description: descriptions[path] || '',
             common: common.has(path)
         };
     });

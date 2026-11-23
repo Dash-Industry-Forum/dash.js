@@ -25,10 +25,6 @@ import {
     validateValue
 } from './SettingsSchema.js';
 
-// URL parameters that are page options, not dash.js settings
-const PAGE_URL_PARAMS = ['stream', 'mpd', 'autoplay', 'autoPlay', 'loop', 'muted', 'autoLoad', 'protData',
-    'forceTextStreaming'];
-
 export class SettingsController {
     /**
      * @param {PlayerController} playerController
@@ -48,6 +44,7 @@ export class SettingsController {
         this._autoPlay = true;
         this._loop = true;
         this._restoredProtData = null;
+        this._lastSignature = '';
     }
 
     // UI-only initial track fields (not dash.js settings): URL param -> input id
@@ -76,6 +73,7 @@ export class SettingsController {
         this._categories = buildCategories(this._schema, SETTINGS_OVERRIDES.categoryLabels);
         this._byPath = new Map(this._schema.map((descriptor) => [descriptor.path, descriptor]));
 
+        this._lastSignature = this._signature();
         this._bindLoadOptions();
     }
 
@@ -150,6 +148,8 @@ export class SettingsController {
     /**
      * Reset everything to the defaults, then apply a partial settings object. Used by presets
      * and by JSON import, so the result never depends on what was set before.
+     * An object that holds values but none that can be applied (a wrong file, a misspelled
+     * top-level key) changes nothing: the current settings are kept.
      * @param {object} settingsObj
      * @returns {{applied: number, unknown: string[], invalid: string[]}} `unknown` lists the paths that
      * name no editable setting, `invalid` the paths whose value does not have the setting's type.
@@ -175,6 +175,10 @@ export class SettingsController {
             applied++;
         }
 
+        if (applied === 0 && (unknown.length > 0 || invalid.length > 0)) {
+            return { applied, unknown, invalid };
+        }
+
         this._resetAllSilently();
         this.player.updateSettings(accepted);
         this._emitChange();
@@ -192,6 +196,20 @@ export class SettingsController {
      */
     onChange(listener) {
         this._listeners.push(listener);
+    }
+
+    /**
+     * Notify the listeners if settings changed without going through this controller. The control
+     * bar and dash.js itself update settings too, and dash.js has no event for a changed setting,
+     * so the page calls this periodically.
+     * @returns {boolean} Whether a change was found
+     */
+    syncWithPlayer() {
+        if (this._signature() === this._lastSignature) {
+            return false;
+        }
+        this._emitChange();
+        return true;
     }
 
     // ---- Export and import ----
@@ -305,13 +323,10 @@ export class SettingsController {
             params.set(path, this._toUrlValue(path, value));
         }
 
-        // Add load options (not part of dash.js settings)
-        if (this._isChecked('opt-autoplay')) {
-            params.set('autoplay', 'true');
-        }
-        if (this._isChecked('opt-loop')) {
-            params.set('loop', 'true');
-        }
+        // Add load options (not part of dash.js settings). Auto play and loop are on by default,
+        // so they are always written: leaving them out could not say "off".
+        params.set('autoplay', String(this._isChecked('opt-autoplay')));
+        params.set('loop', String(this._isChecked('opt-loop')));
         if (this._isChecked('opt-muted')) {
             params.set('muted', 'true');
         }
@@ -374,13 +389,15 @@ export class SettingsController {
         }
 
         // Handle load options
-        if (params.get('autoplay') === 'true' || params.get('autoPlay') === 'true') {
-            $('#opt-autoplay').checked = true;
-            this._autoPlay = true;
+        const autoPlay = this._booleanParam(params.get('autoplay') ?? params.get('autoPlay'));
+        if (autoPlay !== null) {
+            $('#opt-autoplay').checked = autoPlay;
+            this._autoPlay = autoPlay;
         }
-        if (params.get('loop') === 'true') {
-            $('#opt-loop').checked = true;
-            this._loop = true;
+        const loop = this._booleanParam(params.get('loop'));
+        if (loop !== null) {
+            $('#opt-loop').checked = loop;
+            this._loop = loop;
         }
         if (params.get('muted') === 'true') {
             $('#opt-muted').checked = true;
@@ -391,8 +408,7 @@ export class SettingsController {
         if (params.get('forceTextStreaming') === 'true') {
             $('#opt-force-text-streaming').checked = true;
         }
-        const initialMediaParams = SettingsController._INITIAL_MEDIA_PARAMS;
-        for (const [param, id] of Object.entries(initialMediaParams)) {
+        for (const [param, id] of Object.entries(SettingsController._INITIAL_MEDIA_PARAMS)) {
             if (params.has(param)) {
                 $(`#${id}`).value = params.get(param);
             }
@@ -411,8 +427,9 @@ export class SettingsController {
         // Handle dash.js settings
         const settingsObj = {};
         for (const [key, value] of params.entries()) {
-            // Only parameters that name a known, editable setting are applied
-            if (PAGE_URL_PARAMS.includes(key) || key in initialMediaParams || !this._isEditable(key)) {
+            // Only parameters that name a known, editable setting are applied. This also skips
+            // the page options handled above: none of them is a setting path.
+            if (!this._isEditable(key)) {
                 continue;
             }
             const parsed = this._fromUrlValue(key, value);
@@ -478,7 +495,23 @@ export class SettingsController {
         this.player.updateSettings(defaults);
     }
 
+    /**
+     * @param {string|null} value - A URL parameter value
+     * @returns {boolean|null} null if the parameter is absent or neither 'true' nor 'false'
+     */
+    _booleanParam(value) {
+        if (value === 'true' || value === 'false') {
+            return value === 'true';
+        }
+        return null;
+    }
+
+    _signature() {
+        return JSON.stringify(this.getModifiedSettings());
+    }
+
     _emitChange() {
+        this._lastSignature = this._signature();
         for (const listener of this._listeners) {
             listener();
         }

@@ -17,6 +17,8 @@ import {ChartController} from './ChartController.js';
 import {NotificationPanel} from './NotificationPanel.js';
 
 // ---- State ----
+const SETTINGS_SYNC_INTERVAL_MS = 1000;
+
 let playerController;
 let controlBar;
 let streamCatalog;
@@ -77,6 +79,8 @@ async function init() {
 
     settingsPanel = new SettingsPanel(settingsController);
     settingsPanel.init();
+    // The control bar and dash.js itself change settings too, see syncWithPlayer()
+    setInterval(() => settingsController.syncWithPlayer(), SETTINGS_SYNC_INTERVAL_MS);
 
     drmController = new DrmController();
     drmController.init();
