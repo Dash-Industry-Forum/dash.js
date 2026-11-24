@@ -95,9 +95,6 @@ function getBaseRef() {
 }
 
 /**
- * Heuristic for files without coverage data, where istanbul cannot tell which lines are executable.
- */
-/**
  * Lines added or modified since the merge base of baseRef and HEAD, so changes that exist only on
  * the base side are not reported.
  *

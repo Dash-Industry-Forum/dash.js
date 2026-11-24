@@ -89,7 +89,8 @@ describe('Debug', function () {
             expect(window.console.warn).toHaveBeenCalledOnce();
 
             logger.error('Error');
-            expect(window.console.warn).toHaveBeenCalledOnce();
+            // The fatal call above plus this error call
+            expect(window.console.error).toHaveBeenCalledTimes(2);
         });
     });
 });

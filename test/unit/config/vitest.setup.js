@@ -39,13 +39,17 @@ Events.extend(MediaPlayerEvents);
 
 // Mocha compatibility, kept until the remaining tests are converted (tracked in #5210):
 // - before/after are Mocha's names for beforeAll/afterAll
-// - tests and hooks that take a done callback are turned into promises; Vitest does not
-//   support done callbacks
-globalThis.before = globalThis.beforeAll;
-globalThis.after = globalThis.afterAll;
+// - tests and hooks whose first parameter is named `done` are turned into promises; Vitest does
+//   not support done callbacks. Functions with any other first parameter (for example Vitest's
+//   test context) are passed through unchanged.
+const DONE_PARAMETER = /^(?:async\s+)?(?:function\b[^(]*\(\s*done\b|\(\s*done\b|done\s*=>)/;
+
+function usesDoneCallback(fn) {
+    return typeof fn === 'function' && fn.length > 0 && DONE_PARAMETER.test(fn.toString());
+}
 
 function withDoneCallback(fn) {
-    if (typeof fn !== 'function' || fn.length === 0) {
+    if (!usesDoneCallback(fn)) {
         return fn;
     }
     return function () {
@@ -82,13 +86,18 @@ function withDoneCallback(fn) {
                     pendingResult = { err };
                 }
             };
+            let result;
             try {
-                fn.call(this, done);
+                result = fn.call(this, done);
             } catch (e) {
                 settle(e);
                 return;
             }
             returned = true;
+            if (result && typeof result.then === 'function') {
+                // An async function that also takes done: a rejection fails the test
+                result.then(null, settle);
+            }
             if (pendingResult) {
                 settle(pendingResult.err);
             }
@@ -96,15 +105,24 @@ function withDoneCallback(fn) {
     };
 }
 
+// Wraps the test function in both call forms, it(name, fn, options) and it(name, options, fn)
+function wrapTestArguments([name, ...rest]) {
+    return [name, ...rest.map(withDoneCallback)];
+}
+
+// A Proxy keeps every Vitest modifier (each, for, skipIf, runIf, extend, todo, concurrent, fails,
+// ...) working: they are non-enumerable getters that need the original chainable context.
+// Only the call itself and the only/skip variants are wrapped.
 function wrapTest(original) {
-    const wrapped = (name, fn, ...rest) => original(name, withDoneCallback(fn), ...rest);
-    // Keep the modifiers (skipIf, runIf, each, ...) bound to the original test function
-    for (const key of Object.keys(original)) {
-        wrapped[key] = typeof original[key] === 'function' ? original[key].bind(original) : original[key];
-    }
-    wrapped.only = (name, fn, ...rest) => original.only(name, withDoneCallback(fn), ...rest);
-    wrapped.skip = (name, fn, ...rest) => original.skip(name, withDoneCallback(fn), ...rest);
-    return wrapped;
+    return new Proxy(original, {
+        apply(target, thisArg, args) {
+            return Reflect.apply(target, thisArg, wrapTestArguments(args));
+        },
+        get(target, property) {
+            const value = Reflect.get(target, property);
+            return property === 'only' || property === 'skip' ? wrapTest(value) : value;
+        }
+    });
 }
 
 function wrapHook(original) {

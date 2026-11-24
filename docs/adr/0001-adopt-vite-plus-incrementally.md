@@ -28,8 +28,9 @@ Adopt Vite+ incrementally. The first step moves only the unit tests:
 
 - `npm test` runs `vp test` (Vitest browser mode, Playwright, Chromium and Firefox). The configuration is in
   `vite.config.js`.
-- Coverage uses the istanbul provider, so reports and numbers stay comparable with the previous Karma setup.
-  Coverage is measured in Chromium.
+- Coverage uses the istanbul provider, so the report format stays the same as with the previous Karma setup.
+  The totals start from a new baseline, because coverage now counts every file in `src/`, including files no
+  test loads. Coverage is measured in Chromium.
 - New and reworked tests use Vitest's built-in APIs: `vi.fn`, `vi.spyOn`, `vi.useFakeTimers` and Vitest's
   `expect`. Existing sinon and chai code is converted area by area as part of #5210.
 - Developing dash.js requires Node.js 24.11 or newer (`devEngines`), as Vite+ needs it. The published package
