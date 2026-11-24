@@ -1262,8 +1262,30 @@ function AbrController() {
         }
 
         return candidates.reduce((closest, candidate) => {
-            return _isCloserInQuality(candidate, closest, currentRepresentation) ? candidate : closest;
+            return _isBetterBootstrapExit(candidate, closest, currentRepresentation) ? candidate : closest;
         });
+    }
+
+    /**
+     * The bitrate of a bootstrap Representation is inflated by its IDRs and does not reflect its quality. Leave it to
+     * the Representation with the closest resolution and the lowest bitrate among those, the ABR rules take over from
+     * there. Falls back to the closest bitrate if the resolution is not signaled.
+     * @private
+     */
+    function _isBetterBootstrapExit(candidate, currentBest, bootstrapRepresentation) {
+        const pixels = (representation) => representation.width * representation.height;
+        const bootstrapPixels = pixels(bootstrapRepresentation);
+        const candidatePixelsDelta = Math.abs(pixels(candidate) - bootstrapPixels);
+        const bestPixelsDelta = Math.abs(pixels(currentBest) - bootstrapPixels);
+
+        if (isNaN(candidatePixelsDelta) || isNaN(bestPixelsDelta)) {
+            return _isCloserInQuality(candidate, currentBest, bootstrapRepresentation);
+        }
+        if (candidatePixelsDelta !== bestPixelsDelta) {
+            return candidatePixelsDelta < bestPixelsDelta;
+        }
+
+        return candidate.bandwidth < currentBest.bandwidth;
     }
 
     /**

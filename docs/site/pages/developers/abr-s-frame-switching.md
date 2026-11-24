@@ -206,8 +206,10 @@ How it works:
      `canPerformQualitySwitch` at `next = n+1`.
    - With `cadence="1"`, every main Representation has an aligned S-Frame. All five are in the same switching set. All are
      within the scaling limits relative to 540p: 270p is exactly 2x down, and 1080p is 2x up.
-   - The function picks the candidate **closest in bandwidth to the bootstrap Representation** (2.2 Mbps), which is
-     `540p` (1.6 Mbps, Δ 0.6). `720p` loses (3.0 Mbps, Δ 0.8).
+   - The function picks the candidate **closest in resolution to the bootstrap Representation**, and the lowest
+     `@bandwidth` among several with that resolution (`_isBetterBootstrapExit`). That is `540p`. The bootstrap
+     `@bandwidth` is not used, because the IDRs inflate it: closest in bandwidth could be a rung above the bootstrap
+     quality. Without signaled `@width`/`@height`, the closest `@bandwidth` is used instead.
    - This step ignores `autoSwitchBitrate`, the ABR rules and the switch policy, and it is not counted as an up-switch.
 5. **The switch.** `_changeQuality(bs-540 → 540p)`:
    - `isAdaptationSetSwitch = true`.
@@ -247,7 +249,7 @@ because `next = 0`. That gives a regular AdaptationSet switch:
 ### S4: Bootstrap exit with ABR disabled
 
 When `autoSwitchBitrate.video = false`, the bootstrap exit **still** happens, because it runs before the ABR gate. After
-the exit, ABR stays off and the player remains on the quality-neutral rung chosen in S1, step 4.
+the exit, ABR stays off and the player remains on the rung with the bootstrap resolution chosen in S1, step 4.
 
 ### S5: Not a partial-segment stream / `k` missing
 
@@ -341,7 +343,7 @@ Candidates only come from the current AdaptationSet and the ones it lists in `ad
 
 The opposite case matters more. Every linked AdaptationSet counts as the same switching set, **including one with a
 different codec**. Say an AVC AdaptationSet is linked to the AV1 main set. A switch from an AVC Representation into an
-AV1 S-Frame passes `_isInSameSwitchingSet`, and the player would splice without an init segment. See Open issue 8.
+AV1 S-Frame passes `_isInSameSwitchingSet`, and the player would splice without an init segment. See open issue 7.
 
 ### M8: Target signals both an IDR and an S-Frame at `next`
 
@@ -395,32 +397,28 @@ boundaries, and the policy never applies to it.
 
 ## 6. Known limitations and open questions
 
-1. **The bootstrap exit targets the inflated bitrate.** The exit rung is the one closest to the bootstrap's
-   `@bandwidth`, which is inflated by the IDRs. In the example it lands on 540p. In the unit test ladder, `bootstrap360p`
-   (972 kbps) exits to `main720p`, one rung *above* its actual quality. Matching on resolution / pixels per second first
-   may be a better fit.
-2. **Getting stuck in bootstrap when adaptation-set switching is disabled.** With
+1. **Getting stuck in bootstrap when adaptation-set switching is disabled.** With
    `enableSupplementalPropertyAdaptationSetSwitching = false`, there is no exit and no warning.
-3. **Hops in auto ABR are not remembered.** In M3, the player only reaches the original target if the rules decide
+2. **Hops in auto ABR are not remembered.** In M3, the player only reaches the original target if the rules decide
    the same way again on the next tick. The manual path (M9) keeps the target queued.
-4. **`forceReplace` in a partial-segment stream.** A manual `forceReplace` mid-segment passes the gate, but then sets
+3. **`forceReplace` in a partial-segment stream.** A manual `forceReplace` mid-segment passes the gate, but then sets
    `noInitSegmentRequired = false`, prunes the buffer, and re-requests at the playhead. If the playhead partial of the
    target starts with an S-Frame and not an IDR, the replacement cannot be decoded. This needs verification.
-5. **The scaling check uses the MPD's `@width`/`@height`.** AV1 superres or a render size that differs from the coded
+4. **The scaling check uses the MPD's `@width`/`@height`.** AV1 superres or a render size that differs from the coded
    frame size is not accounted for. Missing dimensions are treated as "allowed".
-6. **The gate checks cadence on the current Representation** (`_hasAccessPointAtNextPartialSegment`). This assumes the
+5. **The gate checks cadence on the current Representation** (`_hasAccessPointAtNextPartialSegment`). This assumes the
    cadence is uniform across the switching set.
-7. **`skipInitSegments` is per media type, not per Representation/AdaptationSet.**
-8. **Switching set = AdaptationSet linking only.** A linked AdaptationSet with a different codec family also qualifies
+6. **`skipInitSegments` is per media type, not per Representation/AdaptationSet.**
+7. **Switching set = AdaptationSet linking only.** A linked AdaptationSet with a different codec family also qualifies
    (M7). Comparing `codecFamily` would close this gap.
-9. **The policy is counted, not timed.** It limits switches per segment sequence. A switch at partial 7 and one at
+8. **The policy is counted, not timed.** It limits switches per segment sequence. A switch at partial 7 and one at
    partial 1 of the next sequence are still only two partials apart. If that turns out to be a problem, a minimum
    number of partials between switches would be the next option.
-10. **The ABR rules don't know about the policy.** A blocked request is dropped and re-proposed on the next partial.
+9. **The ABR rules don't know about the policy.** A blocked request is dropped and re-proposed on the next partial.
     `checkPlaybackQuality` adds the requested target to the switch request history **before** the reachability and
     policy checks, so `SwitchHistoryRule` sees blocked requests as switches. This was already the case for unreachable
     targets. It may be worth recording only applied switches.
-11. **No functional test coverage yet.** Unit tests in `test/unit/test/streaming/streaming.controllers.AbrController.js`
+10. **No functional test coverage yet.** Unit tests in `test/unit/test/streaming/streaming.controllers.AbrController.js`
     cover bootstrap exit, S-Frame switching, scaling limits, hopping and the switch policy. The end-to-end path (MSE
     append without abort, no init segment) has only been checked manually.
 
@@ -440,7 +438,7 @@ All functions without a file are in `src/streaming/controllers/AbrController.js`
 | S-Frame splice conditions       | `_canSpliceIntoSFrame`, `_isWithinScaledReferenceLimits`, `_isInSameSwitchingSet`             |
 | Skip init on S-Frame            | `_entersTargetAtSFrame`, used in `_changeQuality`                                              |
 | Hopping                         | `_getReachableRepresentationTowards`                                                           |
-| Bootstrap exit                  | `_getBootstrapExitRepresentation`                                                              |
+| Bootstrap exit                  | `_getBootstrapExitRepresentation`, `_isBetterBootstrapExit`                                    |
 | Closest-quality comparator      | `_isCloserInQuality`                                                                           |
 | Manual switch / queue           | `manuallySetPlaybackQuality`, `handlePendingManualQualitySwitch`                               |
 | Abandon restriction             | `_canAbandonRequest`                                                                           |

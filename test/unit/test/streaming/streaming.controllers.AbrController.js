@@ -1171,7 +1171,7 @@ describe('AbrController', function () {
             expect(capturedEvent).to.be.null;
         });
 
-        it('should pick the non-bootstrap Representation closest in bitrate', function () {
+        it('should pick the non-bootstrap Representation closest in bitrate if no resolution is signaled', function () {
             const low = _representation('low', 300000, [_ssp(7)], mainMediaInfo);
             const closest = _representation('closest', 1000000, [_ssp(7)], mainMediaInfo);
             const high = _representation('high', 2470736, [_ssp(7)], mainMediaInfo);
@@ -1179,6 +1179,49 @@ describe('AbrController', function () {
 
             expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
             expect(capturedEvent.newRepresentation.id).to.equal('closest');
+        });
+
+        describe('exit Representation by resolution', function () {
+
+            function _withResolution(representation, width, height) {
+                representation.width = width;
+                representation.height = height;
+                return representation;
+            }
+
+            it('should pick the Representation with the resolution of the bootstrap Representation', function () {
+                // The bootstrap bitrate is inflated by the IDRs, it is closer to main720p than to main360p
+                _withResolution(bootstrapRepresentation, 640, 360).bandwidth = 2098762;
+                const main360 = _withResolution(_representation('main360p', 458001, [_ssp(7)], mainMediaInfo), 640, 360);
+                const main720 = _withResolution(_representation('main720p', 1415602, [_ssp(7)], mainMediaInfo), 1280, 720);
+                _setAvailableRepresentations([bootstrapRepresentation, main360, main720]);
+
+                expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+                expect(capturedEvent.newRepresentation.id).to.equal('main360p');
+                expect(capturedEvent.noInitSegmentRequired).to.be.true;
+            });
+
+            it('should pick the lowest bitrate if several Representations share the resolution', function () {
+                _withResolution(bootstrapRepresentation, 1280, 720).bandwidth = 6000000;
+                const crf28 = _withResolution(_representation('720p-crf28', 2060000, [_ssp(7)], mainMediaInfo), 1280, 720);
+                const crf23 = _withResolution(_representation('720p-crf23', 3137000, [_ssp(7)], mainMediaInfo), 1280, 720);
+                const top = _withResolution(_representation('1080p', 5757000, [_ssp(7)], mainMediaInfo), 1920, 1080);
+                _setAvailableRepresentations([bootstrapRepresentation, crf23, top, crf28]);
+
+                expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+                expect(capturedEvent.newRepresentation.id).to.equal('720p-crf28');
+            });
+
+            it('should pick the closest resolution if no Representation matches it', function () {
+                _withResolution(bootstrapRepresentation, 960, 540).bandwidth = 3000000;
+                const main360 = _withResolution(_representation('main360p', 458001, [_ssp(7)], mainMediaInfo), 640, 360);
+                const main720 = _withResolution(_representation('main720p', 1415602, [_ssp(7)], mainMediaInfo), 1280, 720);
+                const main1080 = _withResolution(_representation('main1080p', 2900000, [_ssp(7)], mainMediaInfo), 1920, 1080);
+                _setAvailableRepresentations([bootstrapRepresentation, main360, main720, main1080]);
+
+                expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+                expect(capturedEvent.newRepresentation.id).to.equal('main360p');
+            });
         });
 
         it('should allow a target with a different codecs string of the same switching set', function () {
@@ -1635,9 +1678,9 @@ describe('AbrController', function () {
 
             it('should not count leaving a bootstrap Representation as an up-switch', function () {
                 _setCurrentRepresentation(bootstrap360);
-                // The exit picks the main Representation closest in bandwidth, independent of the ABR rules
-                expect(_checkAt(2, main360)).to.be.true;
-                expect(currentRepresentation.id).to.equal('main720p');
+                // The exit picks the main Representation with the bootstrap resolution, independent of the ABR rules
+                expect(_checkAt(2, main1080)).to.be.true;
+                expect(currentRepresentation.id).to.equal('main360p');
                 expect(_checkAt(3, main1080)).to.be.true;
                 expect(currentRepresentation.id).to.equal('main1080p');
             });
