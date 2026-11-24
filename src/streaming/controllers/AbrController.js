@@ -1368,6 +1368,14 @@ function AbrController() {
             const streamProcessor = streamProcessorDict[streamId][mediaType];
             const lastSegment = streamProcessor.getLastSegment();
             const currentRepresentation = streamProcessor.getRepresentation();
+
+            // After a hop, wait until a partial segment of the intermediate Representation has been requested. The
+            // reachability of the next hop is evaluated relative to it, otherwise we would append the next hop directly
+            // after a partial segment of the previous Representation.
+            if (_isWaitingForPartialSegmentOfRepresentation(lastSegment, currentRepresentation)) {
+                return false;
+            }
+
             const reachableRepresentation = currentRepresentation
                 ? _getReachableRepresentationTowards(lastSegment, currentRepresentation, representation)
                 : representation;
@@ -1388,6 +1396,11 @@ function AbrController() {
         } catch (e) {
             logger.error(`Can not handle pending manual quality switch: ${e}`);
         }
+    }
+
+    function _isWaitingForPartialSegmentOfRepresentation(lastSegment, currentRepresentation) {
+        return !!(lastSegment && lastSegment.isPartialSegment && lastSegment.representation && currentRepresentation &&
+            lastSegment.representation.id !== currentRepresentation.id);
     }
 
     function _getManualQualitySwitchKey(streamId, mediaType) {

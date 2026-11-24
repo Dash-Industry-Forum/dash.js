@@ -1291,12 +1291,14 @@ describe('AbrController', function () {
         }
 
         // Partial segment 3 of 8 has been requested, the next partial segment starts with an S-Frame
-        function _setLastSegment(replacementSubNumber, totalNumberOfPartialSegments = 8, index = 0) {
+        function _setLastSegment(replacementSubNumber, totalNumberOfPartialSegments = 8, index = 0,
+            representation = undefined) {
             streamProcessor.getLastSegment = () => ({
                 index,
                 isPartialSegment: true,
                 totalNumberOfPartialSegments,
-                replacementSubNumber
+                replacementSubNumber,
+                representation
             });
         }
 
@@ -1464,6 +1466,32 @@ describe('AbrController', function () {
                 _setCurrentRepresentation(main360);
                 expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.false;
             });
+
+            it('should not hop again before a partial segment of the intermediate Representation has been requested',
+                function () {
+                    _setLastSegment(3, 8, 0, main1080);
+                    abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, main360, { message: 'manual' });
+
+                    expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.true;
+                    expect(capturedEvents).to.have.lengthOf(1);
+                    expect(capturedEvents[0].newRepresentation.id).to.equal('main540p');
+
+                    // The hop has been applied, but the last requested partial segment still belongs to main1080p.
+                    // Hopping again now would append main360p directly after main1080p, beyond the downscale limit.
+                    _setCurrentRepresentation(main540);
+
+                    expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.false;
+                    expect(capturedEvents).to.have.lengthOf(1);
+
+                    // Once a partial segment of main540p has been requested the switch completes
+                    _setLastSegment(4, 8, 0, main540);
+
+                    expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.true;
+                    expect(capturedEvents).to.have.lengthOf(2);
+                    expect(capturedEvents[1].oldRepresentation.id).to.equal('main540p');
+                    expect(capturedEvents[1].newRepresentation.id).to.equal('main360p');
+                    expect(capturedEvents[1].noInitSegmentRequired).to.be.true;
+                });
         });
 
         describe('segment sequence switching settings', function () {
