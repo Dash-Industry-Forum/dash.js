@@ -91,13 +91,19 @@ flowchart TD
     C -->|no| NO[no switch]
     C -->|yes| D[target known?]
     D -->|no: pre-check before the ABR rules run| OK
-    D -->|yes| E["target SSP aligned at next with sapType 0, 1 or 2?"]
+    D -->|yes| G["target has the same k and segment duration?<br/>(_hasAlignedPartialSegments)"]
+    G -->|no| NO
+    G -->|yes| E["target SSP aligned at next with sapType 0, 1 or 2?"]
     E -->|yes: IDR, enter from anywhere| OK
     E -->|no| F["target SSP aligned at next with sapType 7<br/>AND same switching set<br/>AND same codec family<br/>AND within scaled reference limits?"]
     F -->|yes| OK
     F -->|no| NO
 ```
 
+- **Aligned partial segments** (`_hasAlignedPartialSegments`): after a switch the next request continues with the next
+  sub-number of `lastSegment` (template) or at its end time (timeline). This only addresses the boundary validated
+  here if the target has the same `k` and segment duration. Otherwise the switch waits for the segment boundary.
+  Values that are not signaled are not compared.
 - **Same switching set** (`_isInSameSwitchingSet`): the two Representations share an AdaptationSet, or their
   AdaptationSets reference each other through `adaptation-set-switching`.
 - **Same codec family** (`_isSameCodecFamily`): linked AdaptationSets may use different codecs, and an S-Frame cannot
@@ -173,8 +179,15 @@ ABR rule, hop and bootstrap-exit search uses a list without them. The one except
 bootstrap Representations, the list is returned unchanged. This is what makes startup inside the bootstrap AdaptationSet
 work.
 
-A Representation counts as bootstrap when it has an SSP with `cadence === 1` and a random access SAP type
-(`SegmentSequenceProperties.isRandomAccessSapType`: `sapType` 0, 1 or 2; 0 is the default if none is signaled).
+A Representation counts as bootstrap (`_isBootstrapRepresentation`) only if all of the following hold:
+
+- it has an SSP with `cadence === 1` and a random access SAP type (`SegmentSequenceProperties.isRandomAccessSapType`:
+  `sapType` 0, 1 or 2; 0 is the default if none is signaled),
+- every Representation of its AdaptationSet is configured that way,
+- its AdaptationSet links to another AdaptationSet via `adaptation-set-switching`.
+
+Regular content with a random access point at every partial segment, e.g. a single AdaptationSet, is therefore not
+filtered and not left automatically.
 
 `_getPossibleVoRepresentations` lists bootstrap Representations **after** all other Representations and assigns
 `absoluteIndex` afterwards. The ABR candidates therefore have an `absoluteIndex` that matches their position in the
@@ -221,9 +234,11 @@ How it works:
   keeps loading.
 - **How a switch is classified:** by `@bandwidth`, higher = up. A switch to a Representation with the same bandwidth is
   neither counted nor limited.
-- **Counting:** `_addSegmentSequenceSwitch` counts switches per stream and media type, keyed by the segment
-  index of `lastSegment` (`_getSegmentSequenceSwitchState`). The counters reset as soon as the segment index
-  changes, including after a seek.
+- **Counting:** `_addSegmentSequenceSwitch` counts switches per stream and media type, keyed by the start time of
+  the segment `lastSegment` belongs to (`_getSegmentSequenceKey`). The segment index is not stable in a sliding
+  SegmentTimeline: once an MPD update removes old `S` elements, consecutive segments can have the same index. The
+  index is only used if the start time is unknown. The counters reset as soon as the segment changes, including
+  after a seek.
 - **Not affected:** switches at the start of a segment sequence (`next == 0`, regular SAP with init segment), the
   bootstrap exit, manual quality switches and abandonment. These are neither limited nor counted.
 
@@ -470,6 +485,13 @@ boundaries, and the policy never applies to it.
    frames up to the playhead first. With 8 s segments and AV1 720p in Chrome, the picture froze for 1.5 to 4 s, at
    times with a short stall. Re-entering through a bootstrap Representation, which has an IDR at every partial segment,
    would shorten this, but only works if a bootstrap AdaptationSet exists.
+10. **Absolute indices when only bootstrap Representations remain.** If settings or exclusions remove every main
+    Representation, `_filterOutBootstrapRepresentations` falls back to the bootstrap Representations. Their
+    `absoluteIndex` was assigned after the main ladder, so it doesn't match their position in the filtered list. BOLA
+    and L2A index their arrays by `absoluteIndex` and pick wrong or no Representations. This is the same limitation
+    that dash.js already has when a settings filter removes the lowest Representations (see
+    `setRepresentationForTypeByIndex` in `src/streaming/mediaplayer/TrackApi.js`). A fix would make these rules
+    independent of `absoluteIndex`.
 
 ## 7. Code reference index
 
@@ -478,10 +500,10 @@ All functions without a file are in `src/streaming/controllers/AbrController.js`
 | Concern                         | Location                                                                                       |
 |---------------------------------|------------------------------------------------------------------------------------------------|
 | Constants (SAP 7, 2x / 16x)     | `S_FRAME_SAP_TYPE`, `S_FRAME_MAX_DOWNSCALE_FACTOR`, `S_FRAME_MAX_UPSCALE_FACTOR`                |
-| Bootstrap filter and order      | `_filterOutBootstrapRepresentations`, `_moveBootstrapRepresentationsToTheEnd`                  |
+| Bootstrap filter and order      | `_isBootstrapRepresentation`, `_filterOutBootstrapRepresentations`, `_moveBootstrapRepresentationsToTheEnd` |
 | ABR entry point                 | `checkPlaybackQuality`                                                                         |
-| Switch policy                   | `_isMidSegmentSequenceSwitch`, `_getSegmentSequenceSwitchState`, `_isAllowedBySegmentSequenceSwitchingSettings`, `_addSegmentSequenceSwitch` |
-| Switch gate                     | `canPerformQualitySwitch`                                                                      |
+| Switch policy                   | `_isMidSegmentSequenceSwitch`, `_getSegmentSequenceKey`, `_getSegmentSequenceSwitchState`, `_isAllowedBySegmentSequenceSwitchingSettings`, `_addSegmentSequenceSwitch` |
+| Switch gate                     | `canPerformQualitySwitch`, `_hasAlignedPartialSegments`                                        |
 | Cadence check (current)         | `_hasAccessPointAtNextPartialSegment`                                                          |
 | SAP check (target)              | `_targetAllowsSwitchInAtNextPartialSegment`                                                    |
 | S-Frame splice conditions       | `_canSpliceIntoSFrame`, `_isWithinScaledReferenceLimits`, `_isInSameSwitchingSet`, `_isSameCodecFamily` |
