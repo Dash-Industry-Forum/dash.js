@@ -439,12 +439,17 @@ boundaries, and the policy never applies to it.
    partial 1 of the next sequence are still only two partials apart. If that turns out to be a problem, a minimum
    number of partials between switches would be the next option.
 7. **The ABR rules don't know about the policy.** A blocked request is dropped and re-proposed on the next partial.
-    `checkPlaybackQuality` adds the requested target to the switch request history **before** the reachability and
-    policy checks, so `SwitchHistoryRule` sees blocked requests as switches. This was already the case for unreachable
-    targets. It may be worth recording only applied switches.
+   `checkPlaybackQuality` adds the requested target to the switch request history **before** the reachability and
+   policy checks, so `SwitchHistoryRule` sees blocked requests as switches. This was already the case for unreachable
+   targets. It may be worth recording only applied switches.
 8. **No functional test coverage yet.** Unit tests in `test/unit/test/streaming/streaming.controllers.AbrController.js`
-    cover bootstrap exit, S-Frame switching, scaling limits, hopping and the switch policy. The end-to-end path (MSE
-    append without abort, no init segment) has only been checked manually.
+   cover bootstrap exit, S-Frame switching, scaling limits, hopping and the switch policy. The end-to-end path (MSE
+   append without abort, no init segment) has only been checked manually.
+9. **`forceReplace` freezes the picture.** `forceReplace` prunes the whole buffer and reloads from the last random
+   access point before the playhead (2.4), which is usually the start of the segment. The decoder has to decode all
+   frames up to the playhead first. With 8 s segments and AV1 720p in Chrome, the picture froze for 1.5 to 4 s, at
+   times with a short stall. Re-entering through a bootstrap Representation, which has an IDR at every partial segment,
+   would shorten this, but only works if a bootstrap AdaptationSet exists.
 
 ## 7. Code reference index
 
