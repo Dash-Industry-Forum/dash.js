@@ -1101,13 +1101,27 @@ function AbrController() {
 
     /**
      * An S-Frame of the target only decodes correctly if the reference frames of the current Representation are usable:
-     * both have to be part of the same switching set and the resolution change has to stay within the codec's scaled
-     * reference limits.
+     * both have to be part of the same switching set, use the same codec family and the resolution change has to stay
+     * within the codec's scaled reference limits.
      * @private
      */
     function _canSpliceIntoSFrame(currentRepresentation, targetRepresentation) {
         return _isInSameSwitchingSet(currentRepresentation, targetRepresentation)
+            && _isSameCodecFamily(currentRepresentation, targetRepresentation)
             && _isWithinScaledReferenceLimits(currentRepresentation, targetRepresentation);
+    }
+
+    /**
+     * Linked AdaptationSets may use different codecs. An S-Frame can not reference frames of another codec, and the
+     * S-Frame path neither appends an init segment nor calls changeType(). The check is skipped if either
+     * Representation does not signal a codec family.
+     * @private
+     */
+    function _isSameCodecFamily(currentRepresentation, targetRepresentation) {
+        if (!currentRepresentation.codecFamily || !targetRepresentation.codecFamily) {
+            return true;
+        }
+        return currentRepresentation.codecFamily === targetRepresentation.codecFamily;
     }
 
     /**

@@ -816,6 +816,22 @@ describe('AbrController', function () {
                 )).to.be.false;
             });
 
+            it('should return false for an S-Frame target of the same switching set with a different codec family', function () {
+                const avcMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: ['0'] };
+                const av1MediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: ['1'] };
+                const current = Object.assign(_representation(1, avcMediaInfo), { codecFamily: 'avc' });
+                const target = Object.assign(_representation(7, av1MediaInfo), { codecFamily: 'av01' });
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, current, target)).to.be.false;
+            });
+
+            it('should return true for an S-Frame target of the same switching set with the same codec family', function () {
+                const bootstrapMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: ['0'] };
+                const ssrMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: ['1'] };
+                const current = Object.assign(_representation(1, bootstrapMediaInfo), { codecFamily: 'av01' });
+                const target = Object.assign(_representation(7, ssrMediaInfo), { codecFamily: 'av01' });
+                expect(abrCtrl.canPerformQualitySwitch(lastSegment, current, target)).to.be.true;
+            });
+
             it('should return true for a closed GOP target that is not part of the same switching set', function () {
                 const currentMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: [] };
                 const targetMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
