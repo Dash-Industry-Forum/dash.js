@@ -832,6 +832,28 @@ describe('AbrController', function () {
                 expect(abrCtrl.canPerformQualitySwitch(lastSegment, current, target)).to.be.true;
             });
 
+            it('should return false for a target that splits its segments into a different number of partial segments',
+                function () {
+                    const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                    const target = Object.assign(_representation(1, mediaInfo), { k: 8 });
+                    expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(7, mediaInfo), target))
+                        .to.be.false;
+                });
+
+            it('should return false for a target with a different segment duration', function () {
+                const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                const partial = Object.assign({}, lastSegment, { duration: 0.5 });
+                const target = Object.assign(_representation(1, mediaInfo), { k: 16, segmentDuration: 4 });
+                expect(abrCtrl.canPerformQualitySwitch(partial, _representation(7, mediaInfo), target)).to.be.false;
+            });
+
+            it('should return true for a target with the same partial segment boundaries', function () {
+                const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                const partial = Object.assign({}, lastSegment, { duration: 0.5 });
+                const target = Object.assign(_representation(1, mediaInfo), { k: 16, segmentDuration: 8 });
+                expect(abrCtrl.canPerformQualitySwitch(partial, _representation(7, mediaInfo), target)).to.be.true;
+            });
+
             it('should return true for a closed GOP target that is not part of the same switching set', function () {
                 const currentMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: [] };
                 const targetMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
@@ -1116,6 +1138,8 @@ describe('AbrController', function () {
             representation.codecs = codecs;
             representation.segmentSequenceProperties = segmentSequenceProperties;
             representation.mediaInfo = mediaInfo;
+            // Matches the partial segments of _setLastSegment
+            representation.k = 16;
             return representation;
         }
 
@@ -1354,6 +1378,8 @@ describe('AbrController', function () {
             representation.codecs = 'av01.0.09M.08';
             representation.segmentSequenceProperties = segmentSequenceProperties;
             representation.mediaInfo = mediaInfo;
+            // Matches the partial segments of _setLastSegment
+            representation.k = 8;
             return representation;
         }
 
@@ -1504,6 +1530,49 @@ describe('AbrController', function () {
                     expect(ids.slice(0, 4)).to.deep.equal(['main360p', 'main540p', 'main720p', 'main1080p']);
                     expect(ids.slice(4)).to.have.members(['bootstrap360p', 'bootstrap540p']);
                 });
+            });
+
+            it('should not treat a Representation with a random access point at every partial segment as bootstrap if its AdaptationSet is not linked',
+                function () {
+                    const unlinkedMediaInfo = _mediaInfo('unlinkedAs', []);
+                    const frequentRap = _representation('frequentRap', 3000000, 1280, 720, [_ssp(1)], unlinkedMediaInfo);
+                    const regular = _representation('regular', 1000000, 640, 360, [_ssp(1, 8), _ssp(7)],
+                        unlinkedMediaInfo);
+                    adapterMock.getVoRepresentations = () => [frequentRap, regular];
+
+                    const ids = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(unlinkedMediaInfo, true)
+                        .map((representation) => representation.id);
+                    expect(ids).to.have.members(['regular', 'frequentRap']);
+                });
+
+            it('should not treat a Representation as bootstrap if its AdaptationSet contains other Representations',
+                function () {
+                    const mixedMediaInfo = _mediaInfo('mixedAs', ['mainAs']);
+                    const frequentRap = _representation('frequentRap', 3000000, 1280, 720, [_ssp(1)], mixedMediaInfo);
+                    const regular = _representation('regular', 1000000, 640, 360, [_ssp(1, 8), _ssp(7)],
+                        mixedMediaInfo);
+                    adapterMock.getVoRepresentations = (mediaInfo) =>
+                        mediaInfo === mixedMediaInfo ? [frequentRap, regular] : [];
+
+                    const ids = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mixedMediaInfo, false)
+                        .map((representation) => representation.id);
+                    expect(ids).to.have.members(['regular', 'frequentRap']);
+                });
+
+            it('should not leave a Representation that is not a bootstrap Representation', function () {
+                const unlinkedMediaInfo = _mediaInfo('unlinkedAs', []);
+                const frequentRap = _representation('frequentRap', 3000000, 1280, 720, [_ssp(1)], unlinkedMediaInfo);
+                frequentRap.k = 8;
+                const regular = _representation('regular', 1000000, 1280, 720, [_ssp(1, 8), _ssp(7)],
+                    unlinkedMediaInfo);
+                regular.k = 8;
+                adapterMock.getVoRepresentations = () => [frequentRap, regular];
+                streamProcessor.getAllMediaInfos = () => [unlinkedMediaInfo];
+                settings.update({ streaming: { abr: { autoSwitchBitrate: { video: false } } } });
+                _setCurrentRepresentation(frequentRap);
+
+                expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.false;
+                expect(capturedEvents).to.have.lengthOf(0);
             });
 
             it('should include bootstrap Representations if requested, e.g. for the public API', function () {
@@ -1743,6 +1812,30 @@ describe('AbrController', function () {
                 expect(_checkAt(3, main720)).to.be.false;
                 expect(_checkAt(0, main720, 1)).to.be.true;
                 expect(currentRepresentation.id).to.equal('main720p');
+            });
+
+            it('should start a new segment sequence when the index repeats in a sliding SegmentTimeline', function () {
+                // After an MPD update removed an old S element the next segment has the same index as the previous one
+                const checkAt = (segmentStartTime, replacementSubNumber, target) => {
+                    ruleTarget = target;
+                    streamProcessor.getLastSegment = () => ({
+                        index: 5,
+                        isPartialSegment: true,
+                        totalNumberOfPartialSegments: 8,
+                        replacementSubNumber,
+                        duration: 0.5,
+                        presentationStartTime: segmentStartTime + replacementSubNumber * 0.5
+                    });
+                    const hasSwitched = abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id);
+                    if (hasSwitched) {
+                        _setCurrentRepresentation(capturedEvents[capturedEvents.length - 1].newRepresentation);
+                    }
+                    return hasSwitched;
+                };
+
+                expect(checkAt(100, 2, main540)).to.be.true;
+                expect(checkAt(100, 3, main720)).to.be.false;
+                expect(checkAt(104, 2, main720)).to.be.true;
             });
 
             it('should not limit switches at the start of a segment sequence', function () {

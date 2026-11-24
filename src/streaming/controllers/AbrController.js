@@ -51,6 +51,8 @@ const DEFAULT_BITRATE = 100;
 // instance an AV1 S-Frame, which is only decodable when switching from another Representation of the same switching
 // set.
 const S_FRAME_SAP_TYPE = 7;
+// Segment durations in seconds are derived from @duration and @timescale, allow for rounding
+const SEGMENT_DURATION_TOLERANCE = 0.001;
 // AV1 scaled reference limits (AV1 spec 7.9, motion vector scaling): a reference frame may be at most 2x larger and at
 // most 16x smaller than the frame that references it, per dimension. An S-Frame references frames of the Representation
 // we are switching away from.
@@ -79,6 +81,7 @@ function AbrController() {
         logger,
         mediaPlayerModel,
         queuedManualQualitySwitches,
+        bootstrapMediaInfoCache,
         segmentSequenceSwitchStateDict,
         settings,
         streamController,
@@ -179,6 +182,7 @@ function AbrController() {
         segmentSequenceSwitchStateDict = {};
         streamProcessorDict = {};
         queuedManualQualitySwitches = new Map();
+        bootstrapMediaInfoCache = new WeakMap();
 
         if (droppedFramesHistory) {
             droppedFramesHistory.reset();
@@ -504,7 +508,7 @@ function AbrController() {
      */
     function _filterOutBootstrapRepresentations(voRepresentations) {
         const filteredArray = voRepresentations.filter((voRepresentation) => {
-            return !voRepresentation.isBootstrapRepresentation || !voRepresentation.isBootstrapRepresentation();
+            return !_isBootstrapRepresentation(voRepresentation);
         });
 
         return filteredArray.length > 0 ? filteredArray : voRepresentations;
@@ -630,7 +634,35 @@ function AbrController() {
         return _sortBySegmentSequenceProperties(a, b);
     }
 
+    /**
+     * A Representation with a random access point at every partial segment is only a bootstrap Representation if its
+     * whole AdaptationSet is configured that way and the AdaptationSet links to another one via adaptation set
+     * switching. Regular content with frequent random access points stays an ordinary quality option.
+     * @param {Representation} representation
+     * @return {boolean}
+     * @private
+     */
     function _isBootstrapRepresentation(representation) {
+        if (!representation || !_hasBootstrapConfiguration(representation)) {
+            return false;
+        }
+
+        const mediaInfo = representation.mediaInfo;
+        if (!mediaInfo || !mediaInfo.adaptationSetSwitchingCompatibleIds ||
+            mediaInfo.adaptationSetSwitchingCompatibleIds.length === 0) {
+            return false;
+        }
+
+        if (!bootstrapMediaInfoCache.has(mediaInfo)) {
+            const representationsOfAdaptationSet = adapter.getVoRepresentations(mediaInfo) || [];
+            bootstrapMediaInfoCache.set(mediaInfo, representationsOfAdaptationSet.length > 0 &&
+                representationsOfAdaptationSet.every(_hasBootstrapConfiguration));
+        }
+
+        return bootstrapMediaInfoCache.get(mediaInfo);
+    }
+
+    function _hasBootstrapConfiguration(representation) {
         return !!(representation.isBootstrapRepresentation && representation.isBootstrapRepresentation());
     }
 
@@ -964,8 +996,24 @@ function AbrController() {
         }
     }
 
-    function _createSegmentSequenceSwitchState(segmentIndex) {
-        return { segmentIndex, upSwitchCount: 0, downSwitchCount: 0 };
+    function _createSegmentSequenceSwitchState(segmentSequenceKey) {
+        return { segmentSequenceKey, upSwitchCount: 0, downSwitchCount: 0 };
+    }
+
+    /**
+     * The segment index is relative to the current SegmentTimeline. In a sliding live timeline consecutive segments can
+     * have the same index once old S elements are removed. The start time of the segment is stable, it is used if
+     * available.
+     * @private
+     */
+    function _getSegmentSequenceKey(lastSegment) {
+        const segmentStartTime = lastSegment.presentationStartTime -
+            lastSegment.replacementSubNumber * lastSegment.duration;
+        if (isNaN(segmentStartTime)) {
+            return `index-${lastSegment.index}`;
+        }
+
+        return `time-${Math.round(segmentStartTime * 1000)}`;
     }
 
     /**
@@ -992,8 +1040,9 @@ function AbrController() {
             segmentSequenceSwitchStateDict[streamId] = {};
         }
         const state = segmentSequenceSwitchStateDict[streamId][type];
-        if (!state || state.segmentIndex !== lastSegment.index) {
-            segmentSequenceSwitchStateDict[streamId][type] = _createSegmentSequenceSwitchState(lastSegment.index);
+        const segmentSequenceKey = _getSegmentSequenceKey(lastSegment);
+        if (!state || state.segmentSequenceKey !== segmentSequenceKey) {
+            segmentSequenceSwitchStateDict[streamId][type] = _createSegmentSequenceSwitchState(segmentSequenceKey);
         }
 
         return segmentSequenceSwitchStateDict[streamId][type];
@@ -1078,7 +1127,34 @@ function AbrController() {
             return true;
         }
 
+        // The next request continues with the sub-number of the current Representation, which only addresses the
+        // validated boundary if the target splits its segments the same way
+        if (!_hasAlignedPartialSegments(lastSegment, targetRepresentation)) {
+            return false;
+        }
+
         return _targetAllowsSwitchInAtNextPartialSegment(lastSegment, currentRepresentation, targetRepresentation);
+    }
+
+    /**
+     * In the middle of a segment the next request continues with the next sub-number of the last segment (template)
+     * or at its end time (timeline). Both only address the boundary validated by canPerformQualitySwitch if the target
+     * has the same number of partial segments per segment and the same segment duration. Values that are not
+     * signaled are not compared.
+     * @private
+     */
+    function _hasAlignedPartialSegments(lastSegment, targetRepresentation) {
+        if (!isNaN(targetRepresentation.k) && targetRepresentation.k !== lastSegment.totalNumberOfPartialSegments) {
+            return false;
+        }
+
+        const lastSegmentSequenceDuration = lastSegment.duration * lastSegment.totalNumberOfPartialSegments;
+        if (isNaN(targetRepresentation.segmentDuration) || isNaN(lastSegmentSequenceDuration)) {
+            return true;
+        }
+
+        const durationDifference = Math.abs(targetRepresentation.segmentDuration - lastSegmentSequenceDuration);
+        return durationDifference < SEGMENT_DURATION_TOLERANCE;
     }
 
     function _getNextPartialSubNumber(lastSegment) {
@@ -1293,15 +1369,14 @@ function AbrController() {
     function _getBootstrapExitRepresentation(lastSegment, currentRepresentation) {
         // As long as no media segment has been requested there is nothing to splice into, the partial segment with the
         // IDR has to be downloaded first
-        if (!lastSegment || !currentRepresentation || !currentRepresentation.isBootstrapRepresentation ||
-            !currentRepresentation.isBootstrapRepresentation()) {
+        if (!lastSegment || !_isBootstrapRepresentation(currentRepresentation)) {
             return null;
         }
 
         const candidates = getPossibleVoRepresentationsFilteredBySettings(currentRepresentation.mediaInfo, true)
             .filter((representation) => {
                 return representation.id !== currentRepresentation.id
-                    && !representation.isBootstrapRepresentation()
+                    && !_isBootstrapRepresentation(representation)
                     && canPerformQualitySwitch(lastSegment, currentRepresentation, representation)
             });
 
