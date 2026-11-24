@@ -765,7 +765,7 @@ function Stream(config) {
         }
         const mediaInfo = _getMediaInfo(type);
         return filterBySettings
-            ? abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true)
+            ? abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true, true)
             : abrController.getPossibleVoRepresentations(mediaInfo, true);
     }
 
@@ -787,7 +787,7 @@ function Stream(config) {
             const mediaInfos = _getAllMediaInfos(type);
 
             possibleVoRepresentations = mediaInfos.flatMap((mediaInfo) => {
-                return abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+                return abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true, true);
             })
         }
 
@@ -817,7 +817,8 @@ function Stream(config) {
             possibleVoRepresentations = thumbnailController.getPossibleVoRepresentations();
         } else {
             const mediaInfo = _getMediaInfo(type);
-            possibleVoRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+            possibleVoRepresentations =
+                abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true, true);
         }
 
         index = Math.max(Math.min(index, possibleVoRepresentations.length - 1), 0)

@@ -3193,7 +3193,8 @@ export interface AbrController {
 
     getPossibleVoRepresentations(mediaInfo: MediaInfo, includeCompatibleMediaInfos: boolean): Representation[] | null;
 
-    getPossibleVoRepresentationsFilteredBySettings(mediaInfo: MediaInfo, includeCompatibleMediaInfos: boolean): Representation[] | null;
+    getPossibleVoRepresentationsFilteredBySettings(mediaInfo: MediaInfo, includeCompatibleMediaInfos?: boolean,
+        includeBootstrapRepresentations?: boolean): Representation[] | null;
 
     getRepresentationByAbsoluteIndex(absoluteIndex: number, mediaInfo: MediaInfo, includeCompatibleMediaInfos: boolean): Representation | null;
 

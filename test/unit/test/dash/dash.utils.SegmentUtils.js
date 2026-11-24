@@ -306,9 +306,10 @@ describe('SegmentsUtils', function () {
     describe('getRandomAccessSubNumber', function () {
         const ssp = (sapType, cadence = 1) => ({ sapType, cadence });
 
-        it('should return the sub-number unchanged if no segment sequence properties are signaled', function () {
-            expect(getRandomAccessSubNumber({}, 5)).to.equal(5);
-            expect(getRandomAccessSubNumber({ segmentSequenceProperties: [] }, 5)).to.equal(5);
+        it('should round down to the first partial segment if no segment sequence properties are signaled', function () {
+            // Only the first partial segment of a segment is guaranteed to start with a SAP
+            expect(getRandomAccessSubNumber({}, 5)).to.equal(0);
+            expect(getRandomAccessSubNumber({ segmentSequenceProperties: [] }, 5)).to.equal(0);
         });
 
         it('should return the sub-number unchanged if it is not a number', function () {
@@ -320,6 +321,7 @@ describe('SegmentsUtils', function () {
         it('should return the sub-number unchanged if every partial segment starts with a random access point', function () {
             expect(getRandomAccessSubNumber({ segmentSequenceProperties: [ssp(1)] }, 5)).to.equal(5);
             expect(getRandomAccessSubNumber({ segmentSequenceProperties: [ssp(0)] }, 5)).to.equal(5);
+            expect(getRandomAccessSubNumber({ segmentSequenceProperties: [ssp(2)] }, 5)).to.equal(5);
         });
 
         it('should round down to the first partial segment if the partial segments start with S-Frames only', function () {

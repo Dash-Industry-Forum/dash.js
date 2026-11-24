@@ -42,11 +42,13 @@ import SwitchRequestHistory from '../rules/SwitchRequestHistory.js';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory.js';
 import Debug from '../../core/Debug.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import SegmentSequenceProperties from '../../dash/vo/SegmentSequenceProperties.js';
 
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_BITRATE = 100;
-// SAP types 1 to 6 are random access points, a client can start decoding there. SAP type 7 signals a switching frame,
-// for instance an AV1 S-Frame, which is only decodable when switching from another Representation of the same switching
+// SAP types 1 and 2 are closed GOP random access points, a client can start decoding there and switch into them coming
+// from any Representation (SegmentSequenceProperties.isRandomAccessSapType). SAP type 7 signals a switching frame, for
+// instance an AV1 S-Frame, which is only decodable when switching from another Representation of the same switching
 // set.
 const S_FRAME_SAP_TYPE = 7;
 // AV1 scaled reference limits (AV1 spec 7.9, motion vector scaling): a reference frame may be at most 2x larger and at
@@ -295,14 +297,22 @@ function AbrController() {
         return _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos)
     }
 
-    function getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos = true) {
+    /**
+     * @param {MediaInfo} mediaInfo
+     * @param {boolean} includeCompatibleMediaInfos
+     * @param {boolean} includeBootstrapRepresentations - Bootstrap Representations are no quality option for the ABR
+     * logic. The public API lists them, as playback starts with them.
+     * @return {Representation[]}
+     */
+    function getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos = true,
+        includeBootstrapRepresentations = false) {
         let voRepresentations = _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
 
         // Drop excluded Representations first, so the settings filters fall back to the remaining ones
         voRepresentations = _filterExcluded(voRepresentations);
 
         // Filter the list of options based on the provided settings
-        voRepresentations = _filterByAllowedSettings(voRepresentations)
+        voRepresentations = _filterByAllowedSettings(voRepresentations, includeBootstrapRepresentations)
 
         return voRepresentations;
     }
@@ -346,6 +356,11 @@ function AbrController() {
 
         // Now sort by quality (usually simply by bitrate)
         voRepresentations = _sortRepresentationsByQuality(voRepresentations);
+
+        // Bootstrap Representations are no ABR candidates (_filterOutBootstrapRepresentations). List them last, so the
+        // absolute index of the candidates matches their position in the filtered list. Rules like BOLA and L2A rely on
+        // that.
+        voRepresentations = _moveBootstrapRepresentationsToTheEnd(voRepresentations);
 
         // Add an absolute index
         voRepresentations.forEach((rep, index) => {
@@ -399,12 +414,14 @@ function AbrController() {
      * @param {Representation[]} voRepresentations
      * @return {Representation[]}
      */
-    function _filterByAllowedSettings(voRepresentations) {
+    function _filterByAllowedSettings(voRepresentations, includeBootstrapRepresentations = false) {
         try {
             voRepresentations = _filterByPossibleBitrate(voRepresentations);
             voRepresentations = _filterByPortalSize(voRepresentations);
             voRepresentations = _filterByCmsdMaxBitrate(voRepresentations);
-            voRepresentations = _filterOutBootstrapRepresentations(voRepresentations);
+            if (!includeBootstrapRepresentations) {
+                voRepresentations = _filterOutBootstrapRepresentations(voRepresentations);
+            }
 
             return voRepresentations;
         } catch (e) {
@@ -591,10 +608,10 @@ function AbrController() {
     }
 
     function _sortForDifferentMediaInfos(a, b) {
-        // if the codec family is the same we can sort by pixelsPerSecond. But should take bootstrap and non-bootstrap
-        // Representations into account (L3D-DASH)
+        // if the codec family is the same we can sort by pixelsPerSecond. Bootstrap Representations (L3D-DASH) are
+        // moved to the end afterwards, see _moveBootstrapRepresentationsToTheEnd
         if (a.codecFamily && b.codecFamily && a.codecFamily === b.codecFamily) {
-            return _sortForSameCodecFamilyInDifferentMediaInfos(a, b);
+            return _sortForSameCodecs(a, b);
         }
 
         if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
@@ -613,32 +630,16 @@ function AbrController() {
         return _sortBySegmentSequenceProperties(a, b);
     }
 
-    function _compareBootstrapRepresentations(a, b) {
-        const isABootstrapRepresentation = a.isBootstrapRepresentation();
-        const isBBootstrapRepresentation = b.isBootstrapRepresentation();
-
-        if (isABootstrapRepresentation === isBBootstrapRepresentation) {
-            return 0;
-        }
-
-        return isABootstrapRepresentation ? -1 : 1;
+    function _isBootstrapRepresentation(representation) {
+        return !!(representation.isBootstrapRepresentation && representation.isBootstrapRepresentation());
     }
 
-    function _sortForSameCodecFamilyInDifferentMediaInfos(a, b) {
-        const bootstrapComparison = _compareBootstrapRepresentations(a, b);
-        if (bootstrapComparison !== 0) {
-            return bootstrapComparison;
-        }
-
-        return _sortForSameCodecs(a, b);
+    function _moveBootstrapRepresentationsToTheEnd(voRepresentations) {
+        return voRepresentations.filter((representation) => !_isBootstrapRepresentation(representation))
+            .concat(voRepresentations.filter((representation) => _isBootstrapRepresentation(representation)));
     }
 
     function _sortBySegmentSequenceProperties(a, b) {
-        const bootstrapComparison = _compareBootstrapRepresentations(a, b);
-        if (bootstrapComparison !== 0) {
-            return bootstrapComparison;
-        }
-
         return b.k - a.k;
     }
 
@@ -851,7 +852,35 @@ function AbrController() {
             return;
         }
         logger.warn(`Excluded representation ${representation.id} for ${mediaInfo.type}, switching to representation ${fallbackRepresentation.id}`);
-        setPlaybackQuality(mediaInfo.type, mediaInfo.streamInfo, fallbackRepresentation, { message: `[AbrController]: Representation ${representation.id} is excluded` });
+        _switchAwayFromExcludedRepresentation(mediaInfo, currentRepresentation, fallbackRepresentation, {
+            message: `[AbrController]: Representation ${representation.id} is excluded`
+        });
+    }
+
+    /**
+     * In partial segment streams the fallback might not be enterable at the next partial segment, e.g. because it is
+     * below the S-Frame downscale limit. Hop towards it like a manual switch. If not even a hop is possible, replace
+     * the buffer, loading then restarts at a random access point of the fallback.
+     * @private
+     */
+    function _switchAwayFromExcludedRepresentation(mediaInfo, currentRepresentation, fallbackRepresentation, reason) {
+        const type = mediaInfo.type;
+        const streamInfo = mediaInfo.streamInfo;
+        const lastSegment = streamProcessorDict[streamInfo.id][type].getLastSegment();
+        const reachableRepresentation = _isWaitingForPartialSegmentOfRepresentation(lastSegment, currentRepresentation)
+            ? null
+            : _getReachableRepresentationTowards(lastSegment, currentRepresentation, fallbackRepresentation);
+
+        if (!reachableRepresentation) {
+            const replaceReason = Object.assign({}, reason, { forceReplace: true });
+            setPlaybackQuality(type, streamInfo, fallbackRepresentation, replaceReason);
+            return;
+        }
+
+        if (reachableRepresentation.id !== fallbackRepresentation.id) {
+            _queueManualQualitySwitch(type, streamInfo, fallbackRepresentation, reason);
+        }
+        setPlaybackQuality(type, streamInfo, reachableRepresentation, reason);
     }
 
     /**
@@ -884,7 +913,11 @@ function AbrController() {
                 return true;
             }
 
-            const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
+            // The reference frames of an S-Frame come from the last requested partial segment. After a switch they
+            // still belong to the previous Representation until a partial segment of the current one has been
+            // requested, switching again before would splice against the wrong frames.
+            const canSwitchQuality = !_isWaitingForPartialSegmentOfRepresentation(lastSegment, currentRepresentation) &&
+                canPerformQualitySwitch(lastSegment, currentRepresentation);
 
             if (!settings.get().streaming.abr.autoSwitchBitrate[type] || !canSwitchQuality) {
                 return false;
@@ -1091,7 +1124,7 @@ function AbrController() {
             if (isNaN(ssp.sapType) || nextPartialSubNumber % ssp.cadence !== 0) {
                 return false;
             }
-            if (ssp.sapType <= 1) {
+            if (SegmentSequenceProperties.isRandomAccessSapType(ssp.sapType)) {
                 return true;
             }
             return ssp.sapType === S_FRAME_SAP_TYPE &&
@@ -1198,7 +1231,8 @@ function AbrController() {
 
         // If the target signals a regular SAP at this partial segment the entry point is an IDR, the init segment can
         // be appended
-        if (alignedSegmentSequenceProperties.some((ssp) => ssp.sapType <= 1)) {
+        if (alignedSegmentSequenceProperties.some(
+            (ssp) => SegmentSequenceProperties.isRandomAccessSapType(ssp.sapType))) {
             return false;
         }
 
@@ -1367,7 +1401,21 @@ function AbrController() {
         const streamProcessor = streamProcessorDict[streamInfo.id][type];
         const lastSegment = streamProcessor.getLastSegment();
         const currentRepresentation = streamProcessor.getRepresentation();
-        const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation, representation);
+
+        // A newer manual switch replaces a queued one
+        queuedManualQualitySwitches.delete(_getManualQualitySwitchKey(streamInfo.id, type));
+
+        // A replacement prunes the buffer and restarts loading at a random access point of the target, it never enters
+        // the target at an S-Frame. The switch point and hop rules do not apply.
+        if (reason && (reason.forceReplace || reason.forceAbandon)) {
+            return setPlaybackQuality(type, streamInfo, representation, reason);
+        }
+
+        // The reference frames of an S-Frame come from the last requested partial segment. After a switch they still
+        // belong to the previous Representation until a partial segment of the current one has been requested.
+        const canSwitchQuality =
+            !_isWaitingForPartialSegmentOfRepresentation(lastSegment, currentRepresentation) &&
+            canPerformQualitySwitch(lastSegment, currentRepresentation, representation);
 
         if (!canSwitchQuality) {
             _queueManualQualitySwitch(type, streamInfo, representation, reason);
@@ -1427,8 +1475,9 @@ function AbrController() {
             }
 
             queuedManualQualitySwitches.delete(manualQualitySwitchKey);
-            setPlaybackQuality(type, streamInfo, representation, reason);
-            return true;
+            // If the target became the current Representation in the meantime nothing changes, the caller has to
+            // continue scheduling
+            return setPlaybackQuality(type, streamInfo, representation, reason);
         } catch (e) {
             logger.error(`Can not handle pending manual quality switch: ${e}`);
         }
@@ -1589,6 +1638,7 @@ function AbrController() {
             delete abandonmentStateDict[streamId];
         }
         delete excludedRepresentationIds[streamId];
+        delete segmentSequenceSwitchStateDict[streamId];
 
         abrRulesCollection.clearDataForStream(streamId);
     }

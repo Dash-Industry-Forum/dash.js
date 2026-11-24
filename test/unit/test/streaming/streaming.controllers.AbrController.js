@@ -840,6 +840,14 @@ describe('AbrController', function () {
                 )).to.be.true;
             });
 
+            it('should return true for a SAP type 2 target that is not part of the same switching set', function () {
+                const currentMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: [] };
+                const targetMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
+                expect(abrCtrl.canPerformQualitySwitch(
+                    lastSegment, _representation(1, currentMediaInfo), _representation(2, targetMediaInfo)
+                )).to.be.true;
+            });
+
             it('should return false for a target with a SAP type we can not switch into', function () {
                 const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
                 expect(abrCtrl.canPerformQualitySwitch(
@@ -1471,6 +1479,40 @@ describe('AbrController', function () {
             it('should not select a bootstrap Representation for a high bitrate', function () {
                 expect(abrCtrl.getOptimalRepresentationForBitrate(mainMediaInfo, 5000, true).id).to.equal('main1080p');
             });
+
+            describe('with the same codec family in all AdaptationSets', function () {
+
+                beforeEach(function () {
+                    [main360, main540, main720, main1080, bootstrap360, bootstrap540].forEach((representation) => {
+                        representation.codecFamily = 'av01';
+                    });
+                });
+
+                it('should give the ABR candidates absolute indices that match their position in the list', function () {
+                    // Rules like BOLA and L2A index their per-Representation arrays by the absolute index
+                    const representations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mainMediaInfo, true);
+                    expect(representations.map((representation) => representation.id))
+                        .to.deep.equal(['main360p', 'main540p', 'main720p', 'main1080p']);
+                    expect(representations.map((representation) => representation.absoluteIndex))
+                        .to.deep.equal([0, 1, 2, 3]);
+                    expect(abrCtrl.getRepresentationByAbsoluteIndex(0, mainMediaInfo, true).id).to.equal('main360p');
+                });
+
+                it('should list bootstrap Representations after all other Representations', function () {
+                    const ids = abrCtrl.getPossibleVoRepresentations(mainMediaInfo, true)
+                        .map((representation) => representation.id);
+                    expect(ids.slice(0, 4)).to.deep.equal(['main360p', 'main540p', 'main720p', 'main1080p']);
+                    expect(ids.slice(4)).to.have.members(['bootstrap360p', 'bootstrap540p']);
+                });
+            });
+
+            it('should include bootstrap Representations if requested, e.g. for the public API', function () {
+                const ids = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mainMediaInfo, true, true)
+                    .map((representation) => representation.id);
+                expect(ids).to.have.members(
+                    ['main360p', 'main540p', 'main720p', 'main1080p', 'bootstrap360p', 'bootstrap540p']
+                );
+            });
         });
 
         describe('hopping towards an unreachable target', function () {
@@ -1484,6 +1526,23 @@ describe('AbrController', function () {
                 expect(capturedEvents[0].newRepresentation.id).to.equal('main540p');
                 expect(capturedEvents[0].noInitSegmentRequired).to.be.true;
             });
+
+            it('should not switch again before a partial segment of the current Representation has been requested',
+                function () {
+                    // A hop from main1080p to main540p has just been applied, the last requested partial segment still
+                    // belongs to main1080p. Switching to main360p now would append it directly after main1080p.
+                    _stubRuleTarget(main360);
+                    _setCurrentRepresentation(main540);
+                    _setLastSegment(3, 8, 0, main1080);
+
+                    expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.false;
+                    expect(capturedEvents).to.have.lengthOf(0);
+
+                    _setLastSegment(4, 8, 0, main540);
+                    expect(abrCtrl.checkPlaybackQuality(Constants.VIDEO, streamInfo.id)).to.be.true;
+                    expect(capturedEvents[0].oldRepresentation.id).to.equal('main540p');
+                    expect(capturedEvents[0].newRepresentation.id).to.equal('main360p');
+                });
 
             it('should switch straight to the target requested by the ABR rules when it enters at an IDR', function () {
                 _stubRuleTarget(main360);
@@ -1551,6 +1610,92 @@ describe('AbrController', function () {
                     expect(capturedEvents[1].newRepresentation.id).to.equal('main360p');
                     expect(capturedEvents[1].noInitSegmentRequired).to.be.true;
                 });
+        });
+
+        describe('manual switches', function () {
+
+            it('should switch straight to the target of a forceReplace switch without hopping', function () {
+                _setLastSegment(3, 8, 0, main1080);
+                abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, main360, { forceReplace: true });
+
+                expect(capturedEvents).to.have.lengthOf(1);
+                expect(capturedEvents[0].newRepresentation.id).to.equal('main360p');
+                expect(capturedEvents[0].reason.forceReplace).to.be.true;
+                expect(capturedEvents[0].noInitSegmentRequired).to.be.false;
+                expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.false;
+            });
+
+            it('should queue a switch while no partial segment of the current Representation has been requested',
+                function () {
+                    // A hop to main540p has been applied, the last requested partial segment still belongs to main1080p
+                    _setCurrentRepresentation(main540);
+                    _setLastSegment(3, 8, 0, main1080);
+
+                    abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, main360, { message: 'manual' });
+                    expect(capturedEvents).to.have.lengthOf(0);
+
+                    _setLastSegment(4, 8, 0, main540);
+                    expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.true;
+                    expect(capturedEvents).to.have.lengthOf(1);
+                    expect(capturedEvents[0].newRepresentation.id).to.equal('main360p');
+                    expect(capturedEvents[0].noInitSegmentRequired).to.be.true;
+                });
+
+            it('should replace a queued switch with a newer one', function () {
+                _setLastSegment(3, 8, 0, main1080);
+                abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, main360, { message: 'manual' });
+                abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, main720, { message: 'manual' });
+                expect(capturedEvents).to.have.lengthOf(1);
+                expect(capturedEvents[0].newRepresentation.id).to.equal('main720p');
+
+                _setCurrentRepresentation(main720);
+                _setLastSegment(4, 8, 0, main720);
+                expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.false;
+                expect(capturedEvents).to.have.lengthOf(1);
+            });
+
+            it('should let the scheduling continue if the queued target is already the current Representation',
+                function () {
+                    _setLastSegment(3, 8, 0, main1080);
+                    abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, main360, { message: 'manual' });
+
+                    // The ABR rules switched to the target in the meantime
+                    _setCurrentRepresentation(main360);
+                    _setLastSegment(4, 8, 0, main360);
+                    expect(abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO)).to.be.false;
+                });
+        });
+
+        describe('excluding the current Representation', function () {
+
+            function _register() {
+                [main360, main540, main720, main1080].forEach((representation) => {
+                    representation.mediaInfo.streamInfo = streamInfo;
+                });
+            }
+
+            it('should switch to the fallback via an S-Frame if it can be entered at the next partial segment',
+                function () {
+                    _register();
+                    abrCtrl.excludeRepresentation(main1080);
+
+                    expect(capturedEvents).to.have.lengthOf(1);
+                    expect(capturedEvents[0].newRepresentation.id).to.equal('main720p');
+                    expect(capturedEvents[0].noInitSegmentRequired).to.be.true;
+                });
+
+            it('should replace the buffer if the fallback can not be reached at the next partial segment', function () {
+                _register();
+                abrCtrl.excludeRepresentation(main720);
+                abrCtrl.excludeRepresentation(main540);
+                abrCtrl.excludeRepresentation(main1080);
+
+                // main360p is below the downscale limit and there is no Representation left to hop through
+                expect(capturedEvents).to.have.lengthOf(1);
+                expect(capturedEvents[0].newRepresentation.id).to.equal('main360p');
+                expect(capturedEvents[0].reason.forceReplace).to.be.true;
+                expect(capturedEvents[0].noInitSegmentRequired).to.be.false;
+            });
         });
 
         describe('segment sequence switching settings', function () {
