@@ -10,7 +10,7 @@ This page covers what the ABR logic does differently when content signals switch
 
 There are two use cases, and they follow different logic:
 
-| Use case                                | What decides the switch                                               | Limited by the switch policy (2.6) | Section |
+| Use case                                | What decides the switch                                               | Limited by the switch policy (2.7) | Section |
 |-----------------------------------------|-----------------------------------------------------------------------|------------------------------------|---------|
 | **Startup**: leaving bootstrap          | A fixed transition at the first possible S-Frame. No ABR rules involved. | No                                 | 3       |
 | **Rate adaptation** during playback     | The ABR rules, then reachability / hopping, then the switch policy    | Yes                                | 4       |
@@ -21,7 +21,7 @@ The model has two AdaptationSets that are linked through the adaptation-set-swit
 
 | AdaptationSet       | Purpose                    | `SegmentSequenceProperties`                     | Notes                                                                                          |
 |---------------------|----------------------------|-------------------------------------------------|------------------------------------------------------------------------------------------------|
-| **Bootstrap**       | Fast tune-in               | `sapType` 0 or 1, `cadence="1"`: IDR at every partial segment | Bitrate is inflated by the IDRs. Only used at startup.                              |
+| **Bootstrap**       | Fast tune-in               | `sapType` 0, 1 or 2, `cadence="1"`: IDR at every partial segment | Bitrate is inflated by the IDRs. Only used at startup.                              |
 | **Main**            | Regular playback and ABR   | `sapType="7"`, `cadence="N"`: S-Frame at every Nth partial segment | Segments start with a regular SAP (`startWithSAP`). The S-Frames are the mid-segment switch points. |
 
 Each segment is split into `k` partial segments. One segment, from one regular SAP to the next, is called a
@@ -91,7 +91,7 @@ flowchart TD
     C -->|no| NO[no switch]
     C -->|yes| D[target known?]
     D -->|no: pre-check before the ABR rules run| OK
-    D -->|yes| E["target SSP aligned at next with sapType 0/1?"]
+    D -->|yes| E["target SSP aligned at next with sapType 0, 1 or 2?"]
     E -->|yes: IDR, enter from anywhere| OK
     E -->|no| F["target SSP aligned at next with sapType 7<br/>AND same switching set<br/>AND same codec family<br/>AND within scaled reference limits?"]
     F -->|yes| OK
@@ -115,7 +115,7 @@ flowchart TD
 
 - `next != 0`, i.e. we are not at a segment boundary
 - the target signals an aligned `sapType="7"` at `next`
-- the target signals **no** aligned `sapType` 0/1 at `next`
+- the target signals **no** aligned `sapType` 0, 1 or 2 at `next`
 - the S-Frame splice conditions from 2.1 are met
 
 `_changeQuality` then sets `noInitSegmentRequired` on `QUALITY_CHANGE_REQUESTED`. It forces the flag to `false`
@@ -129,7 +129,7 @@ for `forceReplace` and `forceAbandon`. When the flag is set, the downstream code
    which sets "need random access point". The non-sync S-Frame samples would then be silently dropped.
 3. Fast switching is never used for partial segments (`StreamProcessor.js`, `!lastSegment.isPartialSegment`).
 
-### 2.4 Starting to load without reference frames
+### 2.3 Starting to load without reference frames
 
 A partial segment that starts with an S-Frame only decodes after the preceding partial segment. When the player starts
 loading at a time without that predecessor in the decoder, it has to start at a random access point instead.
@@ -138,8 +138,9 @@ loading at a time without that predecessor in the decoder, it has to start at a 
 `_getFragmentRequest` passes the flag via `DashHandler.getSegmentRequestForTime` and `SegmentsController.getSegmentByTime`
 to the template and timeline segment getters. When set, `getRandomAccessSubNumber` (`src/dash/utils/SegmentsUtils.js`)
 rounds the partial at the requested time down to the last partial that starts with a random access point: one whose SSP
-has `sapType` 0/1 at a matching cadence, otherwise partial 0. Bootstrap Representations (`sapType="1"`,
-`cadence="1"`) and Representations without SSPs are unaffected.
+has `sapType` 0, 1 or 2 at a matching cadence, otherwise partial 0. Bootstrap Representations (`sapType="1"`,
+`cadence="1"`) are unaffected. For Representations with partial segments but without SSPs only partial 0 is
+guaranteed to start with a SAP, so they always restart at partial 0. Full segments are not affected.
 
 | Caller                                              | Random access point required                          |
 |-----------------------------------------------------|-------------------------------------------------------|
@@ -153,7 +154,7 @@ has `sapType` 0/1 at a matching cadence, otherwise partial 0. Bootstrap Represen
 The cost is up to one segment of extra download and decoding before the playhead. A seek or `forceReplace` close to
 the end of a segment shows the previous picture until the decoder catches up, at the latest until the next segment.
 
-### 2.3 Hopping
+### 2.4 Hopping
 
 When the ABR target cannot be entered at `next`, `_getReachableRepresentationTowards` doesn't simply wait.
 Instead, it picks an intermediate rung:
@@ -165,17 +166,25 @@ Instead, it picks an intermediate rung:
   delta first, then pixels/s delta, then the higher `absoluteIndex`.
 - **No candidate:** returns `null`, and the switch waits for a later partial segment.
 
-### 2.4 Bootstrap Representations are not ABR candidates
+### 2.5 Bootstrap Representations are not ABR candidates
 
 `_filterOutBootstrapRepresentations` runs as part of `getPossibleVoRepresentationsFilteredBySettings`, so every
 ABR rule, hop and bootstrap-exit search uses a list without them. The one exception: if **all** candidates are
 bootstrap Representations, the list is returned unchanged. This is what makes startup inside the bootstrap AdaptationSet
 work.
 
-A Representation counts as bootstrap when it has an SSP with `cadence === 1` and `sapType` 0 or 1
-(`src/dash/vo/SegmentSequenceProperties.js`).
+A Representation counts as bootstrap when it has an SSP with `cadence === 1` and a random access SAP type
+(`SegmentSequenceProperties.isRandomAccessSapType`: `sapType` 0, 1 or 2; 0 is the default if none is signaled).
 
-### 2.5 Entry points per scheduling tick
+`_getPossibleVoRepresentations` lists bootstrap Representations **after** all other Representations and assigns
+`absoluteIndex` afterwards. The ABR candidates therefore have an `absoluteIndex` that matches their position in the
+filtered list. Rules like BOLA and L2A index their per-Representation arrays by `absoluteIndex`.
+
+The public API (`getRepresentationsByType`, `setRepresentationForTypeById`, `setRepresentationForTypeByIndex`) passes
+`includeBootstrapRepresentations = true`, so the Representation that plays during startup is listed. Selecting a
+bootstrap Representation manually is possible, but the bootstrap exit leaves it again at the next switch point.
+
+### 2.6 Entry points per scheduling tick
 
 `ScheduleController._scheduleNextRequest` (`src/streaming/controllers/ScheduleController.js`) runs these steps in order:
 
@@ -183,14 +192,17 @@ A Representation counts as bootstrap when it has an SSP with `cadence === 1` and
 2. `abrController.checkPlaybackQuality()`: only when `shouldCheckPlaybackQuality` is set, which happens after a
    media request. It runs:
    1. the bootstrap exit (independent of ABR and of the switch policy)
-   2. the target-agnostic `canPerformQualitySwitch`
-   3. the ABR rules
-   4. the reachability check and hopping
-   5. the switch policy (2.6)
+   2. the wait check: if `lastSegment` still belongs to another Representation (a switch has just happened), no switch
+      until a partial segment of the current Representation has been requested. The reference frames of the next
+      S-Frame would otherwise come from the Representation before the switch.
+   3. the target-agnostic `canPerformQualitySwitch`
+   4. the ABR rules
+   5. the reachability check and hopping
+   6. the switch policy (2.7)
 3. If nothing switched, `_getNextFragment()` requests the init segment, or the media segment when the Representation is
    already initialized or `skipInitSegments` is set.
 
-### 2.6 Switch policy within a segment sequence
+### 2.7 Switch policy within a segment sequence
 
 Partial segments are short, so throughput samples are noisy, and every S-Frame costs more bits than a regular inter
 frame. Without limits, the ABR rules can step up through the ladder one partial segment at a time, or flip down and
@@ -240,7 +252,7 @@ How it works:
    - This step ignores `autoSwitchBitrate`, the ABR rules and the switch policy, and it is not counted as an up-switch.
 5. **The switch.** `_changeQuality(bs-540 → 540p)`:
    - `isAdaptationSetSwitch = true`.
-   - `noInitSegmentRequired = true`, because `next ≠ 0` and the target has an aligned SAP 7 and no SAP 0/1 at `next`.
+   - `noInitSegmentRequired = true`, because `next ≠ 0` and the target has an aligned SAP 7 and no SAP 0, 1 or 2 at `next`.
    - Downstream, no `setSwitchTrack`, no init segment, no `abort()`/`changeType()`. Only `timestampOffset` is updated.
    - The next request is `540p` partial `n+1`, which begins with an S-Frame that references the `bs-540` frames already
      in the decoder.
@@ -375,18 +387,25 @@ boundary and switches with an init segment and `changeType()`.
 
 ### M8: Target signals both an IDR and an S-Frame at `next`
 
-If the target has an aligned SSP with `sapType` 0/1 at `next`, the gate passes no matter which switching set or scaling
+If the target has an aligned SSP with `sapType` 0, 1 or 2 at `next`, the gate passes no matter which switching set or scaling
 limits apply. `_entersTargetAtSFrame` returns `false`, so the init segment is loaded and the decoder is reset. The IDR
 wins over the S-Frame. Because `next != 0`, the switch policy still applies.
 
-### M9: Manual switch (`setRepresentationForTypeByIndex` without `forceReplace`)
+### M9: Manual switch (`setRepresentationForTypeByIndex`)
 
 `manuallySetPlaybackQuality`:
 
-1. If `canPerformQualitySwitch(lastSegment, current, target)` passes, the switch happens immediately (like M1 and M2).
-2. Otherwise the request is **queued**. On every tick, `handlePendingManualQualitySwitch` runs
+1. A newer manual request replaces a queued one.
+2. With `forceReplace`, the switch happens immediately, without the switch point check or hops. The replacement prunes
+   the buffer and restarts loading at a random access point of the target (2.3), it never enters at an S-Frame.
+3. If `lastSegment` still belongs to another Representation (a switch has just happened and no partial segment of the
+   current Representation has been requested yet), the request is queued. The reference frames of the next partial
+   segment still come from the previous Representation.
+4. If `canPerformQualitySwitch(lastSegment, current, target)` passes, the switch happens immediately (like M1 and M2).
+5. Otherwise the request is **queued**. On every tick, `handlePendingManualQualitySwitch` runs
    `_getReachableRepresentationTowards`:
-   - If it returns the target, the switch happens and the queue entry is removed.
+   - If it returns the target, the switch happens and the queue entry is removed. If the target is already the
+     current Representation, it returns `false`, so the ScheduleController continues with the next request.
    - If it returns an intermediate rung, the player hops and the request **stays queued**.
    - If it returns `null`, nothing happens this tick.
 
@@ -421,8 +440,9 @@ boundaries, and the policy never applies to it.
 | Two Representations with the same `@bandwidth`                    | Treated as neither up nor down: not limited and not counted.                                                |
 | Portal size / max bitrate / CMSD filters                          | These also apply to the bootstrap exit and to hop candidates. A filtered-out rung cannot serve as a hop.    |
 | Current Representation has no SSP (mid-segment)                   | No switch until the segment boundary.                                                                       |
-| `forceReplace` / `forceAbandon`                                   | `noInitSegmentRequired = false`. The S-Frame path is never used. `forceReplace` reloads from the last random access point before the playhead (2.4). |
-| Seek outside the buffer                                           | Loading starts at the last random access point before the seek target (2.4).                                |
+| `forceReplace` / `forceAbandon`                                   | `noInitSegmentRequired = false`. The S-Frame path is never used. `forceReplace` reloads from the last random access point before the playhead (2.3). |
+| Seek outside the buffer                                           | Loading starts at the last random access point before the seek target (2.3).                                |
+| Current Representation excluded (`excludeRepresentation`)          | `_switchAwayFromExcludedRepresentation`: switch to the fallback if it is reachable, otherwise hop towards it and queue it like a manual switch. If not even a hop is possible, `forceReplace` to the fallback. |
 
 ## 6. Known limitations and open questions
 
@@ -446,7 +466,7 @@ boundaries, and the policy never applies to it.
    cover bootstrap exit, S-Frame switching, scaling limits, hopping and the switch policy. The end-to-end path (MSE
    append without abort, no init segment) has only been checked manually.
 9. **`forceReplace` freezes the picture.** `forceReplace` prunes the whole buffer and reloads from the last random
-   access point before the playhead (2.4), which is usually the start of the segment. The decoder has to decode all
+   access point before the playhead (2.3), which is usually the start of the segment. The decoder has to decode all
    frames up to the playhead first. With 8 s segments and AV1 720p in Chrome, the picture froze for 1.5 to 4 s, at
    times with a short stall. Re-entering through a bootstrap Representation, which has an IDR at every partial segment,
    would shorten this, but only works if a bootstrap AdaptationSet exists.
@@ -458,21 +478,23 @@ All functions without a file are in `src/streaming/controllers/AbrController.js`
 | Concern                         | Location                                                                                       |
 |---------------------------------|------------------------------------------------------------------------------------------------|
 | Constants (SAP 7, 2x / 16x)     | `S_FRAME_SAP_TYPE`, `S_FRAME_MAX_DOWNSCALE_FACTOR`, `S_FRAME_MAX_UPSCALE_FACTOR`                |
-| Bootstrap filter                | `_filterOutBootstrapRepresentations`                                                           |
+| Bootstrap filter and order      | `_filterOutBootstrapRepresentations`, `_moveBootstrapRepresentationsToTheEnd`                  |
 | ABR entry point                 | `checkPlaybackQuality`                                                                         |
 | Switch policy                   | `_isMidSegmentSequenceSwitch`, `_getSegmentSequenceSwitchState`, `_isAllowedBySegmentSequenceSwitchingSettings`, `_addSegmentSequenceSwitch` |
 | Switch gate                     | `canPerformQualitySwitch`                                                                      |
 | Cadence check (current)         | `_hasAccessPointAtNextPartialSegment`                                                          |
 | SAP check (target)              | `_targetAllowsSwitchInAtNextPartialSegment`                                                    |
-| S-Frame splice conditions       | `_canSpliceIntoSFrame`, `_isWithinScaledReferenceLimits`, `_isInSameSwitchingSet`             |
+| S-Frame splice conditions       | `_canSpliceIntoSFrame`, `_isWithinScaledReferenceLimits`, `_isInSameSwitchingSet`, `_isSameCodecFamily` |
 | Skip init on S-Frame            | `_entersTargetAtSFrame`, used in `_changeQuality`                                              |
 | Hopping                         | `_getReachableRepresentationTowards`                                                           |
 | Bootstrap exit                  | `_getBootstrapExitRepresentation`, `_isBetterBootstrapExit`                                    |
 | Closest-quality comparator      | `_isCloserInQuality`                                                                           |
 | Manual switch / queue           | `manuallySetPlaybackQuality`, `handlePendingManualQualitySwitch`                               |
+| Excluded current Representation | `_switchAwayFromExcludedRepresentation`                                                        |
 | Abandon restriction             | `_canAbandonRequest`                                                                           |
 | Policy settings                 | `src/core/Settings.js` (`SegmentSequenceSwitchingSettings`), `index.d.ts`                     |
-| Bootstrap classification        | `src/dash/vo/SegmentSequenceProperties.js`                                                     |
+| Bootstrap classification        | `src/dash/vo/SegmentSequenceProperties.js` (`isBootstrapConfiguration`, `isRandomAccessSapType`) |
+| Random access after seek/replace | `src/dash/utils/SegmentsUtils.js` (`getRandomAccessSubNumber`), `src/streaming/StreamProcessor.js` (`setExplicitBufferingTime`) |
 | Initial track selection         | `src/streaming/controllers/MediaController.js` (`_getL3DBootstrapTracks`, `lowestStartupDelay`)|
 | Initial Representation          | `src/streaming/StreamProcessor.js` (`getOptimalRepresentationForBitrate` call)                 |
 | Switch handling without init    | `src/streaming/StreamProcessor.js` (`_handleDifferentSwitchTypes`)                             |
