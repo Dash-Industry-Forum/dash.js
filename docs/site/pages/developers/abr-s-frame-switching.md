@@ -93,13 +93,16 @@ flowchart TD
     D -->|no: pre-check before the ABR rules run| OK
     D -->|yes| E["target SSP aligned at next with sapType 0/1?"]
     E -->|yes: IDR, enter from anywhere| OK
-    E -->|no| F["target SSP aligned at next with sapType 7<br/>AND same switching set<br/>AND within scaled reference limits?"]
+    E -->|no| F["target SSP aligned at next with sapType 7<br/>AND same switching set<br/>AND same codec family<br/>AND within scaled reference limits?"]
     F -->|yes| OK
     F -->|no| NO
 ```
 
 - **Same switching set** (`_isInSameSwitchingSet`): the two Representations share an AdaptationSet, or their
-  AdaptationSets reference each other through `adaptation-set-switching`. Codecs strings are deliberately not compared.
+  AdaptationSets reference each other through `adaptation-set-switching`.
+- **Same codec family** (`_isSameCodecFamily`): linked AdaptationSets may use different codecs, and an S-Frame cannot
+  reference frames of another codec. The S-Frame path also neither appends an init segment nor calls `changeType()`.
+  The check compares `codecFamily` (e.g. `av01`, `avc`) and is skipped when either side doesn't signal a codec.
 - **Scaled reference limits** (`_isWithinScaledReferenceLimits`): this is AV1 spec 7.9. The S-Frame of the
   target references frames of the current Representation. Per dimension:
   - `target * 2 >= current`: you can go down at most 2x.
@@ -125,6 +128,30 @@ for `forceReplace` and `forceAbandon`. When the flag is set, the downstream code
    `timestampOffset`. It does **not** call `abort()` or `changeType()`. An abort would trigger the MSE "reset parser state",
    which sets "need random access point". The non-sync S-Frame samples would then be silently dropped.
 3. Fast switching is never used for partial segments (`StreamProcessor.js`, `!lastSegment.isPartialSegment`).
+
+### 2.4 Starting to load without reference frames
+
+A partial segment that starts with an S-Frame only decodes after the preceding partial segment. When the player starts
+loading at a time without that predecessor in the decoder, it has to start at a random access point instead.
+
+`StreamProcessor.setExplicitBufferingTime(time, requiresRandomAccessPoint = true)` records whether this is the case.
+`_getFragmentRequest` passes the flag via `DashHandler.getSegmentRequestForTime` and `SegmentsController.getSegmentByTime`
+to the template and timeline segment getters. When set, `getRandomAccessSubNumber` (`src/dash/utils/SegmentsUtils.js`)
+rounds the partial at the requested time down to the last partial that starts with a random access point: one whose SSP
+has `sapType` 0/1 at a matching cadence, otherwise partial 0. Bootstrap Representations (`sapType="1"`,
+`cadence="1"`) and Representations without SSPs are unaffected.
+
+| Caller                                              | Random access point required                          |
+|-----------------------------------------------------|-------------------------------------------------------|
+| Seek outside the buffer, startup                    | yes                                                   |
+| Seek inside the buffer (continue at its end)        | no                                                    |
+| `forceReplace` (buffer is pruned)                   | yes                                                   |
+| Default switch without `segmentAlignment`           | only if there is no continuous buffer at the playhead |
+| Retry of an aborted or failed media request         | no                                                    |
+| `QuotaExceededError`, pruning ahead of the playhead | no                                                    |
+
+The cost is up to one segment of extra download and decoding before the playhead. A seek or `forceReplace` close to
+the end of a segment shows the previous picture until the decoder catches up, at the latest until the next segment.
 
 ### 2.3 Hopping
 
@@ -341,9 +368,10 @@ Candidates only come from the current AdaptationSet and the ones it lists in `ad
 (`_getPossibleMediaInfos`). An AdaptationSet that is not linked therefore never becomes an ABR target, so the
 "not in the same switching set" branch of the S-Frame check is mostly defensive.
 
-The opposite case matters more. Every linked AdaptationSet counts as the same switching set, **including one with a
-different codec**. Say an AVC AdaptationSet is linked to the AV1 main set. A switch from an AVC Representation into an
-AV1 S-Frame passes `_isInSameSwitchingSet`, and the player would splice without an init segment. See open issue 7.
+The opposite case matters more. Every linked AdaptationSet counts as the same switching set, even one with a
+different codec. Say an AVC AdaptationSet is linked to the AV1 main set. A switch from an AVC Representation into an
+AV1 S-Frame passes `_isInSameSwitchingSet` but fails `_isSameCodecFamily`, so the player waits for the next segment
+boundary and switches with an init segment and `changeType()`.
 
 ### M8: Target signals both an IDR and an S-Frame at `next`
 
@@ -393,7 +421,8 @@ boundaries, and the policy never applies to it.
 | Two Representations with the same `@bandwidth`                    | Treated as neither up nor down: not limited and not counted.                                                |
 | Portal size / max bitrate / CMSD filters                          | These also apply to the bootstrap exit and to hop candidates. A filtered-out rung cannot serve as a hop.    |
 | Current Representation has no SSP (mid-segment)                   | No switch until the segment boundary.                                                                       |
-| `forceReplace` / `forceAbandon`                                   | `noInitSegmentRequired = false`. The S-Frame path is never used.                                            |
+| `forceReplace` / `forceAbandon`                                   | `noInitSegmentRequired = false`. The S-Frame path is never used. `forceReplace` reloads from the last random access point before the playhead (2.4). |
+| Seek outside the buffer                                           | Loading starts at the last random access point before the seek target (2.4).                                |
 
 ## 6. Known limitations and open questions
 
@@ -401,24 +430,19 @@ boundaries, and the policy never applies to it.
    `enableSupplementalPropertyAdaptationSetSwitching = false`, there is no exit and no warning.
 2. **Hops in auto ABR are not remembered.** In M3, the player only reaches the original target if the rules decide
    the same way again on the next tick. The manual path (M9) keeps the target queued.
-3. **`forceReplace` in a partial-segment stream.** A manual `forceReplace` mid-segment passes the gate, but then sets
-   `noInitSegmentRequired = false`, prunes the buffer, and re-requests at the playhead. If the playhead partial of the
-   target starts with an S-Frame and not an IDR, the replacement cannot be decoded. This needs verification.
-4. **The scaling check uses the MPD's `@width`/`@height`.** AV1 superres or a render size that differs from the coded
+3. **The scaling check uses the MPD's `@width`/`@height`.** AV1 superres or a render size that differs from the coded
    frame size is not accounted for. Missing dimensions are treated as "allowed".
-5. **The gate checks cadence on the current Representation** (`_hasAccessPointAtNextPartialSegment`). This assumes the
+4. **The gate checks cadence on the current Representation** (`_hasAccessPointAtNextPartialSegment`). This assumes the
    cadence is uniform across the switching set.
-6. **`skipInitSegments` is per media type, not per Representation/AdaptationSet.**
-7. **Switching set = AdaptationSet linking only.** A linked AdaptationSet with a different codec family also qualifies
-   (M7). Comparing `codecFamily` would close this gap.
-8. **The policy is counted, not timed.** It limits switches per segment sequence. A switch at partial 7 and one at
+5. **`skipInitSegments` is per media type, not per Representation/AdaptationSet.**
+6. **The policy is counted, not timed.** It limits switches per segment sequence. A switch at partial 7 and one at
    partial 1 of the next sequence are still only two partials apart. If that turns out to be a problem, a minimum
    number of partials between switches would be the next option.
-9. **The ABR rules don't know about the policy.** A blocked request is dropped and re-proposed on the next partial.
+7. **The ABR rules don't know about the policy.** A blocked request is dropped and re-proposed on the next partial.
     `checkPlaybackQuality` adds the requested target to the switch request history **before** the reachability and
     policy checks, so `SwitchHistoryRule` sees blocked requests as switches. This was already the case for unreachable
     targets. It may be worth recording only applied switches.
-10. **No functional test coverage yet.** Unit tests in `test/unit/test/streaming/streaming.controllers.AbrController.js`
+8. **No functional test coverage yet.** Unit tests in `test/unit/test/streaming/streaming.controllers.AbrController.js`
     cover bootstrap exit, S-Frame switching, scaling limits, hopping and the switch policy. The end-to-end path (MSE
     append without abort, no init segment) has only been checked manually.
 
