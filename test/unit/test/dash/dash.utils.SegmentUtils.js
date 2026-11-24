@@ -3,7 +3,8 @@ import {
     processUriTemplate,
     getIndexBasedSegment,
     getTimeBasedSegment,
-    getTotalNumberOfPartialSegments
+    getTotalNumberOfPartialSegments,
+    getRandomAccessSubNumber
 } from '../../../../src/dash/utils/SegmentsUtils.js';
 import TimelineConverter from '../../../../src/dash/utils/TimelineConverter.js';
 
@@ -299,6 +300,37 @@ describe('SegmentsUtils', function () {
             expect(segment.isPartialSegment).to.be.true;
             expect(segment.duration).to.equal(3);
             expect(segment.totalNumberOfPartialSegments).to.equal(2);
+        });
+    });
+
+    describe('getRandomAccessSubNumber', function () {
+        const ssp = (sapType, cadence = 1) => ({ sapType, cadence });
+
+        it('should return the sub-number unchanged if no segment sequence properties are signaled', function () {
+            expect(getRandomAccessSubNumber({}, 5)).to.equal(5);
+            expect(getRandomAccessSubNumber({ segmentSequenceProperties: [] }, 5)).to.equal(5);
+        });
+
+        it('should return the sub-number unchanged if it is not a number', function () {
+            const representation = { segmentSequenceProperties: [ssp(7)] };
+            expect(getRandomAccessSubNumber(representation, undefined)).to.be.undefined;
+            expect(getRandomAccessSubNumber(representation, NaN)).to.be.NaN;
+        });
+
+        it('should return the sub-number unchanged if every partial segment starts with a random access point', function () {
+            expect(getRandomAccessSubNumber({ segmentSequenceProperties: [ssp(1)] }, 5)).to.equal(5);
+            expect(getRandomAccessSubNumber({ segmentSequenceProperties: [ssp(0)] }, 5)).to.equal(5);
+        });
+
+        it('should round down to the first partial segment if the partial segments start with S-Frames only', function () {
+            expect(getRandomAccessSubNumber({ segmentSequenceProperties: [ssp(7)] }, 5)).to.equal(0);
+        });
+
+        it('should round down to the last partial segment that starts with a random access point', function () {
+            const representation = { segmentSequenceProperties: [ssp(7), ssp(1, 4)] };
+            expect(getRandomAccessSubNumber(representation, 6)).to.equal(4);
+            expect(getRandomAccessSubNumber(representation, 4)).to.equal(4);
+            expect(getRandomAccessSubNumber(representation, 3)).to.equal(0);
         });
     });
 

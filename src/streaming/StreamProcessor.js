@@ -99,6 +99,7 @@ function StreamProcessor(config) {
         shouldRepeatRequest,
         shouldScheduleAfterPruning,
         shouldUseExplicitTimeForRequest,
+        explicitTimeRequiresRandomAccessPoint,
         trackSwitchInProgress;
 
     function setup() {
@@ -204,6 +205,7 @@ function StreamProcessor(config) {
 
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
+        explicitTimeRequiresRandomAccessPoint = true;
         shouldRepeatRequest = false;
     }
 
@@ -220,6 +222,7 @@ function StreamProcessor(config) {
         currentMediaInfo = null;
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
+        explicitTimeRequiresRandomAccessPoint = true;
         shouldRepeatRequest = false;
         qualityChangeInProgress = false;
         enhancementStreamProcessor = null;
@@ -335,7 +338,7 @@ function StreamProcessor(config) {
                         resolve();
                     } else {
                         const targetTime = isNaN(continuousBufferTime) ? e.seekTime : continuousBufferTime;
-                        setExplicitBufferingTime(targetTime);
+                        setExplicitBufferingTime(targetTime, isNaN(continuousBufferTime));
                         bufferController.setSeekTarget(targetTime);
 
                         const promises = [];
@@ -688,7 +691,9 @@ function StreamProcessor(config) {
             const representation = getRepresentation();
 
             if (shouldUseExplicitTimeForRequest) {
-                request = dashHandler.getSegmentRequestForTime(currentMediaInfo, representation, bufferingTime);
+                request = dashHandler.getSegmentRequestForTime(
+                    currentMediaInfo, representation, bufferingTime, explicitTimeRequiresRandomAccessPoint
+                );
             } else if (shouldRepeatRequest) {
                 request = dashHandler.repeatSegmentRequest(currentMediaInfo, representation);
             } else {
@@ -738,7 +743,7 @@ function StreamProcessor(config) {
         // If buffer removed ahead current time (QuotaExceededError or automatic buffer pruning) then adjust current
         // index handler time
         if (e.quotaExceeded && e.from > playbackController.getTime()) {
-            setExplicitBufferingTime(e.from);
+            setExplicitBufferingTime(e.from, false);
         }
 
         // (Re)start schedule once buffer has been pruned after a QuotaExceededError, or after pruning that interrupted
@@ -1233,7 +1238,7 @@ function StreamProcessor(config) {
 
             // in case of a media segment we reset the buffering time
             else {
-                setExplicitBufferingTime(e.request.startTime + (e.request.duration / 2));
+                setExplicitBufferingTime(e.request.startTime + (e.request.duration / 2), false);
             }
 
             // In case of a seek the schedule controller was stopped and will be started once the buffer has been
@@ -1284,7 +1289,7 @@ function StreamProcessor(config) {
 
         // Media segment could not be loaded
         else if (e.request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-            setExplicitBufferingTime(e.request.startTime + (e.request.duration / 2));
+            setExplicitBufferingTime(e.request.startTime + (e.request.duration / 2), false);
             _onMediaFragmentNeeded({}, false);
         }
     }
@@ -1328,7 +1333,7 @@ function StreamProcessor(config) {
 
     function _onQuotaExceeded(e) {
         // Stop scheduler (will be restarted once buffer is pruned)
-        setExplicitBufferingTime(e.quotaExceededTime);
+        setExplicitBufferingTime(e.quotaExceededTime, false);
         clearScheduleTimer();
     }
 
@@ -1718,7 +1723,7 @@ function StreamProcessor(config) {
         const continuousBufferTime = bufferController.getContinuousBufferTimeForTargetTime(time);
         const targetTime = isNaN(continuousBufferTime) ? time : continuousBufferTime;
 
-        setExplicitBufferingTime(targetTime);
+        setExplicitBufferingTime(targetTime, isNaN(continuousBufferTime));
         scheduleController.startScheduleTimer();
     }
 
@@ -1768,9 +1773,16 @@ function StreamProcessor(config) {
         }
     }
 
-    function setExplicitBufferingTime(value) {
+    /**
+     * @param {number} value
+     * @param {boolean} requiresRandomAccessPoint - false if loading continues right after media that is still in the
+     * buffer. Otherwise, the decoder has no reference frames and loading has to start at a random access point, see
+     * getRandomAccessSubNumber() in SegmentsUtils.
+     */
+    function setExplicitBufferingTime(value, requiresRandomAccessPoint = true) {
         bufferingTime = value;
         shouldUseExplicitTimeForRequest = true;
+        explicitTimeRequiresRandomAccessPoint = requiresRandomAccessPoint;
     }
 
     function setTrackSwitchInProgress(value) {

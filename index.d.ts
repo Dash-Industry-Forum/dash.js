@@ -376,7 +376,7 @@ export interface SegmentsController {
 
     getSegmentByIndex(representation: Representation, index: number, lastSegmentTime: number): any;
 
-    getSegmentByTime(representation: Representation, time: number): any;
+    getSegmentByTime(representation: Representation, time: number, requireRandomAccessPoint?: boolean): any;
 
     getMediaFinishedInformation(representation: Representation): any;
 }
@@ -638,7 +638,7 @@ export interface TemplateSegmentsGetter {
 
     getSegmentByIndex(representation: Representation, index: number): any;
 
-    getSegmentByTime(representation: Representation, requestedTime: number): any;
+    getSegmentByTime(representation: Representation, requestedTime: number, requireRandomAccessPoint?: boolean): any;
 }
 
 export interface TimelineConverter {
@@ -672,7 +672,7 @@ export interface TimelineConverter {
 export interface TimelineSegmentsGetter {
     getSegmentByIndex(representation: Representation, index: number, lastSegmentTime: number): Segment | null;
 
-    getSegmentByTime(representation: Representation, requestedTime: number): Segment | null;
+    getSegmentByTime(representation: Representation, requestedTime: number, requireRandomAccessPoint?: boolean): Segment | null;
 
     getMediaFinishedInformation(representation: Representation): number | object;
 }
@@ -1174,7 +1174,8 @@ export interface DashHandler {
 
     getNextSegmentRequestIdempotent(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
-    getSegmentRequestForTime(mediaInfo: MediaInfo, representation: Representation, time: number): FragmentRequest | null;
+    getSegmentRequestForTime(mediaInfo: MediaInfo, representation: Representation, time: number,
+        requireRandomAccessPoint?: boolean): FragmentRequest | null;
 
     getStreamId(): string;
 
@@ -6115,7 +6116,7 @@ export interface StreamProcessor {
 
     setEnhancementStreamProcessor(value: StreamProcessor): void;
 
-    setExplicitBufferingTime(value: number): void;
+    setExplicitBufferingTime(value: number, requiresRandomAccessPoint?: boolean): void;
 
     setMediaSource(mediaSource: MediaSource): void;
 

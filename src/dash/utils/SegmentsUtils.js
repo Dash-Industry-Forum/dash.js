@@ -283,8 +283,38 @@ function getTotalNumberOfPartialSegments(element) {
     return element.k;
 }
 
+/**
+ * Partial segments that start with a switching frame such as an AV1 S-Frame (SAP type 7) are not random access
+ * points, they only decode with the reference frames of the preceding partial segment. When loading starts at a time
+ * without these references (start, seek outside the buffer, buffer replacement), round down to the last partial
+ * segment that starts with a random access point. The first partial segment of a segment is always one. SAP type 0 is
+ * the default if no type is signaled.
+ * @param {object} representation
+ * @param {number} subNumber
+ * @return {number}
+ */
+function getRandomAccessSubNumber(representation, subNumber) {
+    const segmentSequenceProperties = representation ? representation.segmentSequenceProperties : null;
+    if (!segmentSequenceProperties || segmentSequenceProperties.length <= 0 || typeof subNumber !== 'number' ||
+        isNaN(subNumber)) {
+        return subNumber;
+    }
+
+    for (let candidate = subNumber; candidate > 0; candidate--) {
+        const startsWithRandomAccessPoint = segmentSequenceProperties.some((ssp) => {
+            return ssp.sapType <= 1 && candidate % ssp.cadence === 0;
+        });
+        if (startsWithRandomAccessPoint) {
+            return candidate;
+        }
+    }
+
+    return 0;
+}
+
 export {
     getIndexBasedSegment,
+    getRandomAccessSubNumber,
     getTimeBasedSegment,
     getTotalNumberOfPartialSegments,
     processUriTemplate,

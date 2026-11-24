@@ -265,6 +265,50 @@ describe('TimelineSegmentsGetter', () => {
             expect(seg.replacementSubNumber).to.equal(1);
         });
 
+        it('should round down to a partial segment that starts with a random access point', () => {
+            const mpd = {
+                manifest: {
+                    Period: [{
+                        AdaptationSet: [{
+                            Representation: [{
+                                SegmentTemplate: {
+                                    timescale: 40000,
+                                    initialization: 'init-$RepresentationID$.m4s',
+                                    SegmentTimeline: {
+                                        S: [
+                                            { t: 80000, d: 120000, k: 3 },
+                                            { d: 240000, k: 3 }
+                                        ]
+                                    },
+                                    media: 'video-$Time$-$SubNumber$.m4s'
+                                }
+                            }]
+                        }]
+                    }]
+                }
+            }
+            const adaptation = { period: { start: 0, index: 0, mpd }, index: 0 }
+            const representation = {
+                adaptation,
+                presentationTimeOffset: 2,
+                index: 0,
+                timescale: 40000,
+                segmentSequenceProperties: [{ sapType: 7, cadence: 1 }]
+            }
+
+            let seg = timelineSegmentsGetter.getSegmentByTime(representation, 2.1, true);
+            expect(seg.replacementTime).to.be.equal(80000);
+            expect(seg.replacementSubNumber).to.equal(0);
+
+            seg = timelineSegmentsGetter.getSegmentByTime(representation, 5.1, true);
+            expect(seg.replacementTime).to.be.equal(200000);
+            expect(seg.replacementSubNumber).to.equal(0);
+
+            // Without a required random access point, e.g. when continuing right after buffered media
+            seg = timelineSegmentsGetter.getSegmentByTime(representation, 5.1);
+            expect(seg.replacementSubNumber).to.equal(1);
+        });
+
         it('should fall back to full segment (not partial) when time is exactly at end boundary of a segment with partials', () => {
             const voHelper = new VoHelper();
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);

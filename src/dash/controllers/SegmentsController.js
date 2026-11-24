@@ -109,9 +109,9 @@ function SegmentsController(config) {
         return getter.getSegmentByIndex(representation, indexWithoutStartNumber);
     }
 
-    function getSegmentByTime(representation, time) {
+    function getSegmentByTime(representation, time, requireRandomAccessPoint = false) {
         const getter = getSegmentsGetter(representation);
-        return getter ? getter.getSegmentByTime(representation, time) : null;
+        return getter ? getter.getSegmentByTime(representation, time, requireRandomAccessPoint) : null;
     }
 
     function getMediaFinishedInformation(representation) {
