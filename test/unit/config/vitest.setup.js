@@ -50,11 +50,47 @@ function withDoneCallback(fn) {
     }
     return function () {
         return new Promise((resolve, reject) => {
-            const done = (err) => (err ? reject(err) : resolve());
+            let returned = false;
+            let settled = false;
+            let doneCalls = 0;
+            let pendingResult = null;
+            const settle = (err) => {
+                if (!settled) {
+                    settled = true;
+                    err ? reject(err) : resolve();
+                }
+            };
+            const done = (err) => {
+                doneCalls++;
+                if (doneCalls > 1) {
+                    const error = new Error('done() called multiple times');
+                    if (settled) {
+                        // The test already finished; report as an unhandled error, like Mocha does
+                        setTimeout(() => {
+                            throw error;
+                        });
+                    } else {
+                        settle(error);
+                    }
+                    return;
+                }
+                // Like Mocha, a synchronous done() only counts once the test function has returned,
+                // so an exception thrown after it still fails the test
+                if (returned) {
+                    settle(err);
+                } else {
+                    pendingResult = { err };
+                }
+            };
             try {
                 fn.call(this, done);
             } catch (e) {
-                reject(e);
+                settle(e);
+                return;
+            }
+            returned = true;
+            if (pendingResult) {
+                settle(pendingResult.err);
             }
         });
     };
@@ -62,7 +98,10 @@ function withDoneCallback(fn) {
 
 function wrapTest(original) {
     const wrapped = (name, fn, ...rest) => original(name, withDoneCallback(fn), ...rest);
-    Object.assign(wrapped, original);
+    // Keep the modifiers (skipIf, runIf, each, ...) bound to the original test function
+    for (const key of Object.keys(original)) {
+        wrapped[key] = typeof original[key] === 'function' ? original[key].bind(original) : original[key];
+    }
     wrapped.only = (name, fn, ...rest) => original.only(name, withDoneCallback(fn), ...rest);
     wrapped.skip = (name, fn, ...rest) => original.skip(name, withDoneCallback(fn), ...rest);
     return wrapped;

@@ -558,10 +558,7 @@ describe('Capabilities', function () {
         })
         */
 
-        it('should test all default PlayReady system strings with the Media Capabilities API', function () {
-            if (!navigator.mediaCapabilities) {
-                this.skip();
-            }
+        it.skipIf(!navigator.mediaCapabilities)('should test all default PlayReady system strings with the Media Capabilities API', function () {
             settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true } } });
             const stub = sinon.stub(navigator.mediaCapabilities, 'decodingInfo').callsFake((cfg) => {
                 const keySystem = cfg.keySystemConfiguration.keySystem;
