@@ -869,7 +869,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * player will switch from throughput to Bola.
  *
  * @property {module:Settings~SegmentSequenceSwitchingSettings} [segmentSequenceSwitching]
- * Limits the quality switches the ABR logic performs in the middle of a segment sequence, i.e. at partial segment boundaries of content signaling partial segments and SegmentSequenceProperties.
+ * Limits the quality switches the ABR logic performs in the middle of a segment sequence, i.e. at partial segment
+ * boundaries of content signaling partial segments and SegmentSequenceProperties.
  *
  * @property {module:Settings~AbrRules} [rules]
  * Enable/Disable individual ABR rules. Note that if the throughputRule and the bolaRule are activated at the same time
@@ -898,14 +899,18 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 
 /**
  * @typedef {Object} SegmentSequenceSwitchingSettings
- * Only applies to switches the ABR rules request in the middle of a segment sequence, for instance into an S-Frame. Switches at the start of a segment sequence,
- * leaving a bootstrap Representation and manual quality switches are not limited.
+ * Only applies to switches the ABR rules request in the middle of a segment sequence, for instance into an S-Frame.
+ * Switches at the start of a segment sequence, leaving a bootstrap Representation and manual quality switches are not
+ * limited.
  * @property {number} [maxUpSwitchesPerSequence=1]
- * Maximum number of up-switches within one segment sequence. Use 0 to only switch up at the start of a segment sequence and -1 for no limit.
+ * Maximum number of up-switches within one segment sequence. Use 0 to only switch up at the start of a segment sequence
+ * and -1 for no limit.
  * @property {number} [maxDownSwitchesPerSequence=-1]
- * Maximum number of down-switches within one segment sequence. Note that a large down-switch might be performed in several hops, each hop counts as a down-switch. Use -1 for no limit.
+ * Maximum number of down-switches within one segment sequence. Note that a large down-switch might be performed in
+ * several hops, each hop counts as a down-switch. Use -1 for no limit.
  * @property {boolean} [allowUpSwitchAfterDownSwitch=false]
- * If false, the ABR logic does not switch up again in a segment sequence in which it already switched down. This prevents an immediate down and up switch.
+ * If false, the ABR logic does not switch up again in a segment sequence in which it already switched down. This
+ * prevents an immediate down and up switch.
  * @property {boolean} [allowDownSwitchAfterUpSwitch=true]
  * If false, the ABR logic does not switch down again in a segment sequence in which it already switched up.
  */
@@ -1216,8 +1221,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Maximum number of entries to keep in the init segment cache. When the cache exceeds this limit, the least recently
  * used entries are evicted.
  * @property {object} [skipInitSegments={video: false, audio: false, text: false}]
- * Skips requesting initialization segments for the given media type. Only enable this for content whose media segments are self-initializing, i.e. each media segment carries its own moov box.
- * With this flag enabled the first media segment of a Representation is requested directly, also after a quality or track switch. The SourceBuffer preparation for quality switches is not changed by this setting.
+ * Skips requesting initialization segments for the given media type. Only enable this for content whose media segments
+ * are self-initializing, i.e. each media segment carries its own moov box.
+ * With this flag enabled the first media segment of a Representation is requested directly, also after a quality or
+ * track switch. The SourceBuffer preparation for quality switches is not changed by this setting.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  * @property {boolean} [applyProducerReferenceTime=true]

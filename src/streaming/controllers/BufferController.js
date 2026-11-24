@@ -565,7 +565,8 @@ function BufferController(config) {
 
     function _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation, noInitSegmentRequired = false) {
         // When the switch enters the target Representation at an S-Frame the media pipeline must not be reset:
-        // Aborting the SourceBuffer runs the MSE reset parser state algorithm, which sets the "need random access point" flag.
+        // Aborting the SourceBuffer runs the MSE reset parser state algorithm, which sets the "need random access
+        // point" flag.
         // The upcoming S-Frames are not sync samples and would silently be dropped, leaving a gap in the buffer.
         if (noInitSegmentRequired) {
             return updateBufferTimestampOffset(newRepresentation);

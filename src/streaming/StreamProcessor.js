@@ -783,14 +783,23 @@ function StreamProcessor(config) {
         }
 
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
-            _prepareForDefaultQualitySwitch(pendingSwitchToVoRepresentation.newRepresentation, pendingSwitchToVoRepresentation.oldRepresentation, pendingSwitchToVoRepresentation.noInitSegmentRequired);
+            _prepareForDefaultQualitySwitch(
+                pendingSwitchToVoRepresentation.newRepresentation,
+                pendingSwitchToVoRepresentation.oldRepresentation,
+                pendingSwitchToVoRepresentation.noInitSegmentRequired
+            );
         } else if (!trackSwitchInProgress) {
             scheduleController.startScheduleTimer(0);
         }
     }
 
     function _resetPendingSwitchToRepresentation() {
-        pendingSwitchToVoRepresentation = { newRepresentation: null, oldRepresentation: null, noInitSegmentRequired: false, enabled: false };
+        pendingSwitchToVoRepresentation = {
+            newRepresentation: null,
+            oldRepresentation: null,
+            noInitSegmentRequired: false,
+            enabled: false
+        };
     }
 
     /**
@@ -957,7 +966,8 @@ function StreamProcessor(config) {
         // Stop scheduling until we are done with preparing the quality switch
         clearScheduleTimer();
 
-        // Informing ScheduleController about AS switch. If the switch enters the target Representation at an S-Frame no init segment is needed.
+        // Informing ScheduleController about AS switch. If the switch enters the target Representation at an S-Frame no
+        // init segment is needed.
         if (!e.noInitSegmentRequired) {
             scheduleController.setSwitchTrack(true);
         }
@@ -980,8 +990,8 @@ function StreamProcessor(config) {
             logger.warn(`_handleDifferentSwitchTypes() is missing the target representations`);
         }
 
-        // The switch enters the target Representation at an S-Frame: skip the init segment by marking the target as initialized,
-        // so the next request is the target's partial media segment.
+        // The switch enters the target Representation at an S-Frame: skip the init segment by marking the target as
+        // initialized, so the next request is the target's partial media segment.
         if (e.noInitSegmentRequired && newRepresentation) {
             logger.debug(`Switching to representation ${newRepresentation.id} without appending an init segment as the switch enters at an S-Frame`);
             scheduleController.setLastInitializedRepresentationId(newRepresentation.id);
@@ -1136,7 +1146,8 @@ function StreamProcessor(config) {
     }
 
     function _prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation, noInitSegmentRequired = false) {
-        // We are not canceling the current request. Check if there is still an ongoing request. If so we wait for the request to be finished and the media to be appended
+        // We are not canceling the current request. Check if there is still an ongoing request. If so we wait for the
+        // request to be finished and the media to be appended
         const ongoingRequests = fragmentModel.getRequests({ state: FragmentModel.FRAGMENT_MODEL_LOADING })
         if (ongoingRequests && ongoingRequests.length > 0) {
             logger.debug('Preparing for default quality switch: Waiting for ongoing segment request to be finished before applying switch.')

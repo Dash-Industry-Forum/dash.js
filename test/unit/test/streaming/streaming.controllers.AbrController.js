@@ -695,7 +695,8 @@ describe('AbrController', function () {
         });
 
         it('should return true if the current Representation declares a cadence aligned access point, regardless of its SAP type', function() {
-            // The SAP type describes where we may switch into a Representation, so it is only evaluated against the target Representation
+            // The SAP type describes where we may switch into a Representation, so it is only evaluated against the
+            // target Representation
             const ssp = new SegmentSequenceProperties();
             ssp.sapType = 2
             expect(abrCtrl.canPerformQualitySwitch({
@@ -787,51 +788,68 @@ describe('AbrController', function () {
             }
 
             beforeEach(function () {
-                // The AdapterMock unconditionally reports all MediaInfos as equal, which would defeat the switching set check
+                // The AdapterMock unconditionally reports all MediaInfos as equal, which would defeat the switching set
+                // check
                 adapterMock.areMediaInfosEqual = (a, b) => a === b;
             });
 
             it('should return true for an S-Frame target in the same AdaptationSet', function () {
                 const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
-                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(7, mediaInfo), _representation(7, mediaInfo))).to.be.true;
+                expect(abrCtrl.canPerformQualitySwitch(
+                    lastSegment, _representation(7, mediaInfo), _representation(7, mediaInfo)
+                )).to.be.true;
             });
 
             it('should return true for an S-Frame target in an AdaptationSet of the same switching set', function () {
                 const bootstrapMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: ['0'] };
                 const ssrMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: ['1'] };
-                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, bootstrapMediaInfo), _representation(7, ssrMediaInfo))).to.be.true;
+                expect(abrCtrl.canPerformQualitySwitch(
+                    lastSegment, _representation(1, bootstrapMediaInfo), _representation(7, ssrMediaInfo)
+                )).to.be.true;
             });
 
             it('should return false for an S-Frame target that is not part of the same switching set', function () {
                 const bootstrapMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: [] };
                 const ssrMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
-                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, bootstrapMediaInfo), _representation(7, ssrMediaInfo))).to.be.false;
+                expect(abrCtrl.canPerformQualitySwitch(
+                    lastSegment, _representation(1, bootstrapMediaInfo), _representation(7, ssrMediaInfo)
+                )).to.be.false;
             });
 
             it('should return true for a closed GOP target that is not part of the same switching set', function () {
                 const currentMediaInfo = { id: '1', adaptationSetSwitchingCompatibleIds: [] };
                 const targetMediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
-                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, currentMediaInfo), _representation(1, targetMediaInfo))).to.be.true;
+                expect(abrCtrl.canPerformQualitySwitch(
+                    lastSegment, _representation(1, currentMediaInfo), _representation(1, targetMediaInfo)
+                )).to.be.true;
             });
 
             it('should return false for a target with a SAP type we can not switch into', function () {
                 const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
-                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, mediaInfo), _representation(4, mediaInfo))).to.be.false;
+                expect(abrCtrl.canPerformQualitySwitch(
+                    lastSegment, _representation(1, mediaInfo), _representation(4, mediaInfo)
+                )).to.be.false;
             });
 
             it('should return false for an open GOP target in the same switching set, as only SAP type 7 signals a switching frame', function () {
                 const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
-                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(7, mediaInfo), _representation(3, mediaInfo))).to.be.false;
+                expect(abrCtrl.canPerformQualitySwitch(
+                    lastSegment, _representation(7, mediaInfo), _representation(3, mediaInfo)
+                )).to.be.false;
             });
 
             it('should return false for an S-Frame target in the same switching set whose cadence does not line up', function () {
                 const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
-                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(7, mediaInfo), _representation(7, mediaInfo, 4))).to.be.false;
+                expect(abrCtrl.canPerformQualitySwitch(
+                    lastSegment, _representation(7, mediaInfo), _representation(7, mediaInfo, 4)
+                )).to.be.false;
             });
 
             it('should return false if the target does not declare any segmentSequenceProperties', function () {
                 const mediaInfo = { id: '0', adaptationSetSwitchingCompatibleIds: [] };
-                expect(abrCtrl.canPerformQualitySwitch(lastSegment, _representation(1, mediaInfo), { segmentSequenceProperties: [], mediaInfo })).to.be.false;
+                expect(abrCtrl.canPerformQualitySwitch(
+                    lastSegment, _representation(1, mediaInfo), { segmentSequenceProperties: [], mediaInfo }
+                )).to.be.false;
             });
 
         })
@@ -1095,7 +1113,8 @@ describe('AbrController', function () {
             capturedEvent = null;
             bootstrapMediaInfo = _mediaInfo('bootstrapAs', ['mainAs']);
             mainMediaInfo = _mediaInfo('mainAs', ['bootstrapAs']);
-            // Only Representations of the current MediaInfo are resolved directly, the compatible ones come from the StreamProcessor
+            // Only Representations of the current MediaInfo are resolved directly, the compatible ones come from the
+            // StreamProcessor
             streamProcessor.getAllMediaInfos = () => [bootstrapMediaInfo, mainMediaInfo];
             adapterMock.areMediaInfosEqual = (a, b) => a === b;
 
@@ -1313,7 +1332,8 @@ describe('AbrController', function () {
             bootstrap360 = _representation('bootstrap360p', 972253, 640, 360, [_ssp(1)], bootstrap360MediaInfo);
             bootstrap540 = _representation('bootstrap540p', 1544145, 960, 540, [_ssp(1)], bootstrap540MediaInfo);
             const all = [main360, main540, main720, main1080, bootstrap360, bootstrap540];
-            adapterMock.getVoRepresentations = (mediaInfo) => all.filter((representation) => representation.mediaInfo === mediaInfo);
+            adapterMock.getVoRepresentations = (mediaInfo) =>
+                all.filter((representation) => representation.mediaInfo === mediaInfo);
 
             _setCurrentRepresentation(main1080);
             // Required by the RulesContext the ABR rules are evaluated with
@@ -1337,7 +1357,9 @@ describe('AbrController', function () {
         describe('scaled reference limits', function () {
 
             it('should not allow an S-Frame down-switch below half the resolution', function () {
-                expect(abrCtrl.canPerformQualitySwitch(streamProcessor.getLastSegment(), main1080, main360)).to.be.false;
+                expect(abrCtrl.canPerformQualitySwitch(
+                    streamProcessor.getLastSegment(), main1080, main360
+                )).to.be.false;
             });
 
             it('should allow an S-Frame down-switch to exactly half the resolution', function () {
@@ -1374,12 +1396,14 @@ describe('AbrController', function () {
         describe('bootstrap Representations as ABR candidates', function () {
 
             it('should not offer bootstrap Representations to the ABR rules', function () {
-                const ids = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mainMediaInfo, true).map((representation) => representation.id);
+                const ids = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mainMediaInfo, true)
+                    .map((representation) => representation.id);
                 expect(ids).to.have.members(['main360p', 'main540p', 'main720p', 'main1080p']);
             });
 
             it('should keep bootstrap Representations if nothing else is available, as during startup', function () {
-                const ids = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(bootstrap360MediaInfo, false).map((representation) => representation.id);
+                const ids = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(bootstrap360MediaInfo, false)
+                    .map((representation) => representation.id);
                 expect(ids).to.deep.equal(['bootstrap360p']);
             });
 
@@ -1446,7 +1470,8 @@ describe('AbrController', function () {
 
             let ruleTarget;
 
-            // Unlike _stubRuleTarget the rules collection is only replaced once, so the switch state of the segment sequence survives target changes
+            // Unlike _stubRuleTarget the rules collection is only replaced once, so the switch state of the segment
+            // sequence survives target changes
             function _stubRuleTargets() {
                 FactoryMaker.extend('ABRRulesCollection', function () {
                     return {
@@ -1458,7 +1483,8 @@ describe('AbrController', function () {
                 abrCtrl.registerStreamType(Constants.VIDEO, streamProcessor);
             }
 
-            // Requests the ABR decision for the partial segment following replacementSubNumber and applies a resulting switch
+            // Requests the ABR decision for the partial segment following replacementSubNumber and applies a resulting
+            // switch
             function _checkAt(replacementSubNumber, target, index = 0) {
                 ruleTarget = target;
                 _setLastSegment(replacementSubNumber, 8, index);
@@ -1514,7 +1540,15 @@ describe('AbrController', function () {
             });
 
             it('should switch up after a down-switch if allowUpSwitchAfterDownSwitch is enabled', function () {
-                settings.update({ streaming: { abr: { segmentSequenceSwitching: { allowUpSwitchAfterDownSwitch: true } } } });
+                settings.update({
+                    streaming: {
+                        abr: {
+                            segmentSequenceSwitching: {
+                                allowUpSwitchAfterDownSwitch: true
+                            }
+                        }
+                    }
+                });
                 _setCurrentRepresentation(main720);
                 expect(_checkAt(2, main540)).to.be.true;
                 expect(_checkAt(3, main720)).to.be.true;
@@ -1526,7 +1560,15 @@ describe('AbrController', function () {
             });
 
             it('should not switch down after an up-switch if allowDownSwitchAfterUpSwitch is disabled', function () {
-                settings.update({ streaming: { abr: { segmentSequenceSwitching: { allowDownSwitchAfterUpSwitch: false } } } });
+                settings.update({
+                    streaming: {
+                        abr: {
+                            segmentSequenceSwitching: {
+                                allowDownSwitchAfterUpSwitch: false
+                            }
+                        }
+                    }
+                });
                 expect(_checkAt(2, main540)).to.be.true;
                 expect(_checkAt(3, main360)).to.be.false;
             });
@@ -1540,7 +1582,15 @@ describe('AbrController', function () {
             });
 
             it('should limit the down hops to maxDownSwitchesPerSequence', function () {
-                settings.update({ streaming: { abr: { segmentSequenceSwitching: { maxDownSwitchesPerSequence: 1 } } } });
+                settings.update({
+                    streaming: {
+                        abr: {
+                            segmentSequenceSwitching: {
+                                maxDownSwitchesPerSequence: 1
+                            }
+                        }
+                    }
+                });
                 _setCurrentRepresentation(main1080);
                 expect(_checkAt(2, main360)).to.be.true;
                 expect(_checkAt(3, main360)).to.be.false;

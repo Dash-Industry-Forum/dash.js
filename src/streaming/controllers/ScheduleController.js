@@ -173,7 +173,8 @@ function ScheduleController(config) {
     function _getNextFragment() {
         const currentRepresentation = representationController.getCurrentRepresentation();
 
-        // Self-initializing media segments: never request an init segment. Mark the Representation as initialized so scheduling is throttled by the buffer target.
+        // Self-initializing media segments: never request an init segment. Mark the Representation as initialized so
+        // scheduling is throttled by the buffer target.
         if (settings.get().streaming.skipInitSegments[type]) {
             lastInitializedRepresentationId = currentRepresentation.id;
             initSegmentRequired = false;
@@ -182,7 +183,8 @@ function ScheduleController(config) {
             return;
         }
 
-        // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
+        // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init
+        // segment
         if (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack) {
             _initFragmentNeeded(currentRepresentation)
         } else {
