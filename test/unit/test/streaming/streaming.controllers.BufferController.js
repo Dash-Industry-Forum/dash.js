@@ -580,14 +580,31 @@ describe('BufferController', function () {
             pruningController = null;
             playbackControllerMock.setTime(0);
             playbackControllerMock.setIsDynamic(false);
+            textControllerMock.enableText(false);
         });
 
         it('should prune the text buffer behind bufferToKeep for a dynamic stream', function () {
             playbackControllerMock.setIsDynamic(true);
+            textControllerMock.enableText(true);
             return createController('text')
                 .then(() => {
                     pruningController.pruneBuffer();
                     expect(buffer.remove.calledOnceWith(0, 80)).to.be.true;
+                });
+        });
+
+        it('should not prune the text buffer of a dynamic stream while text is disabled', function () {
+            playbackControllerMock.setIsDynamic(true);
+            textControllerMock.enableText(false);
+            return createController('text')
+                .then(() => {
+                    const bufferLevelSpy = sinon.spy();
+                    eventBus.on(Events.BUFFER_LEVEL_UPDATED, bufferLevelSpy);
+                    pruningController.pruneBuffer();
+                    eventBus.off(Events.BUFFER_LEVEL_UPDATED, bufferLevelSpy);
+
+                    expect(buffer.remove.called).to.be.false;
+                    expect(bufferLevelSpy.called).to.be.false;
                 });
         });
 
