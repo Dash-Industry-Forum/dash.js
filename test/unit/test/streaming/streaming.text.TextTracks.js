@@ -908,6 +908,18 @@ describe('TextTracks', function () {
             expect(track.cues.length).to.equal(0);
         });
 
+        it('should delete zero-duration cues on the boundaries of the range', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'At start', start: 10, end: 10},
+                {type: 'noHtml', data: 'At end', start: 20, end: 20}
+            ]);
+
+            textTracks.deleteCuesFromTrackIdx(0, 10, 20);
+            textTracks.updateTextTrackWindow(15, true);
+
+            expect(track.cues.length).to.equal(0);
+        });
+
         it('should delete all cues of the track if no range is given', function () {
             textTracks.addCaptions(0, 0, [
                 {type: 'noHtml', data: 'First cue', start: 0, end: 2},

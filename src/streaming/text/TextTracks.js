@@ -38,6 +38,8 @@ import Utils from '../../core/Utils.js';
 import { CueIntervalTree } from './CueIntervalTree.js';
 import { renderHTML } from 'imsc';
 
+const CUE_RANGE_EPSILON = 0.001;
+
 const CUE_PROPS_TO_COMPARE = [
     'text',
     'align',
@@ -1135,8 +1137,11 @@ function TextTracks(config) {
             if (isNaN(start) && isNaN(end)) {
                 cueData.allCues.clear();
             } else {
+                // The tree query excludes the range boundaries, so widen it to also return cues that touch them
+                // (e.g. zero-duration cues). cueInRange decides which candidates are deleted.
                 const candidates = isNaN(start) || isNaN(end) ?
-                    cueData.allCues.getAllCues() : cueData.allCues.findCuesInRange(start, end);
+                    cueData.allCues.getAllCues() :
+                    cueData.allCues.findCuesInRange(start - CUE_RANGE_EPSILON, end + CUE_RANGE_EPSILON);
                 candidates
                     .filter(cue => cueInRange(cue, start, end, strict))
                     .forEach(cue => cueData.allCues.removeCue(cue));
