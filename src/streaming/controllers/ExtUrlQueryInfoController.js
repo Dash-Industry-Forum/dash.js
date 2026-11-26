@@ -117,24 +117,46 @@ function ExtUrlQueryInfoController() {
         }
     }
 
+    function _getAbsoluteUrl(url) {
+        try {
+            return url ? new URL(url) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     function createFinalQueryStrings(manifest) {
-        mpdQueryStringInformation = {
-            origin: new URL(manifest.url).origin,
+        mpdQueryStringInformation = null;
+
+        if (!manifest || !Array.isArray(manifest.Period)) {
+            logger.warn('Manifest has no Period, skipping UrlQueryInfo and ExtUrlQueryInfo processing');
+            return;
+        }
+
+        // The MPD URL is needed for useMPDUrlQuery and sameOriginOnly. Manifest objects passed to attachSource()
+        // by the application may not have an absolute one.
+        const manifestUrl = _getAbsoluteUrl(manifest.url);
+        if (!manifestUrl) {
+            logger.warn('Manifest has no absolute URL, useMPDUrlQuery and sameOriginOnly of UrlQueryInfo and ExtUrlQueryInfo cannot be applied');
+        }
+
+        const queryStringInformation = {
+            origin: manifestUrl ? manifestUrl.origin : null,
             period: []
         };
 
-        const mpdUrlQuery = manifest.url.split('?')[1];
+        const mpdUrlQuery = manifestUrl ? manifest.url.split('?')[1] : undefined;
         const initialMpdObject = { initialQueryString: '', includeInRequests: [] };
 
-        _generateQueryParams(mpdQueryStringInformation, manifest, mpdUrlQuery, initialMpdObject, DashConstants.MPD);
+        _generateQueryParams(queryStringInformation, manifest, mpdUrlQuery, initialMpdObject, DashConstants.MPD);
 
         manifest.Period.forEach((period) => {
             const periodObject = {
                 adaptation: []
             };
-            _generateQueryParams(periodObject, period, mpdUrlQuery, mpdQueryStringInformation, DashConstants.PERIOD);
+            _generateQueryParams(periodObject, period, mpdUrlQuery, queryStringInformation, DashConstants.PERIOD);
 
-            period.AdaptationSet.forEach((adaptationSet) => {
+            (period.AdaptationSet || []).forEach((adaptationSet) => {
                 const adaptationObject = {
                     representation: []
                 };
@@ -146,7 +168,7 @@ function ExtUrlQueryInfoController() {
                     DashConstants.ADAPTATION_SET
                 );
 
-                adaptationSet.Representation.forEach((representation) => {
+                (adaptationSet.Representation || []).forEach((representation) => {
                     const representationObject = {};
                     _generateQueryParams(
                         representationObject,
@@ -160,8 +182,10 @@ function ExtUrlQueryInfoController() {
                 });
                 periodObject.adaptation.push(adaptationObject);
             });
-            mpdQueryStringInformation.period.push(periodObject);
+            queryStringInformation.period.push(periodObject);
         });
+
+        mpdQueryStringInformation = queryStringInformation;
     }
 
     function getFinalQueryString(request) {

@@ -565,5 +565,71 @@ describe('ExtUrlQueryInfoController', () => {
         expect(representation.SupplementalProperty).to.deep.equal([representationProperty]);
     });
 
-    
+    describe('manifest without absolute url', () => {
+
+        const segmentRequest = {
+            url: 'https://example.com/segment.m4s',
+            type: 'MediaSegment',
+            representation: {
+                index: 0,
+                adaptation: {
+                    index: 0,
+                    period: {index: 0}
+                }
+            }
+        };
+
+        function createManifest(url, sameOriginOnly) {
+            return {
+                url,
+                Period: [{
+                    AdaptationSet: [{
+                        Representation: [{
+                            SupplementalProperty: [{
+                                schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
+                                ExtUrlQueryInfo: {
+                                    queryTemplate: '$querypart$',
+                                    queryString: 'token=abc',
+                                    useMPDUrlQuery: 'true',
+                                    sameOriginOnly
+                                }
+                            }]
+                        }]
+                    }]
+                }]
+            };
+        }
+
+        it('should not throw when manifest has no url or no Period', () => {
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings({})).to.not.throw();
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings({ loadedTime: new Date() })).to.not.throw();
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings({ url: 'https://example.com/manifest.mpd' })).to.not.throw();
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings(undefined)).to.not.throw();
+        });
+
+        it('should apply queryString without MPD url query when manifest has no url', () => {
+            extUrlQueryInfoController.createFinalQueryStrings(createManifest(undefined));
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+        });
+
+        it('should apply queryString without MPD url query when manifest url is relative', () => {
+            extUrlQueryInfoController.createFinalQueryStrings(createManifest('manifest.mpd?param=value'));
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+        });
+
+        it('should not return query parameters when sameOriginOnly is enabled and manifest has no url', () => {
+            extUrlQueryInfoController.createFinalQueryStrings(createManifest(undefined, true));
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.undefined;
+        });
+
+        it('should return null after a manifest without Period', () => {
+            extUrlQueryInfoController.createFinalQueryStrings(createManifest('https://example.com/manifest.mpd'));
+            extUrlQueryInfoController.createFinalQueryStrings({ url: 'https://example.com/manifest.mpd' });
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.null;
+        });
+    });
 });
