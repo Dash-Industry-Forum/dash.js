@@ -625,6 +625,77 @@ describe('ExtUrlQueryInfoController', () => {
             expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.undefined;
         });
 
+        function createRestrictedManifest(url, level, includeInRequests) {
+            const property = {
+                schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
+                ExtUrlQueryInfo: {
+                    queryTemplate: '$querypart$',
+                    queryString: 'token=abc',
+                    sameOriginOnly: 'true',
+                    includeInRequests
+                }
+            };
+            const representation = {};
+            const adaptationSet = { Representation: [representation] };
+            const period = { AdaptationSet: [adaptationSet] };
+            const manifest = { url, Period: [period] };
+            const elements = { mpd: manifest, period, adaptationSet };
+            elements[level].SupplementalProperty = [property];
+            return manifest;
+        }
+
+        ['mpd', 'period', 'adaptationSet'].forEach((level) => {
+            it(`should not return inherited ${level} parameters with sameOriginOnly when manifest has no url`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest(undefined, level));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.undefined;
+            });
+
+            it(`should not return inherited ${level} parameters with sameOriginOnly to another origin`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest('https://other.com/manifest.mpd', level));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.undefined;
+            });
+
+            it(`should return inherited ${level} parameters with sameOriginOnly to the same origin`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest('https://example.com/manifest.mpd', level));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+            });
+        });
+
+        it('should return parameters when sameOriginOnly is "false" and origin does not match', () => {
+            const manifest = createManifest('https://other.com/manifest.mpd', 'false');
+            extUrlQueryInfoController.createFinalQueryStrings(manifest);
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+        });
+
+        [
+            { type: 'MPD', url: 'https://example.com/manifest.mpd' },
+            { type: 'ContentSteering', url: 'https://example.com/steering.json' }
+        ].forEach(({ type, url }) => {
+            const request = { type, url };
+
+            it(`should not return ${type} parameters with sameOriginOnly when manifest has no url`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest(undefined, 'mpd', 'mpd steering'));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(request)).to.be.undefined;
+            });
+
+            it(`should not return ${type} parameters with sameOriginOnly to another origin`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest('https://other.com/manifest.mpd', 'mpd', 'mpd steering'));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(request)).to.be.undefined;
+            });
+
+            it(`should return ${type} parameters with sameOriginOnly to the same origin`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest('https://example.com/manifest.mpd', 'mpd', 'mpd steering'));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(request)).to.deep.equal([{key: 'token', value: 'abc'}]);
+            });
+        });
+
         it('should return null after a manifest without Period', () => {
             extUrlQueryInfoController.createFinalQueryStrings(createManifest('https://example.com/manifest.mpd'));
             extUrlQueryInfoController.createFinalQueryStrings({ url: 'https://example.com/manifest.mpd' });

@@ -52,9 +52,15 @@ function ExtUrlQueryInfoController() {
         _generateInitialQueryString(property, parentLevelInfo.initialQueryString, resultObject, mpdUrlQuery);
         _generateFinalQueryString(property, resultObject, parentLevelInfo.finalQueryString);
 
-        resultObject.sameOriginOnly = property?.ExtUrlQueryInfo?.sameOriginOnly;
+        // Parameters of a parent element are inherited by its children, so is their sameOriginOnly restriction.
+        resultObject.sameOriginOnly = _isSameOriginOnly(property) || !!parentLevelInfo.sameOriginOnly;
         resultObject.queryParams = Utils.parseQueryParams(resultObject?.finalQueryString);
         resultObject.includeInRequests = _getIncludeInRequestFromProperty(property, parentLevelInfo.includeInRequests);
+    }
+
+    function _isSameOriginOnly(property) {
+        const sameOriginOnly = property?.ExtUrlQueryInfo?.sameOriginOnly;
+        return sameOriginOnly === true || sameOriginOnly === 'true';
     }
 
     function _getDescriptorTypeFromManifestObject(manifestObject, mpdElement) {
@@ -188,6 +194,16 @@ function ExtUrlQueryInfoController() {
         mpdQueryStringInformation = queryStringInformation;
     }
 
+    // Without a known MPD origin, restricted parameters are never sent.
+    function _canSendToOrigin(queryInfo, url) {
+        if (!queryInfo.sameOriginOnly) {
+            return true;
+        }
+        const requestUrl = _getAbsoluteUrl(url);
+        return !!mpdQueryStringInformation.origin && !!requestUrl &&
+            mpdQueryStringInformation.origin === requestUrl.origin;
+    }
+
     function getFinalQueryString(request) {
         try {
             if (!mpdQueryStringInformation) {
@@ -205,22 +221,19 @@ function ExtUrlQueryInfoController() {
                     .period[period.index]
                     .adaptation[adaptation.index]
                     .representation[representation.index];
-                const requestUrl = new URL(request.url);
-                const canSendToOrigin = !queryInfo.sameOriginOnly ||
-                    mpdQueryStringInformation.origin === requestUrl.origin;
                 const inRequest = queryInfo.includeInRequests.includes(DashConstants.SEGMENT_TYPE);
-                if (inRequest && canSendToOrigin) {
+                if (inRequest && _canSendToOrigin(queryInfo, request.url)) {
                     return queryInfo.queryParams;
                 }
             } else if (request.type === HTTPRequest.MPD_TYPE) {
                 const inRequest = [DashConstants.MPD_TYPE, DashConstants.MPD_PATCH_TYPE]
                     .some(r => mpdQueryStringInformation.includeInRequests.includes(r));
-                if (inRequest) {
+                if (inRequest && _canSendToOrigin(mpdQueryStringInformation, request.url)) {
                     return mpdQueryStringInformation.queryParams;
                 }
             } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
                 const inRequest = mpdQueryStringInformation.includeInRequests.includes(DashConstants.STEERING_TYPE);
-                if (inRequest) {
+                if (inRequest && _canSendToOrigin(mpdQueryStringInformation, request.url)) {
                     return mpdQueryStringInformation.queryParams;
                 }
             }
