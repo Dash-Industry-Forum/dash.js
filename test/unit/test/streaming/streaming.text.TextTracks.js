@@ -852,4 +852,60 @@ describe('TextTracks', function () {
             expect(track.cues.length).to.equal(1);
         });
     });
+
+    describe('Method deleteCuesFromTrackIdx', function () {
+        let track;
+
+        beforeEach(function () {
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+            textTracks.createTracks();
+            track = videoModelMock.getTextTrack('subtitles', 'eng');
+        });
+
+        it('should not add deleted cues back to the TextTrack on the next window update', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Cue at 10s', start: 10, end: 12},
+                {type: 'noHtml', data: 'Cue at 20s', start: 20, end: 22}
+            ]);
+            textTracks.updateTextTrackWindow(20, true);
+            expect(track.cues.length).to.equal(2);
+
+            textTracks.deleteCuesFromTrackIdx(0, 0, 15);
+            textTracks.updateTextTrackWindow(20, true);
+
+            expect(track.cues.length).to.equal(1);
+            expect(track.cues[0].text).to.equal('Cue at 20s');
+        });
+
+        it('should keep cues that extend beyond the deleted range', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Inside', start: 2, end: 4},
+                {type: 'noHtml', data: 'Overlapping end', start: 9, end: 11}
+            ]);
+
+            textTracks.deleteCuesFromTrackIdx(0, 0, 10);
+            textTracks.updateTextTrackWindow(10, true);
+
+            expect(track.cues.length).to.equal(1);
+            expect(track.cues[0].text).to.equal('Overlapping end');
+        });
+
+        it('should not re-add deleted cues while the TextTrack window is not refreshed', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Old cue', start: 0, end: 2}
+            ]);
+            textTracks.updateTextTrackWindow(1, true);
+
+            textTracks.deleteCuesFromTrackIdx(0, 0, 5);
+            // A later window update for a range that covers the deleted cue
+            textTracks.updateTextTrackWindow(0, true);
+
+            expect(track.cues.length).to.equal(0);
+        });
+    });
 });
