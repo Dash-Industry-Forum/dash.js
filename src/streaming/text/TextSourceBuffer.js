@@ -247,6 +247,24 @@ function TextSourceBuffer(config) {
         currFragmentedTrackIdx = idx;
     }
 
+    /*
+     * currFragmentedTrackIdx is the index in fragmentedTracks, whereas TextTracks addresses a track by its
+     * index in all text tracks of the period. Those also contain the non fragmented and the embedded tracks,
+     * so the two indexes differ as soon as a non fragmented track precedes a fragmented one.
+     */
+    function _getTextTrackIdxOfCurrentFragmentedTrack() {
+        const mediaInfo = fragmentedTracks[currFragmentedTrackIdx];
+
+        if (!mediaInfo) {
+            return -1;
+        }
+
+        return textTracks.getTextTrackInfos().findIndex((textTrackInfo) => {
+            return textTrackInfo.isFragmented && !textTrackInfo.isEmbedded &&
+                (mediaInfo.id ? textTrackInfo.id === mediaInfo.id : textTrackInfo.index === mediaInfo.index);
+        });
+    }
+
     function _checkTtml(mediaInfo) {
         return (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) ||
             (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0);
@@ -341,7 +359,7 @@ function TextSourceBuffer(config) {
                     ((sampleStart + sample.duration) / timescale),
                     images
                 );
-                textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
+                textTracks.addCaptions(_getTextTrackIdxOfCurrentFragmentedTrack(), timestampOffset, result);
 
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
@@ -407,7 +425,7 @@ function TextSourceBuffer(config) {
         if (captionArray.length > 0) {
             // Cue times are period-local media times; the MSE timestamp offset (Period@start - presentationTimeOffset)
             // maps them to presentation time. Required for multiperiod content, see #5087.
-            textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, captionArray);
+            textTracks.addCaptions(_getTextTrackIdxOfCurrentFragmentedTrack(), timestampOffset, captionArray);
         }
     }
 
@@ -659,7 +677,7 @@ function TextSourceBuffer(config) {
             end = instance.buffered.end(instance.buffered.length - 1);
         }
         instance.buffered.remove(start, end);
-        textTracks.deleteCuesFromTrackIdx(currFragmentedTrackIdx, start, end);
+        textTracks.deleteCuesFromTrackIdx(_getTextTrackIdxOfCurrentFragmentedTrack(), start, end);
     }
 
     function onVideoBufferCleared(e) {
