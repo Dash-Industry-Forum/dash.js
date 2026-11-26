@@ -1,7 +1,12 @@
 {
   "browsers": [
-    "bs_chrome_win_11"
+    "bs_chrome_win_11",
+    "bs_firefox_win_11",
+    "bs_edge_win_11",
+    "bs_chrome_mac_sonoma"
   ],
+  "concurrency": 4,
+  "useIframe": true,
   "customLaunchers": {
     "bs_chrome_win_11": {
       "base": "BrowserStack",
@@ -16,6 +21,20 @@
       "browser_version": "latest",
       "os": "Windows",
       "os_version": "11"
+    },
+    "bs_edge_win_11": {
+      "base": "BrowserStack",
+      "browser": "edge",
+      "browser_version": "latest",
+      "os": "Windows",
+      "os_version": "11"
+    },
+    "bs_chrome_mac_sonoma": {
+      "base": "BrowserStack",
+      "browser": "chrome",
+      "browser_version": "latest",
+      "os": "OS X",
+      "os_version": "Sonoma"
     },
     "bs_safari_mac": {
       "base": "BrowserStack",

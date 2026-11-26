@@ -62,7 +62,8 @@ function MssFragmentMoofProcessor(config) {
         const representation = representationController.getCurrentRepresentation();
 
         const manifest = representation.adaptation.period.mpd.manifest;
-        const adaptation = manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index];
+        const adaptation = manifest.Period[representation.adaptation.period.index]
+            .AdaptationSet[representation.adaptation.index];
         const timescale = adaptation.SegmentTemplate.timescale;
 
         type = streamProcessor.getType();
@@ -95,7 +96,8 @@ function MssFragmentMoofProcessor(config) {
         // Consider only first tfrf entry (to avoid pre-condition failure on fragment info requests)
         entry = entries[0];
 
-        // In case of start-over streams, check if we have reached end of original manifest duration (set in timeShiftBufferDepth)
+        // In case of start-over streams, check if we have reached end of original manifest duration
+        // (set in timeShiftBufferDepth)
         // => then do not update anymore timeline
         if (manifest.type === 'static') {
             // Get first segment time
@@ -108,7 +110,9 @@ function MssFragmentMoofProcessor(config) {
         // logger.debug('entry - t = ', (entry.fragment_absolute_time / timescale));
 
         // Get last segment time
-        segmentTime = segments[segments.length - 1].tManifest ? parseFloat(segments[segments.length - 1].tManifest) : segments[segments.length - 1].t;
+        segmentTime = segments[segments.length - 1].tManifest
+            ? parseFloat(segments[segments.length - 1].tManifest)
+            : segments[segments.length - 1].t;
         // logger.debug('Last segment - t = ', (segmentTime / timescale));
 
         // Check if we have to append new segment to timeline

@@ -36,7 +36,8 @@ class MpdLocation {
     constructor(url, serviceLocation) {
         this.url = url || '';
         this.serviceLocation = serviceLocation || null;
-        this.queryParams = {}; // This is an attribute that might be set when synthesizing Locations with content steering
+        // This is an attribute that might be set when synthesizing Locations with content steering
+        this.queryParams = {};
     }
 }
 

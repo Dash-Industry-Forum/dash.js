@@ -76,10 +76,14 @@ function AbandonRequestsRule(config) {
                     return switchRequest;
                 }
 
-                // Activate rule once we have enough samples, the initial startup time has elapsed and the download is not finished yet
+                // Activate rule once we have enough samples, the initial startup time has elapsed and the download is
+                // not finished yet
                 const elapsedTimeSinceFirstByteInMs = Date.now() - request.firstByteDate.getTime();
-                if (request.traces.length >= settings.get().streaming.abr.rules.abandonRequestsRule.parameters.minThroughputSamplesThreshold &&
-                    elapsedTimeSinceFirstByteInMs > settings.get().streaming.abr.rules.abandonRequestsRule.parameters.minSegmentDownloadTimeThresholdInMs &&
+                if (request.traces.length >=
+                    settings.get().streaming.abr.rules.abandonRequestsRule.parameters.minThroughputSamplesThreshold &&
+                    elapsedTimeSinceFirstByteInMs >
+                    settings.get().streaming.abr.rules.abandonRequestsRule.parameters
+                        .minSegmentDownloadTimeThresholdInMs &&
                     request.bytesLoaded < request.bytesTotal) {
                     return _getSwitchRequest(rulesContext, request, switchRequest);
                 }
@@ -96,25 +100,35 @@ function AbandonRequestsRule(config) {
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
 
-        // Use the traces of the request to derive the mean throughput. We ignore the first entries as they contain the latency of the request.
+        // Use the traces of the request to derive the mean throughput. We ignore the first entries as they contain the
+        // latency of the request.
         const downloadedBytes = request.traces.reduce((prev, curr) => prev + curr.b[0], 0) - request.traces[0].b[0];
-        const downloadTimeInMs = Math.max(request.traces.reduce((prev, curr) => prev + curr.d, 0) - request.traces[0].d, 1);
+        const downloadTimeInMs = Math.max(
+            request.traces.reduce((prev, curr) => prev + curr.d, 0) - request.traces[0].d,
+            1
+        );
         const throughputInKbit = Math.round((8 * downloadedBytes) / downloadTimeInMs)
         const estimatedTimeOfDownloadInSeconds = Number((request.bytesTotal * 8 / throughputInKbit) / 1000).toFixed(2);
 
-        // We do not abandon if the estimated download time is below a constant multiple of the segment duration, or if we are on the lowest quality anyway.
+        // We do not abandon if the estimated download time is below a constant multiple of the segment duration, or if
+        // we are on the lowest quality anyway.
         const representation = rulesContext.getRepresentation();
         const abrController = rulesContext.getAbrController();
-        if (estimatedTimeOfDownloadInSeconds < request.duration * settings.get().streaming.abr.rules.abandonRequestsRule.parameters.abandonDurationMultiplier || abrController.isPlayingAtLowestQuality(representation)) {
+        if (estimatedTimeOfDownloadInSeconds <
+            request.duration *
+            settings.get().streaming.abr.rules.abandonRequestsRule.parameters.abandonDurationMultiplier ||
+            abrController.isPlayingAtLowestQuality(representation)) {
             return switchRequest;
         }
 
         if (!abandonDict.hasOwnProperty(request.index)) {
             const abrController = rulesContext.getAbrController();
             const remainingBytesToDownload = request.bytesTotal - request.bytesLoaded;
-            const optimalRepresentationForBitrate = abrController.getOptimalRepresentationForBitrate(mediaInfo, throughputInKbit, true);
+            const optimalRepresentationForBitrate = abrController
+                .getOptimalRepresentationForBitrate(mediaInfo, throughputInKbit, true);
             const currentRequestedRepresentation = request.representation;
-            const totalBytesForOptimalRepresentation = request.bytesTotal * optimalRepresentationForBitrate.bitrateInKbit / currentRequestedRepresentation.bitrateInKbit;
+            const totalBytesForOptimalRepresentation = request.bytesTotal *
+                optimalRepresentationForBitrate.bitrateInKbit / currentRequestedRepresentation.bitrateInKbit;
 
             if (remainingBytesToDownload > totalBytesForOptimalRepresentation) {
                 switchRequest.representation = optimalRepresentationForBitrate;

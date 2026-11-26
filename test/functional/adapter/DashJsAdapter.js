@@ -10,6 +10,7 @@ class DashJsAdapter {
         this.videoElement = document.getElementById('video-element');
         this.ttmlRenderingDiv = document.getElementById('ttml-rendering-div');
         this.startedFragmentDownloads = [];
+        this.requestedMediaEnd = {};
         this.logEvents = {};
         this.errorEvents = [];
         this.registeredEvents = new Set();
@@ -177,7 +178,20 @@ class DashJsAdapter {
                 targetString += e.request.range;
             }
             this.startedFragmentDownloads.push(targetString);
+            const end = e.request.startTime + e.request.duration;
+            if (!isNaN(end)) {
+                this.requestedMediaEnd[e.request.mediaType] = Math.max(this.requestedMediaEnd[e.request.mediaType] || 0, end);
+            }
         }
+    }
+
+    /**
+     * Returns the end of the furthest media segment that has been requested for the given media type
+     * @param {string} mediaType
+     * @returns {number}
+     */
+    getRequestedMediaEnd(mediaType) {
+        return this.requestedMediaEnd[mediaType] || 0;
     }
 
     _onLogEvent(e) {
@@ -195,6 +209,7 @@ class DashJsAdapter {
      */
     attachSource(mpd, startTime = null) {
         this.startedFragmentDownloads = [];
+        this.requestedMediaEnd = {};
         this.player.attachSource(mpd, startTime);
     }
 
@@ -235,6 +250,15 @@ class DashJsAdapter {
 
     getBufferLengthByType(type) {
         return this.player.getBufferLength(type);
+    }
+
+    /**
+     * Forward buffer of the main media type. getBufferLength() without a type returns the minimum of all types, including fragmented text which is only buffered one segment ahead.
+     * @return {number}
+     */
+    getForwardBufferLength() {
+        const type = this.player.getTracksFor(Constants.DASH_JS.MEDIA_TYPES.VIDEO).length > 0 ? Constants.DASH_JS.MEDIA_TYPES.VIDEO : Constants.DASH_JS.MEDIA_TYPES.AUDIO;
+        return this.getBufferLengthByType(type);
     }
 
     getTargetLiveDelay() {
@@ -481,6 +505,55 @@ class DashJsAdapter {
         })
     }
 
+    /**
+     * Counts period transitions and how many of them were not seamless, i.e. dash.js replaced the MediaSource.
+     * A non-seamless switch detaches the MediaSource and attaches a new one, which changes the src (object URL)
+     * of the video element between PERIOD_SWITCH_STARTED and PERIOD_SWITCH_COMPLETED.
+     * The initial stream activation (no previous period) is ignored.
+     * Resolves once targetNumberOfPeriodSwitches is reached or the timeout expires.
+     * @param {number} timeoutValue
+     * @param {number} targetNumberOfPeriodSwitches
+     * @return {Promise<{periodSwitches: number, mediaSourceResets: number}>}
+     */
+    async trackPeriodTransitionsAndMediaSourceResets(timeoutValue, targetNumberOfPeriodSwitches) {
+        return new Promise((resolve) => {
+            let timeout = null;
+            let sourceBeforeSwitch = null;
+            const result = { periodSwitches: 0, mediaSourceResets: 0 };
+
+            const _onComplete = () => {
+                clearTimeout(timeout);
+                timeout = null;
+                this.player.off(MediaPlayer.events.PERIOD_SWITCH_STARTED, _onPeriodSwitchStarted);
+                this.player.off(MediaPlayer.events.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted);
+                resolve(result);
+            }
+            const _onPeriodSwitchStarted = (e) => {
+                if (!e || !e.fromStreamInfo) {
+                    sourceBeforeSwitch = null;
+                    return;
+                }
+                sourceBeforeSwitch = this.videoElement.src;
+            }
+            const _onPeriodSwitchCompleted = () => {
+                if (sourceBeforeSwitch === null) {
+                    return;
+                }
+                result.periodSwitches += 1;
+                if (this.videoElement.src !== sourceBeforeSwitch) {
+                    result.mediaSourceResets += 1;
+                }
+                sourceBeforeSwitch = null;
+                if (result.periodSwitches >= targetNumberOfPeriodSwitches) {
+                    _onComplete();
+                }
+            }
+            timeout = setTimeout(_onComplete, timeoutValue);
+            this.player.on(MediaPlayer.events.PERIOD_SWITCH_STARTED, _onPeriodSwitchStarted);
+            this.player.on(MediaPlayer.events.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchCompleted);
+        })
+    }
+
     async replacedSegmentsInBuffer(maxNumberOfSegmentDownloadsToWait, timeoutValue, bufferInformation) {
         return new Promise((resolve) => {
             let timeout = null;
@@ -723,7 +796,7 @@ class DashJsAdapter {
             }
 
             const _checkBuffer = () => {
-                const buffer = this.getBufferLengthByType();
+                const buffer = this.getForwardBufferLength();
                 if (buffer >= targetBuffer - tolerance) {
                     _onComplete(true);
                 }

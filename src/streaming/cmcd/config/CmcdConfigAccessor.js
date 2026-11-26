@@ -76,7 +76,7 @@ function CmcdConfigAccessor() {
     }
 
     /**
-     * Set a provider function for live access to manifest params
+     * Set a provider function for live access to manifest params<br>
      * This enables lazy loading of CMCDParameters, resolving timing issues
      * where params are needed before they're available in the manifest
      *
@@ -111,7 +111,7 @@ function CmcdConfigAccessor() {
     }
 
     /**
-     * Get the effective manifest params (live from provider, or cached)
+     * Get the effective manifest params (live from provider, or cached)<br>
      * Prefers live access from provider when available
      * @returns {Object|null} CMCDParameters
      * @private
@@ -136,7 +136,7 @@ function CmcdConfigAccessor() {
     }
 
     /**
-     * Detect the CMCD version from available sources
+     * Detect the CMCD version from available sources<br>
      * Priority: manifest > settings > default (1)
      * @returns {number} CMCD version (1 or 2)
      * @private

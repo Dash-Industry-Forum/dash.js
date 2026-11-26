@@ -84,7 +84,9 @@ function BlackListController(config) {
     }
 
     function getBlacklistExpiry() {
-        const currentSteeringResponseData = contentSteeringController ? contentSteeringController.getCurrentSteeringResponseData() : null;
+        const currentSteeringResponseData = contentSteeringController
+            ? contentSteeringController.getCurrentSteeringResponseData()
+            : null;
 
         if (currentSteeringResponseData && Number.isFinite(currentSteeringResponseData.ttl)) {
             return currentSteeringResponseData.ttl;

@@ -4,6 +4,8 @@ import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 
 import {expect} from 'chai';
 import Constants from '../../../../src/streaming/constants/Constants.js';
+import ProtectionConstants from '../../../../src/streaming/constants/ProtectionConstants.js';
+import sinon from 'sinon';
 
 let settings;
 let capabilities;
@@ -364,7 +366,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no other parameters. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no other parameters. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                 }
@@ -387,7 +390,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no width. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no width. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                     height: 180,
@@ -414,7 +418,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no height. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no height. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                     width: 180,
@@ -441,7 +446,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no bitrate. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no bitrate. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                     height: 180,
@@ -468,7 +474,8 @@ describe('Capabilities', function () {
                     })
             })
 
-            it('should return true when a valid codec string is provided but no framerate. In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
+            it('should return true when a valid codec string is provided but no framerate. ' +
+                'In this case isTypeSupported shall be used instead of the MediaCapabilitiesAPI', function (done) {
                 const config = {
                     codec: 'video/mp4;codecs="avc1.4D4028"',
                     height: 180,
@@ -550,6 +557,37 @@ describe('Capabilities', function () {
             })
         })
         */
+
+        it('should test all default PlayReady system strings with the Media Capabilities API', function () {
+            if (!navigator.mediaCapabilities) {
+                this.skip();
+            }
+            settings.update({ streaming: { capabilities: { useMediaCapabilitiesApi: true } } });
+            const stub = sinon.stub(navigator.mediaCapabilities, 'decodingInfo').callsFake((cfg) => {
+                const keySystem = cfg.keySystemConfiguration.keySystem;
+                return Promise.resolve({
+                    supported: keySystem === ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING
+                });
+            });
+            const config = {
+                codec: 'video/mp4;codecs="avc1.64001f"',
+                width: 1280,
+                height: 720,
+                bitrate: 5000000,
+                framerate: '24',
+                keySystemsMetadata: [{ ks: { systemString: ProtectionConstants.PLAYREADY_KEYSTEM_STRING } }]
+            };
+
+            return capabilities.runCodecSupportCheck(config, Constants.VIDEO)
+                .then(() => {
+                    const keySystems = stub.getCalls().map((call) => call.args[0].keySystemConfiguration.keySystem);
+                    const defaults = ProtectionConstants.DEFAULT_SYSTEM_STRING_PRIORITY;
+                    expect(keySystems).to.deep.equal(defaults[ProtectionConstants.PLAYREADY_KEYSTEM_STRING]);
+                    expect(capabilities.isCodecSupportedBasedOnTestedConfigurations(config, Constants.VIDEO))
+                        .to.be.true;
+                })
+                .finally(() => stub.restore());
+        });
 
         it('should return true for enhancement codecs', function () {
             settings.update({ streaming: { enhancement: { enabled: true } } });

@@ -1,7 +1,8 @@
 module.exports = function (config) {
     // Coverage instrumentation slows down compilation and execution considerably,
-    // so it is only enabled when the COVERAGE environment variable is set.
-    const useCoverage = !!process.env.COVERAGE;
+    // so it is only enabled when the COVERAGE environment variable is set or
+    // karma is started with --coverage.
+    const useCoverage = !!process.env.COVERAGE || !!config.coverage;
 
     config.set({
 
@@ -65,8 +66,18 @@ module.exports = function (config) {
 
         // optionally, configure the reporter
         coverageReporter: {
-            type: 'html',
-            dir: 'test/unit/results/coverage/'
+            dir: 'test/unit/results/coverage/',
+            // Stable per-browser directory ("chrome", "firefox") instead of the
+            // default name that includes the browser version and platform.
+            subdir: function (browser) {
+                return browser.toLowerCase().split(/[ /-]/)[0];
+            },
+            reporters: [
+                { type: 'html' },
+                { type: 'lcovonly', file: 'lcov.info' },
+                { type: 'json-summary', file: 'coverage-summary.json' },
+                { type: 'text-summary' }
+            ]
         },
 
 
@@ -88,7 +99,10 @@ module.exports = function (config) {
             },
             mode: 'development',
             cache: {
-                type: 'filesystem'
+                type: 'filesystem',
+                // Separate caches: the loader options are not part of the cache key, so a
+                // shared cache would serve uninstrumented modules to a coverage run and vice versa.
+                name: useCoverage ? 'unit-test-coverage' : 'unit-test'
             },
             resolve: {
                 fallback: {

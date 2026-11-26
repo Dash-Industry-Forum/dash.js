@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Test content for the SVTA 2053-1 beaconing sample: main content, mid-roll ad, main content.
+  Main content: Big Buck Bunny (dash.akamaized.net/akamai/bbb_30fps), 0-12 s, then resumed at 12 s.
+  Mid-roll: 20 s generated test ad, hosted at dash.akamaized.net/dsi/sample_midroll. Its SVTA Event
+  carries the tracking events inline; the beacon URLs point to httpbin.org.
+-->
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" type="static" mediaPresentationDuration="PT52S" minBufferTime="PT2S" profiles="urn:mpeg:dash:profile:isoff-live:2011">
+ <BaseURL>https://dash.akamaized.net/akamai/bbb_30fps/</BaseURL>
+ <Period id="main-1" start="PT0S" duration="PT12S">
+  <AdaptationSet mimeType="video/mp4" contentType="video" segmentAlignment="true" startWithSAP="1" par="16:9">
+   <SegmentTemplate duration="120" timescale="30" media="$RepresentationID$/$RepresentationID$_$Number$.m4v" startNumber="1" presentationTimeOffset="0" initialization="$RepresentationID$/$RepresentationID$_0.m4v"/>
+   <Representation id="bbb_30fps_640x360_1000k" codecs="avc1.64001e" bandwidth="1254758" width="640" height="360" frameRate="30" sar="1:1"/>
+   <Representation id="bbb_30fps_1280x720_4000k" codecs="avc1.64001f" bandwidth="4952892" width="1280" height="720" frameRate="30" sar="1:1"/>
+   <Representation id="bbb_30fps_1920x1080_8000k" codecs="avc1.640028" bandwidth="9914554" width="1920" height="1080" frameRate="30" sar="1:1"/>
+  </AdaptationSet>
+  <AdaptationSet mimeType="audio/mp4" contentType="audio" lang="en" segmentAlignment="true" startWithSAP="1">
+   <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+   <SegmentTemplate duration="192512" timescale="48000" media="$RepresentationID$/$RepresentationID$_$Number$.m4a" startNumber="1" presentationTimeOffset="0" initialization="$RepresentationID$/$RepresentationID$_0.m4a"/>
+   <Representation id="bbb_a64k" codecs="mp4a.40.5" bandwidth="67071" audioSamplingRate="48000">
+    <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+   </Representation>
+  </AdaptationSet>
+ </Period>
+ <Period id="midroll" start="PT12S" duration="PT20S">
+  <BaseURL>https://dash.akamaized.net/dsi/sample_midroll/</BaseURL>
+  <EventStream schemeIdUri="urn:svta:advertising-wg:ad-creative-signaling" timescale="90000">
+   <Event id="1" presentationTime="0" duration="1800000"><![CDATA[
+    {
+      "version": 2,
+      "type": "slot",
+      "payload": [{
+        "type": "linear",
+        "start": 0,
+        "duration": 20,
+        "identifiers": [{ "scheme": "urn:com:example:ads:id", "value": "f2cbf168-621f-4d33-bdd7-d2c79ffeda14" }],
+        "tracking": [
+          { "type": "impression", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/impression?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] },
+          { "type": "start", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/start?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] },
+          { "type": "firstQuartile", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/firstQuartile?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] },
+          { "type": "midpoint", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/midpoint?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] },
+          { "type": "thirdQuartile", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/thirdQuartile?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] },
+          { "type": "complete", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/complete?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] },
+          { "type": "pause", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/pause?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] },
+          { "type": "resume", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/resume?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] },
+          { "type": "mute", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/mute?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] },
+          { "type": "unmute", "urls": ["https://httpbin.org/anything/svta/beacon/slot-1/unmute?ts=[TIMESTAMP]&cb=[CACHEBUSTING]&adph=[ADPLAYHEAD]"] }
+        ]
+      }]
+    }
+   ]]></Event>
+  </EventStream>
+  <AdaptationSet id="0" contentType="video" startWithSAP="1" segmentAlignment="true" bitstreamSwitching="true" frameRate="30/1" maxWidth="1280" maxHeight="720" par="16:9">
+   <Representation id="0" mimeType="video/mp4" codecs="avc1.4d401f" bandwidth="1500000" width="1280" height="720" sar="1:1">
+    <SegmentTemplate timescale="15360" initialization="init-$RepresentationID$.m4s" media="seg-$RepresentationID$-$Number%05d$.m4s" startNumber="1">
+     <SegmentTimeline>
+      <S t="0" d="30720" r="9" />
+     </SegmentTimeline>
+    </SegmentTemplate>
+   </Representation>
+  </AdaptationSet>
+  <AdaptationSet id="1" contentType="audio" lang="en" startWithSAP="1" segmentAlignment="true" bitstreamSwitching="true">
+   <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+   <Representation id="1" mimeType="audio/mp4" codecs="mp4a.40.2" bandwidth="128000" audioSamplingRate="48000">
+    <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2" />
+    <SegmentTemplate timescale="48000" initialization="init-$RepresentationID$.m4s" media="seg-$RepresentationID$-$Number%05d$.m4s" startNumber="1">
+     <SegmentTimeline>
+      <S t="0" d="93184" />
+      <S d="96256" r="1" />
+      <S d="95232" />
+      <S d="96256" r="2" />
+      <S d="95232" />
+      <S d="96256" r="1" />
+      <S d="2560" />
+     </SegmentTimeline>
+    </SegmentTemplate>
+   </Representation>
+  </AdaptationSet>
+ </Period>
+ <Period id="main-2" start="PT32S" duration="PT20S">
+  <AdaptationSet mimeType="video/mp4" contentType="video" segmentAlignment="true" startWithSAP="1" par="16:9">
+   <SegmentTemplate duration="120" timescale="30" media="$RepresentationID$/$RepresentationID$_$Number$.m4v" startNumber="4" presentationTimeOffset="360" initialization="$RepresentationID$/$RepresentationID$_0.m4v"/>
+   <Representation id="bbb_30fps_640x360_1000k" codecs="avc1.64001e" bandwidth="1254758" width="640" height="360" frameRate="30" sar="1:1"/>
+   <Representation id="bbb_30fps_1280x720_4000k" codecs="avc1.64001f" bandwidth="4952892" width="1280" height="720" frameRate="30" sar="1:1"/>
+   <Representation id="bbb_30fps_1920x1080_8000k" codecs="avc1.640028" bandwidth="9914554" width="1920" height="1080" frameRate="30" sar="1:1"/>
+  </AdaptationSet>
+  <AdaptationSet mimeType="audio/mp4" contentType="audio" lang="en" segmentAlignment="true" startWithSAP="1">
+   <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+   <SegmentTemplate duration="192512" timescale="48000" media="$RepresentationID$/$RepresentationID$_$Number$.m4a" startNumber="4" presentationTimeOffset="577536" initialization="$RepresentationID$/$RepresentationID$_0.m4a"/>
+   <Representation id="bbb_a64k" codecs="mp4a.40.5" bandwidth="67071" audioSamplingRate="48000">
+    <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+   </Representation>
+  </AdaptationSet>
+ </Period>
+</MPD>

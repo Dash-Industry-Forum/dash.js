@@ -31,9 +31,6 @@ const configCommonMinProdEsm = {
     output: {
         filename: '[name].min.js'
     },
-    optimization: {
-        usedExports: false,
-    },
     performance: { hints: false }
 };
 

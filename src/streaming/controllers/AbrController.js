@@ -63,6 +63,7 @@ function AbrController() {
         dashMetrics,
         domStorage,
         droppedFramesHistory,
+        excludedRepresentationIds,
         instance,
         logger,
         mediaPlayerModel,
@@ -80,7 +81,8 @@ function AbrController() {
     }
 
     /**
-     * Initialize everything that is not period specific. We only have one instance of the ABR Controller for all periods.
+     * Initialize everything that is not period specific. We only have one instance of the ABR Controller for all
+     * periods.
      */
     function initialize() {
         droppedFramesHistory = DroppedFramesHistory(context).create();
@@ -100,7 +102,7 @@ function AbrController() {
     }
 
     /**
-     * Whenever a StreamProcessor is created it is added to the list of streamProcessorDict
+     * Whenever a StreamProcessor is created it is added to the list of streamProcessorDict<br>
      * In addition, the corresponding objects for this object and its stream id are created
      * @param {object} type
      * @param {object} streamProcessor
@@ -122,7 +124,10 @@ function AbrController() {
         // Do not change current value if it has been set before
         const currentState = abrRulesCollection.getBolaState(type)
         if (currentState === undefined) {
-            abrRulesCollection.setBolaState(type, settings.get().streaming.abr.rules.bolaRule.active && !_shouldApplyDynamicAbrStrategy());
+            abrRulesCollection.setBolaState(
+                type,
+                settings.get().streaming.abr.rules.bolaRule.active && !_shouldApplyDynamicAbrStrategy()
+            );
         }
 
     }
@@ -149,6 +154,7 @@ function AbrController() {
 
     function resetInitialSettings() {
         abandonmentStateDict = {};
+        excludedRepresentationIds = {};
         streamProcessorDict = {};
         queuedManualQualitySwitches = new Map();
 
@@ -222,7 +228,8 @@ function AbrController() {
     }
 
     function getOptimalRepresentationForBitrate(mediaInfo, bitrateInKbit, includeCompatibleMediaInfos = true) {
-        const possibleVoRepresentations = getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos);
+        const possibleVoRepresentations =
+            getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos);
 
         if (!possibleVoRepresentations || possibleVoRepresentations.length === 0) {
             return null;
@@ -256,7 +263,8 @@ function AbrController() {
             return null;
         }
 
-        const possibleVoRepresentations = getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos);
+        const possibleVoRepresentations =
+            getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos);
 
         return possibleVoRepresentations.find((rep) => {
             return rep.absoluteIndex === absoluteIndex
@@ -270,10 +278,33 @@ function AbrController() {
     function getPossibleVoRepresentationsFilteredBySettings(mediaInfo, includeCompatibleMediaInfos = true) {
         let voRepresentations = _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos);
 
+        // Drop excluded Representations first, so the settings filters fall back to the remaining ones
+        voRepresentations = _filterExcluded(voRepresentations);
+
         // Filter the list of options based on the provided settings
         voRepresentations = _filterByAllowedSettings(voRepresentations)
 
         return voRepresentations;
+    }
+
+    function _isExcluded(rep) {
+        // An unresolved dependentRepresentation is a placeholder without mediaInfo
+        const excludedUntil =
+            excludedRepresentationIds[rep.mediaInfo?.streamInfo?.id]?.[rep.mediaInfo?.type]?.get(rep.id);
+        return excludedUntil !== undefined && Date.now() < excludedUntil;
+    }
+
+    function _filterExcluded(voRepresentations) {
+        // A Representation is not playable either if the one it depends on (e.g. its base layer) is excluded
+        const filteredRepresentations = voRepresentations.filter((rep) =>
+            !_isExcluded(rep) && !(rep.dependentRepresentation && _isExcluded(rep.dependentRepresentation)));
+
+        // Like the settings filters, never return an empty list
+        if (filteredRepresentations.length === 0) {
+            return voRepresentations;
+        }
+
+        return filteredRepresentations;
     }
 
     function _getPossibleVoRepresentations(mediaInfo, includeCompatibleMediaInfos) {
@@ -306,9 +337,11 @@ function AbrController() {
         // Also ignore Representations with a key ID that is not usable
 
         voRepresentations = voRepresentations.filter((representation) => {
-            const isMediaInfoAllowed = includeCompatibleMediaInfos ? true : adapter.areMediaInfosEqual(representation.mediaInfo, mediaInfo);
+            const isMediaInfoAllowed =
+                includeCompatibleMediaInfos ? true : adapter.areMediaInfosEqual(representation.mediaInfo, mediaInfo);
             const areKeyIdsUsable =
-                representation && representation.mediaInfo ? capabilities.areKeyIdsUsable(representation.mediaInfo) : true;
+                representation && representation.mediaInfo ?
+                    capabilities.areKeyIdsUsable(representation.mediaInfo) : true;
             return isMediaInfoAllowed && areKeyIdsUsable
         })
 
@@ -405,7 +438,9 @@ function AbrController() {
             const { elementWidth } = videoModel.getVideoElementSize();
 
             const filteredArray = voRepresentations.filter((voRepresentation) => {
-                return voRepresentation.mediaInfo.type !== Constants.VIDEO || voRepresentation.width <= elementWidth || voRepresentation.bandwidth <= minimum;
+                return voRepresentation.mediaInfo.type !== Constants.VIDEO ||
+                    voRepresentation.width <= elementWidth ||
+                    voRepresentation.bandwidth <= minimum;
             });
 
             if (filteredArray.length > 0) {
@@ -517,7 +552,8 @@ function AbrController() {
     }
 
     function _sortForDifferentMediaInfos(a, b) {
-        // if the codec family is the same we can sort by pixelsPerSecond. But should take bootstrap and non-bootstrap Representations into account (L3D-DASH)
+        // if the codec family is the same we can sort by pixelsPerSecond. But should take bootstrap and non-bootstrap
+        // Representations into account (L3D-DASH)
         if (a.codecFamily && b.codecFamily && a.codecFamily === b.codecFamily) {
             return _sortForSameCodecFamilyInDifferentMediaInfos(a, b);
         }
@@ -589,7 +625,8 @@ function AbrController() {
         const type = e.request.mediaType;
         const streamId = e.streamId;
 
-        if (!type || !streamId || !streamProcessorDict[streamId] || !settings.get().streaming.abr.autoSwitchBitrate[type]) {
+        if (!type || !streamId || !streamProcessorDict[streamId] ||
+            !settings.get().streaming.abr.autoSwitchBitrate[type]) {
             return;
         }
 
@@ -637,8 +674,10 @@ function AbrController() {
     }
 
     function _canAbandonRequest(lastSegment) {
-        // For now we only allow abandoning the first partial segment as we are sure there is an IDR at the beginning of the segment
-        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
+        // For now we only allow abandoning the first partial segment as we are sure there is an IDR at the beginning
+        // of the segment
+        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) ||
+            isNaN(lastSegment.replacementSubNumber)) {
             return true
         }
         return lastSegment.replacementSubNumber === 0;
@@ -657,7 +696,12 @@ function AbrController() {
                 targetAbandonmentStateDict.state = MetricsConstants.ABANDON_LOAD;
             }
             switchRequestHistory.reset();
-            setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.representation, switchRequest.reason);
+            setPlaybackQuality(
+                type,
+                streamController.getActiveStreamInfo(),
+                switchRequest.representation,
+                switchRequest.reason
+            );
 
             clearTimeout(abandonmentTimeout);
             abandonmentTimeout = setTimeout(
@@ -731,14 +775,56 @@ function AbrController() {
     }
 
     /**
-     * This function is called by the scheduleControllers to check if the quality should be changed.
+     * Excludes a Representation from quality decisions, e.g. because its segment list could not be loaded,
+     * and switches to the best remaining Representation at or below its bitrate.
+     * @param {object} representation
+     * @param {number} [duration] in milliseconds, excluded for good if not set
+     */
+    function excludeRepresentation(representation, duration = Infinity) {
+        const mediaInfo = representation.mediaInfo;
+        const streamId = mediaInfo.streamInfo.id;
+        // Content often reuses Representation ids across media types, keep them apart
+        excludedRepresentationIds[streamId] = excludedRepresentationIds[streamId] || {};
+        excludedRepresentationIds[streamId][mediaInfo.type] =
+            excludedRepresentationIds[streamId][mediaInfo.type] || new Map();
+        excludedRepresentationIds[streamId][mediaInfo.type].set(representation.id, Date.now() + duration);
+
+        // Rules like BOLA cache the list of possible Representations, make them rebuild it without the excluded one.
+        // ponytail: BOLA only picks the Representation up again once the exclusion expired and its list is rebuilt
+        // for another reason
+        handleNewMediaInfo(mediaInfo);
+
+        // A late failure must not override a newer selection, only switch away if we are still on (or depend on) the
+        // excluded one
+        const currentRepresentation = streamProcessorDict[streamId]?.[mediaInfo.type]
+            ?.getRepresentationController()
+            ?.getCurrentCompositeRepresentation();
+        if (!currentRepresentation ||
+            (currentRepresentation.id !== representation.id &&
+                currentRepresentation.dependentRepresentation?.id !== representation.id)) {
+            logger.warn(`Excluded representation ${representation.id} for ${mediaInfo.type}`);
+            return;
+        }
+
+        const fallbackRepresentation = getOptimalRepresentationForBitrate(mediaInfo, representation.bitrateInKbit);
+        if (!fallbackRepresentation || fallbackRepresentation.id === representation.id) {
+            logger.error(`Excluded representation ${representation.id} for ${mediaInfo.type}, no other representation left to switch to`);
+            return;
+        }
+        logger.warn(`Excluded representation ${representation.id} for ${mediaInfo.type}, switching to representation ${fallbackRepresentation.id}`);
+        setPlaybackQuality(mediaInfo.type, mediaInfo.streamInfo, fallbackRepresentation, { message: `[AbrController]: Representation ${representation.id} is excluded` });
+    }
+
+    /**
+     * This function is called by the scheduleControllers to check if the quality should be changed.<br>
      * Consider this the main entry point for the ABR decision logic
      * @param {string} type
      * @param {string} streamId
      */
     function checkPlaybackQuality(type, streamId) {
         try {
-            if (!type || !streamProcessorDict || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
+            if (!type || !streamProcessorDict || !streamProcessorDict[streamId] ||
+                !streamProcessorDict[streamId][type]) {
                 return false;
             }
 
@@ -746,7 +832,8 @@ function AbrController() {
 
             const streamProcessor = streamProcessorDict[streamId][type];
             const lastSegment = streamProcessor.getLastSegment();
-            const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
+            const currentRepresentation =
+                streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
 
             const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
 
@@ -763,7 +850,9 @@ function AbrController() {
 
             let newRepresentation = switchRequest.representation;
             _addSwitchHistoryEntry(currentRepresentation, newRepresentation);
-            if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
+            if (newRepresentation.id !== currentRepresentation.id &&
+                (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD ||
+                    newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
                 _changeQuality(type, currentRepresentation, newRepresentation, switchRequest.reason);
                 return true;
             }
@@ -776,11 +865,13 @@ function AbrController() {
     }
 
     /**
-     * When playing Segment Sequence Representations we can not simply switch from one partial segment to another partial segment or another full segment.
+     * When playing Segment Sequence Representations we can not simply switch from one partial segment to another
+     * partial segment or another full segment.
      * @private
      */
     function canPerformQualitySwitch(lastSegment, currentRepresentation) {
-        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
+        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) ||
+            isNaN(lastSegment.replacementSubNumber)) {
             return true
         }
 
@@ -793,19 +884,25 @@ function AbrController() {
     }
 
     function _segmentSequencePropertiesAllowsSwitching(lastSegment, currentRepresentation) {
-        if (!currentRepresentation || !currentRepresentation.segmentSequenceProperties || currentRepresentation.segmentSequenceProperties.length <= 0) {
+        if (!currentRepresentation || !currentRepresentation.segmentSequenceProperties ||
+            currentRepresentation.segmentSequenceProperties.length <= 0) {
             return false;
         }
 
-        // We do not allow quality switches at non segment boundaries in case Adaptation Set Switching is available in the MPD.
-        // This is because we can not control the switching process at this point, and the ABR rules might select a Representation that has a different SAPType + Cadence than the current Representation.
-        if (currentRepresentation && currentRepresentation.mediaInfo && currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds && currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds.length > 0) {
+        // We do not allow quality switches at non segment boundaries in case Adaptation Set Switching is available in
+        // the MPD.
+        // This is because we can not control the switching process at this point, and the ABR rules might select a
+        // Representation that has a different SAPType + Cadence than the current Representation.
+        if (currentRepresentation && currentRepresentation.mediaInfo &&
+            currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds &&
+            currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds.length > 0) {
             return false;
         }
 
-        const segmentSequencePropertiesWithTargetSapType = currentRepresentation.segmentSequenceProperties.filter((ssp) => {
-            return !isNaN(ssp.sapType) && ssp.sapType <= 1;
-        })
+        const segmentSequencePropertiesWithTargetSapType =
+            currentRepresentation.segmentSequenceProperties.filter((ssp) => {
+                return !isNaN(ssp.sapType) && ssp.sapType <= 1;
+            })
 
         if (segmentSequencePropertiesWithTargetSapType.length === 0) {
             return false;
@@ -835,7 +932,7 @@ function AbrController() {
     }
 
     /**
-     * Sets the new playback quality. Starts from index 0.
+     * Sets the new playback quality. Starts from index 0.<br>
      * If the index of the new quality is the same as the old one changeQuality will not be called.
      * @param {string} type
      * @param {object} streamInfo
@@ -844,12 +941,14 @@ function AbrController() {
      * @param {string} rule
      */
     function setPlaybackQuality(type, streamInfo, representation, reason = {}) {
-        if (!streamInfo || !streamInfo.id || !type || !streamProcessorDict || !streamProcessorDict[streamInfo.id] || !streamProcessorDict[streamInfo.id][type] || !representation) {
+        if (!streamInfo || !streamInfo.id || !type || !streamProcessorDict || !streamProcessorDict[streamInfo.id] ||
+            !streamProcessorDict[streamInfo.id][type] || !representation) {
             return false;
         }
 
         const streamProcessor = streamProcessorDict[streamInfo.id][type];
-        const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
+        const currentRepresentation =
+            streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
 
         if (!currentRepresentation || representation.id !== currentRepresentation.id) {
             return _changeQuality(type, currentRepresentation, representation, reason);
@@ -924,11 +1023,13 @@ function AbrController() {
      * @return {*|null}
      */
     function getAbandonmentStateFor(streamId, type) {
-        return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ? abandonmentStateDict[streamId][type].state : null;
+        return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ?
+            abandonmentStateDict[streamId][type].state : null;
     }
 
     function _getAbandonmentStateDictFor(streamId, type) {
-        return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ? abandonmentStateDict[streamId][type] : null;
+        return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ?
+            abandonmentStateDict[streamId][type] : null;
 
     }
 
@@ -947,7 +1048,8 @@ function AbrController() {
 
         const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
         const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-        const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
+        const isAdaptationSetSwitch = oldRepresentation !== null &&
+            !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
         const oldBitrate = oldRepresentation ? oldRepresentation.bitrateInKbit : 0;
 
         logger.info(`[AbrController]: Switching quality in period ${streamId} for media type ${type}. Switch from bitrate ${oldBitrate} to bitrate ${newRepresentation.bitrateInKbit}. Current buffer level: ${bufferLevel}. Reason:` + (reason ? JSON.stringify(reason) : '/'));
@@ -981,7 +1083,8 @@ function AbrController() {
      * @private
      */
     function _shouldApplyDynamicAbrStrategy() {
-        return settings.get().streaming.abr.rules.bolaRule.active && settings.get().streaming.abr.rules.throughputRule.active
+        return settings.get().streaming.abr.rules.bolaRule.active &&
+            settings.get().streaming.abr.rules.throughputRule.active
     }
 
     /**
@@ -997,7 +1100,8 @@ function AbrController() {
             const switchOffThreshold = 0.5 * hybridSwitchBufferTime;
 
             const isUsingBolaRule = abrRulesCollection.getBolaState(mediaType)
-            const shouldUseBolaRule = bufferLevel >= (isUsingBolaRule ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
+            // use hysteresis to avoid oscillating rules
+            const shouldUseBolaRule = bufferLevel >= (isUsingBolaRule ? switchOffThreshold : switchOnThreshold);
             abrRulesCollection.setBolaState(mediaType, shouldUseBolaRule);
 
             if (shouldUseBolaRule !== isUsingBolaRule) {
@@ -1050,6 +1154,7 @@ function AbrController() {
         if (abandonmentStateDict[streamId]) {
             delete abandonmentStateDict[streamId];
         }
+        delete excludedRepresentationIds[streamId];
 
         abrRulesCollection.clearDataForStream(streamId);
     }
@@ -1063,6 +1168,7 @@ function AbrController() {
         canPerformQualitySwitch,
         checkPlaybackQuality,
         clearDataForStream,
+        excludeRepresentation,
         getAbandonmentStateFor,
         getInitialBitrateFor,
         getOptimalRepresentationForBitrate,

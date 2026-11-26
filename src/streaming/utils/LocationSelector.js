@@ -92,7 +92,8 @@ function LocationSelector() {
     function _selectByContentSteering(mpdLocations) {
         // Search in the response data of the steering server
         const currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
-        if (currentSteeringResponseData && currentSteeringResponseData.pathwayPriority && currentSteeringResponseData.pathwayPriority.length > 0) {
+        if (currentSteeringResponseData && currentSteeringResponseData.pathwayPriority &&
+            currentSteeringResponseData.pathwayPriority.length > 0) {
             return _findMpdLocation(currentSteeringResponseData.pathwayPriority, mpdLocations);
         }
 

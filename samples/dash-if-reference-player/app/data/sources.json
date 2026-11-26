@@ -115,6 +115,26 @@
                     ]
                 },
                 {
+                    "url": "https://dash.akamaized.net/dashjs/multi-sidx/upfront/manifest.mpd",
+                    "name": "SegmentBase, hierarchical SIDX (child SIDX boxes after the parent)",
+                    "provider": "dashif",
+                    "tags": [
+                        "vod",
+                        "segmentbase",
+                        "dashif"
+                    ]
+                },
+                {
+                    "url": "https://dash.akamaized.net/dashjs/multi-sidx/interleaved/manifest.mpd",
+                    "name": "SegmentBase, hierarchical SIDX (each child SIDX before its media)",
+                    "provider": "dashif",
+                    "tags": [
+                        "vod",
+                        "segmentbase",
+                        "dashif"
+                    ]
+                },
+                {
                     "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
                     "name": "SegmentTemplate/Number, live profile, 250kbps up to 15Mbps@4K.",
                     "provider": "dashif",

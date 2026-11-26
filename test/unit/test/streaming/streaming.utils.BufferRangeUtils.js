@@ -1,4 +1,6 @@
 import {
+    getBufferedEndBefore,
+    getBufferedTimeInInterval,
     getContinuousBufferTime,
     getPruningRanges,
     getRangeAt,
@@ -61,13 +63,22 @@ describe('BufferRangeUtils', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
 
             [NaN, undefined, 'invalid'].forEach((invalidDuration) => {
-                expect(getPruningRanges(ranges, 50, { ...pruningOptions, bufferToKeepBehind: invalidDuration })).to.deep.equal([
+                expect(getPruningRanges(ranges, 50, {
+                    ...pruningOptions,
+                    bufferToKeepBehind: invalidDuration
+                })).to.deep.equal([
                     { start: 80, end: 100.5 }
                 ]);
-                expect(getPruningRanges(ranges, 50, { ...pruningOptions, bufferToKeepAhead: invalidDuration })).to.deep.equal([
+                expect(getPruningRanges(ranges, 50, {
+                    ...pruningOptions,
+                    bufferToKeepAhead: invalidDuration
+                })).to.deep.equal([
                     { start: 0, end: 30 }
                 ]);
-                expect(getPruningRanges(ranges, 50, { bufferToKeepBehind: invalidDuration, bufferToKeepAhead: invalidDuration })).to.deep.equal([]);
+                expect(getPruningRanges(ranges, 50, {
+                    bufferToKeepBehind: invalidDuration,
+                    bufferToKeepAhead: invalidDuration
+                })).to.deep.equal([]);
             });
         });
 
@@ -277,6 +288,44 @@ describe('BufferRangeUtils', function () {
             const ranges = createTimeRanges([{ start: 2, end: 5 }]);
 
             expect(getRangeAt(ranges, 5, 0)).to.be.null;
+        });
+    });
+
+    describe('getBufferedTimeInInterval', function () {
+        const ranges = createTimeRanges([{ start: 0, end: 16 }, { start: 24, end: 40 }]);
+
+        it('should return 0 without ranges', function () {
+            expect(getBufferedTimeInInterval(null, 0, 10)).to.equal(0);
+            expect(getBufferedTimeInInterval(createTimeRanges(), 0, 10)).to.equal(0);
+        });
+
+        it('should include the ranges behind a gap', function () {
+            expect(getBufferedTimeInInterval(ranges, 9, 40)).to.equal(23);
+        });
+
+        it('should only count the buffered time within the interval', function () {
+            expect(getBufferedTimeInInterval(ranges, 9, 30)).to.equal(13);
+            expect(getBufferedTimeInInterval(ranges, 17, 23)).to.equal(0);
+        });
+    });
+
+    describe('getBufferedEndBefore', function () {
+        const ranges = createTimeRanges([{ start: 0, end: 16 }, { start: 24, end: 40 }]);
+
+        it('should return NaN without ranges in front of time', function () {
+            expect(getBufferedEndBefore(null, 10)).to.be.NaN;
+            expect(getBufferedEndBefore(createTimeRanges(), 10)).to.be.NaN;
+            expect(getBufferedEndBefore(ranges, 0)).to.be.NaN;
+        });
+
+        it('should return the end of the last range in front of time, including ranges behind a gap', function () {
+            expect(getBufferedEndBefore(ranges, 50)).to.equal(40);
+            expect(getBufferedEndBefore(ranges, 20)).to.equal(16);
+        });
+
+        it('should limit the end to time and ignore ranges starting at or after time', function () {
+            expect(getBufferedEndBefore(ranges, 30)).to.equal(30);
+            expect(getBufferedEndBefore(ranges, 24)).to.equal(16);
         });
     });
 });

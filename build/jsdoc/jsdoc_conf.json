@@ -12,7 +12,7 @@
         "plugins/markdown"
     ],
     "markdown": {
-        "hardwrap": true,
+        "hardwrap": false,
         "idInHeadings": true
     },
     "templates": {

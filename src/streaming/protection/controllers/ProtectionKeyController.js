@@ -201,12 +201,13 @@ function ProtectionKeyController() {
     /**
      * Returns a set of supported key systems and CENC initialization data
      * from the given array of ContentProtection elements.  Only
-     * key systems that are supported by this player will be returned.
+     * key systems that are supported by this player will be returned.<br>
      * Key systems are returned in priority order (highest first).
      *
      * @param {Array.<Object>} contentProtectionElements - array of content protection elements parsed
      * from the manifest
-     * @param {ProtectionData} applicationSpecifiedProtectionData user specified protection data - license server url etc
+     * @param {ProtectionData} applicationSpecifiedProtectionData user specified protection data - license server url
+     * etc
      * supported by the content
      * @param {string} sessionType session type
      * @returns {Array.<Object>} array of objects indicating which supported key
@@ -214,7 +215,11 @@ function ProtectionKeyController() {
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystemMetadataFromContentProtection(contentProtectionElements, applicationSpecifiedProtectionData, sessionType) {
+    function getSupportedKeySystemMetadataFromContentProtection(
+        contentProtectionElements,
+        applicationSpecifiedProtectionData,
+        sessionType
+    ) {
         let contentProtectionElement, keySystem, ksIdx, cpIdx;
         let supportedKS = [];
 
@@ -299,7 +304,7 @@ function ProtectionKeyController() {
     }
 
     /**
-     * Build key system metadata for sinf (FairPlay) initData.
+     * Build key system metadata for sinf (FairPlay) initData.<br>
      * Since sinf data has no PSSH UUIDs, we match against the FairPlay key system directly.
      * @param {ArrayBuffer} initData
      * @return {Array}
@@ -311,7 +316,9 @@ function ProtectionKeyController() {
             return [];
         }
         const keyId = _extractKeyIdFromSinf(initData);
-        const protData = applicationProvidedProtectionData ? applicationProvidedProtectionData[ProtectionConstants.FAIRPLAY_KEYSTEM_STRING] || null : null;
+        const protData = applicationProvidedProtectionData
+            ? applicationProvidedProtectionData[ProtectionConstants.FAIRPLAY_KEYSTEM_STRING] || null
+            : null;
         return [{
             ks: fairplayKs,
             keyId: keyId,
@@ -323,8 +330,8 @@ function ProtectionKeyController() {
     }
 
     /**
-     * Extract the defaultKID from the tenc box inside a sinf initData.
-     * Safari sends sinf initData as JSON: {"sinf": ["<base64-encoded sinf box>"]}
+     * Extract the defaultKID from the tenc box inside a sinf initData.<br>
+     * Safari sends sinf initData as JSON: {"sinf": ["<base64-encoded sinf box>"]}<br>
      * The sinf box contains: sinf > schi > tenc, where the KID is 12 bytes after the 'tenc' fourcc.
      * @param {ArrayBuffer} initData
      * @return {string|null} key ID as UUID string, or null if not found
@@ -358,9 +365,11 @@ function ProtectionKeyController() {
 
         // Search for 'tenc' fourcc (0x74 0x65 0x6E 0x63)
         for (let i = 0; i < sinfBytes.length - 28; i++) {
-            if (sinfBytes[i] === 0x74 && sinfBytes[i + 1] === 0x65 && sinfBytes[i + 2] === 0x6E && sinfBytes[i + 3] === 0x63) {
+            if (sinfBytes[i] === 0x74 && sinfBytes[i + 1] === 0x65 &&
+                sinfBytes[i + 2] === 0x6E && sinfBytes[i + 3] === 0x63) {
                 // tenc found: KID is 12 bytes after the fourcc
-                // [tenc fourcc (4)] [version (1) + flags (3)] [reserved/crypt (1) + reserved/skip (1)] [isProtected (1) + ivSize (1)] = 12 bytes
+                // [tenc fourcc (4)] [version (1) + flags (3)] [reserved/crypt (1) + reserved/skip (1)] [isProtected (1)
+                // + ivSize (1)] = 12 bytes
                 const kidOffset = i + 12;
                 if (kidOffset + 16 > sinfBytes.length) {
                     return null;
@@ -395,7 +404,8 @@ function ProtectionKeyController() {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
-        if (messageType === ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.LICENSE_RELEASE || messageType === ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.INDIVIDUALIZATION_REQUEST) {
+        if (messageType === ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.LICENSE_RELEASE ||
+            messageType === ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.INDIVIDUALIZATION_REQUEST) {
             return null;
         }
 

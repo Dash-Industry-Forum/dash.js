@@ -150,11 +150,15 @@ class MediaPlayerModelMock {
     }
 
     getBufferTimeDefault() {
-        return this.bufferTimeDefault > -1 ? this.bufferTimeDefault : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return this.bufferTimeDefault > -1
+            ? this.bufferTimeDefault
+            : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     getBufferTimeDefaultUnadjusted() {
-        return this.bufferTimeDefault > -1 ? this.bufferTimeDefault : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return this.bufferTimeDefault > -1
+            ? this.bufferTimeDefault
+            : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     setRetryAttemptsForType(type, value) {

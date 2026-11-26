@@ -10,6 +10,7 @@ dash.js is the DASH Industry Forum reference client for MPEG-DASH playback via M
 npm run dev              # tsc + webpack dev build in watch mode
 npm start                # webpack-dev-server (serves samples, e.g. /samples/dash-if-reference-player/)
 npm test                 # unit tests (Karma + Mocha/Chai/Sinon, headless Chrome)
+npm run test:coverage    # unit tests with coverage (report in test/unit/results/coverage/<browser>/)
 npm run lint             # eslint on src/ and test/unit/
 npm run build            # webpack prod bundles only — skips tsc/tests/lint
 npm run build:dist       # clean + tsc + full modern & legacy bundles (what CI deploys)

@@ -46,3 +46,15 @@ player.updateSettings({
 })
 ````
 
+## Accessing CMSD values
+
+The parsed CMSD values are attached to the corresponding `HttpList` entries of the DASH metrics as `_cmsd`. They are
+private because CMSD is not part of the `HttpList` metric defined in ISO/IEC 23009-1 Annex D.4.3, and are therefore not
+included in metric reports.
+
+````js
+const httpRequest = player.getDashMetrics().getCurrentHttpRequest('video');
+const etp = httpRequest && httpRequest._cmsd && httpRequest._cmsd.dynamic ? httpRequest._cmsd.dynamic.etp : null;
+````
+
+The `cmsd` property is deprecated since dash.js 5.3.0 and will be removed in v6. Use `_cmsd` instead.

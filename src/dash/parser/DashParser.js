@@ -184,6 +184,12 @@ function DashParser(config) {
                     continue;
                 }
 
+                // Consumers read CDATA content (e.g. Event payloads) from __cdata
+                if (child.nodeName === '#cdata') {
+                    node.__cdata = (node.__cdata || '') + child.nodeValue;
+                    continue;
+                }
+
                 processNode(child);
 
                 const { nodeName } = child;

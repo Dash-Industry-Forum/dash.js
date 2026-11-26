@@ -68,7 +68,7 @@ describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
     });
 
     it(`Seek to an unbuffered range`, () => {
-        const bufferEnd = playerAdapter.getBufferLengthByType() + playerAdapter.getCurrentTime();
+        const bufferEnd = playerAdapter.getForwardBufferLength() + playerAdapter.getCurrentTime();
         const targetTime = Math.min(bufferEnd + Constants.TEST_INPUTS.BUFFER_TO_KEEP_SEEK.SEEK_OFFSET, playerAdapter.getDuration() - 10);
         playerAdapter.seek(targetTime);
 

@@ -122,6 +122,17 @@
       ]
     },
     {
+      "name": "Segment Base, hierarchical SIDX, child SIDX boxes after the parent",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dashjs/multi-sidx/upfront/manifest.mpd",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-ended"
+      ]
+    },
+    {
       "name": "MPD Patching with $time",
       "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
       "type": "live",

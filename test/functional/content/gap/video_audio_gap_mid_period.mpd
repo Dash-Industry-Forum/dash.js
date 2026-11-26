@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Video segments 5 and 6 and audio segments 5 to 8 point to the init segments. They contain no samples, which creates a gap from 16s to 24s in the video buffer and from 16s to 32s in the audio buffer, see https://github.com/Dash-Industry-Forum/dash.js/issues/5115 -->
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" mediaPresentationDuration="PT60S" minBufferTime="PT2S" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static">
+    <BaseURL>https://dash.akamaized.net/akamai/bbb_30fps/</BaseURL>
+    <Period duration="PT60S" id="p0">
+        <AdaptationSet contentType="video" mimeType="video/mp4" par="16:9" segmentAlignment="true" startWithSAP="1">
+            <Representation bandwidth="1254758" codecs="avc1.64001e" frameRate="30" height="360" id="bbb_30fps_640x360_1000k" sar="1:1" width="640">
+                <SegmentList duration="120" timescale="30">
+                    <Initialization sourceURL="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_0.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_1.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_2.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_3.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_4.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_0.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_0.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_7.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_8.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_9.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_10.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_11.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_12.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_13.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_14.m4v"/>
+                    <SegmentURL media="bbb_30fps_640x360_1000k/bbb_30fps_640x360_1000k_15.m4v"/>
+                </SegmentList>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet contentType="audio" lang="en" mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1">
+            <Representation audioSamplingRate="48000" bandwidth="67071" codecs="mp4a.40.5" id="bbb_a64k">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+                <SegmentList duration="192512" timescale="48000">
+                    <Initialization sourceURL="bbb_a64k/bbb_a64k_0.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_1.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_2.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_3.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_4.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_0.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_0.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_0.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_0.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_9.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_10.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_11.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_12.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_13.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_14.m4a"/>
+                    <SegmentURL media="bbb_a64k/bbb_a64k_15.m4a"/>
+                </SegmentList>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>

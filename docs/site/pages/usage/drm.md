@@ -69,6 +69,38 @@ session. A server certificate can be provided as well, see [Server certificates]
 An example is available in
 the [PlayReady sample](https://reference.dashif.org/dash.js/nightly/samples/drm/playready.html).
 
+### PlayReady in Chrome
+
+Chrome on Windows supports hardware PlayReady (SL3000) only via the system string
+`com.microsoft.playready.recommendation.3000`. By default, dash.js tries `com.microsoft.playready` and
+`com.microsoft.playready.recommendation`, both of which Chrome rejects. The `.3000` system string is not part of the
+defaults: if it were, Chrome on Windows would silently pick PlayReady instead of Widevine for multi-DRM content.
+
+To enable PlayReady in Chrome, define a [system string priority](#key-system-string-priority). The list replaces the
+defaults, so keep the other system strings to still support Edge and Firefox:
+
+```js
+const protData = {
+    "com.microsoft.playready": {
+        "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+        "systemStringPriority": [
+            "com.microsoft.playready",
+            "com.microsoft.playready.recommendation",
+            "com.microsoft.playready.recommendation.3000"
+        ]
+    }
+};
+player.setProtectionData(protData);
+```
+
+For multi-DRM content, use the [key system priority](#key-system-priority) to decide whether Chrome uses PlayReady or
+Widevine. Hardware PlayReady requires a Windows machine with hardware DRM support; it is not available in virtual
+machines or remote desktop sessions. The system string that was actually used is available in the `selectedSystemString`
+attribute of the `KEY_SYSTEM_SELECTED` event payload.
+
+An example is available in
+the [PlayReady Chrome sample](https://reference.dashif.org/dash.js/nightly/samples/drm/playready-chrome.html).
+
 ## FairPlay
 
 Apple FairPlay Streaming is supported on Apple platforms (Safari on macOS, iOS and iPadOS). dash.js registers the key
@@ -198,7 +230,10 @@ strings `com.microsoft.playready` and `com.microsoft.playready.recommendation`. 
 given [here](https://github.com/Dash-Industry-Forum/dash.js/issues/3852#issuecomment-1020455199)
 and [here](https://github.com/Dash-Industry-Forum/dash.js/issues/3852#issuecomment-1020301841).
 
-dash.js allows the application to define a system string priority for each key system as part of the protection data:
+dash.js allows the application to define a system string priority for each key system as part of the protection data.
+The system strings are tried in the given order. If no priority is defined, dash.js uses `com.microsoft.playready`
+followed by `com.microsoft.playready.recommendation` for PlayReady, and the key system's own system string for all
+other key systems. A priority defined by the application replaces these defaults:
 
 ````js
 var protData = {

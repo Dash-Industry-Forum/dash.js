@@ -413,6 +413,19 @@
                 ]
             },
             {
+                "title": "PlayReady in Chrome",
+                "description": "Probes the supported PlayReady key system strings and plays PlayReady protected content, e.g. in Chrome on Windows using com.microsoft.playready.recommendation.3000.",
+                "href": "drm/playready-chrome.html",
+                "image": "lib/img/tos-2.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "Fairplay DRM",
                 "description": "Shows how to use dash.js to play streams with Fairplay DRM protection.",
                 "href": "drm/fairplay.html",
@@ -818,6 +831,19 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "SVTA 2053-1 ad tracking beacons",
+                "description": "Shows how an application listens to SVTA 2053-1 ad creative signaling events and dispatches the tracking beacons.",
+                "href": "advanced/svta-beaconing.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Events",
+                    "Multiperiod",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -894,6 +920,28 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "CMCD v2 error codes",
+                "description": "Shows how dash.js buffers player error codes (ec) per CMCD v2 report destination and reports each code once with the next report.",
+                "href": "cmcd/cmcd-v2-error-codes.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "CMCD custom keys",
+                "description": "Shows how to add custom keys, such as the player name and version from the SVTA CMCD custom keys registry, to CMCD reports.",
+                "href": "cmcd/cmcd-custom-keys.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -935,7 +983,7 @@
             },
             {
                 "title": "Play HEVC streams in any browser",
-                "description": "Shows how to play HEVC (H.265) DASH streams in dash.js on browsers without native HEVC support — Firefox, Chrome on Linux/Windows, etc. The @hevcjs/dashjs-plugin transcodes HEVC samples to H.264 in a Web Worker (WASM + WebCodecs), transparently to dash.js.",
+                "description": "Shows how to play HEVC (H.265) DASH streams in dash.js on devices with no hardware HEVC decoder, where Chrome (Windows, Linux) and Firefox (Windows, without the HEVC extension) have no software fallback. The @hevcjs/dashjs-plugin transcodes HEVC samples to H.264 in a Web Worker (WASM + WebCodecs), transparently to dash.js.",
                 "href": "hevc/hevc-playback.html",
                 "image": "hevc/preview.jpg",
                 "labels": [

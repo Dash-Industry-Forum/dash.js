@@ -36,7 +36,8 @@ const mpd_sample = {
 describe('DashManifestModel', function () {
     describe('SetConfig not previously called', function () {
         it('should throw an exception when attempting to call getEndTimeForLastPeriod while setConfig has not been called', function () {
-            expect(dashManifestModel.getRegularPeriods.bind(dashManifestModel, mpd_sample)).to.throw(Constants.MISSING_CONFIG_ERROR);
+            expect(dashManifestModel.getRegularPeriods.bind(dashManifestModel, mpd_sample))
+                .to.throw(Constants.MISSING_CONFIG_ERROR);
         });
     });
 
@@ -72,7 +73,8 @@ describe('DashManifestModel', function () {
         });
 
         it('should return 5 when getSuggestedPresentationDelay is called and mpd is an object with suggestedPresentationDelay attribute', () => {
-            const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay({ suggestedPresentationDelay: 5 });
+            const suggestedPresentationDelay =
+                dashManifestModel.getSuggestedPresentationDelay({ suggestedPresentationDelay: 5 });
 
             expect(suggestedPresentationDelay).to.be.equal(5);
         });
@@ -282,16 +284,20 @@ describe('DashManifestModel', function () {
                     };
 
                     const singleRepresentationResult = dashManifestModel[getterName](singleRepresentationAdaptation);
-                    const multipleRepresentationResult = dashManifestModel[getterName](multipleRepresentationAdaptation);
+                    const multipleRepresentationResult =
+                        dashManifestModel[getterName](multipleRepresentationAdaptation);
                     const expectedValues = [
                         [representationProperty.schemeIdUri, representationProperty.value],
                         [adaptationProperty.schemeIdUri, adaptationProperty.value]
                     ];
 
                     expect(singleRepresentationResult.every(property => property instanceof DescriptorType)).to.be.true;
-                    expect(singleRepresentationResult.map(property => [property.schemeIdUri, property.value])).to.deep.equal(expectedValues);
-                    expect(multipleRepresentationResult.map(property => [property.schemeIdUri, property.value])).to.deep.equal(expectedValues);
-                    expect(singleRepresentationAdaptation.Representation[0][propertyName]).to.equal(representationProperties);
+                    expect(singleRepresentationResult.map(property => [property.schemeIdUri, property.value]))
+                        .to.deep.equal(expectedValues);
+                    expect(multipleRepresentationResult.map(property => [property.schemeIdUri, property.value]))
+                        .to.deep.equal(expectedValues);
+                    expect(singleRepresentationAdaptation.Representation[0][propertyName])
+                        .to.equal(representationProperties);
                 });
             });
         });
@@ -1721,7 +1727,8 @@ describe('DashManifestModel', function () {
                         }
                     ]
                 }
-                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
+                const segmentSequenceProperties =
+                    dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
                 expect(segmentSequenceProperties).to.have.length(1);
                 expect(segmentSequenceProperties[0].cadence).to.equal(5);
                 expect(segmentSequenceProperties[0].sapType).to.equal(3);
@@ -1742,7 +1749,8 @@ describe('DashManifestModel', function () {
                         ]
                     }]
                 }
-                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
+                const segmentSequenceProperties =
+                    dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
                 expect(segmentSequenceProperties).to.have.length(1);
                 expect(segmentSequenceProperties[0].cadence).to.equal(5);
                 expect(segmentSequenceProperties[0].sapType).to.equal(3);
@@ -1771,7 +1779,8 @@ describe('DashManifestModel', function () {
                         ]
                     }]
                 }
-                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
+                const segmentSequenceProperties =
+                    dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
                 expect(segmentSequenceProperties).to.have.length(2);
                 expect(segmentSequenceProperties[0].cadence).to.equal(5);
                 expect(segmentSequenceProperties[0].sapType).to.equal(3);

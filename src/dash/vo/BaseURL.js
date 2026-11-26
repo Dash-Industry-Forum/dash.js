@@ -47,7 +47,8 @@ class BaseURL {
 
         this.availabilityTimeOffset = 0;
         this.availabilityTimeComplete = true;
-        this.queryParams = {}; // This is an attribute that might be set when synthesizing BaseURLs with content steering
+        // This is an attribute that might be set when synthesizing BaseURLs with content steering
+        this.queryParams = {};
 
         /* currently unused:
          * byteRange,

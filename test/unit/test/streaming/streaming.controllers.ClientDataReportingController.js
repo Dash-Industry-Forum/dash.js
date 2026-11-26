@@ -22,7 +22,8 @@ describe('ClientDataReportingController', function () {
         it('isServiceLocationIncluded returns true when the filter is not present in manifest', function () {
             const serviceLocation = 'test-location';
 
-            const result = clientDataReportingController.isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
+            const result = clientDataReportingController
+                .isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
@@ -38,7 +39,8 @@ describe('ClientDataReportingController', function () {
         it('isServiceLocationIncluded returns true when the filter is not present in manifest and requestType is steering', function () {
             const serviceLocation = 'test-location';
 
-            const result = clientDataReportingController.isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
+            const result = clientDataReportingController
+                .isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
@@ -56,7 +58,8 @@ describe('ClientDataReportingController', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingController.isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
+            const result = clientDataReportingController
+                .isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
@@ -86,7 +89,8 @@ describe('ClientDataReportingController', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingController.isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
+            const result = clientDataReportingController
+                .isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });
@@ -102,7 +106,8 @@ describe('ClientDataReportingController', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingController.isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
+            const result = clientDataReportingController
+                .isServiceLocationIncluded(HTTPRequest.MPD_TYPE, serviceLocation);
 
             expect(result).to.equal(false);
         });
@@ -132,7 +137,8 @@ describe('ClientDataReportingController', function () {
             }
             serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-            const result = clientDataReportingController.isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
+            const result = clientDataReportingController
+                .isServiceLocationIncluded(HTTPRequest.CONTENT_STEERING_TYPE, serviceLocation);
 
             expect(result).to.equal(true);
         });

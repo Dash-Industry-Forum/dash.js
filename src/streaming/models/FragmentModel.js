@@ -75,7 +75,8 @@ function FragmentModel(config) {
         };
 
         const isEqualMedia = function (req1, req2) {
-            return !isNaN(req1.index) && (req1.startTime === req2.startTime) && (req1.adaptationIndex === req2.adaptationIndex) && (req1.type === req2.type);
+            return !isNaN(req1.index) && (req1.startTime === req2.startTime) &&
+                (req1.adaptationIndex === req2.adaptationIndex) && (req1.type === req2.type);
         };
 
         const isEqualInit = function (req1, req2) {
@@ -126,9 +127,9 @@ function FragmentModel(config) {
      *
      * Gets an array of {@link FragmentRequest} objects
      *
-     * @param {Object} filter The object with properties by which the method filters the requests to be returned.
+     * @param {Object} filter The object with properties by which the method filters the requests to be returned.<br>
      *  the only mandatory property is state, which must be a value from
-     *  other properties should match the properties of {@link FragmentRequest}. E.g.:
+     *  other properties should match the properties of {@link FragmentRequest}. E.g.:<br>
      *  getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, quality: 0})
      *
      * @returns {Array}
@@ -226,7 +227,8 @@ function FragmentModel(config) {
             const start = req.startTime;
             const end = start + req.duration;
             threshold = !isNaN(threshold) ? threshold : getRequestThreshold(req);
-            if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) || (isNaN(start) && isNaN(time))) {
+            if ((!isNaN(start) && !isNaN(end) && ((time + threshold) >= start) && ((time - threshold) < end)) ||
+                (isNaN(start) && isNaN(time))) {
                 return req;
             }
         }

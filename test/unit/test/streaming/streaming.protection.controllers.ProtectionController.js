@@ -222,10 +222,63 @@ describe('ProtectionController', function () {
             expect(protectionModelMock.getSessionTokens().map(s => s.keyId)).to.deep.equal(['session-1', 'session-2', 'session-3']);
         });
 
+        describe('hasLicenseBeenApplied', function () {
+
+            it('should return false if no license has been applied', function () {
+                expect(protectionController.hasLicenseBeenApplied()).to.be.false;
+            });
+
+            it('should return true once a license has been applied to a key session', function () {
+                eventBus.trigger(ProtectionEvents.KEY_SESSION_UPDATED);
+
+                expect(protectionController.hasLicenseBeenApplied()).to.be.true;
+            });
+
+            it('should keep the state when playback is stopped', function () {
+                eventBus.trigger(ProtectionEvents.KEY_SESSION_UPDATED);
+                protectionController.stop();
+
+                expect(protectionController.hasLicenseBeenApplied()).to.be.true;
+            });
+
+            describe('reset', function () {
+                let controller;
+
+                // reset() can only be called once per instance, the shared instance is reset after each test
+                beforeEach(function () {
+                    controller = ProtectionController(context).create({
+                        protectionKeyController: new ProtectionKeyControllerMock(),
+                        events: ProtectionEvents,
+                        debug: new DebugMock(),
+                        protectionModel: new ProtectionModelMock({ events: ProtectionEvents, eventBus: eventBus }),
+                        eventBus: eventBus,
+                        constants: Constants,
+                        settings: settingsMock
+                    });
+                });
+
+                it('should clear the state on reset', function () {
+                    eventBus.trigger(ProtectionEvents.KEY_SESSION_UPDATED);
+                    expect(controller.hasLicenseBeenApplied()).to.be.true;
+                    controller.reset();
+
+                    expect(controller.hasLicenseBeenApplied()).to.be.false;
+                });
+
+                it('should ignore a license that is applied after reset', function () {
+                    controller.reset();
+                    eventBus.trigger(ProtectionEvents.KEY_SESSION_UPDATED);
+
+                    expect(controller.hasLicenseBeenApplied()).to.be.false;
+                });
+            });
+        });
+
     });
 
     describe('CMCD integration', function () {
-        let protectionModelMock, settingsMock, cmcdControllerMock, customParametersModelMock, protectionKeyControllerMock;
+        let protectionModelMock, settingsMock, cmcdControllerMock, customParametersModelMock,
+            protectionKeyControllerMock;
         let xhrMock, requests;
 
         beforeEach(function () {

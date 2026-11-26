@@ -28,10 +28,29 @@ jobs:
                 uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
                 with:
                     persist-credentials: false
+                    # Also fetch the base side of the merge commit (HEAD^1), which the coverage
+                    # summary diffs against to report coverage of the changed lines.
+                    fetch-depth: 2
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
             -   name: Validate and run unit tests
+                env:
+                    COVERAGE: 1
                 run: npm run ci:verify
+            # Informational only: neither step can fail the job.
+            -   name: Coverage summary
+                if: ${{ !cancelled() }}
+                continue-on-error: true
+                run: node test/unit/config/coverage-summary.mjs
+            -   name: Upload coverage report
+                if: ${{ !cancelled() }}
+                continue-on-error: true
+                uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+                with:
+                    name: unit-test-coverage
+                    path: test/unit/results/coverage/chrome/
+                    if-no-files-found: ignore
+                    retention-days: 7
 
     build_modern_artifact:
         runs-on: ubuntu-24.04
@@ -95,7 +114,7 @@ jobs:
             -   name: Run compliance tests
                 run: npm run test:compliance
 
-    run_functional_test_single_stream_lambdatest:
+    run_functional_test_single_stream_browserstack:
         if: github.event.pull_request.head.repo.fork == false
         needs:
             - validate_and_unit_test
@@ -111,23 +130,14 @@ jobs:
                     persist-credentials: false
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
-            -   name: Install karma-webdriver-launcher
-                # CI-only launcher for LambdaTest, deliberately not a devDependency
-                run: npm install karma-webdriver-launcher # zizmor: ignore[adhoc-packages]
             -   name: Download dist artifacts
                 uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
                 with:
                     name: dist-modern
                     path: dist/
-            -   name: Start Tunnel
-                uses: LambdaTest/LambdaTest-tunnel-action@1952f0f9958e5510872d1484ce54c48d1c1796c1 # v2.0.1
-                id: tunnel
-                with:
-                    user: ${{ secrets.LT_USERNAME }}
-                    accessKey: ${{ secrets.LT_ACCESS_KEY }}
-                    tunnelName: "dashjs-tunnel-${{github.run_number}}"
-            -   name: Run functional tests on LambdaTest
+            -   name: Run functional tests on BrowserStack
+                # karma-browserstack-launcher opens the BrowserStack Local tunnel itself
                 env:
-                    LT_USERNAME: ${{ secrets.LT_USERNAME }}
-                    LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
-                run: node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=lambdatest --streamsfile=single
+                    BROWSERSTACK_USER: ${{ secrets.BROWSERSTACK_USER }}
+                    BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+                run: node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=browserstack --streamsfile=single

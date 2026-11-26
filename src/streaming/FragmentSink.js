@@ -42,8 +42,10 @@
 /**
  * Remove data from within the specified time ranges.
  * @function FragmentSink#remove
- * @param {?Number} start The beginning of the range that should be removed from the sink's internal buffer. If NaN, it is regarded as unbounded.
- * @param {?Number} end The end of the range that should be removed from the sink's internal buffer. If NaN, it is regarded as unbounded.
+ * @param {?Number} start The beginning of the range that should be removed from the sink's internal buffer. If NaN, it
+ * is regarded as unbounded.
+ * @param {?Number} end The end of the range that should be removed from the sink's internal buffer. If NaN, it is
+ * regarded as unbounded.
  */
 /**
  * Abort an append operation currently ongoing.

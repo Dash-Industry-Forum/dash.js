@@ -1,4 +1,5 @@
 import MetricSerialiser from '../../../../src/streaming/metrics/utils/MetricSerialiser.js';
+import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 
 import {expect} from 'chai';
 
@@ -24,6 +25,15 @@ describe('MetricSerialiser', function () {
             const actual = metricSerialiser.serialise(entry);
 
             expect(actual).to.equal(expected); // jshint ignore:line
+        });
+
+        it('should not serialise CMSD data of an HttpList entry', () => {
+            const entry = new HTTPRequest();
+            entry._cmsd = { dynamic: { etp: 5000 } };
+
+            const actual = metricSerialiser.serialise(entry);
+
+            expect(actual).to.not.match(/(^|&)_?cmsd=/);
         });
     });
 });

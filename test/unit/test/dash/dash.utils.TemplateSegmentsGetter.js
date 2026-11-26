@@ -200,7 +200,8 @@ describe('TemplateSegmentsGetter', () => {
             representation.timescale = 1;
             attachSegmentTemplate(representation);
 
-            const seg = templateSegmentsGetter.getSegmentByIndex(representation, 2, 1); // segment index 2, start with partial 1
+            // segment index 2, start with partial 1
+            const seg = templateSegmentsGetter.getSegmentByIndex(representation, 2, 1);
             expect(seg).to.exist; // jshint ignore:line
             expect(seg.isPartialSegment).to.be.true;
             expect(seg.index).to.equal(2);
@@ -222,7 +223,8 @@ describe('TemplateSegmentsGetter', () => {
             const dynamicContext = {};
             const dynamicTimelineConverter = TimelineConverter(dynamicContext).getInstance();
             dynamicTimelineConverter.initialize();
-            const dynamicGetter = TemplateSegmentsGetter(dynamicContext).create({ timelineConverter: dynamicTimelineConverter }, true);
+            const dynamicGetter = TemplateSegmentsGetter(dynamicContext)
+                .create({ timelineConverter: dynamicTimelineConverter }, true);
 
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
             const future = new Date(Date.now() + 60000); // 60s in future

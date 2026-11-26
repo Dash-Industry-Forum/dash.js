@@ -164,6 +164,8 @@ Desktop.ini
 eggs
 parts
 bin
+# The sample Express server keeps its express-generator entry point in bin/
+!samples/simple-express-server/bin/
 var
 sdist
 develop-eggs
@@ -220,3 +222,6 @@ docs/site/.vitepress/cache
 *.tgz
 .playwright-mcp
 .opencode
+
+# Git worktrees (see docs/site/pages/developers/git-worktrees.md)
+.claude/worktrees/

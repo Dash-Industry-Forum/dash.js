@@ -89,7 +89,8 @@ describe('TextSourceBuffer', function () {
             const textTracksMock = {
                 addCaptions: (idx, timeOffset, captionArray) => {
                     addCaptionsCalls.push({ idx, timeOffset, captionArray });
-                }
+                },
+                getTextTrackInfos: () => []
             };
             const buffer = TextSourceBuffer(context).create({
                 errHandler: errorHandlerMock,
@@ -111,10 +112,70 @@ describe('TextSourceBuffer', function () {
             expect(addCaptionsCalls[0].captionArray).to.have.lengthOf(1);
             expect(addCaptionsCalls[0].captionArray[0].data).to.equal('Hello');
             expect(addCaptionsCalls[0].captionArray[0].start).to.equal(BASE_MEDIA_DECODE_TIME / TIMESCALE);
-            expect(addCaptionsCalls[0].captionArray[0].end).to.equal((BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
+            expect(addCaptionsCalls[0].captionArray[0].end)
+                .to.equal((BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
             // Buffered range is in presentation time: timestampOffset + cts / timescale
             expect(buffer.buffered.start(0)).to.equal(TIMESTAMP_OFFSET + BASE_MEDIA_DECODE_TIME / TIMESCALE);
-            expect(buffer.buffered.end(0)).to.equal(TIMESTAMP_OFFSET + (BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
+            expect(buffer.buffered.end(0))
+                .to.equal(TIMESTAMP_OFFSET + (BASE_MEDIA_DECODE_TIME + SAMPLE_DURATION) / TIMESCALE);
+        });
+
+        it('should add the cues to the text track of the current fragmented track', function () {
+            const englishTrack = {
+                type: 'text',
+                id: 'eng',
+                index: 0,
+                lang: 'en',
+                isFragmented: true,
+                mimeType: 'application/mp4',
+                codec: 'application/mp4;codecs="wvtt"'
+            };
+            // A non fragmented track between the fragmented ones shifts the index of every
+            // following fragmented track in the list of all text tracks
+            const sideloadedTrack = {
+                type: 'text',
+                id: 'side',
+                index: 1,
+                lang: 'fr',
+                isFragmented: false,
+                mimeType: 'text/vtt'
+            };
+            const germanTrack = {
+                ...englishTrack,
+                id: 'deu',
+                index: 2,
+                lang: 'de'
+            };
+            const allTracks = [englishTrack, sideloadedTrack, germanTrack];
+
+            const textTrackInfos = [];
+            const addCaptionsCalls = [];
+            const textTracksMock = {
+                addCaptions: (idx) => addCaptionsCalls.push(idx),
+                addTextTrackInfo: (info) => textTrackInfos.push(info),
+                getTextTrackInfos: () => textTrackInfos,
+                deleteAllTextTracks: () => {}
+            };
+            const mediaControllerMock = {
+                getTracksFor: () => allTracks,
+                getCurrentTrackFor: () => germanTrack
+            };
+            const buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                mediaController: mediaControllerMock,
+                streamInfo: { id: 'stream' },
+                textTracks: textTracksMock
+            });
+            buffer.initialize();
+            buffer.addMediaInfos('text', allTracks, {});
+
+            const representation = { mediaInfo: germanTrack };
+            buffer.append(createInitSegment(), { segmentType: 'InitializationSegment', representation });
+            buffer.append(createMediaSegment('Hallo'), { segmentType: 'MediaSegment', representation });
+
+            buffer.resetEmbedded();
+
+            expect(addCaptionsCalls).to.deep.equal([2]);
         });
     });
 });

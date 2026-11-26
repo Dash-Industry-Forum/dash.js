@@ -42,7 +42,9 @@ describe('VideoModel', () => {
     describe('setStallState()', () => {        
         describe('syntheticStallEvents enabled', () => {            
             beforeEach(() => {
-                settings.update({ streaming: { buffer: { syntheticStallEvents: { enabled: true, ignoreReadyState: false } }}});
+                settings.update({
+                    streaming: { buffer: { syntheticStallEvents: { enabled: true, ignoreReadyState: false } } }
+                });
                 videoModel.setConfig({ settings });
             })
 
@@ -68,7 +70,9 @@ describe('VideoModel', () => {
             });
 
             it('Should emit a playing event on stall end even if not in ready state if ignoring ready state', (done) => {
-                settings.update({ streaming: { buffer: { syntheticStallEvents: { enabled: true, ignoreReadyState: true } }}});
+                settings.update({
+                    streaming: { buffer: { syntheticStallEvents: { enabled: true, ignoreReadyState: true } } }
+                });
                 
                 videoElementMock.readyState = Constants.VIDEO_ELEMENT_READY_STATES.HAVE_NOTHING;
 

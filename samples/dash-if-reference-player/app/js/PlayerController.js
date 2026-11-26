@@ -452,12 +452,12 @@ export class PlayerController extends EventEmitter {
                 }
 
                 // CMSD metrics
-                if (req.cmsd) {
-                    if (req.cmsd.dynamic && req.cmsd.dynamic.mtp) {
-                        result.mtp = req.cmsd.dynamic.mtp;
+                if (req._cmsd) {
+                    if (req._cmsd.dynamic && req._cmsd.dynamic.mtp) {
+                        result.mtp = req._cmsd.dynamic.mtp;
                     }
-                    if (req.cmsd.dynamic && req.cmsd.dynamic.etp) {
-                        result.etp = req.cmsd.dynamic.etp;
+                    if (req._cmsd.dynamic && req._cmsd.dynamic.etp) {
+                        result.etp = req._cmsd.dynamic.etp;
                     }
                 }
             }

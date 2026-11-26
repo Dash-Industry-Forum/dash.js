@@ -42,7 +42,9 @@ const datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?
 
 // Only known timestamp attributes are converted; other strings may also start with a date.
 const dateTimeAttributes = {
-    [DashConstants.MPD]: [DashConstants.AVAILABILITY_START_TIME, DashConstants.AVAILABILITY_END_TIME, DashConstants.PUBLISH_TIME],
+    [DashConstants.MPD]: [
+        DashConstants.AVAILABILITY_START_TIME, DashConstants.AVAILABILITY_END_TIME, DashConstants.PUBLISH_TIME
+    ],
     Patch: [DashConstants.PUBLISH_TIME, DashConstants.ORIGINAL_PUBLISH_TIME],
     LeapSecondInformation: ['nextLeapChangeTime'],
     [DashConstants.PRODUCER_REFERENCE_TIME]: [DashConstants.WALL_CLOCK_TIME]
@@ -58,8 +60,8 @@ class DateTimeMatcher extends BaseMatcher {
                 let utcDate;
 
                 // If the string does not contain a timezone offset different browsers can interpret it either
-                // as UTC or as a local time so we have to parse the string manually to normalize the given date value for
-                // all browsers
+                // as UTC or as a local time so we have to parse the string manually to normalize the given date value
+                // for all browsers
                 utcDate = Date.UTC(
                     parseInt(match[1], 10),
                     parseInt(match[2], 10) - 1, // months start from zero

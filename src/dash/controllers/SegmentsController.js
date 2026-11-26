@@ -67,7 +67,9 @@ function SegmentsController(config) {
     }
 
     function updateSegmentData(voRepresentation, hasSegments) {
-        if (hasSegments) {
+        // The segment list is fetched once per Representation instance; callers may ask again
+        // (lazy SegmentBase loading).
+        if (hasSegments || voRepresentation.segments) {
             return Promise.resolve();
         }
         return segmentBaseController.getSegmentList({
@@ -78,10 +80,14 @@ function SegmentsController(config) {
     }
 
     function getSegmentsGetter(representation) {
-        return representation ? representation.segments ? getters[dashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType] : null;
+        return representation
+            ? representation.segments ? getters[dashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType]
+            : null;
     }
 
-    function getSegmentByIndex(representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest, lastSegment) {
+    function getSegmentByIndex(
+        representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest, lastSegment
+    ) {
         const getter = getSegmentsGetter(representation);
 
         if (!getter) {
@@ -92,7 +98,9 @@ function SegmentsController(config) {
             if (representation.segmentInfoType === dashConstants.SEGMENT_TIMELINE) {
                 return getter.getSegmentByIndex(representation, lastSegment)
             } else if (representation.segmentInfoType === dashConstants.SEGMENT_TEMPLATE) {
-                return getter.getSegmentByIndex(representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest);
+                return getter.getSegmentByIndex(
+                    representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest
+                );
             } else {
                 return getter.getSegmentByIndex(representation, indexWithoutStartNumber);
             }

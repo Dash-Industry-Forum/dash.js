@@ -32,7 +32,7 @@ import Debug from '../core/Debug.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 
 /**
- * This is a sink that is used to temporarily hold onto media chunks before a video element is added.
+ * This is a sink that is used to temporarily hold onto media chunks before a video element is added.<br>
  * The discharge() function is used to get the chunks out of the PreBuffer for adding to a real SourceBuffer.
  *
  * @class PreBufferSink

@@ -124,7 +124,8 @@ function TextSourceBuffer(config) {
         if (type === Constants.TEXT && mInfos[0].isFragmented && !mInfos[0].isEmbedded) {
             fragmentModel = fModel;
             instance.buffered = CustomTimeRanges(context).create();
-            fragmentedTracks = mediaController.getTracksFor(Constants.TEXT, streamInfo.id).filter(track => track.isFragmented);
+            fragmentedTracks = mediaController.getTracksFor(Constants.TEXT, streamInfo.id)
+                .filter(track => track.isFragmented);
             const currFragTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamInfo.id);
             for (let i = 0; i < fragmentedTracks.length; i++) {
                 if (fragmentedTracks[i] === currFragTrack) {
@@ -246,12 +247,33 @@ function TextSourceBuffer(config) {
         currFragmentedTrackIdx = idx;
     }
 
+    /*
+     * currFragmentedTrackIdx is the index in fragmentedTracks, whereas TextTracks addresses a track by its
+     * index in all text tracks of the period. Those also contain the non fragmented and the embedded tracks,
+     * so the two indexes differ as soon as a non fragmented track precedes a fragmented one.
+     */
+    function _getTextTrackIdxOfCurrentFragmentedTrack() {
+        const mediaInfo = fragmentedTracks[currFragmentedTrackIdx];
+
+        if (!mediaInfo) {
+            return -1;
+        }
+
+        return textTracks.getTextTrackInfos().findIndex((textTrackInfo) => {
+            return textTrackInfo.isFragmented && !textTrackInfo.isEmbedded &&
+                (mediaInfo.id ? textTrackInfo.id === mediaInfo.id : textTrackInfo.index === mediaInfo.index);
+        });
+    }
+
     function _checkTtml(mediaInfo) {
-        return (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) || (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0);
+        return (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) ||
+            (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0);
     }
 
     function _getKind(mediaInfo, trackKindMap) {
-        let kind = (mediaInfo.roles && mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0].value] : trackKindMap.caption;
+        let kind = (mediaInfo.roles && mediaInfo.roles.length > 0)
+            ? trackKindMap[mediaInfo.roles[0].value]
+            : trackKindMap.caption;
 
         kind = Object.values(trackKindMap).includes(kind) ? kind : trackKindMap.caption;
 
@@ -327,10 +349,17 @@ function TextSourceBuffer(config) {
             try {
                 const manifest = manifestModel.getValue();
 
-                // Only used for Microsoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
+                // Only used for Microsoft Smooth Streaming support - caption time is relative to sample time. In this
+                // case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
-                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images);
-                textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
+                const result = parser.parse(
+                    ccContent,
+                    offsetTime,
+                    (sampleStart / timescale),
+                    ((sampleStart + sample.duration) / timescale),
+                    images
+                );
+                textTracks.addCaptions(_getTextTrackIdxOfCurrentFragmentedTrack(), timestampOffset, result);
 
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
@@ -396,7 +425,7 @@ function TextSourceBuffer(config) {
         if (captionArray.length > 0) {
             // Cue times are period-local media times; the MSE timestamp offset (Period@start - presentationTimeOffset)
             // maps them to presentation time. Required for multiperiod content, see #5087.
-            textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, captionArray);
+            textTracks.addCaptions(_getTextTrackIdxOfCurrentFragmentedTrack(), timestampOffset, captionArray);
         }
     }
 
@@ -414,12 +443,23 @@ function TextSourceBuffer(config) {
                 instance.buffered.add(chunk.start, chunk.end);
             }
         } catch (e) {
-            errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
+            errHandler.error(new DashJSError(
+                Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE,
+                Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message,
+                ccContent
+            ));
         }
     }
 
-    function _isDiscontinuityOfChunks(embeddedLastSequenceNumber, sequenceNumber, numSequences, lastChunkEnd, chunkStart) {
-        if (embeddedLastSequenceNumber === null || sequenceNumber === null || lastChunkEnd === null || chunkStart === null) {
+    function _isDiscontinuityOfChunks(
+        embeddedLastSequenceNumber,
+        sequenceNumber,
+        numSequences,
+        lastChunkEnd,
+        chunkStart
+    ) {
+        if (embeddedLastSequenceNumber === null || sequenceNumber === null || lastChunkEnd === null ||
+            chunkStart === null) {
             return false
         }
         // Sequence number is always 1 for low latency streams
@@ -459,7 +499,13 @@ function TextSourceBuffer(config) {
             }
 
             if (embeddedTimescale) {
-                if (_isDiscontinuityOfChunks(embeddedLastSequenceNumber, sequenceNumber, samplesInfo.numSequences, lastChunkEnd, chunkStart)) {
+                if (_isDiscontinuityOfChunks(
+                    embeddedLastSequenceNumber,
+                    sequenceNumber,
+                    samplesInfo.numSequences,
+                    lastChunkEnd,
+                    chunkStart
+                )) {
                     for (i = 0; i < embeddedCea608FieldParsers.length; i++) {
                         if (embeddedCea608FieldParsers[i]) {
                             embeddedCea608FieldParsers[i].reset();
@@ -469,12 +515,21 @@ function TextSourceBuffer(config) {
 
                 const allCcData = _extractCea608Data(bytes, samplesInfo.sampleList);
 
+                // _extractCea608Data returns null when there are no samples,
+                // which happens for any chunk that is not fragmented ISOBMFF.
+                if (!allCcData) {
+                    return;
+                }
+
                 for (let fieldNr = 0; fieldNr < embeddedCea608FieldParsers.length; fieldNr++) {
                     const ccData = allCcData.fields[fieldNr];
                     const fieldParser = embeddedCea608FieldParsers[fieldNr];
                     if (fieldParser) {
                         for (i = 0; i < ccData.length; i++) {
-                            const time = timelineConverter.calcPresentationTimeFromMediaTime(ccData[i][0] / embeddedTimescale, chunk.representation);
+                            const time = timelineConverter.calcPresentationTimeFromMediaTime(
+                                ccData[i][0] / embeddedTimescale,
+                                chunk.representation
+                            );
                             fieldParser.addData(time, ccData[i][1]);
                         }
                     }
@@ -507,7 +562,12 @@ function TextSourceBuffer(config) {
         function newCue(startTime, endTime, captionScreen) {
             let captionsArray;
             if (videoModel.getTTMLRenderingDiv()) {
-                captionsArray = embeddedTextHtmlRender.createHTMLCaptionsFromScreen(videoModel.getElement(), startTime, endTime, captionScreen);
+                captionsArray = embeddedTextHtmlRender.createHTMLCaptionsFromScreen(
+                    videoModel.getElement(),
+                    startTime,
+                    endTime,
+                    captionScreen
+                );
             } else {
                 const text = captionScreen.getDisplayText();
                 captionsArray = [{
@@ -582,7 +642,8 @@ function TextSourceBuffer(config) {
 
     function getIsDefault(mediaInfo) {
         //TODO How to tag default. currently same order as listed in manifest.
-        // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which is being used for track KIND
+        // Is there a way to mark a text adaptation set as the default one? DASHIF meeting talk about using role which
+        // is being used for track KIND
         // Eg subtitles etc. You can have multiple role tags per adaptation Not defined in the spec yet.
         let isDefault = false;
         if (embeddedTracks.length > 1 && mediaInfo.isEmbedded) {
@@ -600,7 +661,9 @@ function TextSourceBuffer(config) {
     function _getParser(codecType) {
         let parser;
         if (codecType.search(Constants.VTT) >= 0) {
-            parser = settings.get().streaming.text.webvtt.customRenderingEnabled && vttCustomRenderingParser ? vttCustomRenderingParser : vttParser;
+            parser = settings.get().streaming.text.webvtt.customRenderingEnabled && vttCustomRenderingParser
+                ? vttCustomRenderingParser
+                : vttParser;
         } else if (codecType.search(Constants.TTML) >= 0 || codecType.search(Constants.STPP) >= 0) {
             parser = ttmlParser;
         }
@@ -614,7 +677,7 @@ function TextSourceBuffer(config) {
             end = instance.buffered.end(instance.buffered.length - 1);
         }
         instance.buffered.remove(start, end);
-        textTracks.deleteCuesFromTrackIdx(currFragmentedTrackIdx, start, end);
+        textTracks.deleteCuesFromTrackIdx(_getTextTrackIdxOfCurrentFragmentedTrack(), start, end);
     }
 
     function onVideoBufferCleared(e) {

@@ -87,7 +87,8 @@ function DashManifestModel() {
         // Check for thumbnail images
         if (adaptation.Representation && adaptation.Representation.length) {
             const essentialProperties = getEssentialProperties(adaptation.Representation[0]);
-            if (essentialProperties && essentialProperties.some(essentialProperty => Constants.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperty.schemeIdUri) >= 0)) {
+            if (essentialProperties && essentialProperties.some(essentialProperty =>
+                Constants.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperty.schemeIdUri) >= 0)) {
                 return (type === Constants.IMAGE);
             }
         }
@@ -191,10 +192,14 @@ function DashManifestModel() {
     }
 
     function getProducerReferenceTimesForAdaptation(adaptation) {
-        const prtArray = adaptation && adaptation.hasOwnProperty(DashConstants.PRODUCER_REFERENCE_TIME) ? adaptation[DashConstants.PRODUCER_REFERENCE_TIME] : [];
+        const prtArray = adaptation && adaptation.hasOwnProperty(DashConstants.PRODUCER_REFERENCE_TIME)
+            ? adaptation[DashConstants.PRODUCER_REFERENCE_TIME]
+            : [];
 
         // ProducerReferenceTime elements can also be contained in Representations
-        const representationsArray = adaptation && adaptation.hasOwnProperty(DashConstants.REPRESENTATION) ? adaptation[DashConstants.REPRESENTATION] : [];
+        const representationsArray = adaptation && adaptation.hasOwnProperty(DashConstants.REPRESENTATION)
+            ? adaptation[DashConstants.REPRESENTATION]
+            : [];
 
         representationsArray.forEach((rep) => {
             if (rep.hasOwnProperty(DashConstants.PRODUCER_REFERENCE_TIME)) {
@@ -301,7 +306,9 @@ function DashManifestModel() {
     }
 
     function getRealAdaptations(manifest, periodIndex) {
-        return manifest && manifest.Period && isInteger(periodIndex) ? manifest.Period[periodIndex] ? manifest.Period[periodIndex].AdaptationSet : [] : [];
+        return manifest && manifest.Period && isInteger(periodIndex)
+            ? manifest.Period[periodIndex] ? manifest.Period[periodIndex].AdaptationSet : []
+            : [];
     }
 
     function getRealPeriods(manifest) {
@@ -376,7 +383,8 @@ function DashManifestModel() {
         let codec = null;
 
         if (adaptation && adaptation.Representation && adaptation.Representation.length > 0) {
-            const representation = isInteger(representationIndex) && representationIndex >= 0 && representationIndex < adaptation.Representation.length ?
+            const representation = isInteger(representationIndex) && representationIndex >= 0 &&
+                representationIndex < adaptation.Representation.length ?
                 adaptation.Representation[representationIndex] : adaptation.Representation[0];
             if (representation) {
                 codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
@@ -386,7 +394,8 @@ function DashManifestModel() {
             }
         }
 
-        // If the codec contains a profiles parameter we remove it. Otherwise, it will cause problems when checking for codec capabilities of the platform
+        // If the codec contains a profiles parameter we remove it. Otherwise, it will cause problems when checking for
+        // codec capabilities of the platform
         if (codec) {
             codec = codec.replace(/\sprofiles=[^;]*/g, '');
         }
@@ -419,7 +428,9 @@ function DashManifestModel() {
     }
 
     function getMimeType(adaptation) {
-        return adaptation && adaptation.Representation && adaptation.Representation.length > 0 ? adaptation.Representation[0].mimeType : null;
+        return adaptation && adaptation.Representation && adaptation.Representation.length > 0
+            ? adaptation.Representation[0].mimeType
+            : null;
     }
 
     function getSegmentAlignment(adaptation) {
@@ -506,7 +517,8 @@ function DashManifestModel() {
     }
 
     function _getContentProtectionFromElement(element) {
-        if (!element || !element.hasOwnProperty(DashConstants.CONTENT_PROTECTION) || element.ContentProtection.length === 0) {
+        if (!element || !element.hasOwnProperty(DashConstants.CONTENT_PROTECTION) ||
+            element.ContentProtection.length === 0) {
             return [];
         }
 
@@ -588,7 +600,9 @@ function DashManifestModel() {
     }
 
     function getPublishTime(manifest) {
-        return manifest && manifest.hasOwnProperty(DashConstants.PUBLISH_TIME) ? new Date(manifest[DashConstants.PUBLISH_TIME]) : null;
+        return manifest && manifest.hasOwnProperty(DashConstants.PUBLISH_TIME)
+            ? new Date(manifest[DashConstants.PUBLISH_TIME])
+            : null;
     }
 
     function getRepresentationCount(adaptation) {
@@ -597,7 +611,9 @@ function DashManifestModel() {
 
     function getBitrateListForAdaptation(realAdaptation) {
         const processedRealAdaptation = processAdaptation(realAdaptation);
-        const realRepresentations = processedRealAdaptation && processedRealAdaptation.Representation ? processedRealAdaptation.Representation : [];
+        const realRepresentations = processedRealAdaptation && processedRealAdaptation.Representation
+            ? processedRealAdaptation.Representation
+            : [];
 
         return realRepresentations.map((realRepresentation) => {
             return {
@@ -663,7 +679,10 @@ function DashManifestModel() {
             return [];
         }
 
-        let allProperties = _getPropertiesCommonToAllRepresentations(propertyType, adaptation[DashConstants.REPRESENTATION]);
+        let allProperties = _getPropertiesCommonToAllRepresentations(
+            propertyType,
+            adaptation[DashConstants.REPRESENTATION]
+        );
 
         // now, only take those Properties from AdaptationSet which we didn't already get from Representations
         if (adaptation.hasOwnProperty(propertyType) && adaptation[propertyType].length) {
@@ -718,7 +737,8 @@ function DashManifestModel() {
     }
 
     function _getSegmentSequencePropertiesForElement(element) {
-        if (!element || !element.hasOwnProperty(DashConstants.SEGMENT_SEQUENCE_PROPERTIES) || !element[DashConstants.SEGMENT_SEQUENCE_PROPERTIES].length) {
+        if (!element || !element.hasOwnProperty(DashConstants.SEGMENT_SEQUENCE_PROPERTIES) ||
+            !element[DashConstants.SEGMENT_SEQUENCE_PROPERTIES].length) {
             return [];
         }
 
@@ -762,7 +782,14 @@ function DashManifestModel() {
             }
             for (let i = 0, len = processedRealAdaptation.Representation.length; i < len; ++i) {
                 const realRepresentation = processedRealAdaptation.Representation[i];
-                const voRepresentation = _createVoRepresentation(mediaInfo, realRepresentation, voAdaptation, processedRealAdaptation, baseUrl, i)
+                const voRepresentation = _createVoRepresentation(
+                    mediaInfo,
+                    realRepresentation,
+                    voAdaptation,
+                    processedRealAdaptation,
+                    baseUrl,
+                    i
+                )
                 voRepresentations.push(voRepresentation);
             }
         }
@@ -770,20 +797,46 @@ function DashManifestModel() {
         return voRepresentations;
     }
 
-    function _createVoRepresentation(mediaInfo, realRepresentation, voAdaptation, processedRealAdaptation, baseUrl, index) {
+    function _createVoRepresentation(
+        mediaInfo,
+        realRepresentation,
+        voAdaptation,
+        processedRealAdaptation,
+        baseUrl,
+        index
+    ) {
         const voRepresentation = new Representation();
 
-        _assignDefaultAttributesToVoRepresentation(voRepresentation, realRepresentation, voAdaptation, mediaInfo, index);
+        _assignDefaultAttributesToVoRepresentation(
+            voRepresentation,
+            realRepresentation,
+            voAdaptation,
+            mediaInfo,
+            index
+        );
 
         const { segmentInfo, segmentInfoType } = _deriveSegmentInfo(realRepresentation);
         voRepresentation.segmentInfoType = segmentInfoType
-        _processSegmentInfo(segmentInfo, segmentInfoType, voRepresentation, processedRealAdaptation, realRepresentation, baseUrl);
+        _processSegmentInfo(
+            segmentInfo,
+            segmentInfoType,
+            voRepresentation,
+            processedRealAdaptation,
+            realRepresentation,
+            baseUrl
+        );
         _assignPixelValues(voRepresentation)
 
         return voRepresentation
     }
 
-    function _assignDefaultAttributesToVoRepresentation(voRepresentation, realRepresentation, voAdaptation, mediaInfo, index) {
+    function _assignDefaultAttributesToVoRepresentation(
+        voRepresentation,
+        realRepresentation,
+        voAdaptation,
+        mediaInfo,
+        index
+    ) {
         voRepresentation.index = index;
         voRepresentation.adaptation = voAdaptation;
         voRepresentation.mediaInfo = mediaInfo;
@@ -870,7 +923,14 @@ function DashManifestModel() {
         return { segmentInfo, segmentInfoType }
     }
 
-    function _processSegmentInfo(segmentInfo, segmentInfoType, voRepresentation, processedRealAdaptation, realRepresentation, baseUrl) {
+    function _processSegmentInfo(
+        segmentInfo,
+        segmentInfoType,
+        voRepresentation,
+        processedRealAdaptation,
+        realRepresentation,
+        baseUrl
+    ) {
         if (!segmentInfo) {
             return
         }
@@ -903,13 +963,17 @@ function DashManifestModel() {
             voRepresentation.timescale = segmentInfo.timescale;
         }
         if (segmentInfo.hasOwnProperty(DashConstants.DURATION)) {
-            // TODO according to the spec @maxSegmentDuration specifies the maximum duration of any Segment in any Representation in the Media Presentation
-            // It is also said that for a SegmentTimeline any @d value shall not exceed the value of MPD@maxSegmentDuration, but nothing is said about
-            // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
+            // TODO according to the spec @maxSegmentDuration specifies the maximum duration of any Segment in any
+            // Representation in the Media Presentation
+            // It is also said that for a SegmentTimeline any @d value shall not exceed the value of
+            // MPD@maxSegmentDuration, but nothing is said about
+            // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead
+            // of calculated duration if the the duration
             // exceeds @maxSegmentDuration
             voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
         } else if (segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
-            voRepresentation.segmentDuration = calcSegmentDuration(segmentInfo.SegmentTimeline) / voRepresentation.timescale;
+            voRepresentation.segmentDuration =
+                calcSegmentDuration(segmentInfo.SegmentTimeline) / voRepresentation.timescale;
             voRepresentation.k = _getKValue(segmentInfo.SegmentTimeline)
         }
         if (segmentInfo.hasOwnProperty(DashConstants.MEDIA)) {
@@ -946,7 +1010,10 @@ function DashManifestModel() {
 
     function _assignPixelValues(voRepresentation) {
         if (!isNaN(voRepresentation.width) && !isNaN(voRepresentation.height) && !isNaN(voRepresentation.frameRate)) {
-            voRepresentation.pixelsPerSecond = Math.max(1, voRepresentation.width * voRepresentation.height * voRepresentation.frameRate)
+            voRepresentation.pixelsPerSecond = Math.max(
+                1,
+                voRepresentation.width * voRepresentation.height * voRepresentation.frameRate
+            )
             if (!isNaN(voRepresentation.bandwidth)) {
                 voRepresentation.bitsPerPixel = voRepresentation.bandwidth / voRepresentation.pixelsPerSecond
             }
@@ -966,7 +1033,8 @@ function DashManifestModel() {
         if (!segmentTimeline || !segmentTimeline.S || segmentTimeline.S.length === 0) {
             return 1;
         }
-        // @k may vary between S elements; consumers of Representation.k (low latency mode, live delay) care about the live edge, which is the last S element
+        // @k may vary between S elements; consumers of Representation.k (low latency mode, live delay) care about the
+        // live edge, which is the last S element
         const s = segmentTimeline.S[segmentTimeline.S.length - 1];
         return s.hasOwnProperty(DashConstants.K) ? s.k : 1;
     }
@@ -1023,7 +1091,8 @@ function DashManifestModel() {
     }
 
     function _getAllAdaptationSetsForPreselection(preselection, adaptations) {
-        if (!preselection || !preselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS) || !Array.isArray(adaptations)) {
+        if (!preselection || !preselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS) ||
+            !Array.isArray(adaptations)) {
             return undefined;
         }
 
@@ -1032,7 +1101,8 @@ function DashManifestModel() {
     }
 
     function getMainAdaptationSetForPreselection(preselection, adaptations) {
-        if (!preselection || !preselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS) || !Array.isArray(adaptations)) {
+        if (!preselection || !preselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS) ||
+            !Array.isArray(adaptations)) {
             return undefined;
         }
 
@@ -1061,7 +1131,10 @@ function DashManifestModel() {
                 realPreselection = realPeriod.Preselection[i];
                 voPreselection = new Preselection();
 
-                const preselectionAdaptationSets = _getAllAdaptationSetsForPreselection(realPreselection, realPeriod.AdaptationSet);
+                const preselectionAdaptationSets = _getAllAdaptationSetsForPreselection(
+                    realPreselection,
+                    realPeriod.AdaptationSet
+                );
                 let allComponentsAvailable = preselectionAdaptationSets.every(adaptation => !!adaptation);
 
                 // up to now, we only support single-representation preselections, not multi-representation
@@ -1118,12 +1191,17 @@ function DashManifestModel() {
                 voPeriod = new Period();
                 voPeriod.start = realPeriod.start;
             }
-            // If the @start attribute is absent, but the previous Period element contains a @duration attribute then this new Period is also a regular Period. The start time of the new Period PeriodStart is the sum of the start time of the previous Period PeriodStart and the value of the attribute @duration of the previous Period.
-            else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) && voPreviousPeriod !== null) {
+            // If the @start attribute is absent, but the previous Period element contains a @duration attribute then
+            // this new Period is also a regular Period. The start time of the new Period PeriodStart is the sum of
+            // the start time of the previous Period PeriodStart and the value of the attribute @duration of the
+            // previous Period.
+            else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(DashConstants.DURATION) &&
+                voPreviousPeriod !== null) {
                 voPeriod = new Period();
                 voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
             }
-            // If (i) @start attribute is absent, and (ii) the Period element is the first in the MPD, and (iii) the MPD@type is 'static', then the PeriodStart time shall be set to zero.
+            // If (i) @start attribute is absent, and (ii) the Period element is the first in the MPD, and (iii) the
+            // MPD@type is 'static', then the PeriodStart time shall be set to zero.
             else if (i === 0 && !isDynamic) {
                 voPeriod = new Period();
                 voPeriod.start = 0;
@@ -1171,7 +1249,9 @@ function DashManifestModel() {
         // The difference between the PeriodStart time of the last Period
         // and the mpd duration
         if (voPreviousPeriod !== null && isNaN(voPreviousPeriod.duration)) {
-            voPreviousPeriod.duration = parseFloat((getEndTimeForLastPeriod(voPreviousPeriod) - voPreviousPeriod.start).toFixed(5));
+            voPreviousPeriod.duration = parseFloat(
+                (getEndTimeForLastPeriod(voPreviousPeriod) - voPreviousPeriod.start).toFixed(5)
+            );
         }
 
         return voPeriods;
@@ -1264,7 +1344,9 @@ function DashManifestModel() {
     function getEventsForPeriod(period) {
         const manifest = period && period.mpd && period.mpd.manifest ? period.mpd.manifest : null;
         const periodArray = manifest ? manifest.Period : null;
-        const eventStreams = periodArray && period && isInteger(period.index) ? periodArray[period.index].EventStream : null;
+        const eventStreams = periodArray && period && isInteger(period.index)
+            ? periodArray[period.index].EventStream
+            : null;
         const events = [];
         let i,
             j;
@@ -1298,8 +1380,11 @@ function DashManifestModel() {
                     if (currentMpdEvent.hasOwnProperty(DashConstants.PRESENTATION_TIME)) {
                         event.presentationTime = currentMpdEvent.presentationTime;
                     }
-                    const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
-                    event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
+                    const presentationTimeOffset = eventStream.presentationTimeOffset
+                        ? eventStream.presentationTimeOffset / eventStream.timescale
+                        : 0;
+                    event.calculatedPresentationTime =
+                        event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
 
                     if (currentMpdEvent.hasOwnProperty(DashConstants.DURATION)) {
                         event.duration = currentMpdEvent.duration / eventStream.timescale;
@@ -1310,7 +1395,8 @@ function DashManifestModel() {
                         event.id = null;
                     }
 
-                    if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary && currentMpdEvent.Signal.Binary.__text) {
+                    if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary &&
+                        currentMpdEvent.Signal.Binary.__text) {
                         // toString is used to manage both regular and namespaced tags
                         event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.__text.toString());
                     } else {
@@ -1387,7 +1473,8 @@ function DashManifestModel() {
             adaptationArray,
             representationArray;
 
-        if (manifest && manifest.Period && representation && representation.adaptation && representation.adaptation.period && isInteger(representation.adaptation.period.index)) {
+        if (manifest && manifest.Period && representation && representation.adaptation &&
+            representation.adaptation.period && isInteger(representation.adaptation.period.index)) {
             periodArray = manifest.Period[representation.adaptation.period.index];
             if (periodArray && periodArray.AdaptationSet && isInteger(representation.adaptation.index)) {
                 adaptationArray = periodArray.AdaptationSet[representation.adaptation.index];
@@ -1581,7 +1668,9 @@ function DashManifestModel() {
         if (manifest && manifest.hasOwnProperty(DashConstants.LOCATION)) {
             return manifest[DashConstants.LOCATION].map((entry) => {
                 const text = entry.__text || entry;
-                const serviceLocation = entry.hasOwnProperty(DashConstants.SERVICE_LOCATION) ? entry[DashConstants.SERVICE_LOCATION] : null;
+                const serviceLocation = entry.hasOwnProperty(DashConstants.SERVICE_LOCATION)
+                    ? entry[DashConstants.SERVICE_LOCATION]
+                    : null;
 
                 return new MpdLocation(text, serviceLocation)
             })
@@ -1594,7 +1683,9 @@ function DashManifestModel() {
         if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION)) {
             return manifest[DashConstants.PATCH_LOCATION].map((entry) => {
                 const text = entry.__text || entry;
-                const serviceLocation = entry.hasOwnProperty(DashConstants.SERVICE_LOCATION) ? entry[DashConstants.SERVICE_LOCATION] : null;
+                const serviceLocation = entry.hasOwnProperty(DashConstants.SERVICE_LOCATION)
+                    ? entry[DashConstants.SERVICE_LOCATION]
+                    : null;
                 let ttl = entry.hasOwnProperty(DashConstants.TTL) ? parseFloat(entry[DashConstants.TTL]) * 1000 : NaN;
 
                 return new PatchLocation(text, serviceLocation, ttl)
@@ -1605,11 +1696,15 @@ function DashManifestModel() {
     }
 
     function getSuggestedPresentationDelay(mpd) {
-        return mpd && mpd.hasOwnProperty(DashConstants.SUGGESTED_PRESENTATION_DELAY) ? mpd.suggestedPresentationDelay : null;
+        return mpd && mpd.hasOwnProperty(DashConstants.SUGGESTED_PRESENTATION_DELAY)
+            ? mpd.suggestedPresentationDelay
+            : null;
     }
 
     function getAvailabilityStartTime(mpd) {
-        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) && mpd.availabilityStartTime !== null ? mpd.availabilityStartTime.getTime() : null;
+        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) && mpd.availabilityStartTime !== null
+            ? mpd.availabilityStartTime.getTime()
+            : null;
     }
 
     function getServiceDescriptions(manifest) {

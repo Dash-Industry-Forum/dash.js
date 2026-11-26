@@ -199,14 +199,17 @@ class Utils {
                 return targetUrl;
             }
 
-            // Use the relative path implementation of the path library. We need to cut off the actual filename in the end to get the relative path
+            // Use the relative path implementation of the path library. We need to cut off the actual filename in the
+            // end to get the relative path
             let relativePath = path.relative(original.pathname.substr(0, original.pathname.lastIndexOf('/')), target.pathname.substr(0, target.pathname.lastIndexOf('/')));
 
-            // In case the relative path is empty (both path are equal) return the filename only. Otherwise add a slash in front of the filename
+            // In case the relative path is empty (both path are equal) return the filename only. Otherwise add a slash
+            // in front of the filename
             const startIndexOffset = relativePath.length === 0 ? 1 : 0;
             relativePath += target.pathname.substr(target.pathname.lastIndexOf('/') + startIndexOffset, target.pathname.length - 1);
 
-            // Build the other candidate, e.g. the 'host relative' path that starts with "/", and return the shortest of the two candidates.
+            // Build the other candidate, e.g. the 'host relative' path that starts with "/", and return the shortest of
+            // the two candidates.
             if (target.pathname.length < relativePath.length) {
                 return target.pathname;
             }

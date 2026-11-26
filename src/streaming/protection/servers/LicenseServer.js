@@ -38,7 +38,7 @@
  * formats (for both error and success cases) need to be customized for a
  * specific server implementation
  *
- * License servers handle requests for more than just initial license retrieval.
+ * License servers handle requests for more than just initial license retrieval.<br>
  * Each API takes a parameter which describes the message type as supported by
  * the Encrypted Media Extensions.
  *

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVTA 2053-1 ad tracking beacons</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
+
+    <style>
+        .sample-video-wrapper {
+            position: relative;
+        }
+
+        #ad-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 2;
+            display: none;
+        }
+
+        #beacon-table-wrapper, #log, #mpd-events {
+            max-height: 320px;
+            overflow: auto;
+        }
+
+        #log, #mpd-events {
+            white-space: pre;
+            font-size: 0.8rem;
+        }
+
+        #beacon-table td {
+            font-size: 0.8rem;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sample-content-custom">
+    <div class="row mt-2">
+        <div class="col-md-7">
+            <div class="sample-video-wrapper">
+                <span id="ad-badge" class="badge text-bg-warning">AD</span>
+                <video></video>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Active ad slot</div>
+                <div class="sample-metrics-body">
+                    <pre id="slot-info" class="mb-0">No active slot</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">EventStream in the MPD</div>
+                <div class="sample-metrics-body">
+                    <pre id="mpd-events" class="mb-0">Loading...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Dispatched beacons</div>
+                <div class="sample-metrics-body" id="beacon-table-wrapper">
+                    <table class="table table-sm table-striped mb-0" id="beacon-table">
+                        <thead>
+                        <tr>
+                            <th>Wall clock</th>
+                            <th>Media time</th>
+                            <th>Scheduled</th>
+                            <th>Type</th>
+                            <th>URL</th>
+                            <th>Result</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Tracker log</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-log" id="log"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script class="code" type="module">
+    import { createControlBar } from '../lib/sample-template.js';
+    import { createBeaconTracker } from './svta-beaconing/BeaconTracker.js';
+    import { showBeacon, showSlotStart, showSlotEnd, log, showMpdEvents } from './svta-beaconing/sample-ui.js';
+
+    const mpd = 'svta-beaconing/svta-beaconing.mpd';
+
+    window.initSample = async function () {
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        /* The tracker registers for the SVTA scheme:
+             player.on('urn:svta:advertising-wg:ad-creative-signaling', onReceive, null, { mode: EVENT_MODE_ON_RECEIVE });
+             player.on('urn:svta:advertising-wg:ad-creative-signaling', onStart, null, { mode: EVENT_MODE_ON_START });
+           It parses the Event payload and requests the tracking URLs in sync with playback. */
+        const tracker = createBeaconTracker({
+            player,
+            dashjs,
+            onBeacon: showBeacon,
+            onSlotStart: showSlotStart,
+            onSlotEnd: showSlotEnd,
+            onLog: log
+        });
+        tracker.attach();
+
+        player.initialize(video, mpd, true);
+        await createControlBar(player, video, document.querySelector('.sample-video-wrapper'));
+        showMpdEvents(mpd);
+    };
+</script>
+
+<!-- Page setup; runs after the module above (module scripts execute in document order) -->
+<script type="module">
+    import { initSamplePage } from '../lib/sample-template.js';
+
+    initSamplePage({
+        title: 'SVTA 2053-1 ad tracking beacons',
+        description: 'This sample shows how an application listens to SVTA 2053-1 ad creative signaling events ' +
+            '(urn:svta:advertising-wg:ad-creative-signaling) dispatched by dash.js and sends the tracking beacons ' +
+            'itself. The stream plays main content, a 20 s mid-roll ad at 12 s and main content again. The mid-roll ' +
+            'period carries one Event with the tracking URLs inline. Beacons go to httpbin.org; check them in the ' +
+            'network tab. Pause, resume, mute and unmute during the ad to trigger the corresponding beacons.',
+        category: 'Events and Monitoring',
+        layout: 'custom',
+        onInit: () => window.initSample()
+    });
+</script>
+</body>
+</html>

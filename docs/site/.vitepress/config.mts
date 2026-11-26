@@ -12,6 +12,10 @@ export default withMermaid({
     head: [
         ['link', { rel: 'icon', href: `${base}favicon.ico` }]
     ],
+    // mermaid >= 11.17 imports CJS-only fastdom; vitepress-plugin-mermaid doesn't pre-bundle it.
+    vite: {
+        optimizeDeps: { include: ['mermaid > fastdom', 'mermaid > fastdom/extensions/fastdom-promised.js'] }
+    },
     ignoreDeadLinks: [
         /^https?:\/\/localhost/
     ],
@@ -156,6 +160,7 @@ export default withMermaid({
                     { text: 'Debugging', link: '/pages/developers/debugging' },
                     { text: 'Dependencies', link: '/pages/developers/dependencies' },
                     { text: 'Development Principles', link: '/pages/developers/development-principles' },
+                    { text: 'Git Worktrees', link: '/pages/developers/git-worktrees' },
                     { text: 'How to contribute', link: '/pages/developers/how-to-contribute' },
                     {
                         text: 'Migration Guides',

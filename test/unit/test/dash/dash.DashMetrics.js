@@ -7,7 +7,10 @@ const context = {};
 
 const metricsModelMock = new MetricsModelMock();
 const manifestModelMock = new ManifestModelMock();
-const dashMetrics = DashMetrics(context).getInstance({manifestModel: manifestModelMock, metricsModel: metricsModelMock });
+const dashMetrics = DashMetrics(context).getInstance({
+    manifestModel: manifestModelMock,
+    metricsModel: metricsModelMock
+});
 
 describe('DashMetrics', function () {
     it('should return null when getCurrentRepresentationSwitch is called and type is undefined', () => {
