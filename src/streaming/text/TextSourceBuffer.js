@@ -673,6 +673,10 @@ function TextSourceBuffer(config) {
     function remove(start, end) {
         //if start and end are not defined, remove all
         if ((start === undefined) && (start === end)) {
+            // Without a buffered range, NaN boundaries would delete every cue of the track
+            if (instance.buffered.length === 0) {
+                return;
+            }
             start = instance.buffered.start(0);
             end = instance.buffered.end(instance.buffered.length - 1);
         }
@@ -681,6 +685,10 @@ function TextSourceBuffer(config) {
     }
 
     function onVideoBufferCleared(e) {
+        // Embedded captions are carried in the video segments, so only a video buffer removal may delete them
+        if (e.mediaType !== Constants.VIDEO) {
+            return;
+        }
         embeddedTracks.forEach(function (track) {
             const trackIdx = textTracks.getTrackIdxForId(track.id);
             if (trackIdx >= 0) {

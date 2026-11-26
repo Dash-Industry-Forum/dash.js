@@ -4,6 +4,8 @@ import Errors from '../../../../src/core/errors/Errors.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import CustomTimeRanges from '../../../../src/streaming/utils/CustomTimeRanges.js';
+import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
 
 import chai from 'chai';
 
@@ -176,6 +178,61 @@ describe('TextSourceBuffer', function () {
             buffer.resetEmbedded();
 
             expect(addCaptionsCalls).to.deep.equal([2]);
+        });
+    });
+
+    describe('Method remove', function () {
+        it('should not delete any cues if no range is given and nothing is buffered', function () {
+            const deleteCalls = [];
+            const buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                textTracks: {
+                    deleteCuesFromTrackIdx: (idx, from, to) => deleteCalls.push({ idx, from, to })
+                }
+            });
+            buffer.buffered = CustomTimeRanges(context).create();
+
+            buffer.remove();
+
+            expect(deleteCalls).to.be.empty;
+        });
+    });
+
+    describe('embedded CEA-608 tracks on BUFFER_CLEARED', function () {
+        const eventBus = EventBus(context).getInstance();
+        let buffer;
+        let deleteCalls;
+
+        beforeEach(function () {
+            deleteCalls = [];
+            buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                streamInfo: { id: 'stream' },
+                textTracks: {
+                    getTrackIdxForId: () => 0,
+                    deleteCuesFromTrackIdx: (idx, from, to) => deleteCalls.push({ idx, from, to }),
+                    deleteAllTextTracks: () => {}
+                }
+            });
+            buffer.initialize();
+            buffer.addEmbeddedTrack({ id: 'CC1' });
+        });
+
+        afterEach(function () {
+            buffer.resetEmbedded();
+        });
+
+        it('should delete the embedded cues when the video buffer is cleared', function () {
+            eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'video' });
+
+            expect(deleteCalls).to.deep.equal([{ idx: 0, from: 0, to: 10 }]);
+        });
+
+        it('should keep the embedded cues when the audio or text buffer is cleared', function () {
+            eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'audio' });
+            eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'text' });
+
+            expect(deleteCalls).to.be.empty;
         });
     });
 });

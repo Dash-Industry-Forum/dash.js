@@ -1132,11 +1132,15 @@ function TextTracks(config) {
         if (cueData) {
             // Release the deleted cues from the interval tree as well. Otherwise the cue window re-adds them to
             // the TextTrack, and on live streams every cue ever parsed stays in memory.
-            const candidates = isNaN(start) || isNaN(end) ?
-                cueData.allCues.getAllCues() : cueData.allCues.findCuesInRange(start, end);
-            candidates
-                .filter(cue => cueInRange(cue, start, end, strict))
-                .forEach(cue => cueData.allCues.removeCue(cue));
+            if (isNaN(start) && isNaN(end)) {
+                cueData.allCues.clear();
+            } else {
+                const candidates = isNaN(start) || isNaN(end) ?
+                    cueData.allCues.getAllCues() : cueData.allCues.findCuesInRange(start, end);
+                candidates
+                    .filter(cue => cueInRange(cue, start, end, strict))
+                    .forEach(cue => cueData.allCues.removeCue(cue));
+            }
 
             const currentActiveCues = cueData.activeCues;
             const cuesToRemove = currentActiveCues.filter(cue => cueInRange(cue, start, end, strict));

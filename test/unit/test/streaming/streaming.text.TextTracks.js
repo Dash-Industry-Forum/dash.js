@@ -895,7 +895,7 @@ describe('TextTracks', function () {
             expect(track.cues[0].text).to.equal('Overlapping end');
         });
 
-        it('should not re-add deleted cues while the TextTrack window is not refreshed', function () {
+        it('should not re-add deleted cues on a forced window update covering their range', function () {
             textTracks.addCaptions(0, 0, [
                 {type: 'noHtml', data: 'Old cue', start: 0, end: 2}
             ]);
@@ -904,6 +904,18 @@ describe('TextTracks', function () {
             textTracks.deleteCuesFromTrackIdx(0, 0, 5);
             // A later window update for a range that covers the deleted cue
             textTracks.updateTextTrackWindow(0, true);
+
+            expect(track.cues.length).to.equal(0);
+        });
+
+        it('should delete all cues of the track if no range is given', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'First cue', start: 0, end: 2},
+                {type: 'noHtml', data: 'Second cue', start: 4, end: 6}
+            ]);
+
+            textTracks.deleteCuesFromTrackIdx(0);
+            textTracks.updateTextTrackWindow(4, true);
 
             expect(track.cues.length).to.equal(0);
         });
