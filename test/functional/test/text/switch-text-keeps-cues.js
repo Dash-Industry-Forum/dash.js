@@ -50,11 +50,21 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 this.skip();
             }
 
+            // Cues of the kept track that are loaded before the switch, including the ones ahead of the playhead
+            const keptCues = playerAdapter.getShowingTextTrackCueTimes();
+
             playerAdapter.setTextTrack(fragmentedTrackIndex);
             await playerAdapter.sleep(Constants.TEST_INPUTS.TEXT_CUES.WAIT_ON_OTHER_TRACK);
             playerAdapter.setTextTrack(keptTrackIndex);
 
             const switchBackTime = playerAdapter.getVideoElementTime();
+            const expectedCues = keptCues.filter((cue) => {
+                return cue.start < switchBackTime + cueRange && cue.end > switchBackTime;
+            });
+            if (expectedCues.length === 0) {
+                // No cue that was loaded before the switch overlaps the range after the switch back
+                this.skip();
+            }
             const switchBackTimeout = Constants.TEST_TIMEOUT_THRESHOLDS.TEXT_CUES_AFTER_SWITCH_BACK;
             const hasCues = await playerAdapter.waitForShowingTextTrackCuesInRange(switchBackTimeout, switchBackTime,
                 switchBackTime + cueRange);

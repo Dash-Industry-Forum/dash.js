@@ -4,9 +4,17 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
 import {expect} from 'chai';
-import {checkIsPlaying, checkIsProgressing, checkNoCriticalErrors, initializeDashJsAdapter} from '../common/common.js';
+import {
+    checkIsPlaying,
+    checkIsProgressing,
+    checkNoCriticalErrors,
+    checkTimeWithinThreshold,
+    initializeDashJsAdapter
+} from '../common/common.js';
 
 const TESTCASE = Constants.TESTCASES.TEXT.SEEK_BACK;
+const BUFFER_CLEARED = 'bufferCleared';
+const PLAYBACK_SEEKED = 'playbackSeeked';
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
@@ -14,6 +22,10 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
 
         let playerAdapter;
+        let bufferClearedEvents = [];
+        const onBufferCleared = (e) => {
+            bufferClearedEvents.push(e);
+        };
 
         before(() => {
             const settings = {
@@ -25,9 +37,11 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 }
             };
             playerAdapter = initializeDashJsAdapter(item, mpd, settings);
+            playerAdapter.registerEvent(BUFFER_CLEARED, onBufferCleared);
         })
 
         after(() => {
+            playerAdapter.unregisterEvent(BUFFER_CLEARED, onBufferCleared);
             playerAdapter.destroy();
         })
 
@@ -47,6 +61,10 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             if (playerAdapter.getCurrentTextTrackIndex() < 0) {
                 playerAdapter.setTextTrack(0);
             }
+            const currentTrack = textTracks[playerAdapter.getCurrentTextTrackIndex()];
+            // Embedded captions are removed with the video buffer, fragmented subtitles with the text buffer
+            const prunedMediaType = currentTrack.isEmbedded ? Constants.DASH_JS.MEDIA_TYPES.VIDEO :
+                Constants.DASH_JS.MEDIA_TYPES.TEXT;
 
             const cueRange = Constants.TEST_INPUTS.TEXT_CUES.CUE_RANGE;
             const requiredPlaybackTime = (Constants.TEST_INPUTS.TEXT_CUES.WAIT_BEFORE_REFERENCE +
@@ -66,13 +84,24 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 this.skip();
             }
 
-            // Play until the reference range is behind bufferToKeep and has been pruned
+            // Play until the buffer holding the reference range has been removed
+            bufferClearedEvents = [];
             await playerAdapter.sleep(Constants.TEST_INPUTS.TEXT_CUES.PLAY_UNTIL_PRUNED);
-            expect(playerAdapter.getVideoElementTime() - (referenceTime + cueRange),
-                'expected the reference range to be behind bufferToKeep')
-                .to.be.above(Constants.TEST_INPUTS.TEXT_CUES.BUFFER_TO_KEEP);
+            const isReferenceRangePruned = bufferClearedEvents.some((e) => {
+                return e.mediaType === prunedMediaType && e.from <= referenceTime && e.to >= referenceTime + cueRange;
+            });
+            if (!isReferenceRangePruned) {
+                // Nothing to restore, e.g. the text of static streams is not pruned
+                this.skip();
+            }
 
+            const seekedPromise = playerAdapter.waitForEvent(Constants.TEST_TIMEOUT_THRESHOLDS.EVENT_WAITING_TIME,
+                PLAYBACK_SEEKED);
             playerAdapter.seekToPresentationTime(referenceTime);
+            expect(await seekedPromise, 'expected the seek back to complete').to.be.true;
+            checkTimeWithinThreshold(playerAdapter, referenceTime,
+                Constants.TEST_INPUTS.GENERAL.MAXIMUM_ALLOWED_SEEK_DIFFERENCE + cueRange);
+
             const hasCues = await playerAdapter.waitForShowingTextTrackCuesInRange(cueTimeout, referenceTime,
                 referenceTime + cueRange);
 

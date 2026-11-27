@@ -825,6 +825,16 @@ class DashJsAdapter {
     }
 
     /**
+     * Returns the start and end times of the cues of the showing text tracks
+     * @return {Array<{start: number, end: number}>}
+     */
+    getShowingTextTrackCueTimes() {
+        return Array.from(this.videoElement.textTracks)
+            .filter((track) => track.mode === 'showing' && track.cues)
+            .flatMap((track) => Array.from(track.cues).map((cue) => ({ start: cue.startTime, end: cue.endTime })));
+    }
+
+    /**
      * Waits until a showing text track has a cue that overlaps the given range in video element time
      * @param {number} timeoutValue
      * @param {number} start
