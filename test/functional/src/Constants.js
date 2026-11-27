@@ -38,7 +38,10 @@ const TEST_TIMEOUT_THRESHOLDS = {
     BUFFER_STABLE_WINDOW: 15000,
     ENDED_EVENT_OFFSET: 2000,
     IS_FINISHED_OFFSET_TO_DURATION: 5000,
-    FAST_SWITCH_QUALITY_VIDEO: 30000
+    FAST_SWITCH_QUALITY_VIDEO: 30000,
+    TEXT_BUFFER_CLEARED: 30000,
+    TEXT_CUES_AFTER_SEEK: 10000,
+    TEXT_CUES_AFTER_SWITCH_BACK: 2000
 };
 
 const TEST_INPUTS = {
@@ -126,6 +129,17 @@ const TEST_INPUTS = {
         TARGET_BUFFER_TOLERANCE: 2,
         LIVE_DELAY: 12,
         MAX_NUMBER_OF_SEGMENT_DOWNLOADS_TO_WAIT: 5
+    },
+    TEXT_CUES: {
+        // Small values so that the buffer behind the playhead is pruned within a few seconds of playback
+        BUFFER_TO_KEEP: 10,
+        BUFFER_PRUNING_INTERVAL: 2,
+        // Range after a reference time in which the content must have cues
+        CUE_RANGE: 8,
+        // Playback time after the reference time until its range has been pruned
+        PLAY_UNTIL_PRUNED: 20000,
+        WAIT_BEFORE_REFERENCE: 3000,
+        WAIT_ON_OTHER_TRACK: 3000
     }
 };
 
@@ -215,6 +229,9 @@ TESTCASES.TEXT.INITIAL = TESTCASES.CATEGORIES.TEXT + 'initial-text';
 TESTCASES.TEXT.SWITCH = TESTCASES.CATEGORIES.TEXT + 'switch-text';
 TESTCASES.TEXT.FORCED_SUBTITLES = TESTCASES.CATEGORIES.TEXT + 'forced-subtitles';
 TESTCASES.TEXT.LANGUAGE_MATCHING = TESTCASES.CATEGORIES.TEXT + 'language-matching';
+TESTCASES.TEXT.LIVE_PRUNING = TESTCASES.CATEGORIES.TEXT + 'live-text-pruning';
+TESTCASES.TEXT.SEEK_BACK = TESTCASES.CATEGORIES.TEXT + 'seek-back-text';
+TESTCASES.TEXT.SWITCH_KEEPS_CUES = TESTCASES.CATEGORIES.TEXT + 'switch-text-keeps-cues';
 
 TESTCASES.VENDOR.GOOGLE_AD_MANAGER_EMSG = TESTCASES.CATEGORIES.VENDOR + 'google-ad-manager-emsg';
 

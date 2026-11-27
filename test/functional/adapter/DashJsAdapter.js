@@ -806,6 +806,42 @@ class DashJsAdapter {
         })
     }
 
+    getVideoElementTime() {
+        return this.videoElement.currentTime;
+    }
+
+    /**
+     * Returns the number of cues of the showing text tracks that overlap the given range in video element time
+     * @param {number} start
+     * @param {number} end
+     * @return {number}
+     */
+    getShowingTextTrackCuesInRange(start, end) {
+        return Array.from(this.videoElement.textTracks)
+            .filter((track) => track.mode === 'showing' && track.cues)
+            .reduce((count, track) => {
+                return count + Array.from(track.cues).filter((cue) => cue.startTime < end && cue.endTime > start).length;
+            }, 0);
+    }
+
+    /**
+     * Waits until a showing text track has a cue that overlaps the given range in video element time
+     * @param {number} timeoutValue
+     * @param {number} start
+     * @param {number} end
+     * @return {Promise<boolean>}
+     */
+    async waitForShowingTextTrackCuesInRange(timeoutValue, start, end) {
+        const pollInterval = 250;
+        for (let elapsed = 0; elapsed <= timeoutValue; elapsed += pollInterval) {
+            if (this.getShowingTextTrackCuesInRange(start, end) > 0) {
+                return true;
+            }
+            await this.sleep(pollInterval);
+        }
+        return false;
+    }
+
     async sleep(timeoutValue) {
         return new Promise((resolve) => {
             setTimeout(resolve, timeoutValue)
