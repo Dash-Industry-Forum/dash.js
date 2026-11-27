@@ -694,6 +694,16 @@ describe('ExtUrlQueryInfoController', () => {
             });
         });
 
+        it('should not throw when the MPD url query contains an encoded percent sign', () => {
+            const manifest = createManifest('https://example.com/manifest.mpd?token=100%25');
+
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings(manifest)).to.not.throw();
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([
+                {key: 'token', value: 'abc'},
+                {key: 'token', value: '100%'}
+            ]);
+        });
+
         it('should return parameters when sameOriginOnly is "false" and origin does not match', () => {
             const manifest = createManifest('https://other.com/manifest.mpd', 'false');
             extUrlQueryInfoController.createFinalQueryStrings(manifest);
