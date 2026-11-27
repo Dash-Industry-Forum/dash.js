@@ -35,7 +35,8 @@
  * files no test covers at all. Written to $GITHUB_STEP_SUMMARY when set, to stdout otherwise.
  *
  * Exits with code 0, unless --min-changed=<percent> is given: then it exits with code 1 when
- * less than that share of the changed executable lines is covered, or when no report exists.
+ * less than that share of the changed executable lines is covered, or when the coverage of the
+ * changed lines cannot be computed (no or unreadable report, no base ref, git error).
  *
  * Usage: node test/unit/config/coverage-summary.mjs [--min-changed=<percent>] [coverageDir]
  *   COVERAGE_BASE  git ref to diff against. Defaults to HEAD^1 when HEAD is a merge
@@ -50,10 +51,15 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const args = process.argv.slice(2);
 const minChangedArg = args.find((arg) => arg.startsWith('--min-changed='));
 const MIN_CHANGED_PCT = minChangedArg ? Number(minChangedArg.split('=')[1]) : null;
+if (MIN_CHANGED_PCT !== null && !(MIN_CHANGED_PCT >= 0 && MIN_CHANGED_PCT <= 100)) {
+    console.error(`Invalid ${minChangedArg}: expected a percentage between 0 and 100`);
+    process.exit(2);
+}
 const COVERAGE_DIR = path.resolve(REPO_ROOT, args.find((arg) => !arg.startsWith('--')) || 'test/unit/results/coverage');
 
-// Set by render(); read by the --min-changed check
-const gate = { reportFound: false, changedCovered: 0, changedTotal: 0, changedError: null };
+// Set by render(); read by the --min-changed check. changedComputed is only set once the coverage of
+// the changed lines is known, so every failure on the way leaves the check failing.
+const gate = { changedComputed: false, changedCovered: 0, changedTotal: 0, failure: 'no coverage report found' };
 const SOURCE_DIR = 'src';
 const MAX_UNCOVERED_RANGES = 12;
 
@@ -202,13 +208,15 @@ function renderPatch(baseRef, lcov) {
             ` | ${toRanges(uncovered)} |`);
     });
 
+    gate.changedComputed = true;
+    gate.changedCovered = coveredTotal;
+    gate.changedTotal = executableTotal;
+
     if (rows.length === 0) {
         out.push('', `No executable lines changed under \`${SOURCE_DIR}/\`.`);
         return out;
     }
 
-    gate.changedCovered = coveredTotal;
-    gate.changedTotal = executableTotal;
     out.push(
         '',
         `**${coveredTotal} of ${executableTotal}** changed executable lines are covered` +
@@ -254,7 +262,6 @@ function render() {
         return out;
     }
 
-    gate.reportFound = true;
     const summary = JSON.parse(readFileSync(summaryFile, 'utf8'));
     out.push(...renderTotals(summary.total));
 
@@ -263,9 +270,11 @@ function render() {
         try {
             out.push(...renderPatch(baseRef, parseLcov(lcovFile)));
         } catch (e) {
-            gate.changedError = String(e.message).split('\n')[0];
-            out.push('', `Coverage of changed lines is unavailable: ${gate.changedError}`);
+            gate.failure = `coverage of changed lines is unavailable: ${String(e.message).split('\n')[0]}`;
+            out.push('', `Coverage of changed lines is unavailable: ${String(e.message).split('\n')[0]}`);
         }
+    } else {
+        gate.failure = 'no base ref to diff against (HEAD is not a merge commit and COVERAGE_BASE is not set)';
     }
 
     out.push(...renderUnloaded(summary));
@@ -277,6 +286,8 @@ try {
     markdown = render().join('\n');
 } catch (e) {
     markdown = `## Unit test coverage\n\nFailed to create the coverage summary: ${String(e.message).split('\n')[0]}`;
+    gate.changedComputed = false;
+    gate.failure = `failed to create the coverage summary: ${String(e.message).split('\n')[0]}`;
 }
 
 if (process.env.GITHUB_STEP_SUMMARY) {
@@ -286,11 +297,8 @@ if (process.env.GITHUB_STEP_SUMMARY) {
 }
 
 function checkChangedLines() {
-    if (!gate.reportFound) {
-        return 'no coverage report found';
-    }
-    if (gate.changedError) {
-        return `coverage of changed lines is unavailable: ${gate.changedError}`;
+    if (!gate.changedComputed) {
+        return gate.failure;
     }
     if (gate.changedTotal === 0) {
         return null;
