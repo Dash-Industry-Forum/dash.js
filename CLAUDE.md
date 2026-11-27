@@ -9,8 +9,8 @@ dash.js is the DASH Industry Forum reference client for MPEG-DASH playback via M
 ```bash
 npm run dev              # tsc + webpack dev build in watch mode
 npm start                # webpack-dev-server (serves samples, e.g. /samples/dash-if-reference-player/)
-npm test                 # unit tests (Karma + Mocha/Chai/Sinon, headless Chrome)
-npm run test:coverage    # unit tests with coverage (report in test/unit/results/coverage/<browser>/)
+npm test                 # unit tests (Vitest browser mode via Vite+, headless Chromium + Firefox)
+npm run test:coverage    # unit tests with coverage, Chromium only (report in test/unit/results/coverage/)
 npm run lint             # eslint on src/ and test/unit/
 npm run build            # webpack prod bundles only — skips tsc/tests/lint
 npm run build:dist       # clean + tsc + full modern & legacy bundles (what CI deploys)
@@ -18,10 +18,12 @@ npm run ci:verify        # clean + tsc + test + lint (full verification)
 npm run test-functional  # functional tests (needs built dist/, uses test/functional/config/test-configurations/local.json)
 ```
 
-- **No per-file unit test runner.** Karma bundles all tests via webpack. Filter with grep:
+- **Run one unit test file or filter by name:**
   ```bash
-  npx karma start test/unit/config/karma.unit.conf.cjs --grep="EventBus"
+  npx vp test --run test/unit/test/core/core.EventBus.js
+  npx vp test --run --project chromium -t "EventBus"
   ```
+- **Node >= 24.11 for development** (`devEngines`, needed by Vite+); the package itself supports Node >= 20.
 - **Functional tests run against `dist/`, not source.** Build first.
 
 ## Architecture

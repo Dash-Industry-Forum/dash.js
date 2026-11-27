@@ -21,12 +21,9 @@ import TextControllerMock from '../../mocks/TextControllerMock.js';
 import ManifestUpdaterMock from '../../mocks/ManifestUpdaterMock.js';
 import ServiceDescriptionController from '../../../../src/dash/controllers/ServiceDescriptionController.js';
 
-import chai from 'chai';
-import spies from 'chai-spies';
+import { expect, vi } from 'vite-plus/test';
 import sinon from 'sinon';
 
-chai.use(spies);
-const expect = chai.expect;
 
 const context = {};
 let streamController = StreamController(context).getInstance();
@@ -149,10 +146,10 @@ describe('StreamController', function () {
 
         describe('event management', () => {
             it('should trigger MANIFEST_UPDATED event when loadWithManifest is called', function () {
-                let spy = chai.spy();
+                let spy = vi.fn();
                 eventBus.on(Events.MANIFEST_UPDATED, spy);
-                streamController.loadWithManifest({ loadedTime: new Date() });
-                expect(spy).to.have.been.called.exactly(1);
+                streamController.loadWithManifest({ loadedTime: new Date(), url: 'http://localhost:8080/manifest.mpd', Period: [] });
+                expect(spy).toHaveBeenCalledTimes(1);
                 eventBus.off(Events.MANIFEST_UPDATED, spy);
             });
 
@@ -207,11 +204,11 @@ describe('StreamController', function () {
             });
 
             it('should call reset if MANIFEST_UPDATED event is triggered with an error parameter', function () {
-                let spy = chai.spy();
+                let spy = vi.fn();
                 eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, spy);
 
                 eventBus.trigger(Events.MANIFEST_UPDATED, { error: {} });
-                expect(spy).to.have.been.called.exactly(1);
+                expect(spy).toHaveBeenCalledTimes(1);
             });
         });
 

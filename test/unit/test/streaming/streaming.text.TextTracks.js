@@ -5,11 +5,9 @@ import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import VoHelper from '../../helpers/VOHelper.js';
 import VideoModelMock from '../../mocks/VideoModelMock.js';
 import Settings from '../../../../src/core/Settings.js';
-import chai, {expect} from 'chai';
-import spies from 'chai-spies';
+import { expect, vi } from 'vite-plus/test';
 import sinon from 'sinon';
 
-chai.use(spies);
 Events.extend(MediaPlayerEvents);
 
 const SUBTITLE_DATA = 'subtitle line 1';
@@ -66,8 +64,8 @@ describe('TextTracks', function () {
 
     describe('Method addTextTrackInfo', function () {
         it('should trigger TEXT_TRACK_ADDED and TEXT_TRACKS_QUEUE_INITIALIZED events when a call to addTextTrackInfo function is made', function () {
-            const spyTrackAdded = chai.spy();
-            const spyTracksQueueInit = chai.spy();
+            const spyTrackAdded = vi.fn();
+            const spyTracksQueueInit = vi.fn();
 
             eventBus.on(Events.TEXT_TRACK_ADDED, spyTrackAdded);
             eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, spyTracksQueueInit);
@@ -82,8 +80,8 @@ describe('TextTracks', function () {
             textTracks.createTracks();
             const currrentTrackIdx = textTracks.getCurrentTrackIdx();
             expect(currrentTrackIdx).to.equal(0); // jshint ignore:line
-            expect(spyTrackAdded).to.have.been.called();
-            expect(spyTracksQueueInit).to.have.been.called();
+            expect(spyTrackAdded).toHaveBeenCalled();
+            expect(spyTracksQueueInit).toHaveBeenCalled();
 
             eventBus.off(Events.TEXT_TRACK_ADDED, spyTrackAdded);
             eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, spyTracksQueueInit);

@@ -37,11 +37,11 @@ development. The dependencies are listed in `package.json` and are installed whe
 | `@babel/runtime`                             | Babel's runtime helpers referenced by the transpiled legacy build                                       |
 | `@chiragrupani/karma-chromium-edge-launcher` | An Edge launcher for Karma that is used for executing functional tests in the Edge browser              |
 | `@eslint/js`                                 | ESLint JavaScript language implementation                                                               |
+| `@vitest/browser-playwright`                 | Playwright provider for Vitest browser mode; runs the unit tests in Chromium and Firefox                |
+| `@vitest/coverage-istanbul`                  | Istanbul coverage instrumentation and reports for the unit tests                                        |
 | `babel-loader`                               | Used for transpiling JavaScript by Webpack                                                              |
-| `babel-plugin-istanbul`                      | Instruments the source code for unit test coverage reports                                              |
 | `buffer`                                     | Node `Buffer` polyfill for the browser bundles                                                          |
-| `chai`                                       | Assertion library used by the Karma testing framework                                                   |
-| `chai-spies`                                 | Addon plugin for the chai assertion library. It provides the most basic function spy ability and tests  |
+| `chai`                                       | Assertion library used by the functional tests and existing unit tests                                  |
 | `clean-jsdoc-theme`                          | Clean and fully responsive theme to generate the JSDoc                                                  |
 | `concurrently`                               | Runs the modern and legacy Webpack builds in parallel                                                   |
 | `core-js`                                    | Modular standard library for JavaScript to polyfill ECMAScript features                                 |
@@ -49,28 +49,29 @@ development. The dependencies are listed in `package.json` and are installed whe
 | `eslint`                                     | Tool for identifying and reporting on patterns found in JavaScript code                                 |
 | `globals`                                    | Global identifiers from different JavaScript environments                                               |
 | `jsdoc`                                      | Generates the API documentation from the JSDoc comments in the source code                              |
-| `karma`                                      | Testrunner for unit and functional tests                                                                |
+| `karma`                                      | Testrunner for functional tests                                                                         |
 | `karma-browserstack-launcher`                | Launch tests on Browserstack via Karma                                                                  |
 | `karma-chai`                                 | Use asserts like "expect" from the chai library                                                         |
-| `karma-chrome-launcher`                      | Launches Chrome for unit and functional tests                                                           |
-| `karma-coverage`                             | Creates coverage report for unit tests                                                                  |
-| `karma-firefox-launcher`                     | Launches Firefox for unit and functional tests                                                          |
+| `karma-chrome-launcher`                      | Launches Chrome for functional tests                                                                    |
+| `karma-coverage`                             | Creates coverage report for functional tests                                                            |
+| `karma-firefox-launcher`                     | Launches Firefox for functional tests                                                                   |
 | `karma-htmlfile-reporter`                    | Creates an HTML test report for functional tests                                                        |
-| `karma-junit-reporter`                       | Creates a JUnit test report for unit and functional test                                                |
-| `karma-mocha`                                | Testframework for unit and functional tests                                                             |
-| `karma-mocha-reporter`                       | Mocha like test output for unit tests                                                                   |
+| `karma-junit-reporter`                       | Creates a JUnit test report for functional tests                                                        |
+| `karma-mocha`                                | Testframework for functional tests                                                                      |
+| `karma-mocha-reporter`                       | Mocha like test output for functional tests                                                             |
 | `karma-safarinative-launcher`                | Launches Safari for test execution on macOS                                                             |
-| `karma-webpack`                              | Webpack bundler for Karma testcases                                                                     |
+| `karma-webpack`                              | Webpack bundler for the functional testcases                                                            |
 | `mermaid`                                    | Renders the architecture diagrams in this documentation                                                 |
-| `mocha`                                      | JavaScript test framework for our unit and functional tests                                             |
+| `mocha`                                      | JavaScript test framework for the functional tests                                                      |
 | `nise`                                       | Fake XHR/server implementations used in unit tests                                                      |
+| `playwright`                                 | Browser automation used by Vitest browser mode for the unit tests                                       |
 | `publint`                                    | Lints `package.json` and the published package for packaging errors                                     |
 | `rimraf`                                     | Dependency to remove `dist` folder before building dash.js                                              |
 | `sinon`                                      | Standalone and test framework agnostic JavaScript test spies, stubs and mocks                           |
 | `stream-browserify`                          | The stream module from node core, for browsers                                                          |
 | `string-replace-loader`                      | Used to perform text replacements when building with webpack                                            |
-| `timers-browserify`                          | Adds support for the timers module to browserify                                                        |
 | `typescript`                                 | TypeScript adds optional types to JavaScript; used to verify `index.d.ts`                               |
+| `vite-plus`                                  | Vite+ toolchain; `vp test` runs the unit tests with Vitest (see docs/adr/0001-adopt-vite-plus-incrementally.md) |
 | `vitepress`                                  | Static site generator used to build this documentation site                                             |
 | `vitepress-plugin-mermaid`                   | Mermaid diagram support for the documentation site                                                      |
 | `webpack`                                    | Module bundler used to create the dash.js builds                                                        |

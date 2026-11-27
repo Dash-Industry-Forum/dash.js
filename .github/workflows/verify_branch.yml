@@ -32,5 +32,7 @@ jobs:
                     persist-credentials: false
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
+                with:
+                    install-browsers: 'true'
             -   name: Build and run unit tests
                 run: npm run build

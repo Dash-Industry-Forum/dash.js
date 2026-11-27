@@ -1260,9 +1260,6 @@ describe('MediaPlayer', function () {
         });
     });
 
-    describe('Protection Management Functions', function () {
-    });
-
     describe('Tools Functions', function () {
         describe('When it is not initialized', function () {
             it('Method attachSource should throw an exception', function () {

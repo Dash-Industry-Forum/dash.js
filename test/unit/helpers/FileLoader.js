@@ -4,10 +4,9 @@ const TYPES = {
     BLOB: 'BLOB',
     ARRAY_BUFFER: 'ARRAY_BUFFER'
 }
-// Use the actual Karma server origin (window.location.origin) so the port is
-// always correct even when Karma picks a different port than the configured
-// default (e.g. when port 9999 is already in use).
-const HTTP_SERVER = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:9999') + '/base/test/unit';
+// The Vitest browser server serves the repository root, so test data is available
+// below /test/unit on the origin the tests run on.
+const HTTP_SERVER = window.location.origin + '/test/unit';
 
 class FileLoader {
     static async loadTextFile(url, options) {

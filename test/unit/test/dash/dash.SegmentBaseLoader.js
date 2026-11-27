@@ -17,13 +17,14 @@ let segmentBaseLoader;
 const eventBus = EventBus(context).getInstance();
 
 describe('SegmentBaseLoader', function () {
+    let requests;
 
     beforeEach(function () {
         XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest();
-        this.requests = [];
+        requests = [];
         XMLHttpRequest.onCreate = function (xhr) {
-            this.requests.push(xhr);
-        }.bind(this);
+            requests.push(xhr);
+        };
     });
 
     afterEach(function () {
@@ -269,7 +270,6 @@ describe('SegmentBaseLoader', function () {
         });
 
         it('should turn the sidx references into index records carrying the fields their consumers read', function (done) {
-            const self = this.test.ctx;
             const representation = { path: 'http://example.com/media.mp4' };
 
             segmentBaseLoader.loadSegments(representation, 'video', { start: 0, end: FREE_BOX_SIZE + SIDX_SIZE - 1 })
@@ -299,7 +299,7 @@ describe('SegmentBaseLoader', function () {
                 })
                 .catch(done);
 
-            setTimeout(() => self.requests[0].respond(200, { 'Content-Type': 'application/octet-stream' }, buildSidxResponse()), 1);
+            setTimeout(() => requests[0].respond(200, { 'Content-Type': 'application/octet-stream' }, buildSidxResponse()), 1);
         });
     });
 });

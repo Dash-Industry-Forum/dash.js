@@ -33,10 +33,13 @@ jobs:
                     fetch-depth: 2
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
+                with:
+                    install-browsers: 'true'
             -   name: Validate and run unit tests
-                env:
-                    COVERAGE: 1
                 run: npm run ci:verify
+            # Coverage is measured in Chromium only.
+            -   name: Unit test coverage
+                run: npm run test:coverage
             # Informational only: neither step can fail the job.
             -   name: Coverage summary
                 if: ${{ !cancelled() }}
@@ -48,7 +51,7 @@ jobs:
                 uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
                 with:
                     name: unit-test-coverage
-                    path: test/unit/results/coverage/chrome/
+                    path: test/unit/results/coverage/
                     if-no-files-found: ignore
                     retention-days: 7
 

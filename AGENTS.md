@@ -6,10 +6,12 @@ dash.js — DASH Industry Forum reference client. Pure JS (ES2020), ESM, Node >=
 
 ### Build & Test
 - **`npm run build` skips tests/lint.** Use `npm run build-modern` for the full pipeline (clean + tsc + test + lint + webpack).
-- **No per-file test runner.** All unit tests are bundled by Karma/webpack. Filter with `--grep`:
+- **Unit tests run on Vitest (via Vite+) in real browsers** (Chromium and Firefox through Playwright). Run a single file or filter by test name:
   ```bash
-  npx karma start test/unit/config/karma.unit.conf.cjs --grep="EventBus"
+  npx vp test --run test/unit/test/core/core.EventBus.js
+  npx vp test --run --project chromium -t "EventBus"
   ```
+  Developing needs Node >= 24.11 (`devEngines`); the published package still supports Node >= 20.
 - **Functional tests load from `dist/`**, not source. Build first.
 - **Two entry points:** `index.js` (full) and `index_mediaplayerOnly.js` (lightweight). Public API changes may need both updated.
 - **Dev builds fewer webpack bundles than prod.** See `build/webpack/common/webpack.common.base.cjs`.

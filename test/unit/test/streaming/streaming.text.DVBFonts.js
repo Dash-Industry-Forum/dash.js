@@ -4,11 +4,8 @@ import AdapterMock from '../../mocks/AdapterMock.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import EventBus from '../../../../src/core/EventBus.js';
 
-import {expect} from 'chai';
-import chai from 'chai';
-import spies from 'chai-spies';
+import { expect, vi } from 'vite-plus/test';
 
-chai.use(spies);
 
 const context = {};
 const eventBus = EventBus(context).getInstance();
@@ -150,11 +147,11 @@ describe('DVBFonts', function () {
     describe('downloadFonts()', () => {
 
         it('should trigger font added event', () => {
-            let spy = chai.spy();
+            let spy = vi.fn();
             eventBus.on(MediaPlayerEvents.DVB_FONT_DOWNLOAD_ADDED, spy);
             dvbFonts.addFontsFromTracks(mockSupplementalDownloadTracks, 'id');
             dvbFonts.downloadFonts();
-            expect(spy).to.have.been.called.exactly(1);
+            expect(spy).toHaveBeenCalledTimes(1);
             eventBus.off(MediaPlayerEvents.DVB_FONT_DOWNLOAD_ADDED, spy);
         });
 

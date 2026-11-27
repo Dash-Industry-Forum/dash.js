@@ -16,16 +16,17 @@ const errHandlerMock = new ErrorHandlerMock();
 import {fakeXhr} from 'nise';
 
 describe('TimeSyncController', function () {
+    let requests;
     let timeSyncController;
     let settings = Settings(context).getInstance();
 
     beforeEach(function () {
         window.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest();
 
-        this.requests = [];
+        requests = [];
         window.XMLHttpRequest.onCreate = function (xhr) {
-            this.requests.push(xhr);
-        }.bind(this);
+            requests.push(xhr);
+        };
 
         timeSyncController = TimeSyncController(context).getInstance();
         timeSyncController.setConfig({
@@ -70,7 +71,6 @@ describe('TimeSyncController', function () {
 
 
     it('should synchronize time when time source is defined', function (done) {
-        let self = this;
         let date = new Date();
 
         function onCompleted() {
@@ -86,13 +86,12 @@ describe('TimeSyncController', function () {
         }], true);
 
         // simulate a response
-        self.requests[0].respond(200, {
+        requests[0].respond(200, {
             'Content-Type': 'text/plain; charset=ISO-8859-1'
         }, date.toString());
     });
 
     it('should calculate offset when time source is defined', function (done) {
-        let self = this;
         let date = new Date();
 
         function onCompleted(e) {
@@ -110,7 +109,7 @@ describe('TimeSyncController', function () {
         }], true);
 
         // simulate a response
-        self.requests[0].respond(200, {
+        requests[0].respond(200, {
             'Content-Type': 'text/plain; charset=ISO-8859-1'
         }, date.toString());
     });
@@ -161,7 +160,7 @@ describe('TimeSyncController', function () {
                 schemeIdUri: 'urn:mpeg:dash:utc:http-iso:2014',
                 value: 'https://time.akamai.com/?iso&ms'
             }], true);
-            this.requests[0].respond(200, { 'Content-Type': 'text/plain' }, '2026-09-13T12:34:56.789');
+            requests[0].respond(200, { 'Content-Type': 'text/plain' }, '2026-09-13T12:34:56.789');
 
             expect(offset).to.equal(789);
         } finally {

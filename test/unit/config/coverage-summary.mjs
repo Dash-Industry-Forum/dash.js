@@ -32,7 +32,7 @@
 /**
  * Turns the unit test coverage report (npm run test:coverage) into a Markdown summary:
  * overall totals, coverage of the lines changed against a base commit, and the source
- * files no test loads. Written to $GITHUB_STEP_SUMMARY when set, to stdout otherwise.
+ * files no test covers at all. Written to $GITHUB_STEP_SUMMARY when set, to stdout otherwise.
  *
  * Purely informational: always exits with code 0.
  *
@@ -46,7 +46,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const COVERAGE_DIR = path.resolve(REPO_ROOT, process.argv[2] || 'test/unit/results/coverage/chrome');
+const COVERAGE_DIR = path.resolve(REPO_ROOT, process.argv[2] || 'test/unit/results/coverage');
 const SOURCE_DIR = 'src';
 const MAX_UNCOVERED_RANGES = 12;
 
@@ -95,19 +95,10 @@ function getBaseRef() {
 }
 
 /**
- * Heuristic for files without coverage data, where istanbul cannot tell which lines are executable.
- */
-function isCodeLine(text) {
-    const trimmed = text.trim();
-    return trimmed !== '' && !/^(\/\/|\/\*|\*)/.test(trimmed);
-}
-
-/**
  * Lines added or modified since the merge base of baseRef and HEAD, so changes that exist only on
  * the base side are not reported.
  *
- * @return {Map<string, {lines: number[], codeLines: number[]}>} repo relative file -> all changed
- * line numbers, and those that are neither blank nor comment-only
+ * @return {Map<string, {lines: number[]}>} repo relative file -> changed line numbers
  */
 function getChangedLines(baseRef) {
     const args = ['diff', '-U0', '--no-color', '--no-ext-diff', '--src-prefix=a/', '--dst-prefix=b/',
@@ -124,7 +115,7 @@ function getChangedLines(baseRef) {
         } else if (inHeader && row.startsWith('+++ ')) {
             // Only a header line here; in a hunk, "+++ " is an added line that starts with "++ "
             if (row.startsWith('+++ b/') && row.endsWith('.js')) {
-                current = { lines: [], codeLines: [] };
+                current = { lines: [] };
                 result.set(row.slice(6), current);
             }
         } else if (row.startsWith('@@')) {
@@ -133,9 +124,6 @@ function getChangedLines(baseRef) {
             nextLine = match ? Number(match[1]) : 0;
         } else if (!inHeader && current && row.startsWith('+')) {
             current.lines.push(nextLine);
-            if (isCodeLine(row.slice(1))) {
-                current.codeLines.push(nextLine);
-            }
             nextLine++;
         }
     });
@@ -186,18 +174,12 @@ function renderPatch(baseRef, lcov) {
     const rows = [];
     let executableTotal = 0;
     let coveredTotal = 0;
-    let unloadedFiles = 0;
 
     [...changed.keys()].sort().forEach((file) => {
         const fileCoverage = lcov.get(file);
         if (!fileCoverage) {
-            // No test loads the file, so every changed line of code is uncovered
-            const codeLines = changed.get(file).codeLines;
-            if (codeLines.length > 0) {
-                executableTotal += codeLines.length;
-                unloadedFiles++;
-                rows.push(`| \`${file}\` | 0 / ${codeLines.length} (not loaded by any test) | ${toRanges(codeLines)} |`);
-            }
+            // The report includes every source file, also the ones no test loads. A file that is
+            // missing has no executable code (only declarations, constants or JSDoc).
             return;
         }
         const executable = changed.get(file).lines.filter((line) => fileCoverage.has(line));
@@ -221,8 +203,7 @@ function renderPatch(baseRef, lcov) {
     out.push(
         '',
         `**${coveredTotal} of ${executableTotal}** changed executable lines are covered` +
-        ` (${formatPct(coveredTotal, executableTotal)})` +
-        (unloadedFiles > 0 ? `, including ${unloadedFiles} changed file(s) no test loads.` : '.'),
+        ` (${formatPct(coveredTotal, executableTotal)}).`,
         '',
         '| File | Changed lines covered | Uncovered changed lines |',
         '| --- | ---: | --- |',
@@ -232,9 +213,12 @@ function renderPatch(baseRef, lcov) {
 }
 
 function renderUnloaded(summary) {
-    const reported = new Set(Object.keys(summary).filter((key) => key !== 'total').map(toRepoPath));
     const sources = listSourceFiles(SOURCE_DIR);
-    const unloaded = sources.filter((file) => !reported.has(file)).sort();
+    // The report includes every source file, so a file without a single covered line is one no test loads
+    const unloaded = Object.entries(summary)
+        .filter(([key, value]) => key !== 'total' && value.lines.total > 0 && value.lines.covered === 0)
+        .map(([key]) => toRepoPath(key))
+        .sort();
 
     if (unloaded.length === 0) {
         return [];
@@ -242,8 +226,8 @@ function renderUnloaded(summary) {
     return [
         '',
         '<details>',
-        `<summary>${unloaded.length} of ${sources.length} source files are not loaded by any unit test` +
-        ' and are missing from the totals above</summary>',
+        `<summary>${unloaded.length} of ${sources.length} source files have no covered line` +
+        ' (no unit test loads them)</summary>',
         '',
         ...unloaded.map((file) => `- \`${file}\``),
         '',

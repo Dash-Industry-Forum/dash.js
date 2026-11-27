@@ -7,13 +7,10 @@ import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import Debug from '../../../../src/core/Debug.js';
 import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 
-import chai from 'chai';
-import spies from 'chai-spies';
+import { expect, vi } from 'vite-plus/test';
 import sinon from 'sinon';
 
-const expect = chai.expect;
 
-chai.use(spies);
 
 describe('FragmentModel', function () {
     const specHelper = new SpecHelper();
@@ -99,14 +96,14 @@ describe('FragmentModel', function () {
         });
 
         it('should fire loadingStarted event a request', function () {
-            const spy = chai.spy();
+            const spy = vi.fn();
 
             eventBus.on(Events.FRAGMENT_LOADING_STARTED, spy);
 
             clock.tick(delay + 1);
             eventBus.off(Events.FRAGMENT_LOADING_STARTED, spy);
 
-            expect(spy).to.have.been.called();
+            expect(spy).toHaveBeenCalled();
         });
 
         it('should add the request to loading requests', function () {

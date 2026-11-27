@@ -6,10 +6,9 @@ import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
 import ContentSteeringSelectorMock from '../../mocks/ContentSteeringSelectorMock.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
-import chai from 'chai';
+import { expect, vi } from 'vite-plus/test';
 import sinon from 'sinon';
 
-const expect = chai.expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();
 const SERVICE_LOCATION_A = 'a';
@@ -48,7 +47,7 @@ describe('BaseURLController', function () {
     it('should add event handlers again after reset', () => {
         const localContext = {};
         const localEventBus = EventBus(localContext).getInstance();
-        const invalidateSpy = chai.spy();
+        const invalidateSpy = vi.fn();
         const localAdapter = {
             getIsDVB: () => false
         };
@@ -83,15 +82,15 @@ describe('BaseURLController', function () {
         localBaseURLController.initialize({});
 
         localEventBus.trigger(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, { entry: 'a' });
-        expect(invalidateSpy).to.have.been.called.exactly(1);
+        expect(invalidateSpy).toHaveBeenCalledTimes(1);
 
         localBaseURLController.reset();
         localEventBus.trigger(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, { entry: 'b' });
-        expect(invalidateSpy).to.have.been.called.exactly(1);
+        expect(invalidateSpy).toHaveBeenCalledTimes(1);
 
         localBaseURLController.initialize({});
         localEventBus.trigger(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, { entry: 'c' });
-        expect(invalidateSpy).to.have.been.called.exactly(2);
+        expect(invalidateSpy).toHaveBeenCalledTimes(2);
 
         localBaseURLController.reset();
     });
