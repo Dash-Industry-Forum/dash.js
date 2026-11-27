@@ -179,6 +179,54 @@ describe('TextSourceBuffer', function () {
 
             expect(addCaptionsCalls).to.deep.equal([2]);
         });
+
+        it('should keep the cues of other segments if a fragmented STPP sample cannot be parsed', function () {
+            const track = {
+                type: 'text',
+                id: 'eng',
+                index: 0,
+                isFragmented: true,
+                mimeType: 'application/mp4',
+                codec: 'application/mp4;codecs="stpp"'
+            };
+            const textTrackInfos = [];
+            const deleteCalls = [];
+            const textTracksMock = {
+                addCaptions: () => {},
+                addTextTrackInfo: (info) => textTrackInfos.push(info),
+                getTextTrackInfos: () => textTrackInfos,
+                deleteCuesFromTrackIdx: (idx, from, to) => deleteCalls.push({ idx, from, to }),
+                deleteAllTextTracks: () => {}
+            };
+            const buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                manifestModel: { getValue: () => ({}) },
+                mediaController: {
+                    getTracksFor: () => [track],
+                    getCurrentTrackFor: () => track
+                },
+                streamInfo: { id: 'stream' },
+                textTracks: textTracksMock,
+                ttmlParser: {
+                    parse: () => {
+                        throw new Error('invalid TTML');
+                    }
+                }
+            });
+            buffer.initialize();
+            buffer.addMediaInfos('text', [track], { removeExecutedRequestsBeforeTime: () => {} });
+            // Cues of earlier segments are already parsed up to the start of the failing sample
+            buffer.buffered.add(0, BASE_MEDIA_DECODE_TIME / TIMESCALE);
+
+            const representation = { mediaInfo: track };
+            buffer.append(createInitSegment(), { segmentType: 'InitializationSegment', representation });
+            buffer.append(createMediaSegment('<tt'), { segmentType: 'MediaSegment', representation });
+
+            expect(deleteCalls).to.be.empty;
+            expect(buffer.buffered.length).to.equal(1);
+            expect(buffer.buffered.start(0)).to.equal(0);
+            expect(buffer.buffered.end(0)).to.equal(BASE_MEDIA_DECODE_TIME / TIMESCALE);
+        });
     });
 
     describe('Method remove', function () {

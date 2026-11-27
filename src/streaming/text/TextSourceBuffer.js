@@ -363,7 +363,8 @@ function TextSourceBuffer(config) {
 
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
-                remove();
+                // Only this sample failed. Deleted cues are not parsed again, so keep the cues of the other samples.
+                instance.buffered.remove(start, end);
                 logger.error('TTML parser error: ' + e);
             }
         }
