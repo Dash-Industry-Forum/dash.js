@@ -147,6 +147,22 @@ describe('Utils', () => {
         })
     })
 
+    describe('parseQueryParams', () => {
+        it('should decode percent-encoded keys and values once', () => {
+            expect(Utils.parseQueryParams('token=100%25&a%20b=%2541')).to.deep.equal([
+                { key: 'token', value: '100%' },
+                { key: 'a b', value: '%41' }
+            ]);
+        });
+
+        it('should round-trip values through addAdditionalQueryParameterToUrl', () => {
+            const params = Utils.parseQueryParams('token=100%25&x=%2541');
+
+            expect(Utils.addAdditionalQueryParameterToUrl('https://example.com/seg.m4s', params))
+                .to.equal('https://example.com/seg.m4s?token=100%25&x=%2541');
+        });
+    });
+
     describe('getHostFromUrl', () => {
 
         it('Should return a valid host for an http URL', () => {

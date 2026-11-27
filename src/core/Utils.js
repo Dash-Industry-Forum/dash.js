@@ -151,8 +151,9 @@ class Utils {
     static parseQueryParams(queryParamString) {
         const params = [];
         const searchParams = new URLSearchParams(queryParamString);
+        // URLSearchParams already decodes keys and values. Decoding again breaks values containing "%".
         for (const [key, value] of searchParams.entries()) {
-            params.push({ key: decodeURIComponent(key), value: decodeURIComponent(value) });
+            params.push({ key, value });
         }
         return params;
     }

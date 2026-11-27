@@ -565,5 +565,182 @@ describe('ExtUrlQueryInfoController', () => {
         expect(representation.SupplementalProperty).to.deep.equal([representationProperty]);
     });
 
-    
+    describe('manifest without absolute url', () => {
+
+        const segmentRequest = {
+            url: 'https://example.com/segment.m4s',
+            type: 'MediaSegment',
+            representation: {
+                index: 0,
+                adaptation: {
+                    index: 0,
+                    period: {index: 0}
+                }
+            }
+        };
+
+        function createManifest(url, sameOriginOnly) {
+            return {
+                url,
+                Period: [{
+                    AdaptationSet: [{
+                        Representation: [{
+                            SupplementalProperty: [{
+                                schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
+                                ExtUrlQueryInfo: {
+                                    queryTemplate: '$querypart$',
+                                    queryString: 'token=abc',
+                                    useMPDUrlQuery: 'true',
+                                    sameOriginOnly
+                                }
+                            }]
+                        }]
+                    }]
+                }]
+            };
+        }
+
+        it('should not throw when manifest has no url or no Period', () => {
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings({})).to.not.throw();
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings({ loadedTime: new Date() })).to.not.throw();
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings({ url: 'https://example.com/manifest.mpd' })).to.not.throw();
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings(undefined)).to.not.throw();
+        });
+
+        it('should apply queryString without MPD url query when manifest has no url', () => {
+            extUrlQueryInfoController.createFinalQueryStrings(createManifest(undefined));
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+        });
+
+        it('should apply queryString without MPD url query when manifest url is relative', () => {
+            extUrlQueryInfoController.createFinalQueryStrings(createManifest('manifest.mpd?param=value'));
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+        });
+
+        it('should not return query parameters when sameOriginOnly is enabled and manifest has no url', () => {
+            extUrlQueryInfoController.createFinalQueryStrings(createManifest(undefined, true));
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.undefined;
+        });
+
+        function createRestrictedManifest(url, level, includeInRequests) {
+            const property = {
+                schemeIdUri: 'urn:mpeg:dash:urlparam:2016',
+                ExtUrlQueryInfo: {
+                    queryTemplate: '$querypart$',
+                    queryString: 'token=abc',
+                    sameOriginOnly: 'true',
+                    includeInRequests
+                }
+            };
+            const representation = {};
+            const adaptationSet = { Representation: [representation] };
+            const period = { AdaptationSet: [adaptationSet] };
+            const manifest = { url, Period: [period] };
+            const elements = { mpd: manifest, period, adaptationSet };
+            elements[level].SupplementalProperty = [property];
+            return manifest;
+        }
+
+        ['mpd', 'period', 'adaptationSet'].forEach((level) => {
+            it(`should not return inherited ${level} parameters with sameOriginOnly when manifest has no url`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest(undefined, level));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.undefined;
+            });
+
+            it(`should not return inherited ${level} parameters with sameOriginOnly to another origin`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest('https://other.com/manifest.mpd', level));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.undefined;
+            });
+
+            it(`should return inherited ${level} parameters with sameOriginOnly to the same origin`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest('https://example.com/manifest.mpd', level));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+            });
+        });
+
+        [1, '1', ' true '].forEach((value) => {
+            it(`should not return parameters to another origin when sameOriginOnly is ${JSON.stringify(value)}`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createManifest('https://other.com/manifest.mpd', value));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.undefined;
+            });
+        });
+
+        [0, '0'].forEach((value) => {
+            it(`should return parameters to another origin when sameOriginOnly is ${JSON.stringify(value)}`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createManifest('https://other.com/manifest.mpd', value));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+            });
+        });
+
+        [1, '1'].forEach((value) => {
+            it(`should append the MPD url query when useMPDUrlQuery is ${JSON.stringify(value)}`, () => {
+                const manifest = createManifest('https://example.com/manifest.mpd?param=value');
+                const representation = manifest.Period[0].AdaptationSet[0].Representation[0];
+                representation.SupplementalProperty[0].ExtUrlQueryInfo.useMPDUrlQuery = value;
+                extUrlQueryInfoController.createFinalQueryStrings(manifest);
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([
+                    {key: 'token', value: 'abc'},
+                    {key: 'param', value: 'value'}
+                ]);
+            });
+        });
+
+        it('should not throw when the MPD url query contains an encoded percent sign', () => {
+            const manifest = createManifest('https://example.com/manifest.mpd?token=100%25');
+
+            expect(() => extUrlQueryInfoController.createFinalQueryStrings(manifest)).to.not.throw();
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([
+                {key: 'token', value: 'abc'},
+                {key: 'token', value: '100%'}
+            ]);
+        });
+
+        it('should return parameters when sameOriginOnly is "false" and origin does not match', () => {
+            const manifest = createManifest('https://other.com/manifest.mpd', 'false');
+            extUrlQueryInfoController.createFinalQueryStrings(manifest);
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+        });
+
+        [
+            { type: 'MPD', url: 'https://example.com/manifest.mpd' },
+            { type: 'ContentSteering', url: 'https://example.com/steering.json' }
+        ].forEach(({ type, url }) => {
+            const request = { type, url };
+
+            it(`should not return ${type} parameters with sameOriginOnly when manifest has no url`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest(undefined, 'mpd', 'mpd steering'));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(request)).to.be.undefined;
+            });
+
+            it(`should not return ${type} parameters with sameOriginOnly to another origin`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest('https://other.com/manifest.mpd', 'mpd', 'mpd steering'));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(request)).to.be.undefined;
+            });
+
+            it(`should return ${type} parameters with sameOriginOnly to the same origin`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createRestrictedManifest('https://example.com/manifest.mpd', 'mpd', 'mpd steering'));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(request)).to.deep.equal([{key: 'token', value: 'abc'}]);
+            });
+        });
+
+        it('should return null after a manifest without Period', () => {
+            extUrlQueryInfoController.createFinalQueryStrings(createManifest('https://example.com/manifest.mpd'));
+            extUrlQueryInfoController.createFinalQueryStrings({ url: 'https://example.com/manifest.mpd' });
+
+            expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.null;
+        });
+    });
 });
