@@ -1078,7 +1078,7 @@ describe('CapabilitiesFilter', function () {
                     });
             })
 
-            it('should set sRGB in config from EssentialProperties', function (done) {
+            it('should set rec2020 and PQ in config from EssentialProperties', function (done) {
                 const manifest = {
                     Period: [{
                         AdaptationSet: [{

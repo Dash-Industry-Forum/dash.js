@@ -520,7 +520,7 @@ describe('DashManifestModel', function () {
             expect(labels).to.be.empty;
         });
 
-        it('should return empty array when getLabelsForAdaptation is called and adaptation is not well defined', () => {
+        it('should return empty array when getLabelsForAdaptation is called and Label is not an array', () => {
             const labels = dashManifestModel.getLabelsForAdaptation({ Label: true });
 
             expect(labels).to.be.instanceOf(Array);

@@ -34,9 +34,11 @@
  * overall totals, coverage of the lines changed against a base commit, and the source
  * files no test covers at all. Written to $GITHUB_STEP_SUMMARY when set, to stdout otherwise.
  *
- * Purely informational: always exits with code 0.
+ * Exits with code 0, unless --min-changed=<percent> is given: then it exits with code 1 when
+ * less than that share of the changed executable lines is covered, or when the coverage of the
+ * changed lines cannot be computed (no or unreadable report, no base ref, git error).
  *
- * Usage: node test/unit/config/coverage-summary.mjs [coverageDir]
+ * Usage: node test/unit/config/coverage-summary.mjs [--min-changed=<percent>] [coverageDir]
  *   COVERAGE_BASE  git ref to diff against. Defaults to HEAD^1 when HEAD is a merge
  *                  commit (what actions/checkout provides on pull_request events).
  */
@@ -44,9 +46,45 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const COVERAGE_DIR = path.resolve(REPO_ROOT, process.argv[2] || 'test/unit/results/coverage');
+const USAGE = 'Usage: node test/unit/config/coverage-summary.mjs [--min-changed=<percent>] [coverageDir]';
+
+// Rejects unknown options and a missing or malformed threshold, so a typo cannot turn the check off
+function parseArguments() {
+    let parsed;
+    try {
+        parsed = parseArgs({ options: { 'min-changed': { type: 'string' } }, allowPositionals: true });
+    } catch (e) {
+        return { error: e.message };
+    }
+    const { values, positionals } = parsed;
+    if (positionals.length > 1) {
+        return { error: `Unexpected arguments: ${positionals.join(' ')}` };
+    }
+    const value = values['min-changed'];
+    let minChanged = null;
+    if (value !== undefined) {
+        minChanged = /^\d+(\.\d+)?$/.test(value) ? Number(value) : NaN;
+        if (!(minChanged >= 0 && minChanged <= 100)) {
+            return { error: `Invalid --min-changed value "${value}": expected a percentage between 0 and 100` };
+        }
+    }
+    return { minChanged, coverageDir: positionals[0] };
+}
+
+const cliArguments = parseArguments();
+if (cliArguments.error) {
+    console.error(`${cliArguments.error}\n${USAGE}`);
+    process.exit(2);
+}
+const MIN_CHANGED_PCT = cliArguments.minChanged;
+const COVERAGE_DIR = path.resolve(REPO_ROOT, cliArguments.coverageDir || 'test/unit/results/coverage');
+
+// Set by render(); read by the --min-changed check. changedComputed is only set once the coverage of
+// the changed lines is known, so every failure on the way leaves the check failing.
+const gate = { changedComputed: false, changedCovered: 0, changedTotal: 0, failure: 'no coverage report found' };
 const SOURCE_DIR = 'src';
 const MAX_UNCOVERED_RANGES = 12;
 
@@ -63,23 +101,80 @@ function formatPct(covered, total) {
 }
 
 /**
- * @return {Map<string, Map<number, number>>} repo relative file -> (line -> hit count)
+ * Statement spans from the istanbul JSON report (coverage-final.json). lcov.info is not enough: it
+ * lists a statement only on its first line, so a change to a later line of a multiline statement
+ * would look like a change without executable code.
+ *
+ * @return {Map<string, {start: number, end: number, hits: number}[]>} repo relative file -> statements
  */
-function parseLcov(file) {
+function parseStatements(file) {
     const result = new Map();
-    let lines = null;
+    Object.entries(JSON.parse(readFileSync(file, 'utf8'))).forEach(([key, fileCoverage]) => {
+        const statements = Object.entries(fileCoverage.statementMap).map(([id, { start, end }]) => ({
+            start: start.line,
+            end: end.line,
+            hits: fileCoverage.s[id]
+        }));
+        result.set(toRepoPath(fileCoverage.path || key), statements);
+    });
+    return result;
+}
 
-    readFileSync(file, 'utf8').split('\n').forEach((row) => {
-        if (row.startsWith('SF:')) {
-            lines = new Map();
-            result.set(toRepoPath(row.slice(3).trim()), lines);
-        } else if (row.startsWith('DA:') && lines) {
-            const [line, hits] = row.slice(3).split(',');
-            lines.set(Number(line), Number(hits));
+/**
+ * Line numbers (1-based) that carry no code of their own: blank lines, comments, and lines with only
+ * closing brackets. A simple scan: it does not look into strings, which is good enough for src/.
+ */
+function getNoCodeLines(source) {
+    const result = new Set();
+    let inBlockComment = false;
+    source.forEach((text, index) => {
+        let code = '';
+        let rest = text;
+        while (rest.length > 0) {
+            if (inBlockComment) {
+                const end = rest.indexOf('*/');
+                if (end === -1) {
+                    rest = '';
+                } else {
+                    inBlockComment = false;
+                    rest = rest.slice(end + 2);
+                }
+            } else {
+                const start = rest.search(/\/\*|\/\//);
+                if (start === -1) {
+                    code += rest;
+                    rest = '';
+                } else {
+                    code += rest.slice(0, start);
+                    inBlockComment = rest.startsWith('/*', start);
+                    rest = inBlockComment ? rest.slice(start + 2) : '';
+                }
+            }
+        }
+        if (/^[\s)\]};,]*$/.test(code)) {
+            result.add(index + 1);
         }
     });
-
     return result;
+}
+
+/**
+ * Hit count of a source line, or undefined when the line has no executable code. A line on which a
+ * statement starts gets the highest count of these statements, like lcov. Any other line with code
+ * gets the count of the innermost statement it is part of.
+ */
+function getLineHits(statements, line, noCodeLines) {
+    const starting = statements.filter((statement) => statement.start === line);
+    if (starting.length > 0) {
+        return Math.max(...starting.map((statement) => statement.hits));
+    }
+    if (noCodeLines.has(line)) {
+        return undefined;
+    }
+    const innermost = statements
+        .filter((statement) => statement.start < line && statement.end >= line)
+        .sort((a, b) => (a.end - a.start) - (b.end - b.start))[0];
+    return innermost ? innermost.hits : undefined;
 }
 
 function getBaseRef() {
@@ -168,7 +263,7 @@ function renderTotals(total) {
     return ['| Metric | Coverage | Covered / Total |', '| --- | ---: | ---: |', ...rows];
 }
 
-function renderPatch(baseRef, lcov) {
+function renderPatch(baseRef, statementsByFile) {
     const out = ['', '### Changed lines'];
     const changed = getChangedLines(baseRef);
     const rows = [];
@@ -176,24 +271,36 @@ function renderPatch(baseRef, lcov) {
     let coveredTotal = 0;
 
     [...changed.keys()].sort().forEach((file) => {
-        const fileCoverage = lcov.get(file);
-        if (!fileCoverage) {
+        const statements = statementsByFile.get(file);
+        if (!statements) {
             // The report includes every source file, also the ones no test loads. A file that is
             // missing has no executable code (only declarations, constants or JSDoc).
             return;
         }
-        const executable = changed.get(file).lines.filter((line) => fileCoverage.has(line));
+        const noCodeLines = getNoCodeLines(readFileSync(path.join(REPO_ROOT, file), 'utf8').split('\n'));
+        const hits = new Map();
+        changed.get(file).lines.forEach((line) => {
+            const count = getLineHits(statements, line, noCodeLines);
+            if (count !== undefined) {
+                hits.set(line, count);
+            }
+        });
+        const executable = [...hits.keys()];
         if (executable.length === 0) {
             // Only comments, whitespace or declarations changed
             return;
         }
-        const uncovered = executable.filter((line) => fileCoverage.get(line) === 0);
+        const uncovered = executable.filter((line) => hits.get(line) === 0);
         const covered = executable.length - uncovered.length;
         executableTotal += executable.length;
         coveredTotal += covered;
         rows.push(`| \`${file}\` | ${covered} / ${executable.length} (${formatPct(covered, executable.length)})` +
             ` | ${toRanges(uncovered)} |`);
     });
+
+    gate.changedComputed = true;
+    gate.changedCovered = coveredTotal;
+    gate.changedTotal = executableTotal;
 
     if (rows.length === 0) {
         out.push('', `No executable lines changed under \`${SOURCE_DIR}/\`.`);
@@ -237,10 +344,10 @@ function renderUnloaded(summary) {
 
 function render() {
     const summaryFile = path.join(COVERAGE_DIR, 'coverage-summary.json');
-    const lcovFile = path.join(COVERAGE_DIR, 'lcov.info');
+    const statementsFile = path.join(COVERAGE_DIR, 'coverage-final.json');
     const out = ['## Unit test coverage', ''];
 
-    if (!existsSync(summaryFile) || !existsSync(lcovFile)) {
+    if (!existsSync(summaryFile) || !existsSync(statementsFile)) {
         out.push(`No coverage report found in \`${toRepoPath(COVERAGE_DIR)}\`. The unit tests probably did not complete.`);
         return out;
     }
@@ -251,10 +358,13 @@ function render() {
     const baseRef = getBaseRef();
     if (baseRef) {
         try {
-            out.push(...renderPatch(baseRef, parseLcov(lcovFile)));
+            out.push(...renderPatch(baseRef, parseStatements(statementsFile)));
         } catch (e) {
+            gate.failure = `coverage of changed lines is unavailable: ${String(e.message).split('\n')[0]}`;
             out.push('', `Coverage of changed lines is unavailable: ${String(e.message).split('\n')[0]}`);
         }
+    } else {
+        gate.failure = 'no base ref to diff against (HEAD is not a merge commit and COVERAGE_BASE is not set)';
     }
 
     out.push(...renderUnloaded(summary));
@@ -266,10 +376,35 @@ try {
     markdown = render().join('\n');
 } catch (e) {
     markdown = `## Unit test coverage\n\nFailed to create the coverage summary: ${String(e.message).split('\n')[0]}`;
+    gate.changedComputed = false;
+    gate.failure = `failed to create the coverage summary: ${String(e.message).split('\n')[0]}`;
 }
 
 if (process.env.GITHUB_STEP_SUMMARY) {
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${markdown}\n`);
 } else {
     console.log(markdown);
+}
+
+function checkChangedLines() {
+    if (!gate.changedComputed) {
+        return gate.failure;
+    }
+    if (gate.changedTotal === 0) {
+        return null;
+    }
+    const pct = (gate.changedCovered / gate.changedTotal) * 100;
+    if (pct < MIN_CHANGED_PCT) {
+        return `${gate.changedCovered} of ${gate.changedTotal} changed executable lines are covered ` +
+            `(${pct.toFixed(2)}%), at least ${MIN_CHANGED_PCT}% are required`;
+    }
+    return null;
+}
+
+if (MIN_CHANGED_PCT !== null) {
+    const failure = checkChangedLines();
+    if (failure) {
+        console.error(`Changed lines coverage check failed: ${failure}`);
+        process.exitCode = 1;
+    }
 }

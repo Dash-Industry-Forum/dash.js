@@ -53,28 +53,28 @@ describe('Utils', () => {
             expect(Utils.getRelativeUrl(a, b)).to.be.equal('/ab/b/f.mp4');
         })
 
-        it('Should return relative url if target pathname is longer than source pathname ', () => {
+        it('Should return relative url if target pathname is longer than source pathname', () => {
             const a = 'https://localhost:3000/a/b/f.mp4';
             const b = 'https://localhost:3000/a/b/f/e/c.mp4';
 
             expect(Utils.getRelativeUrl(a, b)).to.be.equal('f/e/c.mp4');
         })
 
-        it('Should return relative url if source pathname is longer than target pathname ', () => {
+        it('Should return relative url if source pathname is longer than target pathname', () => {
             const a = 'https://localhost:3000/a/b/f/e/c.mp4';
             const b = 'https://localhost:3000/a/b/f.mp4';
 
             expect(Utils.getRelativeUrl(a, b)).to.be.equal('/a/b/f.mp4');
         })
 
-        it('Should return relative url if source contains slash in the end ', () => {
+        it('Should return relative url if source contains slash in the end', () => {
             const a = 'https://localhost:3000/a/';
             const b = 'https://localhost:3000/a/b.mp4';
 
             expect(Utils.getRelativeUrl(a, b)).to.be.equal('b.mp4');
         })
 
-        it('Should return relative url if source pathnames are exceptionally long ', () => {
+        it('Should return relative url if source pathnames are exceptionally long', () => {
             const a = 'https://localhost:3000/a/b/c/d/e/f/g/h/1.mp4';
             const b = 'https://localhost:3000/a/b/c/d/e/change/i/j/k/l/m/n/2.mp4';
 
@@ -169,7 +169,7 @@ describe('Utils', () => {
             expect(Utils.getHostFromUrl('http://dash.akamaized.net')).to.be.equal('dash.akamaized.net');
         })
 
-        it('Should return a valid host for an http URL', () => {
+        it('Should return a valid host for an https URL', () => {
             expect(Utils.getHostFromUrl('https://dash.akamaized.net')).to.be.equal('dash.akamaized.net');
         })
     })

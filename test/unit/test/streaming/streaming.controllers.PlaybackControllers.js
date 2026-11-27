@@ -277,7 +277,7 @@ describe('PlaybackController', function () {
                 expect(playbackController.getPlayedRanges()).to.equal(videoModelMock.playedRange);
             });
 
-            it('should return video ended ', function () {
+            it('should return video ended', function () {
                 videoModelMock.ended = true;
                 expect(playbackController.getEnded()).to.equal(videoModelMock.ended);
             });

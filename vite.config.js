@@ -98,10 +98,20 @@ export default defineConfig({
             reporter: [
                 'html',
                 ['lcovonly', { file: 'lcov.info' }],
+                // Statement spans for the changed-lines check in coverage-summary.mjs
+                ['json', { file: 'coverage-final.json' }],
                 ['json-summary', { file: 'coverage-summary.json' }],
                 'text-summary'
             ],
-            reportOnFailure: true
+            reportOnFailure: true,
+            // Coverage floor: the run fails below these values. Pull requests that raise coverage raise
+            // the floor as well (#5210); it never goes down.
+            thresholds: {
+                lines: 57.33,
+                functions: 56.58,
+                statements: 57.19,
+                branches: 50.62
+            }
         }
     }
 });

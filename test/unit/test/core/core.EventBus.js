@@ -4,7 +4,6 @@ import chai from 'chai';
 import sinon from 'sinon';
 
 const expect = chai.expect;
-const assert = chai.assert;
 
 const context = {};
 const eventBus = EventBus(context).getInstance();
@@ -40,9 +39,9 @@ describe('EventBus', function () {
 
         eventBus.trigger('EVENT_TEST', {});
 
-        assert.equal(spy.calledOnce, true);
-        assert.equal(spy2.calledOnce, true);
-        assert.equal(spy2.calledBefore(spy), true);
+        expect(spy.calledOnce).to.equal(true);
+        expect(spy2.calledOnce).to.equal(true);
+        expect(spy2.calledBefore(spy)).to.equal(true);
     });
 
     it('should respect mode parameter in the on function in order to trigger events according to isEventStart option in trigger function', function () {
@@ -55,8 +54,8 @@ describe('EventBus', function () {
         eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_START });
         eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
-        assert.equal(spy.calledOnce, true);
-        assert.equal(spy2.calledOnce, true);
+        expect(spy.calledOnce).to.equal(true);
+        expect(spy2.calledOnce).to.equal(true);
     });
 
     it('should ignore onReceive events if no mode was specified in the callback handler', function () {
@@ -66,7 +65,7 @@ describe('EventBus', function () {
 
         eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
-        assert.equal(spy.notCalled, true);
+        expect(spy.notCalled).to.equal(true);
     });
 
     it('should trigger onStart event if no mode was specified in the callback handler', function () {
@@ -77,6 +76,6 @@ describe('EventBus', function () {
         eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_START });
         eventBus.trigger('EVENT_TEST', {}, { mode: mediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
-        assert.equal(spy.calledOnce, true);
+        expect(spy.calledOnce).to.equal(true);
     });
 });

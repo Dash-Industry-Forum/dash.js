@@ -194,7 +194,7 @@ describe('BufferController', function () {
                 });
         });
 
-        it('should append data to source buffer ', function (done) {
+        it('should append data to source buffer', function (done) {
             const event = {
                 chunk: {
                     streamId: streamInfo.id,
@@ -267,7 +267,7 @@ describe('BufferController', function () {
                 });
         });
 
-        it('should append data to source buffer ', function (done) {
+        it('should append data to source buffer', function (done) {
             const event = {
                 chunk: {
                     streamId: streamInfo.id,

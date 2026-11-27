@@ -363,7 +363,7 @@ describe('CustomParametersModel', function () {
             expect(subtitles.size).to.equal(0);
         })
 
-        it('should not remove any external subtitle if the URL does not match', () => {
+        it('should not remove any external subtitle if the id does not match', () => {
             const id = '0';
             const url = 'http://example.com/subtitle.vtt';
             const language = 'en';

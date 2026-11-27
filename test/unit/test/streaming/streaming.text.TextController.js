@@ -21,10 +21,6 @@ describe('TextController', function () {
     const settings = Settings(context).getInstance();
     let textController;
 
-    afterEach(function () {
-        settings.reset();
-    });
-
     beforeEach(function () {
         textController = TextController(context).create({
             videoModel: videoModelMock,
@@ -66,6 +62,7 @@ describe('TextController', function () {
 
     afterEach(function () {
         textController.reset();
+        settings.reset();
     });
 
 

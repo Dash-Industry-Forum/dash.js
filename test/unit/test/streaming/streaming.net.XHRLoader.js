@@ -24,9 +24,6 @@ describe('XHRLoader', function () {
         window.XMLHttpRequest.restore();
     });
 
-    afterEach(function () {
-    });
-
     it('should call onloadend callback when load is called successfully', () => {
         const callbackLoadend = sinon.spy();
         const callbackAbort = sinon.spy();

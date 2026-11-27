@@ -12,6 +12,7 @@ dash.js — DASH Industry Forum reference client. Pure JS (ES2020), ESM, Node >=
   npx vp test --run --project chromium -t "EventBus"
   ```
   Developing needs Node >= 24.11 (`devEngines`); the published package still supports Node >= 20.
+- **Unit test conventions** (structure, assertions, mocks, coverage rules): `test/unit/README.md`.
 - **Functional tests load from `dist/`**, not source. Build first.
 - **Two entry points:** `index.js` (full) and `index_mediaplayerOnly.js` (lightweight). Public API changes may need both updated.
 - **Dev builds fewer webpack bundles than prod.** See `build/webpack/common/webpack.common.base.cjs`.

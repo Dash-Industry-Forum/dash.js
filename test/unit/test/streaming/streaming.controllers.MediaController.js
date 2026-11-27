@@ -343,7 +343,7 @@ describe('MediaController', function () {
             expect(currentTrack).to.be.true;
         });
 
-        it('should check current track', function () {
+        it('should not report a null track as current track', function () {
             let streamInfo = {
                 id: 'id'
             };
