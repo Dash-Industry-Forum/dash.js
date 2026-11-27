@@ -991,18 +991,20 @@ describe('AbrController', function () {
 
         it('should ignore an attempt to set a quality value if no streamInfo is provided', function () {
             const spy = sinon.spy();
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
+
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, null, dummyRepresentations[0]);
 
             expect(spy.notCalled).to.equal(true);
-            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
-            abrCtrl.setPlaybackQuality(Constants.VIDEO, null, dummyRepresentations[0]);
         });
 
         it('should ignore an attempt to set a quality value if no Representation is provided', function () {
             const spy = sinon.spy();
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
+
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, null);
 
             expect(spy.notCalled).to.equal(true);
-            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
-            abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, null);
         });
 
         it('should return the right Representations for maxBitrate values', function () {
