@@ -117,6 +117,7 @@
   },
   "dependencies": {
     "@svta/cml-608": "1.1.0",
+    "@svta/cml-c2pa": "1.7.0",
     "@svta/cml-cmcd": "2.8.4",
     "@svta/cml-cmsd": "1.1.2",
     "@svta/cml-dash": "1.0.10",

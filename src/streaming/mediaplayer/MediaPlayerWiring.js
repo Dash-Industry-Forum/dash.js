@@ -36,6 +36,7 @@ import Capabilities from '../utils/Capabilities.js';
 import CapabilitiesFilter from '../utils/CapabilitiesFilter.js';
 import CatchupController from '../controllers/CatchupController.js';
 import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
+import C2paController from '../c2pa/C2paController.js';
 import CmcdController from '../controllers/CmcdController.js';
 import CmsdModel from '../models/CmsdModel.js';
 import Constants from '../constants/Constants.js';
@@ -107,7 +108,8 @@ function MediaPlayerWiring() {
         cmsdModel,
         domStorage,
         segmentBaseController,
-        clientDataReportingController;
+        clientDataReportingController,
+        c2paController;
 
     function setConfig(config) {
         if (!config) {
@@ -138,6 +140,9 @@ function MediaPlayerWiring() {
         }
         if (config.clientDataReportingController) {
             clientDataReportingController = config.clientDataReportingController;
+        }
+        if (config.c2paController) {
+            c2paController = config.c2paController;
         }
         if (config.catchupController) {
             catchupController = config.catchupController;
@@ -252,6 +257,10 @@ function MediaPlayerWiring() {
 
         clientDataReportingController = ClientDataReportingController(context).getInstance();
 
+        if (!c2paController) {
+            c2paController = C2paController(context).getInstance();
+        }
+
         state.dashMetrics = DashMetrics(context).getInstance({
             settings: state.settings
         });
@@ -349,6 +358,9 @@ function MediaPlayerWiring() {
         state.textController.reset();
         cmcdController.reset();
         cmsdModel.reset();
+        if (c2paController) {
+            c2paController.resetForNewSource();
+        }
     }
 
     function createPlaybackControllers() {
@@ -468,6 +480,12 @@ function MediaPlayerWiring() {
             serviceDescriptionController
         })
 
+        c2paController.setConfig({
+            settings: state.settings,
+            eventBus,
+            customParametersModel: state.customParametersModel
+        });
+
         cmsdModel.setConfig({});
 
         // initializes controller
@@ -479,6 +497,7 @@ function MediaPlayerWiring() {
         gapController.initialize();
         catchupController.initialize();
         cmcdController.initialize(state.autoPlay);
+        c2paController.initialize();
         cmsdModel.initialize();
         state.contentSteeringController.initialize();
         segmentBaseController.initialize();
@@ -662,6 +681,12 @@ function MediaPlayerWiring() {
         if (metricsReportingController) {
             metricsReportingController.reset();
             metricsReportingController = null;
+        }
+        // Unlike the detect*() controllers, the C2PA controller is created once in
+        // createCoreControllers(), which does not run again after reset; keep the instance
+        // so createPlaybackControllers() can reconfigure it for the next source.
+        if (c2paController) {
+            c2paController.reset();
         }
         if (state.offlineController) {
             state.offlineController.reset();
