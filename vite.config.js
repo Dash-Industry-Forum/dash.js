@@ -29,13 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { defineConfig } from 'vite-plus';
+import { defineConfig, normalizePath } from 'vite-plus';
 import { playwright } from '@vitest/browser-playwright';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const unitTestDir = fileURLToPath(new URL('./test/unit/', import.meta.url));
+// Vite module ids use forward slashes on every platform, also on Windows
+const unitTestDir = normalizePath(fileURLToPath(new URL('./test/unit/', import.meta.url)));
 
 // The unit tests import chai 4 as 'chai', while Vitest imports its own chai 6 under the same name.
 // Vite pre-bundles both under the key 'chai', so only one of them can win, and a global alias would
