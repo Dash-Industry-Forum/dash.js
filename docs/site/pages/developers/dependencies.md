@@ -70,7 +70,6 @@ development. The dependencies are listed in `package.json` and are installed whe
 | `sinon`                                      | Standalone and test framework agnostic JavaScript test spies, stubs and mocks                           |
 | `stream-browserify`                          | The stream module from node core, for browsers                                                          |
 | `string-replace-loader`                      | Used to perform text replacements when building with webpack                                            |
-| `timers-browserify`                          | Adds support for the timers module to browserify                                                        |
 | `typescript`                                 | TypeScript adds optional types to JavaScript; used to verify `index.d.ts`                               |
 | `vite-plus`                                  | Vite+ toolchain; `vp test` runs the unit tests with Vitest (see docs/adr/0001-adopt-vite-plus-incrementally.md) |
 | `vitepress`                                  | Static site generator used to build this documentation site                                             |
