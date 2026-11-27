@@ -16,6 +16,7 @@ import ABRRulesCollection from '../../../../src/streaming/rules/abr/ABRRulesColl
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 
 import sinon from 'sinon';
+import { fakeXhr } from 'nise';
 import {expect} from 'chai';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
@@ -1404,6 +1405,16 @@ describe('MediaPlayer with context injected', () => {
     });
 
     describe('retrieveManifest', () => {
+        // retrieveManifest starts a real manifest request. Fake XHR keeps it from reaching the network and
+        // finishing at a random time after the test.
+        beforeEach(() => {
+            window.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest();
+        });
+
+        afterEach(() => {
+            window.XMLHttpRequest.restore();
+        });
+
         it('retrieveManifest callback should be invoked when INTERNAL_MANIFEST_LOADED is triggered', () => {
             player.initialize(videoElementMock, null, false);
 
