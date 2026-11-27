@@ -1132,6 +1132,12 @@ function TextTracks(config) {
         // Handle manual cues using active cues tracking
         const cueData = tracksCueData.get(track);
         if (cueData) {
+            // A dispatched cue is not necessarily in the native TextTrack (e.g. it was dispatched on track selection
+            // while paused), so the loop above does not exit it. Exit it before it is released from the tree.
+            Array.from(dispatchedCues)
+                .filter(cue => cueInRange(cue, start, end, strict) && _isCueInTree(cueData.allCues, cue))
+                .forEach(_exitDispatchedCue);
+
             // Release the deleted cues from the interval tree as well. Otherwise the cue window re-adds them to
             // the TextTrack, and on live streams every cue ever parsed stays in memory.
             if (isNaN(start) && isNaN(end)) {
@@ -1161,6 +1167,10 @@ function TextTracks(config) {
             // Remove from active cues array
             cueData.activeCues = currentActiveCues.filter(cue => !cuesToRemove.includes(cue));
         }
+    }
+
+    function _isCueInTree(tree, cue) {
+        return tree.findCuesInRange(cue.startTime - CUE_RANGE_EPSILON, cue.endTime + CUE_RANGE_EPSILON).includes(cue);
     }
 
     function deleteCuesFromTrackIdx(trackIdx, start, end) {

@@ -627,6 +627,33 @@ describe('TextTracks', function () {
             expect(enterEvents.length).to.equal(1);
         });
 
+        it('should dispatch CUE_EXIT when a dispatched cue that is not in the native TextTrack is deleted', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            // While paused the cue window is not refreshed, so the dispatched cue is not in the native TextTrack
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 4}]);
+            videoModelMock.time = 1;
+            textTracks.setCurrentTrackIdx(1);
+            expect(deuTrack.cues.length).to.equal(0);
+            expect(enterEvents.length).to.equal(1);
+
+            textTracks.deleteCuesFromTrackIdx(1, 0, 10);
+
+            expect(exitEvents).to.deep.equal(enterEvents);
+        });
+
+        it('should not dispatch CUE_EXIT for dispatched cues outside of the deleted range', function () {
+            addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 4}]);
+            videoModelMock.time = 1;
+            textTracks.setCurrentTrackIdx(1);
+
+            textTracks.deleteCuesFromTrackIdx(1, 10, 20);
+
+            expect(exitEvents).to.be.empty;
+        });
+
         it('should not dispatch CUE_ENTER when a track is selected at the end time of its cue', function () {
             addTwoTracks();
 
