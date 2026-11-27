@@ -59,8 +59,15 @@ function ExtUrlQueryInfoController() {
     }
 
     function _isSameOriginOnly(property) {
-        const sameOriginOnly = property?.ExtUrlQueryInfo?.sameOriginOnly;
-        return sameOriginOnly === true || sameOriginOnly === 'true';
+        return _isXsBooleanTrue(property?.ExtUrlQueryInfo?.sameOriginOnly);
+    }
+
+    // xs:boolean allows "true" and "1". The parser converts "1" to the number 1.
+    function _isXsBooleanTrue(value) {
+        if (typeof value === 'string') {
+            value = value.trim();
+        }
+        return value === true || value === 'true' || value === 1 || value === '1';
     }
 
     function _getDescriptorTypeFromManifestObject(manifestObject, mpdElement) {
@@ -94,7 +101,7 @@ function ExtUrlQueryInfoController() {
         } else {
             initialQueryString = defaultInitialString;
         }
-        if (queryInfo?.useMPDUrlQuery === 'true' && mpdUrlQuery) {
+        if (_isXsBooleanTrue(queryInfo?.useMPDUrlQuery) && mpdUrlQuery) {
             initialQueryString = initialQueryString ? initialQueryString + '&' + mpdUrlQuery : mpdUrlQuery;
         }
         dst.initialQueryString = initialQueryString;

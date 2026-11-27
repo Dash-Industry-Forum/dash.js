@@ -664,6 +664,36 @@ describe('ExtUrlQueryInfoController', () => {
             });
         });
 
+        [1, '1', ' true '].forEach((value) => {
+            it(`should not return parameters to another origin when sameOriginOnly is ${JSON.stringify(value)}`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createManifest('https://other.com/manifest.mpd', value));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.be.undefined;
+            });
+        });
+
+        [0, '0'].forEach((value) => {
+            it(`should return parameters to another origin when sameOriginOnly is ${JSON.stringify(value)}`, () => {
+                extUrlQueryInfoController.createFinalQueryStrings(createManifest('https://other.com/manifest.mpd', value));
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([{key: 'token', value: 'abc'}]);
+            });
+        });
+
+        [1, '1'].forEach((value) => {
+            it(`should append the MPD url query when useMPDUrlQuery is ${JSON.stringify(value)}`, () => {
+                const manifest = createManifest('https://example.com/manifest.mpd?param=value');
+                const representation = manifest.Period[0].AdaptationSet[0].Representation[0];
+                representation.SupplementalProperty[0].ExtUrlQueryInfo.useMPDUrlQuery = value;
+                extUrlQueryInfoController.createFinalQueryStrings(manifest);
+
+                expect(extUrlQueryInfoController.getFinalQueryString(segmentRequest)).to.deep.equal([
+                    {key: 'token', value: 'abc'},
+                    {key: 'param', value: 'value'}
+                ]);
+            });
+        });
+
         it('should return parameters when sameOriginOnly is "false" and origin does not match', () => {
             const manifest = createManifest('https://other.com/manifest.mpd', 'false');
             extUrlQueryInfoController.createFinalQueryStrings(manifest);
