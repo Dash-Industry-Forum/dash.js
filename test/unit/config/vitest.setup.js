@@ -44,6 +44,9 @@ Events.extend(MediaPlayerEvents);
 //   test context) are passed through unchanged.
 const DONE_PARAMETER = /^(?:async\s+)?(?:function\b[^(]*\(\s*done\b|\(\s*done\b|done\s*=>)/;
 
+// Captured before any test can install fake timers
+const realSetTimeout = globalThis.setTimeout.bind(globalThis);
+
 function usesDoneCallback(fn) {
     return typeof fn === 'function' && fn.length > 0 && DONE_PARAMETER.test(fn.toString());
 }
@@ -69,8 +72,10 @@ function withDoneCallback(fn) {
                 if (doneCalls > 1) {
                     const error = new Error('done() called multiple times');
                     if (settled) {
-                        // The test already finished; report as an unhandled error, like Mocha does
-                        setTimeout(() => {
+                        // The test already finished; report as an unhandled error, like Mocha does.
+                        // Use the real setTimeout: under sinon's fake timers the error would be lost
+                        // or thrown during a later test's clock.tick().
+                        realSetTimeout(() => {
                             throw error;
                         });
                     } else {
@@ -112,15 +117,17 @@ function wrapTestArguments([name, ...rest]) {
 
 // A Proxy keeps every Vitest modifier (each, for, skipIf, runIf, extend, todo, concurrent, fails,
 // ...) working: they are non-enumerable getters that need the original chainable context.
-// Only the call itself and the only/skip variants are wrapped.
+// Every modifier returns another test function (it.only, it.skipIf(c), it.concurrent.fails, ...),
+// so each function it returns is wrapped as well; Function.prototype methods are left alone.
 function wrapTest(original) {
     return new Proxy(original, {
         apply(target, thisArg, args) {
-            return Reflect.apply(target, thisArg, wrapTestArguments(args));
+            const result = Reflect.apply(target, thisArg, wrapTestArguments(args));
+            return typeof result === 'function' ? wrapTest(result) : result;
         },
         get(target, property) {
             const value = Reflect.get(target, property);
-            return property === 'only' || property === 'skip' ? wrapTest(value) : value;
+            return typeof value === 'function' && !(property in Function.prototype) ? wrapTest(value) : value;
         }
     });
 }
