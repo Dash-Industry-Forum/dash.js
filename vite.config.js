@@ -98,6 +98,8 @@ export default defineConfig({
             reporter: [
                 'html',
                 ['lcovonly', { file: 'lcov.info' }],
+                // Statement spans for the changed-lines check in coverage-summary.mjs
+                ['json', { file: 'coverage-final.json' }],
                 ['json-summary', { file: 'coverage-summary.json' }],
                 'text-summary'
             ],

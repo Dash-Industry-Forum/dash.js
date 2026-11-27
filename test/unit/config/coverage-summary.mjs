@@ -76,23 +76,80 @@ function formatPct(covered, total) {
 }
 
 /**
- * @return {Map<string, Map<number, number>>} repo relative file -> (line -> hit count)
+ * Statement spans from the istanbul JSON report (coverage-final.json). lcov.info is not enough: it
+ * lists a statement only on its first line, so a change to a later line of a multiline statement
+ * would look like a change without executable code.
+ *
+ * @return {Map<string, {start: number, end: number, hits: number}[]>} repo relative file -> statements
  */
-function parseLcov(file) {
+function parseStatements(file) {
     const result = new Map();
-    let lines = null;
+    Object.entries(JSON.parse(readFileSync(file, 'utf8'))).forEach(([key, fileCoverage]) => {
+        const statements = Object.entries(fileCoverage.statementMap).map(([id, { start, end }]) => ({
+            start: start.line,
+            end: end.line,
+            hits: fileCoverage.s[id]
+        }));
+        result.set(toRepoPath(fileCoverage.path || key), statements);
+    });
+    return result;
+}
 
-    readFileSync(file, 'utf8').split('\n').forEach((row) => {
-        if (row.startsWith('SF:')) {
-            lines = new Map();
-            result.set(toRepoPath(row.slice(3).trim()), lines);
-        } else if (row.startsWith('DA:') && lines) {
-            const [line, hits] = row.slice(3).split(',');
-            lines.set(Number(line), Number(hits));
+/**
+ * Line numbers (1-based) that carry no code of their own: blank lines, comments, and lines with only
+ * closing brackets. A simple scan: it does not look into strings, which is good enough for src/.
+ */
+function getNoCodeLines(source) {
+    const result = new Set();
+    let inBlockComment = false;
+    source.forEach((text, index) => {
+        let code = '';
+        let rest = text;
+        while (rest.length > 0) {
+            if (inBlockComment) {
+                const end = rest.indexOf('*/');
+                if (end === -1) {
+                    rest = '';
+                } else {
+                    inBlockComment = false;
+                    rest = rest.slice(end + 2);
+                }
+            } else {
+                const start = rest.search(/\/\*|\/\//);
+                if (start === -1) {
+                    code += rest;
+                    rest = '';
+                } else {
+                    code += rest.slice(0, start);
+                    inBlockComment = rest.startsWith('/*', start);
+                    rest = inBlockComment ? rest.slice(start + 2) : '';
+                }
+            }
+        }
+        if (/^[\s)\]};,]*$/.test(code)) {
+            result.add(index + 1);
         }
     });
-
     return result;
+}
+
+/**
+ * Hit count of a source line, or undefined when the line has no executable code. A line on which a
+ * statement starts gets the highest count of these statements, like lcov. Any other line with code
+ * gets the count of the innermost statement it is part of.
+ */
+function getLineHits(statements, line, noCodeLines) {
+    const starting = statements.filter((statement) => statement.start === line);
+    if (starting.length > 0) {
+        return Math.max(...starting.map((statement) => statement.hits));
+    }
+    if (noCodeLines.has(line)) {
+        return undefined;
+    }
+    const innermost = statements
+        .filter((statement) => statement.start < line && statement.end >= line)
+        .sort((a, b) => (a.end - a.start) - (b.end - b.start))[0];
+    return innermost ? innermost.hits : undefined;
 }
 
 function getBaseRef() {
@@ -181,7 +238,7 @@ function renderTotals(total) {
     return ['| Metric | Coverage | Covered / Total |', '| --- | ---: | ---: |', ...rows];
 }
 
-function renderPatch(baseRef, lcov) {
+function renderPatch(baseRef, statementsByFile) {
     const out = ['', '### Changed lines'];
     const changed = getChangedLines(baseRef);
     const rows = [];
@@ -189,18 +246,26 @@ function renderPatch(baseRef, lcov) {
     let coveredTotal = 0;
 
     [...changed.keys()].sort().forEach((file) => {
-        const fileCoverage = lcov.get(file);
-        if (!fileCoverage) {
+        const statements = statementsByFile.get(file);
+        if (!statements) {
             // The report includes every source file, also the ones no test loads. A file that is
             // missing has no executable code (only declarations, constants or JSDoc).
             return;
         }
-        const executable = changed.get(file).lines.filter((line) => fileCoverage.has(line));
+        const noCodeLines = getNoCodeLines(readFileSync(path.join(REPO_ROOT, file), 'utf8').split('\n'));
+        const hits = new Map();
+        changed.get(file).lines.forEach((line) => {
+            const count = getLineHits(statements, line, noCodeLines);
+            if (count !== undefined) {
+                hits.set(line, count);
+            }
+        });
+        const executable = [...hits.keys()];
         if (executable.length === 0) {
             // Only comments, whitespace or declarations changed
             return;
         }
-        const uncovered = executable.filter((line) => fileCoverage.get(line) === 0);
+        const uncovered = executable.filter((line) => hits.get(line) === 0);
         const covered = executable.length - uncovered.length;
         executableTotal += executable.length;
         coveredTotal += covered;
@@ -254,10 +319,10 @@ function renderUnloaded(summary) {
 
 function render() {
     const summaryFile = path.join(COVERAGE_DIR, 'coverage-summary.json');
-    const lcovFile = path.join(COVERAGE_DIR, 'lcov.info');
+    const statementsFile = path.join(COVERAGE_DIR, 'coverage-final.json');
     const out = ['## Unit test coverage', ''];
 
-    if (!existsSync(summaryFile) || !existsSync(lcovFile)) {
+    if (!existsSync(summaryFile) || !existsSync(statementsFile)) {
         out.push(`No coverage report found in \`${toRepoPath(COVERAGE_DIR)}\`. The unit tests probably did not complete.`);
         return out;
     }
@@ -268,7 +333,7 @@ function render() {
     const baseRef = getBaseRef();
     if (baseRef) {
         try {
-            out.push(...renderPatch(baseRef, parseLcov(lcovFile)));
+            out.push(...renderPatch(baseRef, parseStatements(statementsFile)));
         } catch (e) {
             gate.failure = `coverage of changed lines is unavailable: ${String(e.message).split('\n')[0]}`;
             out.push('', `Coverage of changed lines is unavailable: ${String(e.message).split('\n')[0]}`);
