@@ -407,7 +407,7 @@ describe('EventController', function () {
             eventController.start();
         });
 
-        it('should trigger added inline events', function (done) {
+        it('should trigger added inband events in on-receive and on-start mode', function (done) {
             const schemeIdUri = 'schemeIdUri';
             const periodId = 'periodId';
             let events = [{

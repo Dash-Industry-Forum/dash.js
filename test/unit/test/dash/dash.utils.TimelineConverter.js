@@ -44,9 +44,9 @@ describe('TimelineConverter', function () {
             .to.be.equal(expectedValue);
     });
 
-    describe('should calcAvailabilityStartTimeFromPresentationTime() for a segment and ', () => {
+    describe('should calcAvailabilityStartTimeFromPresentationTime() for a segment and', () => {
 
-        describe('a static MPD and ', () => {
+        describe('a static MPD and', () => {
 
             before(() => {
                 settings.update({
@@ -114,7 +114,7 @@ describe('TimelineConverter', function () {
 
         });
 
-        describe('a dynamic MPD and ', () => {
+        describe('a dynamic MPD and', () => {
 
             before(() => {
                 settings.update({
@@ -131,7 +131,7 @@ describe('TimelineConverter', function () {
             });
 
 
-            describe('SegmentTemplate and ', function () {
+            describe('SegmentTemplate and', function () {
 
                 it('an init segment', function () {
                     representation.adaptation.period.mpd.availabilityStartTime = new Date(
@@ -202,9 +202,9 @@ describe('TimelineConverter', function () {
         });
     });
 
-    describe('should calcAvailabilityEndTimeFromPresentationTime() for a segment and ', () => {
+    describe('should calcAvailabilityEndTimeFromPresentationTime() for a segment and', () => {
 
-        describe('a static MPD and ', () => {
+        describe('a static MPD and', () => {
 
             before(() => {
                 settings.update({
@@ -269,7 +269,7 @@ describe('TimelineConverter', function () {
 
         });
 
-        describe('a dynamic MPD and ', () => {
+        describe('a dynamic MPD and', () => {
 
             before(() => {
                 settings.update({
@@ -282,7 +282,7 @@ describe('TimelineConverter', function () {
             });
 
 
-            describe('SegmentTemplate and ', function () {
+            describe('SegmentTemplate and', function () {
 
                 it('an init segment', function () {
                     representation.adaptation.period.mpd.availabilityStartTime = new Date(

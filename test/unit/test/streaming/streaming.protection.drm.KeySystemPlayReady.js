@@ -32,15 +32,15 @@ describe('KeySystemPlayready', function () {
             expect(KeySystemPlayReady).to.exist;
         });
 
-        it('should throw an exception when getting an instance while the config attribute has not been set properly', function () {
+        it('should throw an exception when getCDMData is called while the config attribute has not been set properly', function () {
             expect(keySystem.getCDMData.bind(keySystem)).to.throw('Missing config parameter(s)');
         });
 
-        it('should throw an exception when getting an instance while the config attribute has not been set properly', function () {
+        it('should throw an exception when getInitData is called while the config attribute has not been set properly', function () {
             expect(keySystem.getInitData.bind(keySystem)).to.throw('Missing config parameter(s)');
         });
 
-        it('should throw an exception when getting an instance while the config attribute has not been set properly', function () {
+        it('should throw an exception when getLicenseRequestFromMessage is called while the config attribute has not been set properly', function () {
             expect(keySystem.getLicenseRequestFromMessage.bind(keySystem)).to.throw('Missing config parameter(s)');
         });
     });

@@ -229,7 +229,7 @@ describe('ThumbnailController', function () {
             thumbnailController.reset();
         });
 
-        it('should return a thumbnail when using multiple rows sprites ', function () {
+        it('should return a thumbnail when using multiple rows sprites', function () {
             thumbnailController.provide(0, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(0);

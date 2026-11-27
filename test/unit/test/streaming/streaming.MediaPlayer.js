@@ -1036,9 +1036,6 @@ describe('MediaPlayer', function () {
                 expect(player.getCurrentLiveLatency).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
         });
-    });
-
-    describe('Stream and Track Management Functions', function () {
 
         describe('When it is initialized', function () {
             beforeEach(function () {

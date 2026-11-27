@@ -24,13 +24,6 @@ describe('TextTracks', function () {
     let videoModelMock;
 
     beforeEach(function () {
-    });
-
-    afterEach(function () {
-        settings.reset();
-    });
-
-    beforeEach(function () {
         videoModelMock = new VideoModelMock();
         textTracks = TextTracks(context).create({
             videoModel: videoModelMock,
@@ -52,6 +45,7 @@ describe('TextTracks', function () {
 
     afterEach(function () {
         textTracks.deleteAllTextTracks();
+        settings.reset();
     });
 
     describe('Method getTrackIdxForId', function () {

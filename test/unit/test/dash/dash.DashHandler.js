@@ -151,7 +151,7 @@ describe('DashHandler', function () {
             segRequestStub.restore();
         });
 
-        it('it returns a segment request', () => {
+        it('returns a segment request', () => {
             const mediaSegment = dashHandler.getNextSegmentRequest({}, {
                 segmentInfoType: DashConstants.SEGMENT_TEMPLATE,
                 adaptation: {index: 1}

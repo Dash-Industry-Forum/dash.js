@@ -10,20 +10,11 @@ describe('Debug', function () {
         for (const method of ['log', 'debug', 'info', 'warn', 'error']) {
             vi.spyOn(console, method).mockImplementation(() => {});
         }
-    });
-
-    after(function () {
-    });
-
-    beforeEach(function () {
         // Debug binds the console functions when it is created, so every test needs
         // a fresh instance that picks up the spies of that test.
         context = {};
         settings = Settings(context).getInstance();
         debug = Debug(context).getInstance({settings: settings});
-    });
-
-    afterEach(function () {
     });
 
     it('Default values', function () {

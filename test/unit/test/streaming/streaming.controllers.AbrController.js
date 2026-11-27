@@ -15,7 +15,7 @@ import CmsdModel from '../../../../src/streaming/models/CmsdModel.js';
 import ServiceDescriptionController from '../../../../src/dash/controllers/ServiceDescriptionController.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
-import {expect, assert} from 'chai';
+import {expect} from 'chai';
 import EventBus from '../../../../src/core/EventBus.js';
 import FactoryMaker from '../../../../src/core/FactoryMaker.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
@@ -274,7 +274,7 @@ describe('AbrController', function () {
             expect(optimalRepresentationForBitrate.id).to.be.equal(3);
         })
 
-        it('Should return the Representation with the highest bandwidth per second for same pixels per second and same MediaInfo ', function () {
+        it('Should return the Representation with the highest bandwidth per second for same pixels per second and same MediaInfo', function () {
             const mediaInfo = streamProcessor.getMediaInfo();
             adapterMock.getVoRepresentations = () => {
                 return [
@@ -339,7 +339,7 @@ describe('AbrController', function () {
         })
 
 
-        it('Should return the Representation with the lowest bits per pixel for same pixels per second and different MediaInfo ', function () {
+        it('Should return the Representation with the lowest bits per pixel for same pixels per second and different MediaInfo', function () {
             const mediaInfo = streamProcessor.getMediaInfo();
             adapterMock.getVoRepresentations = () => {
                 return [
@@ -373,7 +373,7 @@ describe('AbrController', function () {
             expect(optimalRepresentationForBitrate.id).to.be.equal(1);
         })
 
-        it('Should return the Representation with the highest bandwidth when having the same bits per pixel and same pixels per second and different MediaInfo ', function () {
+        it('Should return the Representation with the highest bandwidth when having the same bits per pixel and same pixels per second and different MediaInfo', function () {
             const mediaInfo = streamProcessor.getMediaInfo();
             adapterMock.getVoRepresentations = () => {
                 return [
@@ -992,7 +992,7 @@ describe('AbrController', function () {
         it('should ignore an attempt to set a quality value if no streamInfo is provided', function () {
             const spy = sinon.spy();
 
-            assert.equal(spy.notCalled, true);
+            expect(spy.notCalled).to.equal(true);
             eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
             abrCtrl.setPlaybackQuality(Constants.VIDEO, null, dummyRepresentations[0]);
         });
@@ -1000,7 +1000,7 @@ describe('AbrController', function () {
         it('should ignore an attempt to set a quality value if no Representation is provided', function () {
             const spy = sinon.spy();
 
-            assert.equal(spy.notCalled, true);
+            expect(spy.notCalled).to.equal(true);
             eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
             abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, null);
         });

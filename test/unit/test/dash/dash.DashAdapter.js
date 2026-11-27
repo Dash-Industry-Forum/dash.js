@@ -863,7 +863,7 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].supplementalProperties[1].value).equals('value2');
                 });
 
-                it('supplemental properties should be filled if set on all representations', function () {
+                it('supplemental properties should not be filled if set on only some representations', function () {
                     const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
                         id: 'defaultId_0',
                         index: 0
