@@ -35,8 +35,8 @@ jobs:
             -   name: Install Playwright browsers
                 run: npx playwright install --with-deps chromium firefox
 
-            # The pack in the build job runs with --ignore-scripts, so the prepack hook (and
-            # with it the prebuild -> ci:verify chain) never runs in this workflow. Gate explicitly.
+            # npm run build does not run the tests, and the pack in the build job runs with
+            # --ignore-scripts. Gate explicitly.
             -   name: Run unit tests and lint
                 run: npm run ci:verify
 
