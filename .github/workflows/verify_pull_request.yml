@@ -37,14 +37,13 @@ jobs:
                     install-browsers: 'true'
             -   name: Validate and run unit tests
                 run: npm run ci:verify
-            # Coverage is measured in Chromium only.
+            # Coverage is measured in Chromium only. Fails when total coverage drops below the floor in vite.config.js.
             -   name: Unit test coverage
                 run: npm run test:coverage
-            # Informational only: neither step can fail the job.
+            # Writes the job summary. Fails when less than 80% of the changed executable lines in src/ are covered.
             -   name: Coverage summary
                 if: ${{ !cancelled() }}
-                continue-on-error: true
-                run: node test/unit/config/coverage-summary.mjs
+                run: node test/unit/config/coverage-summary.mjs --min-changed=80
             -   name: Upload coverage report
                 if: ${{ !cancelled() }}
                 continue-on-error: true

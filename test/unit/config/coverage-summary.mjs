@@ -34,9 +34,10 @@
  * overall totals, coverage of the lines changed against a base commit, and the source
  * files no test covers at all. Written to $GITHUB_STEP_SUMMARY when set, to stdout otherwise.
  *
- * Purely informational: always exits with code 0.
+ * Exits with code 0, unless --min-changed=<percent> is given: then it exits with code 1 when
+ * less than that share of the changed executable lines is covered, or when no report exists.
  *
- * Usage: node test/unit/config/coverage-summary.mjs [coverageDir]
+ * Usage: node test/unit/config/coverage-summary.mjs [--min-changed=<percent>] [coverageDir]
  *   COVERAGE_BASE  git ref to diff against. Defaults to HEAD^1 when HEAD is a merge
  *                  commit (what actions/checkout provides on pull_request events).
  */
@@ -46,7 +47,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const COVERAGE_DIR = path.resolve(REPO_ROOT, process.argv[2] || 'test/unit/results/coverage');
+const args = process.argv.slice(2);
+const minChangedArg = args.find((arg) => arg.startsWith('--min-changed='));
+const MIN_CHANGED_PCT = minChangedArg ? Number(minChangedArg.split('=')[1]) : null;
+const COVERAGE_DIR = path.resolve(REPO_ROOT, args.find((arg) => !arg.startsWith('--')) || 'test/unit/results/coverage');
+
+// Set by render(); read by the --min-changed check
+const gate = { reportFound: false, changedCovered: 0, changedTotal: 0, changedError: null };
 const SOURCE_DIR = 'src';
 const MAX_UNCOVERED_RANGES = 12;
 
@@ -200,6 +207,8 @@ function renderPatch(baseRef, lcov) {
         return out;
     }
 
+    gate.changedCovered = coveredTotal;
+    gate.changedTotal = executableTotal;
     out.push(
         '',
         `**${coveredTotal} of ${executableTotal}** changed executable lines are covered` +
@@ -245,6 +254,7 @@ function render() {
         return out;
     }
 
+    gate.reportFound = true;
     const summary = JSON.parse(readFileSync(summaryFile, 'utf8'));
     out.push(...renderTotals(summary.total));
 
@@ -253,7 +263,8 @@ function render() {
         try {
             out.push(...renderPatch(baseRef, parseLcov(lcovFile)));
         } catch (e) {
-            out.push('', `Coverage of changed lines is unavailable: ${String(e.message).split('\n')[0]}`);
+            gate.changedError = String(e.message).split('\n')[0];
+            out.push('', `Coverage of changed lines is unavailable: ${gate.changedError}`);
         }
     }
 
@@ -272,4 +283,30 @@ if (process.env.GITHUB_STEP_SUMMARY) {
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${markdown}\n`);
 } else {
     console.log(markdown);
+}
+
+function checkChangedLines() {
+    if (!gate.reportFound) {
+        return 'no coverage report found';
+    }
+    if (gate.changedError) {
+        return `coverage of changed lines is unavailable: ${gate.changedError}`;
+    }
+    if (gate.changedTotal === 0) {
+        return null;
+    }
+    const pct = (gate.changedCovered / gate.changedTotal) * 100;
+    if (pct < MIN_CHANGED_PCT) {
+        return `${gate.changedCovered} of ${gate.changedTotal} changed executable lines are covered ` +
+            `(${pct.toFixed(2)}%), at least ${MIN_CHANGED_PCT}% are required`;
+    }
+    return null;
+}
+
+if (MIN_CHANGED_PCT !== null) {
+    const failure = checkChangedLines();
+    if (failure) {
+        console.error(`Changed lines coverage check failed: ${failure}`);
+        process.exitCode = 1;
+    }
 }
