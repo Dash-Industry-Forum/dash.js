@@ -206,7 +206,8 @@ function HTTPLoader(cfg) {
                 progressTimeout = setTimeout(function () {
                     // No more progress => abort request and treat as an error
                     logger.warn('Abort request ' + commonMediaRequest.url + ' due to progress timeout');
-                    // Suppress onabort on all loader paths first so abort() below doesn't also trigger _onRequestEnd via _onabort
+                    // Suppress onabort on all loader paths first so abort() 
+                    // below doesn't also trigger _onRequestEnd via _onabort
                     if (commonMediaRequest.customData.xhr) {
                         commonMediaRequest.customData.xhr.onabort = null;
                     }
