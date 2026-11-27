@@ -28,11 +28,12 @@ describe('HTTPLoader', function () {
         cmcdController,
         requests;
 
-    function _createHttpLoader() {
+    function _createHttpLoader(boxParser) {
         return HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModelMock,
+            boxParser: boxParser,
             errors: Errors
         });
     }
@@ -201,6 +202,222 @@ describe('HTTPLoader', function () {
         } finally {
             customParametersModel.removeRequestInterceptor(requestInterceptor);
             customParametersModel.removeResponseInterceptor(responseInterceptor);
+        }
+    });
+
+    it('should abort and retry the intercepted replacement request on progress timeout', async () => {
+        const customParametersModel = CustomParametersModel(context).getInstance();
+        let originalRequest;
+        let replacementRequest;
+        let resolveRetry;
+        const retryPromise = new Promise((resolve) => {
+            resolveRetry = resolve;
+        });
+
+        const requestInterceptor = sinon.spy((request) => {
+            if (!originalRequest) {
+                originalRequest = request;
+                replacementRequest = Object.assign({}, request, { customData: Object.assign({}, request.customData) });
+                return Promise.resolve(replacementRequest);
+            }
+            resolveRetry();
+            return Promise.resolve(request);
+        });
+        customParametersModel.addRequestInterceptor(requestInterceptor);
+        settings.update({ streaming: { fragmentRequestProgressTimeout: 10 } });
+        mediaPlayerModelMock.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, 1);
+        mediaPlayerModelMock.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, 0);
+
+        try {
+            httpLoader = _createHttpLoader();
+            const callbacks = _createCallbacks();
+            const abortCallback = sinon.spy();
+
+            await httpLoader.load({
+                request: { type: HTTPRequest.MEDIA_SEGMENT_TYPE },
+                success: callbacks.success,
+                complete: callbacks.complete,
+                error: callbacks.error,
+                abort: abortCallback
+            });
+
+            expect(originalRequest.customData.abort).to.be.undefined;
+            expect(replacementRequest.customData.abort).to.be.a('function');
+            const abortSpy = sinon.spy(replacementRequest.customData, 'abort');
+
+            replacementRequest.customData.onprogress({ lengthComputable: true, loaded: 5, total: 100 });
+            await retryPromise;
+
+            sinon.assert.calledOnce(abortSpy);
+            sinon.assert.notCalled(abortCallback);
+            sinon.assert.calledTwice(requestInterceptor);
+            expect(replacementRequest.customData.onabort).to.be.null;
+            expect(replacementRequest.customData.xhr.onabort).to.be.null;
+        } finally {
+            customParametersModel.removeRequestInterceptor(requestInterceptor);
+        }
+    });
+
+    [
+        {
+            title: 'AbortController',
+            disableAbortController: false
+        },
+        {
+            title: 'reader cancellation without AbortController',
+            disableAbortController: true
+        }
+    ].forEach(({title, disableAbortController}) => {
+        it(`should abort and retry an intercepted Fetch request on progress timeout using ${title}`, async () => {
+            const customParametersModel = CustomParametersModel(context).getInstance();
+            const sandbox = sinon.createSandbox();
+            let originalRequest;
+            let replacementRequest;
+            let resolveRetry;
+            let resolveRetryFetch;
+            let resolveFirstProgress;
+            let resolveComplete;
+            const retryPromise = new Promise((resolve) => {
+                resolveRetry = resolve;
+            });
+            const retryFetchPromise = new Promise((resolve) => {
+                resolveRetryFetch = resolve;
+            });
+            const firstProgressPromise = new Promise((resolve) => {
+                resolveFirstProgress = resolve;
+            });
+            const completePromise = new Promise((resolve) => {
+                resolveComplete = resolve;
+            });
+            const callbacks = _createCallbacks({
+                complete: sinon.spy(() => resolveComplete())
+            });
+            const abortCallback = sinon.spy();
+
+            const requestInterceptor = sinon.spy((request) => {
+                if (!originalRequest) {
+                    originalRequest = request;
+                    replacementRequest = Object.assign({}, request, { 
+                        customData: Object.assign({}, request.customData) 
+                    });
+                    return Promise.resolve(replacementRequest);
+                }
+                resolveRetry();
+                return Promise.resolve(request);
+            });
+            customParametersModel.addRequestInterceptor(requestInterceptor);
+
+            if (disableAbortController) {
+                sandbox.stub(window, 'AbortController').value(undefined);
+            }
+
+            const pendingResponse = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(new Uint8Array([1, 2, 3]));
+                }
+            });
+            const completedResponse = new ReadableStream({
+                start(controller) {
+                    controller.close();
+                }
+            });
+            const fetchStub = sandbox.stub(window, 'fetch');
+            fetchStub.onFirstCall().resolves(new Response(pendingResponse));
+            fetchStub.onSecondCall().callsFake(() => {
+                resolveRetryFetch();
+                return Promise.resolve(new Response(completedResponse));
+            });
+
+            settings.update({ streaming: { fragmentRequestProgressTimeout: 25 } });
+            mediaPlayerModelMock.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, 1);
+            mediaPlayerModelMock.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, 0);
+
+            try {
+                httpLoader = _createHttpLoader({
+                    findLastTopIsoBoxCompleted: sinon.stub().returns({
+                        found: false,
+                        startOffsetOfLastCompletedBox: 0,
+                        sizeOfLastCompletedBox: 0
+                    })
+                });
+
+                await httpLoader.load({
+                    request: {
+                        url: 'https://example.com/segment.m4s',
+                        method: 'GET',
+                        responseType: 'arraybuffer',
+                        type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                        availabilityTimeComplete: false
+                    },
+                    success: callbacks.success,
+                    complete: callbacks.complete,
+                    error: callbacks.error,
+                    abort: abortCallback,
+                    progress: resolveFirstProgress
+                });
+
+                await firstProgressPromise;
+
+                expect(originalRequest.customData.abort).to.be.undefined;
+                expect(replacementRequest.customData.abort).to.be.a('function');
+
+                const abortSpy = sinon.spy(replacementRequest.customData, 'abort');
+                let cancellationSpy;
+                if (disableAbortController) {
+                    cancellationSpy = sinon.spy(replacementRequest.customData.reader, 'cancel');
+                } else {
+                    cancellationSpy = sinon.spy(replacementRequest.customData.abortController, 'abort');
+                }
+
+                await retryPromise;
+                await retryFetchPromise;
+                await completePromise;
+
+                sinon.assert.calledOnce(abortSpy);
+                sinon.assert.calledOnce(cancellationSpy);
+                expect(replacementRequest.customData.cancelled).to.equal(true);
+                sinon.assert.notCalled(abortCallback);
+                sinon.assert.calledTwice(requestInterceptor);
+                sinon.assert.calledTwice(fetchStub);
+            } finally {
+                customParametersModel.removeRequestInterceptor(requestInterceptor);
+                sandbox.restore();
+            }
+        });
+    });
+
+    it('should abort the intercepted replacement request when abort() is called', async () => {
+        const customParametersModel = CustomParametersModel(context).getInstance();
+        let originalRequest;
+        let replacementRequest;
+
+        const requestInterceptor = (request) => {
+            originalRequest = request;
+            replacementRequest = Object.assign({}, request, { customData: Object.assign({}, request.customData) });
+            return Promise.resolve(replacementRequest);
+        };
+        customParametersModel.addRequestInterceptor(requestInterceptor);
+
+        try {
+            httpLoader = _createHttpLoader();
+            const callbacks = _createCallbacks();
+
+            await httpLoader.load({
+                request: { type: HTTPRequest.MEDIA_SEGMENT_TYPE },
+                success: callbacks.success,
+                complete: callbacks.complete,
+                error: callbacks.error
+            });
+
+            expect(originalRequest.customData.abort).to.be.undefined;
+            const abortSpy = sinon.spy(replacementRequest.customData, 'abort');
+
+            httpLoader.abort();
+
+            sinon.assert.calledOnce(abortSpy);
+            expect(requests[0].aborted).to.be.true;
+        } finally {
+            customParametersModel.removeRequestInterceptor(requestInterceptor);
         }
     });
 
