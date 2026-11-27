@@ -46,16 +46,41 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const args = process.argv.slice(2);
-const minChangedArg = args.find((arg) => arg.startsWith('--min-changed='));
-const MIN_CHANGED_PCT = minChangedArg ? Number(minChangedArg.split('=')[1]) : null;
-if (MIN_CHANGED_PCT !== null && !(MIN_CHANGED_PCT >= 0 && MIN_CHANGED_PCT <= 100)) {
-    console.error(`Invalid ${minChangedArg}: expected a percentage between 0 and 100`);
+const USAGE = 'Usage: node test/unit/config/coverage-summary.mjs [--min-changed=<percent>] [coverageDir]';
+
+// Rejects unknown options and a missing or malformed threshold, so a typo cannot turn the check off
+function parseArguments() {
+    let parsed;
+    try {
+        parsed = parseArgs({ options: { 'min-changed': { type: 'string' } }, allowPositionals: true });
+    } catch (e) {
+        return { error: e.message };
+    }
+    const { values, positionals } = parsed;
+    if (positionals.length > 1) {
+        return { error: `Unexpected arguments: ${positionals.join(' ')}` };
+    }
+    const value = values['min-changed'];
+    let minChanged = null;
+    if (value !== undefined) {
+        minChanged = /^\d+(\.\d+)?$/.test(value) ? Number(value) : NaN;
+        if (!(minChanged >= 0 && minChanged <= 100)) {
+            return { error: `Invalid --min-changed value "${value}": expected a percentage between 0 and 100` };
+        }
+    }
+    return { minChanged, coverageDir: positionals[0] };
+}
+
+const cliArguments = parseArguments();
+if (cliArguments.error) {
+    console.error(`${cliArguments.error}\n${USAGE}`);
     process.exit(2);
 }
-const COVERAGE_DIR = path.resolve(REPO_ROOT, args.find((arg) => !arg.startsWith('--')) || 'test/unit/results/coverage');
+const MIN_CHANGED_PCT = cliArguments.minChanged;
+const COVERAGE_DIR = path.resolve(REPO_ROOT, cliArguments.coverageDir || 'test/unit/results/coverage');
 
 // Set by render(); read by the --min-changed check. changedComputed is only set once the coverage of
 // the changed lines is known, so every failure on the way leaves the check failing.
