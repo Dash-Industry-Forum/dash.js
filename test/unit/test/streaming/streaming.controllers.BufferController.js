@@ -17,6 +17,7 @@ import TextControllerMock from '../../mocks/TextControllerMock.js';
 import RepresentationControllerMock from '../../mocks/RepresentationControllerMock.js';
 
 import chai from 'chai';
+import sinon from 'sinon';
 
 const expect = chai.expect;
 
@@ -536,6 +537,94 @@ describe('BufferController', function () {
             let range = bufferController.getRangeAt(10);
             expect(range.start).to.equal(10.1);
             expect(range.end).to.equal(11);
+        });
+    });
+
+    describe('Method pruneBuffer', function () {
+        let pruningController;
+        let buffer;
+
+        const createController = (type) => {
+            pruningController = BufferController(context).create({
+                streamInfo: streamInfo,
+                type,
+                dashMetrics: dashMetricsMock,
+                errHandler: errorHandlerMock,
+                streamController: streamControllerMock,
+                mediaController: mediaControllerMock,
+                adapter: adapterMock,
+                textController: textControllerMock,
+                abrController: abrControllerMock,
+                representationController: representationControllerMock,
+                fragmentModel: fragmentModelMock,
+                playbackController: playbackControllerMock,
+                mediaPlayerModel: mediaPlayerModelMock,
+                settings: settings
+            });
+            pruningController.initialize(mediaSourceMock);
+            return pruningController.createBufferSink(mediaInfo)
+                .then(() => {
+                    buffer = pruningController.getBuffer().getBuffer();
+                    buffer.addRange({ start: 0, end: 100 });
+                    sinon.spy(buffer, 'remove');
+                });
+        };
+
+        beforeEach(function () {
+            settings.update({ streaming: { buffer: { bufferToKeep: 20 } } });
+            playbackControllerMock.setTime(100);
+        });
+
+        afterEach(function () {
+            pruningController.reset();
+            pruningController = null;
+            playbackControllerMock.setTime(0);
+            playbackControllerMock.setIsDynamic(false);
+            textControllerMock.enableText(false);
+        });
+
+        it('should prune the text buffer behind bufferToKeep for a dynamic stream', function () {
+            playbackControllerMock.setIsDynamic(true);
+            textControllerMock.enableText(true);
+            return createController('text')
+                .then(() => {
+                    pruningController.pruneBuffer();
+                    expect(buffer.remove.calledOnceWith(0, 80)).to.be.true;
+                });
+        });
+
+        it('should not prune the text buffer of a dynamic stream while text is disabled', function () {
+            playbackControllerMock.setIsDynamic(true);
+            textControllerMock.enableText(false);
+            return createController('text')
+                .then(() => {
+                    const bufferLevelSpy = sinon.spy();
+                    eventBus.on(Events.BUFFER_LEVEL_UPDATED, bufferLevelSpy);
+                    pruningController.pruneBuffer();
+                    eventBus.off(Events.BUFFER_LEVEL_UPDATED, bufferLevelSpy);
+
+                    expect(buffer.remove.called).to.be.false;
+                    expect(bufferLevelSpy.called).to.be.false;
+                });
+        });
+
+        it('should not prune the text buffer for a static stream', function () {
+            playbackControllerMock.setIsDynamic(false);
+            textControllerMock.enableText(true);
+            return createController('text')
+                .then(() => {
+                    pruningController.pruneBuffer();
+                    expect(buffer.remove.called).to.be.false;
+                });
+        });
+
+        it('should prune the video buffer behind bufferToKeep for a static stream', function () {
+            playbackControllerMock.setIsDynamic(false);
+            return createController('video')
+                .then(() => {
+                    pruningController.pruneBuffer();
+                    expect(buffer.remove.calledOnceWith(0, 80)).to.be.true;
+                });
         });
     });
 

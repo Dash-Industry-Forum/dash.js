@@ -4,6 +4,8 @@ import Errors from '../../../../src/core/errors/Errors.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import CustomTimeRanges from '../../../../src/streaming/utils/CustomTimeRanges.js';
+import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
 
 import chai from 'chai';
 
@@ -176,6 +178,139 @@ describe('TextSourceBuffer', function () {
             buffer.resetEmbedded();
 
             expect(addCaptionsCalls).to.deep.equal([2]);
+        });
+
+        it('should keep the cues of other segments if a fragmented STPP sample cannot be parsed', function () {
+            const track = {
+                type: 'text',
+                id: 'eng',
+                index: 0,
+                isFragmented: true,
+                mimeType: 'application/mp4',
+                codec: 'application/mp4;codecs="stpp"'
+            };
+            const textTrackInfos = [];
+            const deleteCalls = [];
+            const textTracksMock = {
+                addCaptions: () => {},
+                addTextTrackInfo: (info) => textTrackInfos.push(info),
+                getTextTrackInfos: () => textTrackInfos,
+                deleteCuesFromTrackIdx: (idx, from, to) => deleteCalls.push({ idx, from, to }),
+                deleteAllTextTracks: () => {}
+            };
+            const buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                manifestModel: { getValue: () => ({}) },
+                mediaController: {
+                    getTracksFor: () => [track],
+                    getCurrentTrackFor: () => track
+                },
+                streamInfo: { id: 'stream' },
+                textTracks: textTracksMock,
+                ttmlParser: {
+                    parse: () => {
+                        throw new Error('invalid TTML');
+                    }
+                }
+            });
+            buffer.initialize();
+            buffer.addMediaInfos('text', [track], { removeExecutedRequestsBeforeTime: () => {} });
+            // Cues of earlier segments are already parsed up to the start of the failing sample
+            buffer.buffered.add(0, BASE_MEDIA_DECODE_TIME / TIMESCALE);
+
+            const representation = { mediaInfo: track };
+            buffer.append(createInitSegment(), { segmentType: 'InitializationSegment', representation });
+            buffer.append(createMediaSegment('<tt'), { segmentType: 'MediaSegment', representation });
+
+            expect(deleteCalls).to.be.empty;
+            expect(buffer.buffered.length).to.equal(1);
+            expect(buffer.buffered.start(0)).to.equal(0);
+            expect(buffer.buffered.end(0)).to.equal(BASE_MEDIA_DECODE_TIME / TIMESCALE);
+        });
+    });
+
+    describe('Method remove', function () {
+        it('should not delete any cues if no range is given and nothing is buffered', function () {
+            const deleteCalls = [];
+            const buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                textTracks: {
+                    deleteCuesFromTrackIdx: (idx, from, to) => deleteCalls.push({ idx, from, to })
+                }
+            });
+            buffer.buffered = CustomTimeRanges(context).create();
+
+            buffer.remove();
+
+            expect(deleteCalls).to.be.empty;
+        });
+
+        it('should remove the range from the buffered ranges and delete its cues', function () {
+            const deleteCalls = [];
+            const buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                textTracks: {
+                    deleteCuesFromTrackIdx: (idx, from, to) => deleteCalls.push({ from, to })
+                }
+            });
+            buffer.buffered = CustomTimeRanges(context).create();
+            buffer.buffered.add(0, 30);
+
+            buffer.remove(0, 20);
+
+            expect(buffer.buffered.start(0)).to.equal(20);
+            expect(buffer.buffered.end(0)).to.equal(30);
+            expect(deleteCalls).to.deep.equal([{ from: 0, to: 20 }]);
+        });
+    });
+
+    describe('embedded CEA-608 tracks on BUFFER_CLEARED', function () {
+        const eventBus = EventBus(context).getInstance();
+        let buffer;
+        let deleteCalls;
+
+        const createBuffer = (isDynamic) => {
+            buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                streamInfo: { id: 'stream', manifestInfo: { isDynamic } },
+                textTracks: {
+                    getTrackIdxForId: () => 0,
+                    deleteCuesFromTrackIdx: (idx, from, to) => deleteCalls.push({ idx, from, to }),
+                    deleteAllTextTracks: () => {}
+                }
+            });
+            buffer.initialize();
+            buffer.addEmbeddedTrack({ id: 'CC1' });
+        };
+
+        beforeEach(function () {
+            deleteCalls = [];
+        });
+
+        afterEach(function () {
+            buffer.resetEmbedded();
+        });
+
+        it('should delete the embedded cues when the video buffer of a dynamic stream is cleared', function () {
+            createBuffer(true);
+            eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'video' });
+
+            expect(deleteCalls).to.deep.equal([{ idx: 0, from: 0, to: 10 }]);
+        });
+
+        it('should keep the embedded cues when the video buffer of a static stream is cleared', function () {
+            createBuffer(false);
+            eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'video' });
+
+            expect(deleteCalls).to.be.empty;
+        });
+
+        it('should keep the embedded cues when the audio or text buffer is cleared', function () {
+            createBuffer(true);
+            eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'audio' });
+            eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'text' });
+
+            expect(deleteCalls).to.be.empty;
         });
     });
 });

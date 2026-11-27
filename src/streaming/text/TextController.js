@@ -465,7 +465,12 @@ function TextController(config) {
                 (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.index === mediaInfo.index)) {
                 let currentFragTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamId);
                 if (mediaInfo.id ? currentFragTrack.id !== mediaInfo.id : currentFragTrack.index !== mediaInfo.index) {
-                    textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
+                    // Only the cues of a fragmented track are loaded again when it is selected again. Embedded cues
+                    // come from video segments and a non-fragmented file is not appended again once it is cached.
+                    const oldTrackInfo = textTracks[streamId].getTextTrackInfos()[oldTrackIdx];
+                    if (oldTrackInfo && oldTrackInfo.isFragmented && !oldTrackInfo.isEmbedded) {
+                        textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
+                    }
                     textSourceBuffers[streamId].setCurrentFragmentedTrackIdx(i);
                 } else if (oldTrackIdx === -1) {
                     // in fragmented use case, if the user selects the older track (the one selected before disabled

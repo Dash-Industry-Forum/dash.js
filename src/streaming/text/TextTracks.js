@@ -38,6 +38,8 @@ import Utils from '../../core/Utils.js';
 import { CueIntervalTree } from './CueIntervalTree.js';
 import { renderHTML } from 'imsc';
 
+const CUE_RANGE_EPSILON = 0.001;
+
 const CUE_PROPS_TO_COMPARE = [
     'text',
     'align',
@@ -1130,10 +1132,29 @@ function TextTracks(config) {
         // Handle manual cues using active cues tracking
         const cueData = tracksCueData.get(track);
         if (cueData) {
+            // A dispatched cue is not necessarily in the native TextTrack (e.g. it was dispatched on track selection
+            // while paused), so the loop above does not exit it. Exit it before it is released from the tree.
+            Array.from(dispatchedCues)
+                .filter(cue => cueInRange(cue, start, end, strict) && _isCueInTree(cueData.allCues, cue))
+                .forEach(_exitDispatchedCue);
+
+            // Release the deleted cues from the interval tree as well. Otherwise the cue window re-adds them to
+            // the TextTrack, and on live streams every cue ever parsed stays in memory.
+            if (isNaN(start) && isNaN(end)) {
+                cueData.allCues.clear();
+            } else {
+                // The tree query excludes the range boundaries, so widen it to also return cues that touch them
+                // (e.g. zero-duration cues). cueInRange decides which candidates are deleted.
+                const candidates = isNaN(start) || isNaN(end) ?
+                    cueData.allCues.getAllCues() :
+                    cueData.allCues.findCuesInRange(start - CUE_RANGE_EPSILON, end + CUE_RANGE_EPSILON);
+                candidates
+                    .filter(cue => cueInRange(cue, start, end, strict))
+                    .forEach(cue => cueData.allCues.removeCue(cue));
+            }
+
             const currentActiveCues = cueData.activeCues;
-            const cuesToRemove = currentActiveCues.filter(cue =>
-                cue.startTime >= start && cue.endTime <= end
-            );
+            const cuesToRemove = currentActiveCues.filter(cue => cueInRange(cue, start, end, strict));
 
             cuesToRemove.forEach(cue => {
                 if (settings.get().streaming.text.dispatchForManualRendering) {
@@ -1148,6 +1169,10 @@ function TextTracks(config) {
         }
     }
 
+    function _isCueInTree(tree, cue) {
+        return tree.findCuesInRange(cue.startTime - CUE_RANGE_EPSILON, cue.endTime + CUE_RANGE_EPSILON).includes(cue);
+    }
+
     function deleteCuesFromTrackIdx(trackIdx, start, end) {
         const track = getTrackByIdx(trackIdx);
         if (track) {
@@ -1160,6 +1185,11 @@ function TextTracks(config) {
         for (let i = 0; i < ln; i++) {
             const track = getTrackByIdx(i);
             if (track) {
+                // The trees are discarded below, so empty them at once instead of removing the cues one by one
+                const cueData = tracksCueData.get(track);
+                if (cueData) {
+                    cueData.allCues.clear();
+                }
                 _deleteTrackCues.call(this, track, streamInfo.start, streamInfo.start + streamInfo.duration, false);
             }
         }

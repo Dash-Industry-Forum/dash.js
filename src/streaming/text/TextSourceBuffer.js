@@ -363,7 +363,8 @@ function TextSourceBuffer(config) {
 
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
-                remove();
+                // Only this sample failed. Deleted cues are not parsed again, so keep the cues of the other samples.
+                instance.buffered.remove(start, end);
                 logger.error('TTML parser error: ' + e);
             }
         }
@@ -673,6 +674,10 @@ function TextSourceBuffer(config) {
     function remove(start, end) {
         //if start and end are not defined, remove all
         if ((start === undefined) && (start === end)) {
+            // Without a buffered range, NaN boundaries would delete every cue of the track
+            if (instance.buffered.length === 0) {
+                return;
+            }
             start = instance.buffered.start(0);
             end = instance.buffered.end(instance.buffered.length - 1);
         }
@@ -681,6 +686,12 @@ function TextSourceBuffer(config) {
     }
 
     function onVideoBufferCleared(e) {
+        // Embedded captions are carried in the video segments, so only a video buffer removal may delete them.
+        // In static streams they are bounded by the content duration and are kept: a 608 caption is not rebuilt if
+        // the video is appended again without the segment that started it (e.g. after a seek back).
+        if (e.mediaType !== Constants.VIDEO || !streamInfo?.manifestInfo?.isDynamic) {
+            return;
+        }
         embeddedTracks.forEach(function (track) {
             const trackIdx = textTracks.getTrackIdxForId(track.id);
             if (trackIdx >= 0) {

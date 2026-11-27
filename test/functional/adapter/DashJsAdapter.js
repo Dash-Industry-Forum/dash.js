@@ -806,6 +806,75 @@ class DashJsAdapter {
         })
     }
 
+    getVideoElementTime() {
+        return this.videoElement.currentTime;
+    }
+
+    /**
+     * Returns the number of cues of the showing text tracks that overlap the given range in video element time
+     * @param {number} start
+     * @param {number} end
+     * @return {number}
+     */
+    getShowingTextTrackCuesInRange(start, end) {
+        return Array.from(this.videoElement.textTracks)
+            .filter((track) => track.mode === 'showing' && track.cues)
+            .reduce((count, track) => {
+                const cuesInRange = Array.from(track.cues).filter((cue) => cue.startTime < end && cue.endTime > start);
+                return count + cuesInRange.length;
+            }, 0);
+    }
+
+    /**
+     * Returns the start and end times of the cues of the showing text tracks
+     * @return {Array<{start: number, end: number}>}
+     */
+    getShowingTextTrackCueTimes() {
+        return Array.from(this.videoElement.textTracks)
+            .filter((track) => track.mode === 'showing' && track.cues)
+            .flatMap((track) => Array.from(track.cues).map((cue) => ({ start: cue.startTime, end: cue.endTime })));
+    }
+
+    /**
+     * Waits until a showing text track has a cue that overlaps the given range in video element time
+     * @param {number} timeoutValue
+     * @param {number} start
+     * @param {number} end
+     * @return {Promise<boolean>}
+     */
+    async waitForShowingTextTrackCuesInRange(timeoutValue, start, end) {
+        const pollInterval = 250;
+        for (let elapsed = 0; elapsed <= timeoutValue; elapsed += pollInterval) {
+            if (this.getShowingTextTrackCuesInRange(start, end) > 0) {
+                return true;
+            }
+            await this.sleep(pollInterval);
+        }
+        return false;
+    }
+
+    /**
+     * Waits until a showing text track has a cue with the start and end time of one of the given cues
+     * @param {number} timeoutValue
+     * @param {Array<{start: number, end: number}>} expectedCues
+     * @return {Promise<boolean>}
+     */
+    async waitForShowingTextTrackCues(timeoutValue, expectedCues) {
+        const pollInterval = 250;
+        const tolerance = 0.001;
+        for (let elapsed = 0; elapsed <= timeoutValue; elapsed += pollInterval) {
+            const showingCues = this.getShowingTextTrackCueTimes();
+            const hasExpectedCue = expectedCues.some((expected) => showingCues.some((cue) => {
+                return Math.abs(cue.start - expected.start) < tolerance && Math.abs(cue.end - expected.end) < tolerance;
+            }));
+            if (hasExpectedCue) {
+                return true;
+            }
+            await this.sleep(pollInterval);
+        }
+        return false;
+    }
+
     async sleep(timeoutValue) {
         return new Promise((resolve) => {
             setTimeout(resolve, timeoutValue)

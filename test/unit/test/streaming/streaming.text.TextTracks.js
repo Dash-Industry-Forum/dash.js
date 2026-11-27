@@ -1,3 +1,4 @@
+import { CueIntervalTree } from '../../../../src/streaming/text/CueIntervalTree.js';
 import TextTracks from '../../../../src/streaming/text/TextTracks.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
@@ -410,6 +411,37 @@ describe('TextTracks', function () {
             expect(exitEvents).to.deep.equal([cue.cueID]);
         });
 
+        it('should exit a deleted active cue and not enter it again in manual cue processing', function () {
+            const [engTrack] = addTwoTracks();
+            engTrack.manualMode = 'showing';
+            videoModelMock.tracks = [engTrack];
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.manualCueProcessing(1);
+            expect(enterEvents.length).to.equal(1);
+            const cueID = enterEvents[0];
+
+            textTracks.deleteCuesFromTrackIdx(0, 0, 5);
+            textTracks.manualCueProcessing(1);
+
+            expect(exitEvents).to.include(cueID);
+            expect(enterEvents.length).to.equal(1);
+        });
+
+        it('should exit the active cues if all cues of the track are deleted', function () {
+            const [engTrack] = addTwoTracks();
+            engTrack.manualMode = 'showing';
+            videoModelMock.tracks = [engTrack];
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.manualCueProcessing(1);
+            const cueID = enterEvents[0];
+
+            textTracks.deleteCuesFromTrackIdx(0);
+
+            expect(exitEvents).to.include(cueID);
+        });
+
         it('should not dispatch CUE_ENTER for cues of a track that is not selected', function () {
             const [, deuTrack] = addTwoTracks();
 
@@ -591,6 +623,33 @@ describe('TextTracks', function () {
             textTracks.setCurrentTrackIdx(1);
 
             expect(enterEvents.length).to.equal(1);
+        });
+
+        it('should dispatch CUE_EXIT when a dispatched cue that is not in the native TextTrack is deleted', function () {
+            const [, deuTrack] = addTwoTracks();
+
+            // While paused the cue window is not refreshed, so the dispatched cue is not in the native TextTrack
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 4}]);
+            videoModelMock.time = 1;
+            textTracks.setCurrentTrackIdx(1);
+            expect(deuTrack.cues.length).to.equal(0);
+            expect(enterEvents.length).to.equal(1);
+
+            textTracks.deleteCuesFromTrackIdx(1, 0, 10);
+
+            expect(exitEvents).to.deep.equal(enterEvents);
+        });
+
+        it('should not dispatch CUE_EXIT for dispatched cues outside of the deleted range', function () {
+            addTwoTracks();
+
+            textTracks.addCaptions(1, 0, [{type: 'noHtml', data: 'German subtitle', start: 0, end: 4}]);
+            videoModelMock.time = 1;
+            textTracks.setCurrentTrackIdx(1);
+
+            textTracks.deleteCuesFromTrackIdx(1, 10, 20);
+
+            expect(exitEvents).to.be.empty;
         });
 
         it('should not dispatch CUE_ENTER when a track is selected at the end time of its cue', function () {
@@ -848,6 +907,106 @@ describe('TextTracks', function () {
             // Force update should always update the TextTrack
             textTracks.updateTextTrackWindow(5, true);
             expect(track.cues.length).to.equal(1);
+        });
+    });
+
+    describe('Method deleteCuesFromTrackIdx', function () {
+        let track;
+
+        beforeEach(function () {
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+            textTracks.createTracks();
+            track = videoModelMock.getTextTrack('subtitles', 'eng');
+        });
+
+        it('should not add deleted cues back to the TextTrack on the next window update', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Cue at 10s', start: 10, end: 12},
+                {type: 'noHtml', data: 'Cue at 20s', start: 20, end: 22}
+            ]);
+            textTracks.updateTextTrackWindow(20, true);
+            expect(track.cues.length).to.equal(2);
+
+            textTracks.deleteCuesFromTrackIdx(0, 0, 15);
+            textTracks.updateTextTrackWindow(20, true);
+
+            expect(track.cues.length).to.equal(1);
+            expect(track.cues[0].text).to.equal('Cue at 20s');
+        });
+
+        it('should keep cues that extend beyond the deleted range', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Inside', start: 2, end: 4},
+                {type: 'noHtml', data: 'Overlapping end', start: 9, end: 11}
+            ]);
+
+            textTracks.deleteCuesFromTrackIdx(0, 0, 10);
+            textTracks.updateTextTrackWindow(10, true);
+
+            expect(track.cues.length).to.equal(1);
+            expect(track.cues[0].text).to.equal('Overlapping end');
+        });
+
+        it('should not re-add deleted cues on a forced window update covering their range', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Old cue', start: 0, end: 2}
+            ]);
+            textTracks.updateTextTrackWindow(1, true);
+
+            textTracks.deleteCuesFromTrackIdx(0, 0, 5);
+            // A later window update for a range that covers the deleted cue
+            textTracks.updateTextTrackWindow(0, true);
+
+            expect(track.cues.length).to.equal(0);
+        });
+
+        it('should delete zero-duration cues on the boundaries of the range', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'At start', start: 10, end: 10},
+                {type: 'noHtml', data: 'At end', start: 20, end: 20}
+            ]);
+
+            textTracks.deleteCuesFromTrackIdx(0, 10, 20);
+            textTracks.updateTextTrackWindow(15, true);
+
+            expect(track.cues.length).to.equal(0);
+        });
+
+        it('should not remove cues one by one from the interval tree when all text tracks are deleted', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'First cue', start: 0, end: 2},
+                {type: 'noHtml', data: 'Second cue', start: 4, end: 6}
+            ]);
+            const removeCueSpy = sinon.spy(CueIntervalTree.prototype, 'removeCue');
+            // Range of a live stream
+            streamInfo.start = 0;
+            streamInfo.duration = Infinity;
+
+            try {
+                textTracks.deleteAllTextTracks();
+                expect(removeCueSpy.called).to.be.false;
+            } finally {
+                removeCueSpy.restore();
+                streamInfo.start = NaN;
+                streamInfo.duration = NaN;
+            }
+        });
+
+        it('should delete all cues of the track if no range is given', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'First cue', start: 0, end: 2},
+                {type: 'noHtml', data: 'Second cue', start: 4, end: 6}
+            ]);
+
+            textTracks.deleteCuesFromTrackIdx(0);
+            textTracks.updateTextTrackWindow(4, true);
+
+            expect(track.cues.length).to.equal(0);
         });
     });
 });

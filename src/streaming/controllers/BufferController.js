@@ -790,7 +790,11 @@ function BufferController(config) {
 
     /* prune buffer on our own in background to avoid browsers pruning buffer silently */
     function pruneBuffer() {
-        if (!sourceBufferSink || type === Constants.TEXT) {
+        // Text of static streams is bounded by the content duration. In dynamic streams it grows for as long as
+        // playback runs, so prune it like audio and video to release the parsed cues as well. Disabled text is
+        // not buffered and must not report a buffer level.
+        if (!sourceBufferSink ||
+            (type === Constants.TEXT && (!playbackController.getIsDynamic() || !textController.isTextEnabled()))) {
             return;
         }
 
