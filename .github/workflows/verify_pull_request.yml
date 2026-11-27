@@ -39,10 +39,12 @@ jobs:
                 run: npm run ci:verify
             # Coverage is measured in Chromium only. Fails when total coverage drops below the floor in vite.config.js.
             -   name: Unit test coverage
+                id: coverage
                 run: npm run test:coverage
             # Writes the job summary. Fails when less than 80% of the changed executable lines in src/ are covered.
+            # Skipped when the coverage step did not run, so an earlier failure is not reported twice.
             -   name: Coverage summary
-                if: ${{ !cancelled() }}
+                if: ${{ !cancelled() && steps.coverage.outcome != 'skipped' }}
                 run: node test/unit/config/coverage-summary.mjs --min-changed=80
             -   name: Upload coverage report
                 if: ${{ !cancelled() }}
