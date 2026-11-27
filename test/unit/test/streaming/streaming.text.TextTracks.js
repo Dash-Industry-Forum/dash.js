@@ -1,3 +1,4 @@
+import { CueIntervalTree } from '../../../../src/streaming/text/CueIntervalTree.js';
 import TextTracks from '../../../../src/streaming/text/TextTracks.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
@@ -918,6 +919,26 @@ describe('TextTracks', function () {
             textTracks.updateTextTrackWindow(15, true);
 
             expect(track.cues.length).to.equal(0);
+        });
+
+        it('should not remove cues one by one from the interval tree when all text tracks are deleted', function () {
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'First cue', start: 0, end: 2},
+                {type: 'noHtml', data: 'Second cue', start: 4, end: 6}
+            ]);
+            const removeCueSpy = sinon.spy(CueIntervalTree.prototype, 'removeCue');
+            // Range of a live stream
+            streamInfo.start = 0;
+            streamInfo.duration = Infinity;
+
+            try {
+                textTracks.deleteAllTextTracks();
+                expect(removeCueSpy.called).to.be.false;
+            } finally {
+                removeCueSpy.restore();
+                streamInfo.start = NaN;
+                streamInfo.duration = NaN;
+            }
         });
 
         it('should delete all cues of the track if no range is given', function () {

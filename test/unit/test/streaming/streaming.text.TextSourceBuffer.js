@@ -203,11 +203,10 @@ describe('TextSourceBuffer', function () {
         let buffer;
         let deleteCalls;
 
-        beforeEach(function () {
-            deleteCalls = [];
+        const createBuffer = (isDynamic) => {
             buffer = TextSourceBuffer(context).create({
                 errHandler: errorHandlerMock,
-                streamInfo: { id: 'stream' },
+                streamInfo: { id: 'stream', manifestInfo: { isDynamic } },
                 textTracks: {
                     getTrackIdxForId: () => 0,
                     deleteCuesFromTrackIdx: (idx, from, to) => deleteCalls.push({ idx, from, to }),
@@ -216,19 +215,32 @@ describe('TextSourceBuffer', function () {
             });
             buffer.initialize();
             buffer.addEmbeddedTrack({ id: 'CC1' });
+        };
+
+        beforeEach(function () {
+            deleteCalls = [];
         });
 
         afterEach(function () {
             buffer.resetEmbedded();
         });
 
-        it('should delete the embedded cues when the video buffer is cleared', function () {
+        it('should delete the embedded cues when the video buffer of a dynamic stream is cleared', function () {
+            createBuffer(true);
             eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'video' });
 
             expect(deleteCalls).to.deep.equal([{ idx: 0, from: 0, to: 10 }]);
         });
 
+        it('should keep the embedded cues when the video buffer of a static stream is cleared', function () {
+            createBuffer(false);
+            eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'video' });
+
+            expect(deleteCalls).to.be.empty;
+        });
+
         it('should keep the embedded cues when the audio or text buffer is cleared', function () {
+            createBuffer(true);
             eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'audio' });
             eventBus.trigger(Events.BUFFER_CLEARED, { from: 0, to: 10 }, { streamId: 'stream', mediaType: 'text' });
 

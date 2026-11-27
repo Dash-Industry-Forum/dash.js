@@ -6,6 +6,7 @@ import MediaControllerMock from '../../mocks/MediaControllerMock.js';
 import BaseURLControllerMock from '../../mocks/BaseURLControllerMock.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import Settings from '../../../../src/core/Settings.js';
+import FactoryMaker from '../../../../src/core/FactoryMaker.js';
 
 import {expect} from 'chai';
 const context = {};
@@ -120,4 +121,81 @@ describe('TextController', function () {
         });
     });
 
+});
+
+describe('TextController setTextTrack switching to a fragmented track', function () {
+    const videoModelMock = new VideoModelMock();
+    const streamInfo = new VoHelper().getDummyStreamInfo();
+    const mediaControllerMock = new MediaControllerMock();
+    const dashAdapterMock = new AdapterMock();
+    const baseURLControllerMock = new BaseURLControllerMock();
+    const settings = Settings(context).getInstance();
+
+    const fragmentedTrack = { lang: 'ger', id: 'track1', isFragmented: true, isEmbedded: false };
+    const otherFragmentedTrack = { lang: 'eng', id: 'track2', isFragmented: true, isEmbedded: false };
+    const embeddedTrack = { lang: 'eng', id: 'CC1', isFragmented: true, isEmbedded: true };
+    let switchingController;
+    let deleteCalls;
+
+    // Selects oldTrack first, then switches to the fragmented track
+    const switchFrom = (oldTrack) => {
+        const textTrackInfos = [oldTrack, fragmentedTrack];
+        let currentTrackIdx = 0;
+        deleteCalls = [];
+
+        FactoryMaker.extend('TextTracks', () => ({
+            initialize: () => {},
+            addTextTrackInfo: () => {},
+            createTracks: () => {},
+            deleteAllTextTracks: () => {},
+            disableManualTracks: () => {},
+            invalidateCueWindow: () => {},
+            setModeForTrackIdx: () => {},
+            getTextTrackInfos: () => textTrackInfos,
+            getCurrentTrackIdx: () => currentTrackIdx,
+            setCurrentTrackIdx: (idx) => {
+                currentTrackIdx = idx;
+            },
+            getCurrentTextTrackInfo: () => textTrackInfos[currentTrackIdx],
+            deleteCuesFromTrackIdx: (idx) => deleteCalls.push(idx)
+        }), false, context);
+        try {
+            switchingController = TextController(context).create({
+                videoModel: videoModelMock,
+                mediaController: mediaControllerMock,
+                baseURLController: baseURLControllerMock,
+                adapter: dashAdapterMock,
+                streamInfo,
+                settings
+            });
+            switchingController.initialize();
+            switchingController.initializeForStream(streamInfo);
+        } finally {
+            delete context.TextTracks;
+        }
+        mediaControllerMock.tracks = [fragmentedTrack, otherFragmentedTrack];
+        switchingController.addMediaInfosToBuffer(streamInfo, Constants.TEXT, [fragmentedTrack, otherFragmentedTrack]);
+        // The fragmented track loaded before the switch
+        mediaControllerMock.track = otherFragmentedTrack;
+
+        switchingController.setTextTrack(streamInfo.id, 1);
+    };
+
+    afterEach(function () {
+        switchingController.reset();
+        mediaControllerMock.track = undefined;
+        mediaControllerMock.tracks = [];
+    });
+
+    it('should delete the cues of the previous fragmented track', function () {
+        switchFrom(otherFragmentedTrack);
+
+        expect(deleteCalls).to.deep.equal([0]);
+    });
+
+    it('should keep the cues of a previous embedded track', function () {
+        switchFrom(embeddedTrack);
+
+        expect(deleteCalls).to.be.empty;
+    });
 });

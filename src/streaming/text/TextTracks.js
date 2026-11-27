@@ -1175,6 +1175,11 @@ function TextTracks(config) {
         for (let i = 0; i < ln; i++) {
             const track = getTrackByIdx(i);
             if (track) {
+                // The trees are discarded below, so empty them at once instead of removing the cues one by one
+                const cueData = tracksCueData.get(track);
+                if (cueData) {
+                    cueData.allCues.clear();
+                }
                 _deleteTrackCues.call(this, track, streamInfo.start, streamInfo.start + streamInfo.duration, false);
             }
         }

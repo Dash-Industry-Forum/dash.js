@@ -685,8 +685,10 @@ function TextSourceBuffer(config) {
     }
 
     function onVideoBufferCleared(e) {
-        // Embedded captions are carried in the video segments, so only a video buffer removal may delete them
-        if (e.mediaType !== Constants.VIDEO) {
+        // Embedded captions are carried in the video segments, so only a video buffer removal may delete them.
+        // In static streams they are bounded by the content duration and are kept: a 608 caption is not rebuilt if
+        // the video is appended again without the segment that started it (e.g. after a seek back).
+        if (e.mediaType !== Constants.VIDEO || !streamInfo?.manifestInfo?.isDynamic) {
             return;
         }
         embeddedTracks.forEach(function (track) {
