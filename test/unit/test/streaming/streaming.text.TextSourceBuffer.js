@@ -196,6 +196,24 @@ describe('TextSourceBuffer', function () {
 
             expect(deleteCalls).to.be.empty;
         });
+
+        it('should remove the range from the buffered ranges and delete its cues', function () {
+            const deleteCalls = [];
+            const buffer = TextSourceBuffer(context).create({
+                errHandler: errorHandlerMock,
+                textTracks: {
+                    deleteCuesFromTrackIdx: (idx, from, to) => deleteCalls.push({ from, to })
+                }
+            });
+            buffer.buffered = CustomTimeRanges(context).create();
+            buffer.buffered.add(0, 30);
+
+            buffer.remove(0, 20);
+
+            expect(buffer.buffered.start(0)).to.equal(20);
+            expect(buffer.buffered.end(0)).to.equal(30);
+            expect(deleteCalls).to.deep.equal([{ from: 0, to: 20 }]);
+        });
     });
 
     describe('embedded CEA-608 tracks on BUFFER_CLEARED', function () {

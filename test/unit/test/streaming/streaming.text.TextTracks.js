@@ -413,6 +413,37 @@ describe('TextTracks', function () {
             expect(exitEvents).to.deep.equal([cue.cueID]);
         });
 
+        it('should exit a deleted active cue and not enter it again in manual cue processing', function () {
+            const [engTrack] = addTwoTracks();
+            engTrack.manualMode = 'showing';
+            videoModelMock.tracks = [engTrack];
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.manualCueProcessing(1);
+            expect(enterEvents.length).to.equal(1);
+            const cueID = enterEvents[0];
+
+            textTracks.deleteCuesFromTrackIdx(0, 0, 5);
+            textTracks.manualCueProcessing(1);
+
+            expect(exitEvents).to.include(cueID);
+            expect(enterEvents.length).to.equal(1);
+        });
+
+        it('should exit the active cues if all cues of the track are deleted', function () {
+            const [engTrack] = addTwoTracks();
+            engTrack.manualMode = 'showing';
+            videoModelMock.tracks = [engTrack];
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+            textTracks.manualCueProcessing(1);
+            const cueID = enterEvents[0];
+
+            textTracks.deleteCuesFromTrackIdx(0);
+
+            expect(exitEvents).to.include(cueID);
+        });
+
         it('should not dispatch CUE_ENTER for cues of a track that is not selected', function () {
             const [, deuTrack] = addTwoTracks();
 

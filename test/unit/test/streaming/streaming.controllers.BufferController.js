@@ -610,6 +610,7 @@ describe('BufferController', function () {
 
         it('should not prune the text buffer for a static stream', function () {
             playbackControllerMock.setIsDynamic(false);
+            textControllerMock.enableText(true);
             return createController('text')
                 .then(() => {
                     pruningController.pruneBuffer();
