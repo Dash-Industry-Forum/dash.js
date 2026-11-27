@@ -66,11 +66,11 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 this.skip();
             }
             const switchBackTimeout = Constants.TEST_TIMEOUT_THRESHOLDS.TEXT_CUES_AFTER_SWITCH_BACK;
-            const hasCues = await playerAdapter.waitForShowingTextTrackCuesInRange(switchBackTimeout, switchBackTime,
-                switchBackTime + cueRange);
+            // Only a cue loaded before the switch proves that it was kept, a newly parsed cue does not
+            const hasKeptCue = await playerAdapter.waitForShowingTextTrackCues(switchBackTimeout, expectedCues);
 
-            expect(hasCues, `expected cues of track ${textTracks[keptTrackIndex].id} in ` +
-                `[${switchBackTime}, ${switchBackTime + cueRange}] right after switching back`).to.be.true;
+            expect(hasKeptCue, `expected one of the cues ${JSON.stringify(expectedCues)} of track ` +
+                `${textTracks[keptTrackIndex].id} right after switching back`).to.be.true;
         });
 
         it(`Expect no critical errors to be thrown`, () => {

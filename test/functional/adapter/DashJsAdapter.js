@@ -820,7 +820,8 @@ class DashJsAdapter {
         return Array.from(this.videoElement.textTracks)
             .filter((track) => track.mode === 'showing' && track.cues)
             .reduce((count, track) => {
-                return count + Array.from(track.cues).filter((cue) => cue.startTime < end && cue.endTime > start).length;
+                const cuesInRange = Array.from(track.cues).filter((cue) => cue.startTime < end && cue.endTime > start);
+                return count + cuesInRange.length;
             }, 0);
     }
 
@@ -845,6 +846,28 @@ class DashJsAdapter {
         const pollInterval = 250;
         for (let elapsed = 0; elapsed <= timeoutValue; elapsed += pollInterval) {
             if (this.getShowingTextTrackCuesInRange(start, end) > 0) {
+                return true;
+            }
+            await this.sleep(pollInterval);
+        }
+        return false;
+    }
+
+    /**
+     * Waits until a showing text track has a cue with the start and end time of one of the given cues
+     * @param {number} timeoutValue
+     * @param {Array<{start: number, end: number}>} expectedCues
+     * @return {Promise<boolean>}
+     */
+    async waitForShowingTextTrackCues(timeoutValue, expectedCues) {
+        const pollInterval = 250;
+        const tolerance = 0.001;
+        for (let elapsed = 0; elapsed <= timeoutValue; elapsed += pollInterval) {
+            const showingCues = this.getShowingTextTrackCueTimes();
+            const hasExpectedCue = expectedCues.some((expected) => showingCues.some((cue) => {
+                return Math.abs(cue.start - expected.start) < tolerance && Math.abs(cue.end - expected.end) < tolerance;
+            }));
+            if (hasExpectedCue) {
                 return true;
             }
             await this.sleep(pollInterval);
