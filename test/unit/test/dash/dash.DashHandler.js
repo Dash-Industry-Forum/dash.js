@@ -206,6 +206,29 @@ describe('DashHandler', function () {
         })
     })
 
+    describe('getSegmentRequestForTime()', () => {
+        let segmentByTimeStub;
+
+        beforeEach(() => {
+            segmentByTimeStub = sinon.stub(segmentsController, 'getSegmentByTime').returns(null);
+        });
+
+        afterEach(() => {
+            segmentByTimeStub.restore();
+        });
+
+        it('should not require a random access point by default', () => {
+            dashHandler.getSegmentRequestForTime({}, { segmentInfoType: DashConstants.SEGMENT_TEMPLATE }, 5);
+            expect(segmentByTimeStub.calledOnce).to.be.true;
+            expect(segmentByTimeStub.firstCall.args[2]).to.be.false;
+        });
+
+        it('should forward that a random access point is required', () => {
+            dashHandler.getSegmentRequestForTime({}, { segmentInfoType: DashConstants.SEGMENT_TEMPLATE }, 5, true);
+            expect(segmentByTimeStub.firstCall.args[2]).to.be.true;
+        });
+    });
+
     describe('getValidTimeAheadOfTargetTime()', () => {
         let segRequestStub;
 

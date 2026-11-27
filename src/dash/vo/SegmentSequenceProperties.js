@@ -51,7 +51,17 @@ class SegmentSequenceProperties {
     }
 
     isBootstrapConfiguration() {
-        return this.cadence === 1 && (this.sapType === 0 || this.sapType === 1);
+        return this.cadence === 1 && SegmentSequenceProperties.isRandomAccessSapType(this.sapType);
+    }
+
+    /**
+     * SAP types 1 and 2 are closed GOP random access points, decoding can start there without any preceding frames.
+     * SAP type 0 is the default if no SAP type is signaled.
+     * @param {number} sapType
+     * @return {boolean}
+     */
+    static isRandomAccessSapType(sapType) {
+        return !isNaN(sapType) && sapType >= 0 && sapType <= 2;
     }
 }
 

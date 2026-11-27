@@ -227,14 +227,14 @@ function DashHandler(config) {
     }
 
 
-    function getSegmentRequestForTime(mediaInfo, representation, time) {
+    function getSegmentRequestForTime(mediaInfo, representation, time, requireRandomAccessPoint = false) {
         let request = null;
 
         if (!representation || !representation.segmentInfoType) {
             return request;
         }
 
-        const segment = segmentsController.getSegmentByTime(representation, time);
+        const segment = segmentsController.getSegmentByTime(representation, time, requireRandomAccessPoint);
         if (segment) {
             lastSegment = segment;
             logger.debug('Index for time ' + time + ' is ' + segment.index);

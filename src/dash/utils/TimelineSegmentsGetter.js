@@ -31,7 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../../streaming/constants/Constants.js';
-import {getTimeBasedSegment, getTotalNumberOfPartialSegments} from './SegmentsUtils.js';
+import {getRandomAccessSubNumber, getTimeBasedSegment, getTotalNumberOfPartialSegments} from './SegmentsUtils.js';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
@@ -59,7 +59,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return getSegmentByTime(representation, requestedPresentationTime);
     }
 
-    function getSegmentByTime(representation, requestedPresentationTime) {
+    function getSegmentByTime(representation, requestedPresentationTime, requireRandomAccessPoint = false) {
         checkConfig();
 
         if (!representation) {
@@ -135,12 +135,15 @@ function TimelineSegmentsGetter(config, isDynamic) {
             let mediaUrl = _getMediaUrl(segmentBase, segmentURL, sElementCounter);
             let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
             const totalNumberOfPartialSegments = getTotalNumberOfPartialSegments(currentSElement);
-            const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequestByTime({
+            const subNumberAtTime = _getSubNumberOfPartialSegmentToRequestByTime({
                 durationInTimescale,
                 requiredMediaTimeInTimescaleUnits,
                 mediaTime,
                 totalNumberOfPartialSegments
-            })
+            });
+            const subNumberOfPartialSegmentToRequest = requireRandomAccessPoint
+                ? getRandomAccessSubNumber(representation, subNumberAtTime)
+                : subNumberAtTime;
 
             segment = getTimeBasedSegment({
                 timelineConverter,

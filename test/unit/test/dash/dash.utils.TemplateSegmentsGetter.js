@@ -208,6 +208,43 @@ describe('TemplateSegmentsGetter', () => {
             expect(seg.replacementSubNumber).to.equal(1);
         });
 
+        it('should return the partial segment at the requested time (getSegmentByTime)', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = { start: 0, end: 100 };
+            representation.segmentDuration = 6;
+            representation.timescale = 1;
+            attachSegmentTemplate(representation);
+
+            const seg = templateSegmentsGetter.getSegmentByTime(representation, 16.5);
+            expect(seg.index).to.equal(2);
+            expect(seg.replacementSubNumber).to.equal(2);
+        });
+
+        it('should round down to a partial segment that starts with a random access point (getSegmentByTime)', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = { start: 0, end: 100 };
+            representation.segmentDuration = 6;
+            representation.timescale = 1;
+            representation.segmentSequenceProperties = [{ sapType: 7, cadence: 1 }];
+            attachSegmentTemplate(representation);
+
+            const seg = templateSegmentsGetter.getSegmentByTime(representation, 16.5, true);
+            expect(seg.index).to.equal(2);
+            expect(seg.replacementSubNumber).to.equal(0);
+        });
+
+        it('should not round down if no random access point is required (getSegmentByTime)', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = { start: 0, end: 100 };
+            representation.segmentDuration = 6;
+            representation.timescale = 1;
+            representation.segmentSequenceProperties = [{ sapType: 7, cadence: 1 }];
+            attachSegmentTemplate(representation);
+
+            const seg = templateSegmentsGetter.getSegmentByTime(representation, 16.5);
+            expect(seg.replacementSubNumber).to.equal(2);
+        });
+
         it('should clamp negative indexWithoutStartNumber to 0', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
             representation.segmentAvailabilityWindow = { start: 0, end: 50 };

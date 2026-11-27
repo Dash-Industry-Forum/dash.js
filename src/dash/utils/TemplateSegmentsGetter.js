@@ -31,6 +31,7 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import {
     getIndexBasedSegment,
+    getRandomAccessSubNumber,
     getTotalNumberOfPartialSegments,
 } from './SegmentsUtils.js';
 
@@ -95,7 +96,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         return seg;
     }
 
-    function getSegmentByTime(representation, requestedTime) {
+    function getSegmentByTime(representation, requestedTime, requireRandomAccessPoint = false) {
         if (!representation) {
             return null;
         }
@@ -122,7 +123,13 @@ function TemplateSegmentsGetter(config, isDynamic) {
             indexWithoutStartNumber
         })
 
-        return getSegmentByIndex(representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest);
+        return getSegmentByIndex(
+            representation,
+            indexWithoutStartNumber,
+            requireRandomAccessPoint
+                ? getRandomAccessSubNumber(representation, subNumberOfPartialSegmentToRequest)
+                : subNumberOfPartialSegmentToRequest
+        );
     }
 
     function _getSegmentTemplateElement(representation) {

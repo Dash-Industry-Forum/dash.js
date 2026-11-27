@@ -32,6 +32,7 @@
 import { processUriTemplate as cmlProcessUriTemplate } from '@svta/cml-dash';
 import FullSegment from './../vo/FullSegment.js';
 import PartialSegment from '../vo/PartialSegment.js';
+import SegmentSequenceProperties from '../vo/SegmentSequenceProperties.js';
 
 function _getSegment(data) {
     if (!data) {
@@ -283,8 +284,37 @@ function getTotalNumberOfPartialSegments(element) {
     return element.k;
 }
 
+/**
+ * Partial segments that start with a switching frame such as an AV1 S-Frame (SAP type 7) are not random access
+ * points, they only decode with the reference frames of the preceding partial segment. When loading starts at a time
+ * without these references (start, seek outside the buffer, buffer replacement), round down to the last partial
+ * segment that starts with a random access point. The first partial segment of a segment is always one. Without
+ * segment sequence properties it is the only one. SAP type 0 is the default if no type is signaled.
+ * @param {object} representation
+ * @param {number} subNumber
+ * @return {number}
+ */
+function getRandomAccessSubNumber(representation, subNumber) {
+    if (!representation || typeof subNumber !== 'number' || isNaN(subNumber)) {
+        return subNumber;
+    }
+    const segmentSequenceProperties = representation.segmentSequenceProperties || [];
+
+    for (let candidate = subNumber; candidate > 0; candidate--) {
+        const startsWithRandomAccessPoint = segmentSequenceProperties.some((ssp) => {
+            return SegmentSequenceProperties.isRandomAccessSapType(ssp.sapType) && candidate % ssp.cadence === 0;
+        });
+        if (startsWithRandomAccessPoint) {
+            return candidate;
+        }
+    }
+
+    return 0;
+}
+
 export {
     getIndexBasedSegment,
+    getRandomAccessSubNumber,
     getTimeBasedSegment,
     getTotalNumberOfPartialSegments,
     processUriTemplate,

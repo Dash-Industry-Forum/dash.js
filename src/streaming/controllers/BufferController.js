@@ -559,11 +559,19 @@ function BufferController(config) {
         return _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation);
     }
 
-    function prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation) {
-        return _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation);
+    function prepareForDefaultQualitySwitch(newRepresentation, oldRepresentation, noInitSegmentRequired = false) {
+        return _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation, noInitSegmentRequired);
     }
 
-    function _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation) {
+    function _defaultQualitySwitchPreparation(newRepresentation, oldRepresentation, noInitSegmentRequired = false) {
+        // When the switch enters the target Representation at an S-Frame the media pipeline must not be reset:
+        // Aborting the SourceBuffer runs the MSE reset parser state algorithm, which sets the "need random access
+        // point" flag.
+        // The upcoming S-Frames are not sync samples and would silently be dropped, leaving a gap in the buffer.
+        if (noInitSegmentRequired) {
+            return updateBufferTimestampOffset(newRepresentation);
+        }
+
         const promises = [];
         promises.push(updateBufferTimestampOffset(newRepresentation));
         promises.push(abort());
