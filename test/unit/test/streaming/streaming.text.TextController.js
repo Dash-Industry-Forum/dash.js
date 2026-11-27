@@ -134,6 +134,7 @@ describe('TextController setTextTrack switching to a fragmented track', function
     const fragmentedTrack = { lang: 'ger', id: 'track1', isFragmented: true, isEmbedded: false };
     const otherFragmentedTrack = { lang: 'eng', id: 'track2', isFragmented: true, isEmbedded: false };
     const embeddedTrack = { lang: 'eng', id: 'CC1', isFragmented: true, isEmbedded: true };
+    const sideloadedTrack = { lang: 'fre', id: 'side', isFragmented: false, isEmbedded: false };
     let switchingController;
     let deleteCalls;
 
@@ -195,6 +196,12 @@ describe('TextController setTextTrack switching to a fragmented track', function
 
     it('should keep the cues of a previous embedded track', function () {
         switchFrom(embeddedTrack);
+
+        expect(deleteCalls).to.be.empty;
+    });
+
+    it('should keep the cues of a previous non-fragmented track', function () {
+        switchFrom(sideloadedTrack);
 
         expect(deleteCalls).to.be.empty;
     });
