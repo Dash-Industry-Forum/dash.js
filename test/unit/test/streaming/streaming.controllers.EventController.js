@@ -422,8 +422,10 @@ describe('EventController', function () {
                 calculatedPresentationTime: 20
             }];
 
+            // Recorded here and checked in onStartEvent, which reports failures through done
+            let receivedEventIds = [];
             let onReceiveEvent = function (e) {
-                expect(e.event.id).to.equal('event0');
+                receivedEventIds.push(e.event.id);
                 eventBus.off(schemeIdUri, onReceiveEvent);
             };
 
@@ -431,6 +433,7 @@ describe('EventController', function () {
 
             let onStartEvent = function (e) {
                 try {
+                    expect(receivedEventIds).to.deep.equal(['event0']);
                     expect(e.event.id).to.equal('event0');
                     eventBus.off(schemeIdUri, onStartEvent);
                     expect(playbackControllerMock.getTime()).to.equal(20);
