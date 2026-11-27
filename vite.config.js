@@ -35,15 +35,33 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
+const unitTestDir = fileURLToPath(new URL('./test/unit/', import.meta.url));
 
-// Vite+ is adopted one tool at a time, see docs/adr/0001-adopt-vite-plus-incrementally.md.
-// Only the unit tests use it so far; build, lint and functional tests are unchanged.
+// The unit tests import chai 4 as 'chai', while Vitest imports its own chai 6 under the same name.
+// Vite pre-bundles both under the key 'chai', so only one of them can win, and a global alias would
+// hand chai 4 to Vitest's expect as well. Rename the tests' import to chai4 (aliased below) before
+// Vite resolves it; a resolveId hook would be too late, since Vite maps pre-bundled bare imports first.
+function unitTestChai() {
+    const chaiImport = /(\bfrom\s*|\bimport\s*\(?\s*)(['"])chai\2/g;
+    return {
+        name: 'dashjs:unit-test-chai',
+        enforce: 'pre',
+        transform(code, id) {
+            if (!id.startsWith(unitTestDir) || !code.includes('chai')) {
+                return null;
+            }
+            const renamed = code.replace(chaiImport, '$1$2chai4$2');
+            return renamed === code ? null : { code: renamed, map: null };
+        }
+    };
+}
+
 export default defineConfig({
+    plugins: [unitTestChai()],
     resolve: {
         alias: {
-            // The tests import chai 4 directly. Without the alias, Vite resolves the chai 6
-            // that Vitest ships, which has no default export.
-            chai: require.resolve('chai'),
+            // chai 4 from the root node_modules, see unitTestChai()
+            chai4: require.resolve('chai'),
             // imsc uses sax, which expects the Node stream module. The webpack build has the same fallback.
             stream: require.resolve('stream-browserify'),
             // readable-stream (used by stream-browserify) maps util to false for browsers and falls back to
@@ -52,7 +70,7 @@ export default defineConfig({
         }
     },
     optimizeDeps: {
-        include: ['chai', 'stream-browserify', 'imsc']
+        include: ['chai4', 'stream-browserify', 'imsc']
     },
     test: {
         include: ['test/unit/test/**/*.js'],
