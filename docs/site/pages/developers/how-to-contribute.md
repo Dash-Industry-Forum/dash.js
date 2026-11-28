@@ -79,7 +79,8 @@ contribute a fix yourself (or have someone else create a fix on your behalf).
    available [here](https://dashif.org/docs/dash.js.license-header.May2013.txt). Be sure to replace the placeholder
    text "YOUR_COMPANY_NAME_HERE" with the name of your company before adding it to the header.
 1. Add or modify unit tests for any new or modified functionality in your patch.
-1. Run `npm run ci:verify` before you commit so that you may catch test failures, lint issues, or syntax errors. Pull
+1. Run `npm run ci:verify && npm run build` before you commit so that you may catch test failures, lint issues, syntax
+   errors, or bundling errors. Pull
    requests that
    do not compile or pass linter checks or pass all unit tests will not be accepted.
 1. If you are submitting code as an individual or on behalf of a company who is _not a member_ of the

@@ -35,8 +35,8 @@ jobs:
             -   name: Install Playwright browsers
                 run: npx playwright install --with-deps chromium firefox
 
-            # npm run build does not run the tests, and the pack in the build job runs with
-            # --ignore-scripts. Gate explicitly.
+            # The build job runs build:dist (no tests/lint) and packs with --ignore-scripts.
+            # Gate explicitly.
             -   name: Run unit tests and lint
                 run: npm run ci:verify
 

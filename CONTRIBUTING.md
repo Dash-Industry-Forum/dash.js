@@ -46,7 +46,7 @@ If you find a low priority issues is affecting your use case then the only way t
 1. Fork the repository and setup a new branch to work in.
 1. In each of your files, include the required BSD-3 header available [here](https://dashif.org/docs/dash.js.license-header.May2013.txt). Be sure to replace the placeholder text "YOUR_COMPANY_NAME_HERE" with the name of your company before adding it to the header.
 1. Add or modify unit tests for any new or modified functionality in your patch.
-1. Run `npm run ci:verify` before you commit so that you may catch test failures, lint issues, or syntax errors. Pull requests that do not compile or pass linter checks or pass all unit tests will not be accepted.
+1. Run `npm run ci:verify && npm run build` before you commit so that you may catch test failures, lint issues, syntax errors, or bundling errors. Pull requests that do not compile or pass linter checks or pass all unit tests will not be accepted.
 1. If you are submitting code as an individual or on behalf of a company who is _not a member_ of the DASH [Industry Forum](http://dashif.org/members), then download, sign, scan and email back to the email list the [Feedback Agreement](https://dashif.org/docs/DASH-IF-Feedback-Agreement-3-7-2014.pdf). Your code will not be reviewed and accepted by the Admins until this has been received. DASH IF members do not need to take this step, as the Forum's By-Laws already cover your submission to this open source project.
 1. Issue a Pull Request.
 1. The Admins will review your code and may optionally request conformance, functional or other changes. Work with them to resolve any issues.
