@@ -72,7 +72,7 @@ version). Do this **continuously**, not only at the end:
 
 * Merge the finished `RC_vX.X.X` branch into `master`. (`master` should end up in
   the exact state of the latest, approved RC branch.)
-* Pull `master` locally and build the `dist` files with `npm run build`.
+* Pull `master` locally, verify and build the `dist` files with `npm run ci:verify && npm run build`.
 * Push the resulting `dist` files to `master`.
 * Draft the release with the Git Release UI:
     * Tag the release with the version number, e.g. `vX.X.X`.

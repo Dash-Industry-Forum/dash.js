@@ -5,7 +5,7 @@ dash.js — DASH Industry Forum reference client. Pure JS (ES2020), ESM, Node >=
 ## Gotchas
 
 ### Build & Test
-- **`npm run build` skips tests/lint.** Use `npm run build-modern` for the full pipeline (clean + tsc + test + lint + webpack).
+- **`npm run build`, `build-modern` and `build-legacy` only run webpack** (no tsc/tests/lint). Full pipeline: `npm run ci:verify && npm run build`.
 - **Unit tests run on Vitest (via Vite+) in real browsers** (Chromium and Firefox through Playwright). Run a single file or filter by test name:
   ```bash
   npx vp test --run test/unit/test/core/core.EventBus.js

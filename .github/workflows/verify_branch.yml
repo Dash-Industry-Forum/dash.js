@@ -34,5 +34,7 @@ jobs:
                 uses: ./.github/actions/setup-dashjs
                 with:
                     install-browsers: 'true'
-            -   name: Build and run unit tests
+            -   name: Run unit tests and lint
+                run: npm run ci:verify
+            -   name: Build
                 run: npm run build
